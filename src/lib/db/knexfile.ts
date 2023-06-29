@@ -5,7 +5,7 @@ export const pgConfig = {
   timezone: 'UTC',
   connection: {
     host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'paulius-tmp',
+    database: process.env.DB_NAME || 'veritable-cloudagent',
     user: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'postgres',
     port: process.env.DB_PORT || '5432',

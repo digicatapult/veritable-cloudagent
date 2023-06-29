@@ -7,6 +7,6 @@ import { logger } from './lib/logger'
   const app: Express = await Server()
 
   app.listen(env.PORT, () => {
-    logger.info(`paulius-tmp listening on ${env.PORT} port`)
+    logger.info(`veritable-cloudagent listening on ${env.PORT} port`)
   })
 })()
