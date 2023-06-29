@@ -1,0 +1,11 @@
+.github
+coverage
+node_modules
+scripts
+build
+bin
+
+.eslintignore
+.eslintrc
+.prettierrc
+*.md

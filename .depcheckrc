@@ -1,0 +1,6 @@
+ignores: [
+  "concurrently",
+  "pino-colada",
+  "nodemon",
+  "pg",
+]

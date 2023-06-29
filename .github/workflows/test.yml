@@ -1,0 +1,142 @@
+name: Lint and Test
+
+on:
+  push:
+    branches-ignore: ["main"]
+
+jobs:
+
+  repo_ids:
+    runs-on: ubuntu-latest
+    outputs:
+      repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
+      org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Get repository identifiers
+        id: repo_ids
+        run: |
+          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
+
+  lint:
+    name: Run lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: Install Packages
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+
+  dependency-check:
+    name: Run dependency check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: Install Packages
+        run: npm ci
+      - name: Dependency Check
+        run: npm run depcheck
+
+  tests:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - name: Install Packages
+        run: npm ci
+      - name: Build OpenAPI
+        run: npm run build
+      - name: Setup dependencies
+        run: docker-compose up -d
+      - name: Sleep
+        uses: kibertoad/wait-action@1.0.1
+        with:
+          time: '30s'
+      - name: Run database migrations
+        run: npm run db:migrate
+        env:
+          NODE_ENV: test
+      - name: Run unit tests
+        run: npm run test:unit
+      - name: Run integration tests
+        run: npm run test
+
+  check-version:
+    name: "Check version"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: git fetch --depth=1 --tags origin
+      - name: Install yq
+        run: sudo snap install yq
+      - name: Check Build Version
+        id: get_version
+        run: ./scripts/check-version.sh
+        shell: bash
+      - name: Error if version is not increased
+        shell: bash
+        run: |
+          exit $([[ "${{steps.get_version.outputs.IS_NEW_VERSION}}" = "true" ]] && echo 0 || echo 1)
+
+  build-docker:
+    name: "Build docker image"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          buildkitd-flags: "--debug"
+      - name: Build image
+        uses: docker/build-push-action@v4
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64, linux/arm64
+          push: false
