@@ -11,6 +11,6 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_DB=openapi-ts-template
+      - POSTGRES_DB=paulius-tmp
 volumes:
   data-storage:
