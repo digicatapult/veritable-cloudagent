@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An open api typescript nodejs/express api service template",
   "main": "src/index.ts",
   "scripts": {
@@ -39,7 +39,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.60.0",
     "@typescript-eslint/parser": "^5.60.0",
-    "concurrently": "^7.6.0",
+    "concurrently": "^8.2.0",
     "depcheck": "^1.4.3",
     "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.8.0",
