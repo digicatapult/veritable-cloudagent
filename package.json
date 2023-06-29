@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "An open api typescript nodejs/express api service template",
   "main": "src/index.ts",
   "scripts": {
@@ -55,6 +55,6 @@
     "body-parser": "^1.20.2",
     "envalid": "^7.3.1",
     "express": "^4.18.2",
-    "pino": "^7.11.0"
+    "pino": "^8.14.1"
   }
 }
