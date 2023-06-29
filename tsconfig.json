@@ -1,28 +1,6 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "experimentalDecorators": true,
-    "target": "es6",
-    "module": "commonjs",
-    "rootDir": "./src",
-    "baseUrl": "./",
-    "moduleResolution": "node",
-    "typeRoots": ["types/*", "node_modules/@types"],
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "outDir": "./build",
-    "esModuleInterop": true,
-    "paths":{
-      "pino": ["node_modules/pino"],
-      "types": ["types"]
-    }
-  },
-  "exclude": [
-    "**/*.test.ts",
-    "test",
-    "**/__test__"
-  ]
+    "types": ["jest"]
+  }
 }
