@@ -1,225 +1,225 @@
-name: Release
+# name: Release
 
-on:
-  push:
-    branches: ["main"]
+# on:
+#   push:
+#     branches: ["main"]
 
-jobs:
+# jobs:
 
-  preconditions:
-    runs-on: ubuntu-latest
-    outputs:
-      repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
-      org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Check token
-        run: |
-          if [ -z "${{ secrets.GITHUB_TOKEN }}"]; then
-            echo "Must provide a GITHUB_TOKEN secret in order to run release workflow"
-            exit 1
-          fi
-      - name: Get repository identifiers
-        id: repo_ids
-        run: |
-          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-          echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
+#   preconditions:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
+#       org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+#       - name: Check token
+#         run: |
+#           if [ -z "${{ secrets.GITHUB_TOKEN }}"]; then
+#             echo "Must provide a GITHUB_TOKEN secret in order to run release workflow"
+#             exit 1
+#           fi
+#       - name: Get repository identifiers
+#         id: repo_ids
+#         run: |
+#           REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+#           ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
+#           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+#           echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
 
-  lint:
-    name: Run lint
-    runs-on: ubuntu-latest
-    needs: [preconditions]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm ci
-      - name: Lint
-        run: npm run lint
+#   lint:
+#     name: Run lint
+#     runs-on: ubuntu-latest
+#     needs: [preconditions]
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-node@v3
+#         with:
+#           node-version: 18.x
+#       - name: Cache Node.js modules
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+#           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.OS }}-node-
+#             ${{ runner.OS }}-
+#       - name: Install Packages
+#         run: npm ci
+#       - name: Lint
+#         run: npm run lint
 
-  dependency-check:
-    name: Run dependency check
-    runs-on: ubuntu-latest
-    needs: [preconditions]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm ci
-      - name: Dependency Check
-        run: npm run depcheck
+#   dependency-check:
+#     name: Run dependency check
+#     runs-on: ubuntu-latest
+#     needs: [preconditions]
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-node@v3
+#         with:
+#           node-version: 18.x
+#       - name: Cache Node.js modules
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+#           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.OS }}-node-
+#             ${{ runner.OS }}-
+#       - name: Install Packages
+#         run: npm ci
+#       - name: Dependency Check
+#         run: npm run depcheck
 
-  tests:
-    name: Run tests
-    runs-on: ubuntu-latest
-    needs: [preconditions]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm ci
-      - name: Build OpenAPI
-        run: npm run build
-      - name: Setup dependencies
-        run: docker-compose up -d
-      - name: Sleep
-        uses: kibertoad/wait-action@1.0.1
-        with:
-          time: '30s'
-      - name: Run integration tests
-        run: npm run test
+#   tests:
+#     name: Run tests
+#     runs-on: ubuntu-latest
+#     needs: [preconditions]
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-node@v3
+#         with:
+#           node-version: 18.x
+#       - name: Cache Node.js modules
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+#           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.OS }}-node-
+#             ${{ runner.OS }}-
+#       - name: Install Packages
+#         run: npm ci
+#       - name: Build OpenAPI
+#         run: npm run build
+#       - name: Setup dependencies
+#         run: docker-compose up -d
+#       - name: Sleep
+#         uses: kibertoad/wait-action@1.0.1
+#         with:
+#           time: '30s'
+#       - name: Run integration tests
+#         run: npm run test
 
-  check-version:
-    name: "Check version"
-    runs-on: ubuntu-latest
-    outputs:
-      is_new_version: ${{ steps.get_version.outputs.IS_NEW_VERSION }}
-      version: ${{ steps.get_version.outputs.VERSION }}
-      build_date: ${{ steps.get_version.outputs.BUILD_DATE }}
-      is_prerelease: ${{ steps.get_version.outputs.IS_PRERELEASE }}
+#   check-version:
+#     name: "Check version"
+#     runs-on: ubuntu-latest
+#     outputs:
+#       is_new_version: ${{ steps.get_version.outputs.IS_NEW_VERSION }}
+#       version: ${{ steps.get_version.outputs.VERSION }}
+#       build_date: ${{ steps.get_version.outputs.BUILD_DATE }}
+#       is_prerelease: ${{ steps.get_version.outputs.IS_PRERELEASE }}
 
-    steps:
-      - uses: actions/checkout@v3
-      - run: git fetch --depth=1 --tags origin
-      - name: Install yq
-        run: sudo snap install yq
-      - name: Check Build Version
-        id: get_version
-        run: ./scripts/check-version.sh
-        shell: bash
-      - name: Skipping release as version has not increased
-        if: steps.get_version.outputs.IS_NEW_VERSION != 'true'
-        shell: bash
-        run: |
-          echo "Skipping release as current version has already been published"
+#     steps:
+#       - uses: actions/checkout@v3
+#       - run: git fetch --depth=1 --tags origin
+#       - name: Install yq
+#         run: sudo snap install yq
+#       - name: Check Build Version
+#         id: get_version
+#         run: ./scripts/check-version.sh
+#         shell: bash
+#       - name: Skipping release as version has not increased
+#         if: steps.get_version.outputs.IS_NEW_VERSION != 'true'
+#         shell: bash
+#         run: |
+#           echo "Skipping release as current version has already been published"
 
-  publish:
-    name: "Publish package"
-    needs: [preconditions, lint, dependency-check, tests, check-version]
-    runs-on: ubuntu-latest
-    if: ${{ needs.check-version.outputs.is_new_version == 'true' }}
+#   publish:
+#     name: "Publish package"
+#     needs: [preconditions, lint, dependency-check, tests, check-version]
+#     runs-on: ubuntu-latest
+#     if: ${{ needs.check-version.outputs.is_new_version == 'true' }}
 
-    steps:
-      - uses: actions/checkout@v3
+#     steps:
+#       - uses: actions/checkout@v3
 
-      # Docker build
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-      - name: Setup Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          buildkitd-flags: "--debug"
-      - name: Generate tags
-        id: generate-tags
-        env:
-          VERSION: ${{ needs.check-version.outputs.version }}
-          IS_NEW_VERSION: ${{ needs.check-version.outputs.is_new_version }}
-          IS_PRERELEASE: ${{ needs.check-version.outputs.is_prerelease }}
-        # if it's a new non prerelease version tag with hash, version latest-dev and latest
-        # if it's a new prerelease version tag with hash, version and latest-dev
-        # if it's a non new version tag with hash and latest-dev
-        run: |
-          if [ "$IS_NEW_VERSION" == "true" ]; then
-            echo "GHCR_VERSION_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
-            echo "DOCKERHUB_VERSION_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
-            if [ "$IS_PRERELEASE" == "false" ]; then
-              echo "GHCR_LATEST_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:latest" >> $GITHUB_OUTPUT
-              echo "DOCKERHUB_LATEST_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:latest" >> $GITHUB_OUTPUT
-            else
-              echo "GHCR_LATEST_TAG=" >> $GITHUB_OUTPUT
-              echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
-            fi;
-          else
-            echo "GHCR_VERSION_TAG=" >> $GITHUB_OUTPUT
-            echo "GHCR_LATEST_TAG=" >> $GITHUB_OUTPUT
-            echo "DOCKERHUB_VERSION_TAG=" >> $GITHUB_OUTPUT
-            echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
-          fi;
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Login to Dockerhub Registry
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DSCP_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DSCP_DOCKERHUB_TOKEN }}
-      - name: Build image
-        uses: docker/build-push-action@v4
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64, linux/arm64
-          push: true
-          tags: |
-            ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:${{ github.sha }}
-            ${{ steps.generate-tags.outputs.GHCR_VERSION_TAG }}
-            ${{ steps.generate-tags.outputs.GHCR_LATEST_TAG }}
-            ${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:${{ github.sha }}
-            ${{ steps.generate-tags.outputs.DOCKERHUB_VERSION_TAG }}
-            ${{ steps.generate-tags.outputs.DOCKERHUB_LATEST_TAG }}
-          labels: |
-            org.opencontainers.image.title=${{ needs.preconditions.outputs.repo_name }}
-            org.opencontainers.image.description=${{ github.event.repository.description }}
-            org.opencontainers.image.source=${{ github.event.repository.html_url }}
-            org.opencontainers.image.url=${{ github.event.repository.html_url }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ needs.check-version.outputs.version }}
-            org.opencontainers.image.created=${{ needs.check-version.outputs.build_date }}
+#       # Docker build
+#       - name: Setup QEMU
+#         uses: docker/setup-qemu-action@v2
+#         with:
+#           platforms: all
+#       - name: Setup Docker Buildx
+#         id: buildx
+#         uses: docker/setup-buildx-action@v2
+#         with:
+#           buildkitd-flags: "--debug"
+#       - name: Generate tags
+#         id: generate-tags
+#         env:
+#           VERSION: ${{ needs.check-version.outputs.version }}
+#           IS_NEW_VERSION: ${{ needs.check-version.outputs.is_new_version }}
+#           IS_PRERELEASE: ${{ needs.check-version.outputs.is_prerelease }}
+#         # if it's a new non prerelease version tag with hash, version latest-dev and latest
+#         # if it's a new prerelease version tag with hash, version and latest-dev
+#         # if it's a non new version tag with hash and latest-dev
+#         run: |
+#           if [ "$IS_NEW_VERSION" == "true" ]; then
+#             echo "GHCR_VERSION_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
+#             echo "DOCKERHUB_VERSION_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
+#             if [ "$IS_PRERELEASE" == "false" ]; then
+#               echo "GHCR_LATEST_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:latest" >> $GITHUB_OUTPUT
+#               echo "DOCKERHUB_LATEST_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:latest" >> $GITHUB_OUTPUT
+#             else
+#               echo "GHCR_LATEST_TAG=" >> $GITHUB_OUTPUT
+#               echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
+#             fi;
+#           else
+#             echo "GHCR_VERSION_TAG=" >> $GITHUB_OUTPUT
+#             echo "GHCR_LATEST_TAG=" >> $GITHUB_OUTPUT
+#             echo "DOCKERHUB_VERSION_TAG=" >> $GITHUB_OUTPUT
+#             echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
+#           fi;
+#       - name: Login to GitHub Container Registry
+#         uses: docker/login-action@v2
+#         with:
+#           registry: ghcr.io
+#           username: ${{ github.repository_owner }}
+#           password: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Login to Dockerhub Registry
+#         uses: docker/login-action@v2
+#         with:
+#           username: ${{ secrets.DSCP_DOCKERHUB_USERNAME }}
+#           password: ${{ secrets.DSCP_DOCKERHUB_TOKEN }}
+#       - name: Build image
+#         uses: docker/build-push-action@v4
+#         with:
+#           builder: ${{ steps.buildx.outputs.name }}
+#           context: .
+#           file: ./Dockerfile
+#           platforms: linux/amd64, linux/arm64
+#           push: true
+#           tags: |
+#             ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:${{ github.sha }}
+#             ${{ steps.generate-tags.outputs.GHCR_VERSION_TAG }}
+#             ${{ steps.generate-tags.outputs.GHCR_LATEST_TAG }}
+#             ${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:${{ github.sha }}
+#             ${{ steps.generate-tags.outputs.DOCKERHUB_VERSION_TAG }}
+#             ${{ steps.generate-tags.outputs.DOCKERHUB_LATEST_TAG }}
+#           labels: |
+#             org.opencontainers.image.title=${{ needs.preconditions.outputs.repo_name }}
+#             org.opencontainers.image.description=${{ github.event.repository.description }}
+#             org.opencontainers.image.source=${{ github.event.repository.html_url }}
+#             org.opencontainers.image.url=${{ github.event.repository.html_url }}
+#             org.opencontainers.image.revision=${{ github.sha }}
+#             org.opencontainers.image.version=${{ needs.check-version.outputs.version }}
+#             org.opencontainers.image.created=${{ needs.check-version.outputs.build_date }}
 
-      # Build github release
-      - name: Build release version
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ needs.check-version.outputs.version }}
-          prerelease: false
-          title: Release ${{ needs.check-version.outputs.version }}
-      - name: Build release latest
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: latest
-          prerelease: false
-          title: Latest Release ${{ needs.check-version.outputs.version }}
+#       # Build github release
+#       - name: Build release version
+#         uses: "marvinpinto/action-automatic-releases@latest"
+#         with:
+#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#           automatic_release_tag: ${{ needs.check-version.outputs.version }}
+#           prerelease: false
+#           title: Release ${{ needs.check-version.outputs.version }}
+#       - name: Build release latest
+#         uses: "marvinpinto/action-automatic-releases@latest"
+#         with:
+#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#           automatic_release_tag: latest
+#           prerelease: false
+#           title: Latest Release ${{ needs.check-version.outputs.version }}

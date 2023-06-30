@@ -1,28 +1,39 @@
-# syntax=docker/dockerfile:1.4
-FROM node:lts-alpine as builder
+FROM ubuntu:18.04 as base
 
-WORKDIR /veritable-cloudagent
+ENV DEBIAN_FRONTEND noninteractive
 
-# Install base dependencies
-RUN npm install -g npm@latest
+# due to bad request, apt kicks offs and terminates build. [More](https://askubuntu.com/questions/786334/proxy-problems-after-upgrade-to-ubuntu-16-04-apt-1-2)
+# on 18.04 it does not say proxy stuff, just trips, maybe shared cache did not have time to fully investigate this anomaly
+RUN echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf
+RUN echo "Acquire::http::Pipeline-Depth 0;" >> /etc/apt/apt.conf
 
-COPY package*.json ./
-COPY tsconfig.json ./
+RUN apt-get update -y && apt-get install -y \
+    software-properties-common \
+    apt-transport-https \
+    curl \
+    # Only needed to build indy-sdk
+    build-essential 
 
-RUN npm ci
-COPY . .
-RUN npm run build
+# libindy
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88
+RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable"
 
-# service 
-FROM node:lts-alpine as service
+# nodejs
+RUN curl -sL https://deb.nodesource.com/setup_16.x | bash
 
-WORKDIR /veritable-cloudagent
+# install depdencies
+RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
+    libindy \
+    nodejs
 
-RUN npm -g install npm@9.x.x
+# AFJ specifc setup
+WORKDIR /www
 
-COPY package*.json ./
-RUN npm ci --production
-COPY --from=builder /veritable-cloudagent/build .
+COPY bin ./bin
+COPY package.json package.json
+COPY package-lock.json package-lock.json
+RUN npm ci 
 
-EXPOSE 80
-CMD [ "node", "./index.js" ]
+COPY build ./build
+
+ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
