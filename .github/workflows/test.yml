@@ -1,8 +1,6 @@
 name: Lint and Test
 
-on:
-  push:
-    branches-ignore: ["main-do-not0-ignore-main-ha"]
+on: [push]
 
 jobs:
 
