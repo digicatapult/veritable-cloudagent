@@ -1,10 +1,9 @@
-# name: Release
+name: Release
 
-# on:
-#   push:
+on: [push]
 #     branches: ["main"]
 
-# jobs:
+jobs:
 
 #   preconditions:
 #     runs-on: ubuntu-latest
@@ -208,18 +207,18 @@
 #             org.opencontainers.image.version=${{ needs.check-version.outputs.version }}
 #             org.opencontainers.image.created=${{ needs.check-version.outputs.build_date }}
 
-#       # Build github release
-#       - name: Build release version
-#         uses: "marvinpinto/action-automatic-releases@latest"
-#         with:
-#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#           automatic_release_tag: ${{ needs.check-version.outputs.version }}
-#           prerelease: false
-#           title: Release ${{ needs.check-version.outputs.version }}
-#       - name: Build release latest
-#         uses: "marvinpinto/action-automatic-releases@latest"
-#         with:
-#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#           automatic_release_tag: latest
-#           prerelease: false
-#           title: Latest Release ${{ needs.check-version.outputs.version }}
+      # Build github release
+      - name: Build release version
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ needs.check-version.outputs.version }}
+          prerelease: false
+          title: Release ${{ needs.check-version.outputs.version }}
+      - name: Build release latest
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: latest
+          prerelease: false
+          title: Latest Release ${{ needs.check-version.outputs.version }}
