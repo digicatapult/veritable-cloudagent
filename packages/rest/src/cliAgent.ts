@@ -61,7 +61,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger,
   }
 
-  const agent = new Agent(agentConfig, agentDependencies as any)
+  const agent = new Agent(agentConfig, agentDependencies)
 
   // Register outbound transports
   for (const outboundTransport of outboundTransports) {
@@ -72,7 +72,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   // Register inbound transports
   for (const inboundTransport of inboundTransports) {
     const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }) as any)
+    agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
   }
 
   await agent.initialize()

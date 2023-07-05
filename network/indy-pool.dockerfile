@@ -3,19 +3,6 @@ FROM ubuntu:16.04
 ARG uid=1000
 
 # Install environment
-
-# man.... for real.. due to 5 bad request while trying to download
-# around 200 libs (150mb of stuff) and then it just trips itself
-RUN apt-get clean \
-	cd /var/lib/apt \
- 	mv lists lists.old \
- 	mkdir lists/partial \
- 	apt-get clean 
-
-# to be fair this my second attempt which should be enough but leaving above solution just for reference 
-RUN echo "Acquire::http::No-Cache true;" >> /etc/apt/apt.conf
-RUN echo "Acquire::http::Pipeline-Depth 0;" >> /etc/apt/apt.conf
-
 RUN apt-get update -y && apt-get install -y \
 	git \
 	wget \
@@ -36,7 +23,6 @@ RUN pip3 install -U \
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CE7709D068DB5E88 || \
 	apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CE7709D068DB5E88
 ARG indy_stream=stable
-RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
 RUN echo "deb https://repo.sovrin.org/deb xenial $indy_stream" >> /etc/apt/sources.list
 RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb xenial $indy_stream"
 

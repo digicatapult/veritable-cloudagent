@@ -1,47 +1,47 @@
-name: Release
+# name: Release
 
-on:
-  push:
-    branches: ["main"]
+# on:
+#   push:
+#     branches: ["main"]
 
-jobs:
+# jobs:
 
-  preconditions:
-    runs-on: ubuntu-latest
-    outputs:
-      repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
-      org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Check token
-        run: |
-          if [ -z "${{ secrets.GITHUB_TOKEN }}"]; then
-            echo "Must provide a GITHUB_TOKEN secret in order to run release workflow"
-            exit 1
-          fi
-      - name: Get repository identifiers
-        id: repo_ids
-        run: |
-          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-          echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
+#   preconditions:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
+#       org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+#       - name: Check token
+#         run: |
+#           if [ -z "${{ secrets.GITHUB_TOKEN }}"]; then
+#             echo "Must provide a GITHUB_TOKEN secret in order to run release workflow"
+#             exit 1
+#           fi
+#       - name: Get repository identifiers
+#         id: repo_ids
+#         run: |
+#           REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+#           ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
+#           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+#           echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
 
-      # Build github release
-      - name: Build release version
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: ${{ needs.check-version.outputs.version }}
-          prerelease: false
-          title: Release ${{ needs.check-version.outputs.version }}
-      - name: Build release latest
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: latest
-          prerelease: false
-          title: Latest Release ${{ needs.check-version.outputs.version }}
+#       # Build github release
+#       - name: Build release version
+#         uses: "marvinpinto/action-automatic-releases@latest"
+#         with:
+#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#           automatic_release_tag: ${{ needs.check-version.outputs.version }}
+#           prerelease: false
+#           title: Release ${{ needs.check-version.outputs.version }}
+#       - name: Build release latest
+#         uses: "marvinpinto/action-automatic-releases@latest"
+#         with:
+#           repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#           automatic_release_tag: latest
+#           prerelease: false
+#           title: Latest Release ${{ needs.check-version.outputs.version }}

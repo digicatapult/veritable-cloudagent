@@ -1,0 +1,9 @@
+node_modules
+build
+.vscode
+yarn-error.log
+.idea
+coverage
+.DS_Store
+logs.txt
+*.tgz

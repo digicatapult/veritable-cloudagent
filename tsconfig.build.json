@@ -7,7 +7,6 @@
     "strict": true,
     "noEmitOnError": true,
     "lib": [],
-    "outDir": "./build",
     "types": [],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -15,11 +14,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["src/**/*", "src/routes"],
   "exclude": [
     "node_modules",
-    "samples",
-    "tests",
     "build",
     "**/*.test.ts",
     "**/__tests__/*.ts",

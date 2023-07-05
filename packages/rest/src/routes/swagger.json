@@ -1161,15 +1161,13 @@
 		"securitySchemes": {}
 	},
 	"info": {
-		"title": "@digicatapult/veritable-cloudagent",
-		"version": "0.0.1",
+		"title": "@aries-framework/rest",
+		"version": "0.9.3",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
 			"name": "Apache-2.0"
 		},
-		"contact": {
-			"name": "Digital Catapult"
-		}
+		"contact": {}
 	},
 	"openapi": "3.0.0",
 	"paths": {

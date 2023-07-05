@@ -1,13 +1,11 @@
 import type { Config } from '@jest/types'
 
+import base from './jest.config.base'
+
 const config: Config.InitialOptions = {
+  ...base,
   roots: ['<rootDir>'],
-  displayName: 'veritable-cloudagent-test',
-  testTimeout: 120000,
-  preset: 'ts-jest',
-  testEnvironment: 'node',
-  verbose: true,
-  testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
+  projects: ['<rootDir>/packages/*'],
 }
 
 export default config

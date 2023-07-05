@@ -49,14 +49,14 @@ export const setupAgent = async ({
         },
       ],
     },
-    agentDependencies as any
+    agentDependencies
   )
 
   const httpInbound = new HttpInboundTransport({
     port: port,
   })
 
-  agent.registerInboundTransport(httpInbound as any)
+  agent.registerInboundTransport(httpInbound)
 
   agent.registerOutboundTransport(new HttpOutboundTransport())
 

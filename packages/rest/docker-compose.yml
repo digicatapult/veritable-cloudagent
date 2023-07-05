@@ -1,24 +1,12 @@
 version: '3.5'
 
 services:
-  # indy-pool:
-    # image: indy-pool
-    # environment:
-    #   GENESIS_TXN_PATH: /work/network/genesis/local-genesis.txn
-    # volumes:
-      # - veritable-cloudagent-storage:/var/lib/postgresql/data
-    # ports:
-    #  - '9701:9701'
-    #  - '9708:9708'
-    # or via command line arguments
-
   rest-sample:
     build: .
     restart: always
     environment:
       # possible to set values using env variables
       AFJ_REST_LOG_LEVEL: 1
-      # also possible to set values using json
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
@@ -28,4 +16,4 @@ services:
       - '3000:3000'
     platform: linux/amd64
     # or via command line arguments
-    command: --auto-accept-connections --config /config.json 
+    command: --auto-accept-connections --config /config.json

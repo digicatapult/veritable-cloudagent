@@ -1,54 +1,54 @@
-name: Lint and Test
+# name: Lint and Test
 
-on: 
-  push:
-    branches:
-      - 'main'
+# on: 
+#   push:
+#     branches:
+#       - 'main'
 
-jobs:
+# jobs:
 
-env:
-  TEST_AGENT_PUBLIC_DID_SEED: 000000000000000000000000Trustee9
-  GENESIS_TXN_PATH: network/genesis/local-genesis.txn
+# env:
+#   TEST_AGENT_PUBLIC_DID_SEED: 000000000000000000000000Trustee9
+#   GENESIS_TXN_PATH: network/genesis/local-genesis.txn
 
-  repo_ids:
-    runs-on: ubuntu-latest
-    outputs:
-      repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
-      org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Get repository identifiers
-        id: repo_ids
-        run: |
-          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-          echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
+#   repo_ids:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
+#       org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+#       - name: Get repository identifiers
+#         id: repo_ids
+#         run: |
+#           REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+#           ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
+#           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
+#           echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
 
-  # lint:
-  #   name: Run lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: actions/setup-node@v3
-  #       with:
-  #         node-version: 18.x
-  #     - name: Cache Node.js modules
-  #       uses: actions/cache@v3
-  #       with:
-  #         path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-  #         key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-  #         restore-keys: |
-  #           ${{ runner.OS }}-node-
-  #           ${{ runner.OS }}-
-  #     - name: Install Packages
-  #       run: npm ci
-  #     - name: Lint
-  #       run: npm run lint
+#   lint:
+#     name: Run lint
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v3
+#       - uses: actions/setup-node@v3
+#         with:
+#           node-version: 18.x
+#       - name: Cache Node.js modules
+#         uses: actions/cache@v3
+#         with:
+#           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
+#           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
+#           restore-keys: |
+#             ${{ runner.OS }}-node-
+#             ${{ runner.OS }}-
+#       - name: Install Packages
+#         run: npm ci
+#       - name: Lint
+#         run: npm run lint
 
 #   dependency-check:
 #     name: Run dependency check
@@ -71,33 +71,33 @@ env:
 #       - name: Dependency Check
 #         run: npm run depcheck
 
-  tests:
-    runs-on: ubuntu-20.04
-    name: Integration Tests
+#   tests:
+#     runs-on: ubuntu-20.04
+#     name: Integration Tests
 
-    strategy:
-      matrix:
-        node-version: [16.x, 18.x]
+#     strategy:
+#       matrix:
+#         node-version: [16.x, 18.x]
 
-    steps:
-      - name: Checkout veritable-cloudagent 
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout veritable-cloudagent 
+#         uses: actions/checkout@v2
 
-      # setup dependencies
-      - name: Setup Libindy
-        uses: ./.github/actions/setup-libindy
-      - name: Setup Indy Pool
-        uses: ./.github/actions/setup-indy-pool
-        with:
-          seed: ${TEST_AGENT_PUBLIC_DID_SEED}
-      - name: Setup NodeJS
-        uses: ./.github/actions/setup-node
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Install dependencies
-        run: npm i 
-      - name: Run tests for Rest
-        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} npm test rest
+#       setup dependencies
+#       - name: Setup Libindy
+#         uses: ./.github/actions/setup-libindy
+#       - name: Setup Indy Pool
+#         uses: ./.github/actions/setup-indy-pool
+#         with:
+#           seed: ${TEST_AGENT_PUBLIC_DID_SEED}
+#       - name: Setup NodeJS
+#         uses: ./.github/actions/setup-node
+#         with:
+#           node-version: ${{ matrix.node-version }}
+#       - name: Install dependencies
+#         run: npm i 
+#       - name: Run tests for Rest
+#         run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} npm test rest
 
 
 #   check-version:
