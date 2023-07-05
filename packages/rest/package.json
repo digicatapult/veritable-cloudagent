@@ -2,7 +2,7 @@
   "name": "@aries-framework/rest",
   "main": "build/index",
   "types": "build/index",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "files": [
     "build"
   ],
@@ -40,7 +40,7 @@
     "reflect-metadata": "^0.1.13",
     "swagger-ui-express": "^4.4.0",
     "tslog": "^3.3.3",
-    "tsoa": "^4.1.2",
+    "tsoa": "^5.1.1",
     "tsyringe": "^4.7.0",
     "ws": "^7.5.3",
     "yargs": "^17.3.1"
