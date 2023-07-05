@@ -1,5 +1,5 @@
 {
-    "name": "@cdecatapult/veritable-cloudagent-tmp",
+    "name": "@cdecatapult/veritable-cloudagent",
     "version": "0.0.1",
     "main": "build/index",
     "types": "build/index",
@@ -15,11 +15,11 @@
     },
     "author": "Digital Catapult",
     "license": "Apache-2.0",
-    "homepage": "https://github.com/cdecatapult/veritable-cloudagent-tmp#readme",
+    "homepage": "https://github.com/cdecatapult/veritable-cloudagent#readme",
     "description": "Rest endpoint wrapper for using your agent over HTTP",
     "repository": {
       "type": "git",
-      "url": "git+https://github.com/cdecatapult/veritable-cloudagent-tmp.git"
+      "url": "git+https://github.com/cdecatapult/veritable-cloudagent.git"
     },
     "workspaces": {
       "packages": [
