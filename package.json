@@ -9,9 +9,6 @@
     "keywords": [
       "OpenAPI"
     ],
-    "publishConfig": {
-      "access": "public"
-    },
     "author": "Digital Catapult",
     "license": "Apache-2.0",
     "homepage": "https://github.com/cdecatapult/veritable-cloudagent-tmp#readme",
