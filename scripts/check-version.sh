@@ -5,14 +5,6 @@ set -e
 
 function check_versions_consistent () {
   local PACKAGE_VERSION=$(yq eval '.version' ./package.json)
-  local PACKAGE_LOCK_VERSION=$(yq eval '.version' ./package-lock.json)
-
-  if [ "$PACKAGE_VERSION" != "$PACKAGE_LOCK_VERSION" ]; then
-    echo "Inconsistent versions detected"
-    echo "PACKAGE_VERSION: $PACKAGE_VERSION"
-    echo "PACKAGE_LOCK_VERSION: $PACKAGE_LOCK_VERSION"
-    exit 1
-  fi
 }
 
 check_versions_consistent

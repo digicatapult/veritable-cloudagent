@@ -1,28 +1,15 @@
 {
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "target": "es6",
-    "module": "commonjs",
-    "rootDir": "./src",
-    "baseUrl": "./",
-    "moduleResolution": "node",
-    "typeRoots": ["types/*", "node_modules/@types"],
-    "resolveJsonModule": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "skipLibCheck": true,
-    "outDir": "./build",
-    "esModuleInterop": true,
-    "paths":{
-      "pino": ["node_modules/pino"],
-      "types": ["types"]
-    }
+  "extends": "./tsconfig.build.json",
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    "files": true
   },
-  "exclude": [
-    "**/*.test.ts",
-    "test",
-    "**/__test__"
-  ]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@aries-framework/*": ["packages/*/src"]
+    },
+    "types": ["jest", "node"]
+  },
+  "exclude": ["node_modules", "build"]
 }

@@ -1,142 +1,148 @@
-name: Lint and Test
+name: Test and Lint 
 
 on:
+  pull_request:
+    branches: [main] 
+    types: [opened, synchronize, reopened, labeled]
   push:
-    branches-ignore: ["main"]
+    branches: [main]
+
+env:
+  TEST_AGENT_PUBLIC_DID_SEED: 000000000000000000000000Trustee9
+  GENESIS_TXN_PATH: network/genesis/local-genesis.txn
+
+# Make sure we're not running multiple release steps at the same time as this can give issues with determining the next npm version to release.
+# Ideally we only add this to the 'release' job so it doesn't limit PR runs, but github can't guarantee the job order in that case:
+# "When concurrency is specified at the job level, order is not guaranteed for jobs or runs that queue within 5 minutes of each other."
+concurrency:
+  group: aries-framework-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
+  cancel-in-progress: true
 
 jobs:
-
-  repo_ids:
-    runs-on: ubuntu-latest
-    outputs:
-      repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
-      org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
+  validate:
+    runs-on: ubuntu-20.04
+    name: Validate
     steps:
-      - name: Checkout
+      - name: Checkout veritable-cloudagent
         uses: actions/checkout@v3
+      - name: Setup Libindy
+        uses: ./.github/actions/setup-libindy
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
         with:
-          fetch-depth: 0
-      - name: Get repository identifiers
-        id: repo_ids
-        run: |
-          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-          echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
+          node-version: 16
+      - name: Install dependencies
+        run: yarn install
+      - name: Compile
+        run: yarn check-types
 
   lint:
-    name: Run lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    name: Lint
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout veritable-cloudagent
+        uses: actions/checkout@v3
+      - name: Setup Libindy
+        uses: ./.github/actions/setup-libindy
+      - name: Setup Indy Pool
+        uses: ./.github/actions/setup-indy-pool
         with:
-          node-version: 18.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
+          seed: ${TEST_AGENT_PUBLIC_DID_SEED}
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
         with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm ci
-      - name: Lint
-        run: npm run lint
+          node-version: 16
+      - name: Install dependencies
+        run: yarn install
+      - name: Compile
+        run: yarn check-types
+      - name: Lint 
+        run: yarn lint 
 
-  dependency-check:
-    name: Run dependency check
-    runs-on: ubuntu-latest
+  integration-test:
+    runs-on: ubuntu-20.04
+    name: Integration Tests
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Checkout veritable-cloudagent
+        uses: actions/checkout@v3
+      # setup dependencies
+      - name: Setup Libindy
+        uses: ./.github/actions/setup-libindy
+      - name: Setup Indy Pool
+        uses: ./.github/actions/setup-indy-pool
         with:
-          node-version: 18.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
+          seed: ${TEST_AGENT_PUBLIC_DID_SEED}
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
         with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm ci
-      - name: Dependency Check
-        run: npm run depcheck
+          node-version: ${{ matrix.node-version }}
+      - name: Install dependencies
+        run: yarn install
+      - name: Integration Test
+        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} yarn test rest --coverage
 
-  tests:
-    name: Run tests
+  package-finder:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.repository == 'digicatapult/veritable-cloudagent' && github.event_name == 'push'
+    needs: [integration-test, validate]
+    outputs:
+      packages: ${{ steps.get-packages.outputs.packages }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm ci
-      - name: Build OpenAPI
-        run: npm run build
-      - name: Setup dependencies
-        run: docker-compose up -d
-      - name: Sleep
-        uses: kibertoad/wait-action@1.0.1
-        with:
-          time: '30s'
-      - name: Run database migrations
-        run: npm run db:migrate
-        env:
-          NODE_ENV: test
-      - name: Run unit tests
-        run: npm run test:unit
-      - name: Run integration tests
-        run: npm run test
+      - name: Checkout veritable-cloudagent
+        uses: actions/checkout@v3
 
-  check-version:
-    name: "Check version"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - run: git fetch --depth=1 --tags origin
-      - name: Install yq
-        run: sudo snap install yq
-      - name: Check Build Version
-        id: get_version
-        run: ./scripts/check-version.sh
-        shell: bash
-      - name: Error if version is not increased
-        shell: bash
-        run: |
-          exit $([[ "${{steps.get_version.outputs.IS_NEW_VERSION}}" = "true" ]] && echo 0 || echo 1)
+      # Some packages need indy-sdk for node as part of yarn install
+      - name: Setup Libindy
+        uses: ./.github/actions/setup-libindy
 
-  build-docker:
-    name: "Build docker image"
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
+        with:
+          node-version: 16
+
+      - name: Install dependencies
+        run: yarn install
+
+      - id: get-packages
+        name: Get all NPM packages
+        run: yarn ts-node ./scripts/getPackages.ts
+
+  release-please:
     runs-on: ubuntu-latest
+    needs: [package-finder, lint]
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{fromJson(needs.package-finder.outputs.packages)}}
     steps:
-      - uses: actions/checkout@v3
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
+      - uses: google-github-actions/release-please-action@v2
+        id: release-please
         with:
-          platforms: all
-      - name: Setup Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
+          path: packages/${{ matrix.package }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: node
+          package-name: ${{ matrix.package }}
+          bump-minor-pre-major: true
+          bump-patch-for-minor-pre-major: true
+          monorepo-tags: true
+          signoff: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
+
+      # Initiate release process if release was created
+      - name: Checkout veritable-cloudagent
+        uses: actions/checkout@v3
+        if: ${{ steps.release-please.outputs.release_created }}
+      # Some packages need indy-sdk for node as part of yarn install
+      - name: Setup Libindy
+        uses: ./.github/actions/setup-libindy
+        if: ${{ steps.release-please.outputs.release_created }}
+      - name: Setup NodeJS
+        uses: ./.github/actions/setup-node
         with:
-          buildkitd-flags: "--debug"
-      - name: Build image
-        uses: docker/build-push-action@v4
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64, linux/arm64
-          push: false
+          node-version: 16
+        if: ${{ steps.release-please.outputs.release_created }}
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        if: ${{ steps.release-please.outputs.release_created }}
