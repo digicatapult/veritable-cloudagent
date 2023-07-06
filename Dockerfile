@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.4
 FROM node:lts-alpine as builder
 
-WORKDIR /openapi-ts-template
+WORKDIR /veritable-cloudagent
 
 # Install base dependencies
 RUN npm install -g npm@latest
@@ -16,13 +16,13 @@ RUN npm run build
 # service 
 FROM node:lts-alpine as service
 
-WORKDIR /openapi-ts-template
+WORKDIR /veritable-cloudagent
 
 RUN npm -g install npm@9.x.x
 
 COPY package*.json ./
 RUN npm ci --production
-COPY --from=builder /openapi-ts-template/build .
+COPY --from=builder /veritable-cloudagent/build .
 
 EXPOSE 80
 CMD [ "node", "./index.js" ]

@@ -1,4 +1,4 @@
-# openapi-ts-template
+# veritable-cloudagent
 
 ## Description
 
@@ -15,7 +15,7 @@ Use a `.env` at root of the repository to set values for the environment variabl
 | ENVIRONMENT_VAR |    N     |       `example`        | An environment specific variable                                                     |
 | DB_PORT         |    N     |         `5432`         | The port for the database                                                            |
 | DB_HOST         |    N     |      `localhost`       | The database hostname / host                                                         |
-| DB_NAME         |    N     | `openapi-ts-template ` | The database name                                                                    |
+| DB_NAME         |    N     | `veritable-cloudagent ` | The database name                                                                    |
 | DB_USERNAME     |    N     |       `postgres`       | The database username                                                                |
 | DB_PASSWORD     |    N     |       `postgres`       | The database password                                                                |
 
