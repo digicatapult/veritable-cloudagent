@@ -1,6 +1,6 @@
 {
-  "name": "@digicatapult/openapi-ts-template",
-  "version": "0.0.34",
+  "name": "@digicatapult/veritable-cloudagent",
+  "version": "0.0.1",
   "description": "An open api typescript nodejs/express api service template",
   "main": "src/index.ts",
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/digicatapult/openapi-ts-template.git"
+    "url": "git+https://github.com/digicatapult/veritable-cloudagent.git"
   },
   "engines": {
     "node": "18.x.x",
@@ -29,9 +29,9 @@
   "author": "Digital Catapult",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/digicatapult/openapi-ts-template/issues"
+    "url": "https://github.com/digicatapult/veritable-cloudagent/issues"
   },
-  "homepage": "https://github.com/digicatapult/openapi-ts-template#readme",
+  "homepage": "https://github.com/digicatapult/veritable-cloudagent#readme",
   "devDependencies": {
     "@types/chai": "^4.3.5",
     "@types/cors": "^2.8.13",

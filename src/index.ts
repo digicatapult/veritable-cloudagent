@@ -7,6 +7,6 @@ import { logger } from './lib/logger'
   const app: Express = await Server()
 
   app.listen(env.PORT, () => {
-    logger.info(`openapi-ts-template listening on ${env.PORT} port`)
+    logger.info(`veritable-cloudagent listening on ${env.PORT} port`)
   })
 })()

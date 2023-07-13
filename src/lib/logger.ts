@@ -4,7 +4,7 @@ import env from '../env'
 
 export const logger: Logger = pino(
   {
-    name: 'openapi-ts-template',
+    name: 'veritable-cloudagent',
     timestamp: true,
     level: env.LOG_LEVEL,
   },

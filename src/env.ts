@@ -14,5 +14,5 @@ export default envalid.cleanEnv(process.env, {
   DB_PORT: envalid.port({ default: 5432 }),
   DB_USERNAME: envalid.str({ devDefault: 'postgres' }),
   DB_PASSWORD: envalid.str({ devDefault: 'postgres' }),
-  DB_NAME: envalid.str({ default: 'openapi-ts-template' }),
+  DB_NAME: envalid.str({ default: 'veritable-cloudagent' }),
 })
