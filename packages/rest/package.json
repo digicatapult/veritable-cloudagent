@@ -30,6 +30,7 @@
     "test-mocha": "mocha --config .mocharc.js --require ts-node/register 'test/**/*.ts'",
     "test-mocha-watch": "mocha --config .mocharc.js --require ts-node/register --watch --watch-extensions test/ 'test/**/*.ts' --watch-files test/*",
     "test-mocha-watch-fast": "TS_NODE_TRANSPILE_ONLY=true mocha --config .mocharc.js --require ts-node/register --watch --watch-extensions test/ 'test/**/*.ts' --watch-files test/*",
+    "test-watch": "jest --watchAll",
     "test": "jest"
   },
   "dependencies": {
