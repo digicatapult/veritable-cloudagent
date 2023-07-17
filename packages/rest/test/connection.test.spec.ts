@@ -187,21 +187,6 @@ describe('ConnectionController', () => {
 
   describe('Connection WebSocket Event', () => {
     test('should return connection event sent from test agent to websocket client', async () => {
-      // // todo: Needs Cleaning
-      // // expect.assertions(1)
-      // class ExpectCounter {
-      //   actual: number
-      //   expected: any
-      //   constructor(expected: any) {
-      //     this.actual = 0, this.expected = expected
-      //   }
-      //   expect(...args: any[]) {
-      //     this.actual++
-      //     return expect([...args][0])
-      //   }
-      // }
-      // const count = new ExpectCounter(1)
-
       const client = new WebSocket('ws://localhost:3009')
 
       const aliceOutOfBandRecord = await aliceAgent.oob.createInvitation()
@@ -211,7 +196,6 @@ describe('ConnectionController', () => {
         client.on('message', (data) => {
           const event = JSON.parse(data as string)
 
-          // count.expect(event.type).to.be.equal(ConnectionEventTypes.ConnectionStateChanged)
           connectionEvent = event.type
           client.terminate()
           resolve(undefined)
@@ -222,7 +206,6 @@ describe('ConnectionController', () => {
       await waitForMessagePromise
 
       expect(connectionEvent).to.be.equal(ConnectionEventTypes.ConnectionStateChanged)
-      // expect(count.actual).to.be.equal(count.expected)
     })
   })
 
