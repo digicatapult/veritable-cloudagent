@@ -14,20 +14,11 @@ import { startServer } from '../src'
 
 import { getTestAgent, objectToJson } from './utils/helpers'
 
-// STUFF
-// class Paulius {
-//   getText(txt: string) {
-//     return 'text' + txt
-//   }
-// }
-
 describe('BasicMessageController', () => {
   let server: Server
   let aliceAgent: Agent
   let bobAgent: Agent
   let bobConnectionToAlice: ConnectionRecord
-
-  // const pauliusInstance = new Paulius()
 
   before(async () => {
     aliceAgent = await getTestAgent('Basic Message REST Agent Test Alice', 3002)
@@ -93,17 +84,6 @@ describe('BasicMessageController', () => {
 
       const response = await request(server).get(`/basic-messages/${bobConnectionToAlice.id}`)
       const result = await getResult()
-
-      // console.log('EXAMPLE')
-      // const getTextStub = sinon.stub(pauliusInstance, 'getText')
-      // getTextStub.returns('andyText') //
-      // 
-      // const p = pauliusInstance.getText('myText')
-      // 
-      // console.log(typeof getTextStub)
-      // expect(getTextStub.firstCall.args[0]).to.equal('myText')
-      // expect(p).to.equal('andyText')
-      // console.log('END_EXAMPLE')
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(result.map(objectToJson))
