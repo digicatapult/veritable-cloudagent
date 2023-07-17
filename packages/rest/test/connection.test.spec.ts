@@ -1,5 +1,6 @@
-import { describe, before, after, afterEach, test } from 'mocha'
-import { expect } from 'chai'
+import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
+import { expect, use as chaiUse, Assertion as assertion } from 'chai'
+import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import type { Agent, ConnectionRecord } from '@aries-framework/core'
@@ -12,6 +13,8 @@ import WebSocket from 'ws'
 import { startServer } from '../src'
 
 import { getTestConnection, getTestAgent, objectToJson } from './utils/helpers'
+
+chaiUse(chaiAssertionsCount)
 
 describe('ConnectionController', () => {
   let app: Server
@@ -26,8 +29,14 @@ describe('ConnectionController', () => {
     connection = getTestConnection()
   })
 
+  beforeEach(() => {
+    assertion.resetAssertsCheck()
+  })
+
   afterEach(() => {
     sinonRestore()
+
+    assertion.checkExpectsCount()
   })
 
   describe('Get all connections', () => {
@@ -187,16 +196,16 @@ describe('ConnectionController', () => {
 
   describe('Connection WebSocket Event', () => {
     test('should return connection event sent from test agent to websocket client', async () => {
+      assertion.expectExpects(1)
       const client = new WebSocket('ws://localhost:3009')
 
       const aliceOutOfBandRecord = await aliceAgent.oob.createInvitation()
 
-      let connectionEvent: ConnectionEventTypes | null = null
       const waitForMessagePromise = new Promise((resolve) => {
         client.on('message', (data) => {
           const event = JSON.parse(data as string)
 
-          connectionEvent = event.type
+          expect(event.type).to.be.equal(ConnectionEventTypes.ConnectionStateChanged)
           client.terminate()
           resolve(undefined)
         })
@@ -204,8 +213,6 @@ describe('ConnectionController', () => {
 
       await bobAgent.oob.receiveInvitation(aliceOutOfBandRecord.outOfBandInvitation)
       await waitForMessagePromise
-
-      expect(connectionEvent).to.be.equal(ConnectionEventTypes.ConnectionStateChanged)
     })
   })
 
