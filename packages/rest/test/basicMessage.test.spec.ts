@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import * as sinon from 'sinon'
+import { spy, restore as sinonRestore } from 'sinon'
 
 import type { Agent, BasicMessageRecord, ConnectionRecord } from '@aries-framework/core'
 import type { Server } from 'net'
@@ -33,7 +33,7 @@ describe('BasicMessageController', () => {
   })
 
   afterEach(() => {
-    sinon.restore()
+    sinonRestore()
   })
 
   describe('Send basic message to connection', () => {
@@ -79,8 +79,8 @@ describe('BasicMessageController', () => {
 
   describe('Get basic messages', () => {
     test('should return list of basic messages filtered by connection id1', async () => {
-      const spy = sinon.spy(bobAgent.basicMessages, 'findAllByQuery')
-      const getResult = (): Promise<BasicMessageRecord[]> => spy.firstCall.returnValue
+      const findAllByQuerySpy = spy(bobAgent.basicMessages, 'findAllByQuery')
+      const getResult = (): Promise<BasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
 
       const response = await request(server).get(`/basic-messages/${bobConnectionToAlice.id}`)
       const result = await getResult()
