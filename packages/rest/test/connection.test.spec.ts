@@ -42,8 +42,8 @@ describe('ConnectionController', () => {
   describe('Get all connections', () => {
     test('should return all connections', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const spy = stub(connectionRepository, 'findByQuery')
-      spy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections')
 
@@ -55,12 +55,12 @@ describe('ConnectionController', () => {
   describe('Get all connections by state', () => {
     test('should return all credentials by specified state', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const findByQuerySpy = stub(connectionRepository, 'findByQuery')
-      findByQuerySpy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections').query({ state: connection.state })
 
-      expect(findByQuerySpy.calledWithMatch({
+      expect(findByQueryStub.calledWithMatch({
         state: connection.state,
       })).equals(true)
 
@@ -72,12 +72,12 @@ describe('ConnectionController', () => {
   describe('Get all connections by outOfBandId', () => {
     test('should return all credentials by specified outOfBandId', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const findByQuerySpy = stub(connectionRepository, 'findByQuery')
-      findByQuerySpy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections').query({ outOfBandId: connection.outOfBandId })
 
-      expect(findByQuerySpy.calledWithMatch({
+      expect(findByQueryStub.calledWithMatch({
         outOfBandId: connection.outOfBandId,
       })).equals(true)
 
@@ -89,12 +89,12 @@ describe('ConnectionController', () => {
   describe('Get all connections by alias', () => {
     test('should return all credentials by specified alias', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const findByQuerySpy = stub(connectionRepository, 'findByQuery')
-      findByQuerySpy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections').query({ alias: connection.alias })
 
-      expect(findByQuerySpy.calledWithMatch({
+      expect(findByQueryStub.calledWithMatch({
         alias: connection.alias,
       })).equals(true)
 
@@ -106,12 +106,12 @@ describe('ConnectionController', () => {
   describe('Get all connections by myDid', () => {
     test('should return all credentials by specified peer did', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const findByQuerySpy = stub(connectionRepository, 'findByQuery')
-      findByQuerySpy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections').query({ myDid: connection.did })
 
-      expect(findByQuerySpy.calledWithMatch({
+      expect(findByQueryStub.calledWithMatch({
         myDid: connection.did,
       })).equals(true)
 
@@ -123,12 +123,12 @@ describe('ConnectionController', () => {
   describe('Get all connections by theirDid', () => {
     test('should return all credentials by specified peer did', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const findByQuerySpy = stub(connectionRepository, 'findByQuery')
-      findByQuerySpy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections').query({ theirDid: connection.theirDid })
 
-      expect(findByQuerySpy.calledWithMatch({
+      expect(findByQueryStub.calledWithMatch({
         theirDid: connection.theirDid,
       })).equals(true)
 
@@ -140,12 +140,12 @@ describe('ConnectionController', () => {
   describe('Get all connections by theirLabel', () => {
     test('should return all credentials by specified peer label', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
-      const findByQuerySpy = stub(connectionRepository, 'findByQuery')
-      findByQuerySpy.resolves([connection])
+      const findByQueryStub = stub(connectionRepository, 'findByQuery')
+      findByQueryStub.resolves([connection])
 
       const response = await request(app).get('/connections').query({ theirLabel: connection.theirLabel })
 
-      expect(findByQuerySpy.calledWithMatch({
+      expect(findByQueryStub.calledWithMatch({
         theirLabel: connection.theirLabel,
       })).equals(true)
 
@@ -156,14 +156,14 @@ describe('ConnectionController', () => {
 
   describe('Get connection by id', () => {
     test('should return connection record', async () => {
-      const spy = stub(bobAgent.connections, 'findById')
-      spy.resolves(connection)
-      const getResult = (): Promise<ConnectionRecord | null> => spy.firstCall.returnValue
+      const findByIdStub = stub(bobAgent.connections, 'findById')
+      findByIdStub.resolves(connection)
+      const getResult = (): Promise<ConnectionRecord | null> => findByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/connections/${connection.id}`)
 
       expect(response.statusCode).to.be.equal(200)
-      expect(spy.calledWithMatch(connection.id)).equals(true)
+      expect(findByIdStub.calledWithMatch(connection.id)).equals(true)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
@@ -176,14 +176,14 @@ describe('ConnectionController', () => {
 
   describe('Accept response', () => {
     test('should return accepted connection record', async () => {
-      const spy = stub(bobAgent.connections, 'acceptResponse')
-      spy.resolves(connection)
-      const getResult = (): Promise<ConnectionRecord | null> => spy.firstCall.returnValue
+      const acceptResponseStub = stub(bobAgent.connections, 'acceptResponse')
+      acceptResponseStub.resolves(connection)
+      const getResult = (): Promise<ConnectionRecord | null> => acceptResponseStub.firstCall.returnValue
 
       const response = await request(app).post(`/connections/${connection.id}/accept-response`)
 
       expect(response.statusCode)
-      expect(spy.calledWithMatch(connection.id)).equals(true)
+      expect(acceptResponseStub.calledWithMatch(connection.id)).equals(true)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
