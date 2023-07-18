@@ -1,6 +1,6 @@
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import * as sinon from 'sinon'
+import { restore as sinonRestore } from 'sinon'
 
 import type { Agent } from '@aries-framework/core'
 import type { Server } from 'net'
@@ -21,7 +21,7 @@ describe('DidController', () => {
   })
 
   afterEach(() => {
-    sinon.restore()
+    sinonRestore()
   })
 
   describe('Get did resolution result by did', () => {
