@@ -2,6 +2,7 @@
 
 const base = {
   testTimeout: 120000,
+  require: ['ts-node/register'],
   //   preset: 'ts-jest',
   //   testEnvironment: 'node',
   //   coveragePathIgnorePatterns: ['/build/', '/node_modules/', '/__tests__/', 'tests'],
@@ -20,8 +21,8 @@ const base = {
 
 module.exports = {
   ...base,
-  timeout: '120000',
-//   "extension": ["ts", "tsx"],
+  timeout: 120000,
+  "extension": ["ts", "tsx"],
 //   "spec": [
 //     "test/**/*.spec.ts", "test/**/*.spec.tsx"
 //   ],
