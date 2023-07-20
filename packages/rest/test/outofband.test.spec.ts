@@ -48,6 +48,7 @@ describe('OutOfBandController', () => {
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result.map(objectToJson))
       getAllSpy.restore()
     })
 
