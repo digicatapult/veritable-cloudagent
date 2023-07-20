@@ -1,5 +1,6 @@
 import { describe, before, after, afterEach, test } from 'mocha'
-import { expect } from 'chai'
+import { expect, use as chaiUse, Assertion as assertion } from 'chai'
+import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import type { Agent, CredentialStateChangedEvent, OutOfBandRecord } from '@aries-framework/core'
@@ -22,6 +23,8 @@ import { startServer } from '../src'
 
 import { objectToJson, getTestCredential, getTestAgent, getTestOffer, getTestOutOfBandRecord } from './utils/helpers'
 
+chaiUse(chaiAssertionsCount)
+
 describe('CredentialController', () => {
   let app: Server
   let aliceAgent: Agent
@@ -43,8 +46,14 @@ describe('CredentialController', () => {
     outOfBandRecord = getTestOutOfBandRecord()
   })
 
+  beforeEach(() => {
+    assertion.resetAssertsCheck()
+  })
+
   afterEach(() => {
     sinonRestore()
+
+    assertion.checkExpectsCount()
   })
 
   describe('Get all credentials', () => {
@@ -245,18 +254,19 @@ describe('CredentialController', () => {
   describe('Credential WebSocket event', () => {
     test('should return credential event sent from test agent to websocket client', async () => {
       // expect.assertions(1)
-      class ExpectCounter { // From: https://github.com/chaijs/chai/issues/94#issuecomment-925403907
-        actual: number
-        expected: any
-        constructor(expected: any) {
-          this.actual = 0, this.expected = expected
-        }
-        expect(...args: any[]) {
-          this.actual++
-          return expect([...args][0])
-        }
-      }
-      const count = new ExpectCounter(1)
+      assertion.expectExpects(1)
+      // class ExpectCounter { // From: https://github.com/chaijs/chai/issues/94#issuecomment-925403907
+      //   actual: number
+      //   expected: any
+      //   constructor(expected: any) {
+      //     this.actual = 0, this.expected = expected
+      //   }
+      //   expect(...args: any[]) {
+      //     this.actual++
+      //     return expect([...args][0])
+      //   }
+      // }
+      // const count = new ExpectCounter(1)
 
       const now = new Date()
 
@@ -309,7 +319,8 @@ describe('CredentialController', () => {
       // Wait for event on WebSocket
       const event = await waitForEvent
 
-      count.expect(event).to.deep.equal({
+      expect(event).to.deep.equal({
+      // count.expect(event).to.deep.equal({
         type: CredentialEventTypes.CredentialStateChanged,
         payload: {
           credentialRecord: {
@@ -344,7 +355,7 @@ describe('CredentialController', () => {
         },
       })
 
-      expect(count.actual).to.be.equal(count.expected)
+      // expect(count.actual).to.be.equal(count.expected)
     })
   })
 
