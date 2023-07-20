@@ -60,7 +60,8 @@
       "prettier": "prettier '**/*.+(js|json|ts|md|yml|yaml)'",
       "format": "yarn prettier --write",
       "check-format": "yarn prettier --list-different",
-      "test": "jest",
+      "test": "REST=packages/rest && $(env --chdir=$REST yarn bin)/mocha --config $REST/.mocharc.js $REST'/test/**/*.ts'",
+      "test-watch": "REST=packages/rest && $(env --chdir=$REST yarn bin)/mocha --config $REST/.mocharc.js $REST'/test/**/*.ts' --watch --watch-extension $REST/test --watch-file $REST/test",
       "lint": "eslint --ignore-path .gitignore .",
       "validate": "yarn lint && yarn check-types && yarn check-format",
       "prepare": "husky install"
