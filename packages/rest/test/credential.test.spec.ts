@@ -253,20 +253,7 @@ describe('CredentialController', () => {
 
   describe('Credential WebSocket event', () => {
     test('should return credential event sent from test agent to websocket client', async () => {
-      // expect.assertions(1)
       assertion.expectExpects(1)
-      // class ExpectCounter { // From: https://github.com/chaijs/chai/issues/94#issuecomment-925403907
-      //   actual: number
-      //   expected: any
-      //   constructor(expected: any) {
-      //     this.actual = 0, this.expected = expected
-      //   }
-      //   expect(...args: any[]) {
-      //     this.actual++
-      //     return expect([...args][0])
-      //   }
-      // }
-      // const count = new ExpectCounter(1)
 
       const now = new Date()
 
@@ -320,7 +307,6 @@ describe('CredentialController', () => {
       const event = await waitForEvent
 
       expect(event).to.deep.equal({
-      // count.expect(event).to.deep.equal({
         type: CredentialEventTypes.CredentialStateChanged,
         payload: {
           credentialRecord: {
@@ -354,8 +340,6 @@ describe('CredentialController', () => {
           previousState: CredentialState.CredentialIssued,
         },
       })
-
-      // expect(count.actual).to.be.equal(count.expected)
     })
   })
 
