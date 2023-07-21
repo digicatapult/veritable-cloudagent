@@ -12,7 +12,7 @@ import { setupServer } from '../src/server'
 
 import { getTestAgent } from './utils/helpers'
 
-describe('AgentController', ()=>{
+describe('SchemaController', ()=>{
   let app: Express
   let agent: Agent
 
