@@ -126,15 +126,9 @@ describe('ProofController', () => {
 
       expect(proposeProofStub.calledWith(
         match(proposalRequest.connectionId),
-        match.hasNested('attributes[0].credentialDefinitionId', 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test'),
-        match.has('comment', proposalRequest.comment)
+        match.hasNested('attributes[0]', match(proposalRequest.attributes[0])),
+        match({ comment: proposalRequest.comment })
       )).equals(true)
-
-      // expect(proposeProofStub.calledWith(
-        // match(proposalRequest.connectionId),
-        // match.hasNested('attributes[0]', match(proposalRequest.attributes[0])),
-        // match({ comment: proposalRequest.comment })
-      // )).equals(true)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
