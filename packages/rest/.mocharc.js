@@ -1,34 +1,22 @@
 'use strict';
 
 const base = {
-  testTimeout: 120000,
   require: ['ts-node/register'],
-  //   preset: 'ts-jest',
-  //   testEnvironment: 'node',
-  //   coveragePathIgnorePatterns: ['/build/', '/node_modules/', '/__tests__/', 'tests'],
   ignore: ['/build/', '/node_modules/', './build/', './node_modules/'],
-  //   coverageDirectory: '<rootDir>/coverage/',
-  //   verbose: true,
-  //   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
-  //   transform: {
-  //     '^.+\\.tsx?$': [
-  //       'ts-jest',
-  //       {
-  //         isolatedModules: true,
-  //       },
-  //     ],
 }
 
 module.exports = {
   ...base,
   timeout: 120000,
-  "extension": ["ts", "tsx"],
-//   "spec": [
-//     "test/**/*.spec.ts", "test/**/*.spec.tsx"
-//   ],
-  bail: false /* bail */,
-  package: './package.json' /* details */,
-  fullTrace: true /* verbosity */,
-  ui: 'bdd' /* looks */,
-  color: true /* looks */,
+  extension: ['ts', 'tsx'],
+  bail: false,
+  package: './package.json',
+  fullTrace: false,
+  ui: 'bdd',
+  color: true,
+  recursive: true,
+  reporter: 'spec',
+  slow: 100,
+  watch: false,
+  retries: 0,
 }
