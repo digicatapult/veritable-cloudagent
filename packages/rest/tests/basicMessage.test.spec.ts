@@ -78,7 +78,7 @@ describe('BasicMessageController', () => {
   })
 
   describe('Get basic messages', () => {
-    test('should return list of basic messages filtered by connection id1', async () => {
+    test('should return list of basic messages filtered by connection id', async () => {
       const findAllByQuerySpy = spy(bobAgent.basicMessages, 'findAllByQuery')
       const getResult = (): Promise<BasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
 
