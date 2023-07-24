@@ -5,7 +5,7 @@
     "paths": {
       "@aries-framework/rest": ["packages/rest/src"]
     },
-    "types": ["node"]
+    "types": ["mocha", "node"]
   },
   "include": ["tests", "samples", "**/tests", "**/samples"],
   "exclude": ["node_modules", "build", "**/build/**"]
