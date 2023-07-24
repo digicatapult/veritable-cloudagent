@@ -174,6 +174,26 @@ describe('ConnectionController', () => {
     })
   })
 
+  describe('Accept request', () => {
+    test('should return accepted connection record', async () => {
+      const acceptRequestStub = stub(bobAgent.connections, 'acceptRequest')
+      acceptRequestStub.resolves(connection)
+      const getResult = (): Promise<ConnectionRecord> => acceptRequestStub.firstCall.returnValue
+
+      const response = await request(app).post(`/connections/${connection.id}/accept-request`)
+
+      expect(response.statusCode)
+      expect(acceptRequestStub.calledWithMatch(connection.id)).equals(true)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
+    test('should throw error when connection id is not found', async () => {
+      const response = await request(app).post(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request`)
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
   describe('Accept response', () => {
     test('should return accepted connection record', async () => {
       const acceptResponseStub = stub(bobAgent.connections, 'acceptResponse')
