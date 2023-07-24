@@ -83,6 +83,7 @@
       "tsconfig-paths": "^4.2.0",
       "typescript": "~4.4.0",
       "string-width": "^4.2.3",
+      "wrap-ansi": "^6.2.0",
       "rimraf": "^5.0.1"
     },
     "engines": {
@@ -90,6 +91,7 @@
     },
     "resolutions": {
       "@types/indy-sdk": "1.16.9",
-      "string-width": "^4.2.3"
+      "string-width": "^4.2.3",
+      "wrap-ansi": "^6.2.0"
     }
   }
