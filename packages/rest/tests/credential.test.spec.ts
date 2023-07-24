@@ -568,27 +568,6 @@ describe('CredentialController', () => {
     })
   })
 
-  describe('Accept a credential request', () => {
-    test('should return credential record', async () => {
-      const acceptRequestStub = stub(bobAgent.credentials, 'acceptRequest')
-      acceptRequestStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => acceptRequestStub.firstCall.returnValue
-
-      const response = await request(app).post(`/credentials/${testCredential.id}/accept-request`)
-      const result = await getResult()
-
-      expect(response.statusCode).to.be.equal(200)
-      expect(acceptRequestStub.lastCall.args[0]).to.be.deep.include({ credentialRecordId: testCredential.id })
-      expect(response.body).to.deep.equal(objectToJson(result))
-    })
-
-    test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
-
-      expect(response.statusCode).to.be.equal(404)
-    })
-  })
-
   describe('Accept a credential', () => {
     test('should return credential record', async () => {
       const acceptCredentialStub = stub(bobAgent.credentials, 'acceptCredential')
