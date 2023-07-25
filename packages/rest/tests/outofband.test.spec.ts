@@ -1,3 +1,7 @@
+import { describe, before, after, afterEach, test } from 'mocha'
+import { expect } from 'chai'
+import { stub, spy, match, restore as sinonRestore } from 'sinon'
+
 import type { Agent, OutOfBandRecord, ConnectionRecord, OutOfBandInvitation } from '@aries-framework/core'
 import type { Express } from 'express'
 
@@ -22,7 +26,7 @@ describe('OutOfBandController', () => {
   let outOfBandInvitation: OutOfBandInvitation
   let connectionRecord: ConnectionRecord
 
-  beforeAll(async () => {
+  before(async () => {
     aliceAgent = await getTestAgent('OutOfBand REST Agent Test Alice', 3014)
     bobAgent = await getTestAgent('OutOfBand REST Agent Test Bob', 3015)
     app = await setupServer(bobAgent, { port: 3000 })
@@ -32,55 +36,62 @@ describe('OutOfBandController', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    sinonRestore
   })
 
   describe('Get all out of band records', () => {
     test('should return all out of band records', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'getAll')
-      const getResult = (): Promise<OutOfBandRecord[]> => spy.mock.results[0].value
+      const getAllSpy = spy(bobAgent.oob, 'getAll')
+      const getResult = (): Promise<OutOfBandRecord[]> => getAllSpy.firstCall.returnValue
 
       const response = await request(app).get('/oob')
       const result = await getResult()
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(result.map(objectToJson))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result.map(objectToJson))
+      getAllSpy.restore()
     })
+
     test('should return filtered out of band records if query is passed', async () => {
-      jest.spyOn(bobAgent.oob, 'getAll').mockResolvedValueOnce([outOfBandRecord])
+      const getAllStub = stub(bobAgent.oob, 'getAll')
+      getAllStub.resolves([outOfBandRecord])
       const response = await request(app).get('/oob?invitationId=test')
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual([])
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal([])
     })
   })
 
   describe('Get out of band record by id', () => {
     test('should return out of band record with correct id', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'findById').mockResolvedValueOnce(outOfBandRecord)
-      const getResult = (): Promise<OutOfBandRecord> => spy.mock.results[0].value
+      const findByIdStub = stub(bobAgent.oob, 'findById')
+      findByIdStub.resolves(outOfBandRecord)
+      const getResult = (): Promise<OutOfBandRecord | null> => findByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/oob/${outOfBandRecord.id}`)
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith(outOfBandRecord.id)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      findByIdStub.calledWithMatch(outOfBandRecord.id)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      findByIdStub.restore()
     })
+
     test('should return 404 if out of band record is not found', async () => {
       const response = await request(app).get(`/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
   describe('Create out of band invitation', () => {
     test('should return out of band invitation', async () => {
-      jest.spyOn(bobAgent.oob, 'createInvitation').mockResolvedValueOnce(outOfBandRecord)
+      const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
+      createInvitationStub.resolves(outOfBandRecord)
 
       const response = await request(app).post('/oob/create-invitation')
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual({
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson({
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
           domain: bobAgent.config.endpoints[0],
         }),
@@ -88,10 +99,13 @@ describe('OutOfBandController', () => {
           useLegacyDidSovPrefix: bobAgent.config.useLegacyDidSovPrefix,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-      })
+      }))
+      createInvitationStub.restore()
     })
+
     test('should use parameters', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'createInvitation').mockResolvedValueOnce(outOfBandRecord)
+      const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
+      createInvitationStub.resolves(outOfBandRecord)
 
       // todo: add tests for routing param
       const params = {
@@ -107,22 +121,24 @@ describe('OutOfBandController', () => {
       }
       const response = await request(app).post('/oob/create-invitation').send(params)
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith(params)
+      expect(response.statusCode).to.be.equal(200)
+      expect(createInvitationStub.lastCall.args[0]).to.be.deep.include(params)
+      createInvitationStub.restore()
     })
   })
 
   describe('Create legacy invitation', () => {
     test('should return out of band invitation', async () => {
-      jest.spyOn(bobAgent.oob, 'createLegacyInvitation').mockResolvedValueOnce({
+      const createLegacyInvitation = stub(bobAgent.oob, 'createLegacyInvitation')
+      createLegacyInvitation.resolves({
         outOfBandRecord: outOfBandRecord,
         invitation: outOfBandInvitation,
       })
 
       const response = await request(app).post('/oob/create-legacy-invitation')
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual({
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson({
         invitationUrl: outOfBandInvitation.toUrl({
           domain: bobAgent.config.endpoints[0],
         }),
@@ -130,10 +146,13 @@ describe('OutOfBandController', () => {
           useLegacyDidSovPrefix: bobAgent.config.useLegacyDidSovPrefix,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-      })
+      }))
+      createLegacyInvitation.restore()
     })
+
     test('should use parameters', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'createLegacyInvitation').mockResolvedValueOnce({
+      const createLegacyInvitationStub = stub(bobAgent.oob, 'createLegacyInvitation')
+      createLegacyInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         invitation: outOfBandInvitation,
       })
@@ -147,8 +166,8 @@ describe('OutOfBandController', () => {
       }
       const response = await request(app).post('/oob/create-legacy-invitation').send(params)
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith(params)
+      expect(response.statusCode).to.be.equal(200)
+      expect(createLegacyInvitationStub.lastCall.args[0]).to.be.deep.include(params)
     })
   })
 
@@ -171,51 +190,61 @@ describe('OutOfBandController', () => {
     }
 
     test('should return out of band invitation', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'createLegacyConnectionlessInvitation').mockResolvedValueOnce({
+      const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
+      createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
       })
 
-      const getResult = (): Promise<OutOfBandRecord> => spy.mock.results[0].value
+      const getResult = () => createLegacyConnectionlessInvitationStub.firstCall.returnValue
 
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      createLegacyConnectionlessInvitationStub.restore()
     })
+
     test('should use parameters', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'createLegacyConnectionlessInvitation').mockResolvedValueOnce({
+      const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
+      createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
       })
 
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith({
+      expect(response.statusCode).to.be.equal(200)
+      createLegacyConnectionlessInvitationStub
+      expect(createLegacyConnectionlessInvitationStub.lastCall.args[0]).to.be.deep.include({
         ...inputParams,
         message: msg,
       })
+      createLegacyConnectionlessInvitationStub.restore()
     })
   })
 
   describe('Receive out of band invitation', () => {
     test('should return out of band invitation', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'receiveInvitation').mockResolvedValueOnce({
+      const receiveInvitationStub = stub(bobAgent.oob, 'receiveInvitation')
+      receiveInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
-      const getResult = (): Promise<OutOfBandRecord> => spy.mock.results[0].value
+      const getResult = () => receiveInvitationStub.firstCall.returnValue
 
       const response = await request(app)
         .post('/oob/receive-invitation')
         .send({ invitation: outOfBandRecord.outOfBandInvitation })
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      receiveInvitationStub.restore()
     })
+
     test('should use parameters', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'receiveInvitation').mockResolvedValueOnce({
+      const receiveInvitationStub = stub(bobAgent.oob, 'receiveInvitation')
+      receiveInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
@@ -237,10 +266,10 @@ describe('OutOfBandController', () => {
           ...params,
         })
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
+      expect(response.statusCode).to.be.equal(200)
+      expect(receiveInvitationStub.calledWith(
+        match.any,
+        match({
           label: params.label,
           alias: params.alias,
           imageUrl: params.imageUrl,
@@ -248,27 +277,32 @@ describe('OutOfBandController', () => {
           autoAcceptConnection: params.autoAcceptConnection,
           reuseConnection: params.reuseConnection,
         })
-      )
+      )).equals(true)
+      receiveInvitationStub.restore()
     })
   })
 
   describe('Receive out of band invitation by url', () => {
     test('should return out of band invitation', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'receiveInvitationFromUrl').mockResolvedValueOnce({
+      const receiveInvitationFromUrlStub = stub(bobAgent.oob, 'receiveInvitationFromUrl')
+      receiveInvitationFromUrlStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
-      const getResult = (): Promise<OutOfBandRecord> => spy.mock.results[0].value
+      const getResult = () => receiveInvitationFromUrlStub.firstCall.returnValue
 
       const response = await request(app)
         .post('/oob/receive-invitation-url')
         .send({ invitationUrl: 'https://example.com/test' })
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      receiveInvitationFromUrlStub.restore()
     })
+
     test('should use parameters', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'receiveInvitationFromUrl').mockResolvedValueOnce({
+      const receiveInvitationFromUrlStub = stub(bobAgent.oob, 'receiveInvitationFromUrl')
+      receiveInvitationFromUrlStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
@@ -287,28 +321,30 @@ describe('OutOfBandController', () => {
         .post('/oob/receive-invitation-url')
         .send({ invitationUrl: 'https://example.com/test', ...params })
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith(
-        expect.stringMatching('https://example.com/test'),
-        expect.objectContaining({
+      expect(response.statusCode).to.be.equal(200)
+      expect(receiveInvitationFromUrlStub.calledWith(
+        match('https://example.com/test'),
+        match({
           label: params.label,
           alias: params.alias,
           imageUrl: params.imageUrl,
           autoAcceptInvitation: params.autoAcceptInvitation,
           autoAcceptConnection: params.autoAcceptConnection,
-          reuseConnection: params.reuseConnection,
-        })
-      )
+          reuseConnection: params.reuseConnection
+      })
+      )).equals(true)
+      receiveInvitationFromUrlStub.restore()
     })
   })
 
   describe('Accept out of band invitation', () => {
     test('should return record from accepted invitation', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'acceptInvitation').mockResolvedValueOnce({
+      const acceptInvitationStb = stub(bobAgent.oob, 'acceptInvitation')
+      acceptInvitationStb.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
-      const getResult = (): Promise<OutOfBandRecord> => spy.mock.results[0].value
+      const getResult = () => acceptInvitationStb.firstCall.returnValue
 
       // todo: add tests for routing param
       const params = {
@@ -324,11 +360,14 @@ describe('OutOfBandController', () => {
         .post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
         .send(params)
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      acceptInvitationStb.restore()
     })
+
     test('should use parameters', async () => {
-      const spy = jest.spyOn(bobAgent.oob, 'acceptInvitation').mockResolvedValueOnce({
+      const acceptInvitationStub = stub(bobAgent.oob, 'acceptInvitation')
+      acceptInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
@@ -347,27 +386,32 @@ describe('OutOfBandController', () => {
         .post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
         .send(params)
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', params)
+      expect(response.statusCode).to.be.equal(200)
+      expect(acceptInvitationStub.calledWithMatch('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', params))
+        .equals(true)
+      acceptInvitationStub.restore()
     })
+
     test('should throw 404 if out of band record is not found', async () => {
       const response = await request(app).post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
   describe('Delete out of band record', () => {
     test('should return 204 if record is successfully deleted', async () => {
-      jest.spyOn(bobAgent.oob, 'deleteById').mockResolvedValueOnce()
+      const deleteByIdStub = stub(bobAgent.oob, 'deleteById')
+      deleteByIdStub.resolves()
 
       const response = await request(app).delete('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
-      expect(response.statusCode).toBe(204)
+      expect(response.statusCode).to.be.equal(204)
+      deleteByIdStub.restore()
     })
   })
 
-  afterAll(async () => {
+  after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()

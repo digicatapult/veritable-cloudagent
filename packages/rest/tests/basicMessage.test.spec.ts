@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { describe, before, after, afterEach, test } from 'mocha'
+import { expect } from 'chai'
+import { spy, restore as sinonRestore } from 'sinon'
+
 import type { Agent, BasicMessageRecord, ConnectionRecord } from '@aries-framework/core'
 import type { Server } from 'net'
 
@@ -16,7 +20,7 @@ describe('BasicMessageController', () => {
   let bobAgent: Agent
   let bobConnectionToAlice: ConnectionRecord
 
-  beforeAll(async () => {
+  before(async () => {
     aliceAgent = await getTestAgent('Basic Message REST Agent Test Alice', 3002)
     bobAgent = await getTestAgent('Basic Message REST Agent Test Bob', 5034)
     server = await startServer(bobAgent, { port: 5033 })
@@ -29,7 +33,7 @@ describe('BasicMessageController', () => {
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    sinonRestore()
   })
 
   describe('Send basic message to connection', () => {
@@ -38,7 +42,7 @@ describe('BasicMessageController', () => {
         .post(`/basic-messages/${bobConnectionToAlice?.id}`)
         .send({ content: 'Hello!' })
 
-      expect(response.statusCode).toBe(204)
+      expect(response.statusCode).to.be.equal(204)
     })
 
     test('should give 404 not found when connection is not found', async () => {
@@ -46,7 +50,7 @@ describe('BasicMessageController', () => {
         .post(`/basic-messages/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
         .send({ content: 'Hello!' })
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
@@ -59,11 +63,12 @@ describe('BasicMessageController', () => {
           const event = JSON.parse(data as string)
 
           if (event.type === BasicMessageEventTypes.BasicMessageStateChanged) {
-            expect(event.payload.basicMessageRecord.connectionId).toBe(bobConnectionToAlice.id)
+            expect(event.payload.basicMessageRecord.connectionId).to.be.equal(bobConnectionToAlice.id)
             client.terminate()
             resolve(undefined)
           }
         })
+
       })
 
       await request(server).post(`/basic-messages/${bobConnectionToAlice?.id}`).send({ content: 'Hello!' })
@@ -74,18 +79,19 @@ describe('BasicMessageController', () => {
 
   describe('Get basic messages', () => {
     test('should return list of basic messages filtered by connection id', async () => {
-      const spy = jest.spyOn(bobAgent.basicMessages, 'findAllByQuery')
-      const getResult = (): Promise<BasicMessageRecord[]> => spy.mock.results[0].value
+      const findAllByQuerySpy = spy(bobAgent.basicMessages, 'findAllByQuery')
+      const getResult = (): Promise<BasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
 
       const response = await request(server).get(`/basic-messages/${bobConnectionToAlice.id}`)
       const result = await getResult()
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(result.map(objectToJson))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result.map(objectToJson))
+      findAllByQuerySpy.restore()
     })
   })
 
-  afterAll(async () => {
+  after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()

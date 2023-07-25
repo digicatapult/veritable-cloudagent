@@ -82,7 +82,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: Integration Test
-        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} yarn test rest --coverage
+        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} yarn test
 
   package-finder:
     runs-on: ubuntu-latest

@@ -1,3 +1,8 @@
+import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
+import { expect, use as chaiUse, Assertion as assertion } from 'chai'
+import chaiAssertionsCount from 'chai-assertions-count'
+import { stub, match, restore as sinonRestore } from 'sinon'
+
 import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
 import type { Server } from 'net'
 
@@ -9,13 +14,15 @@ import { startServer } from '../src'
 
 import { getTestAgent, getTestProof, objectToJson } from './utils/helpers'
 
+chaiUse(chaiAssertionsCount)
+
 describe('ProofController', () => {
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
   let testProof: ProofRecord
 
-  beforeAll(async () => {
+  before(async () => {
     aliceAgent = await getTestAgent('Proof REST Agent Test Alice', 3032)
     bobAgent = await getTestAgent('Proof REST Agent Test Bob', 3912)
     app = await startServer(bobAgent, { port: 3033 })
@@ -23,59 +30,69 @@ describe('ProofController', () => {
     testProof = getTestProof()
   })
 
+  beforeEach(() => {
+    assertion.resetAssertsCheck()
+  })
+
   afterEach(() => {
-    jest.clearAllMocks()
+    sinonRestore()
+
+    assertion.checkExpectsCount()
   })
 
   describe('Get all proofs', () => {
     test('should return all proofs', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'getAll').mockResolvedValueOnce([testProof])
-      const getResult = (): Promise<ProofRecord[]> => spy.mock.results[0].value
+      const getAllStub = stub(bobAgent.proofs, 'getAll')
+      getAllStub.resolves([testProof])
+      const getResult = (): Promise<ProofRecord[]> => getAllStub.firstCall.returnValue
 
       const response = await request(app).get('/proofs')
       const result = await getResult()
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(result.map(objectToJson))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result.map(objectToJson))
     })
 
     test('should optionally filter on threadId', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'getAll').mockResolvedValueOnce([testProof])
-      const getResult = (): Promise<ProofRecord[]> => spy.mock.results[0].value
+      const getAllStub = stub(bobAgent.proofs, 'getAll')
+      getAllStub.resolves([testProof])
+      const getResult = (): Promise<ProofRecord[]> => getAllStub.firstCall.returnValue
 
       const response = await request(app).get('/proofs').query({ threadId: testProof.threadId })
       const result = await getResult()
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(result.map(objectToJson))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result.map(objectToJson))
     })
 
     test('should return empty array if nothing found', async () => {
-      jest.spyOn(bobAgent.proofs, 'getAll').mockResolvedValueOnce([testProof])
+      const getAllStub = stub(bobAgent.proofs, 'getAll')
+      getAllStub.resolves([testProof])
 
       const response = await request(app).get('/proofs').query({ threadId: 'string' })
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual([])
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal([])
     })
   })
 
   describe('Get by proof by id', () => {
     test('should return proof record', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'getById').mockResolvedValueOnce(testProof)
-      const getResult = (): Promise<ProofRecord> => spy.mock.results[0].value
+      const getByIdStub = stub(bobAgent.proofs, 'getById')
+      getByIdStub.resolves(testProof)
+      const getResult = (): Promise<ProofRecord> => getByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/proofs/${testProof.id}`)
 
-      expect(response.statusCode).toBe(200)
-      expect(spy).toHaveBeenCalledWith(testProof.id)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      expect(getByIdStub.calledWithMatch(testProof.id)).equals(true)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
     test('should return 404 not found when proof record not found', async () => {
       const response = await request(app).get(`/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
@@ -83,7 +100,7 @@ describe('ProofController', () => {
     test('should give 404 not found when proof is not found', async () => {
       const response = await request(app).delete('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
@@ -99,29 +116,28 @@ describe('ProofController', () => {
       predicates: [],
       comment: 'test',
     }
+
     test('should return proof record', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'proposeProof').mockResolvedValueOnce(testProof)
-      const getResult = (): Promise<ProofRecord> => spy.mock.results[0].value
+      const proposeProofStub = stub(bobAgent.proofs, 'proposeProof')
+      proposeProofStub.resolves(testProof)
+      const getResult = (): Promise<ProofRecord> => proposeProofStub.firstCall.returnValue
 
       const response = await request(app).post('/proofs/propose-proof').send(proposalRequest)
 
-      expect(spy).toHaveBeenCalledWith(
-        expect.stringContaining(proposalRequest.connectionId),
-        expect.objectContaining({
-          attributes: proposalRequest.attributes,
-        }),
-        expect.objectContaining({
-          comment: proposalRequest.comment,
-        })
-      )
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(proposeProofStub.calledWith(
+        match(proposalRequest.connectionId),
+        match.hasNested('attributes[0]', match(proposalRequest.attributes[0])),
+        match({ comment: proposalRequest.comment })
+      )).equals(true)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
     test('should give 404 not found when connection is not found', async () => {
       const response = await request(app).post('/proofs/propose-proof').send(proposalRequest)
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
@@ -136,20 +152,25 @@ describe('ProofController', () => {
     }
 
     test('should return proof record', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'acceptProposal').mockResolvedValueOnce(testProof)
-      const getResult = (): Promise<ProofRecord> => spy.mock.results[0].value
+      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      acceptProposalStub.resolves(testProof)
+      const getResult = (): Promise<ProofRecord> => acceptProposalStub.firstCall.returnValue
 
       const response = await request(app).post(`/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
 
-      expect(spy).toHaveBeenCalledWith(testProof.id, acceptRequest)
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(acceptProposalStub.calledWith(
+        match(testProof.id),
+        match.has('request', acceptRequest.request)
+      )).equals(true)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
     test('should give 404 not found when proof is not found', async () => {
       const response = await request(app).post(`/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
@@ -169,16 +190,17 @@ describe('ProofController', () => {
           },
         })
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body.proofUrl).toBeDefined()
-      expect(response.body.proofRecord).toBeDefined()
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body.proofUrl).to.not.be.undefined
+      expect(response.body.proofRecord).to.not.be.undefined
     })
   })
 
   describe('Request proof', () => {
     test('should return proof record', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'requestProof').mockResolvedValueOnce(testProof)
-      const getResult = (): Promise<ProofRecord> => spy.mock.results[0].value
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+      const getResult = (): Promise<ProofRecord> => requestProofStub.firstCall.returnValue
 
       const response = await request(app)
         .post(`/proofs/request-proof`)
@@ -196,8 +218,8 @@ describe('ProofController', () => {
           },
         })
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
     test('should give 404 not found when connection is not found', async () => {
@@ -217,32 +239,33 @@ describe('ProofController', () => {
           },
         })
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
   describe('Accept proof presentation', () => {
     test('should return proof record', async () => {
-      const spy = jest.spyOn(bobAgent.proofs, 'acceptPresentation').mockResolvedValueOnce(testProof)
-      const getResult = (): Promise<ProofRecord> => spy.mock.results[0].value
+      const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
+      acceptPresentationStub.resolves(testProof)
+      const getResult = (): Promise<ProofRecord> => acceptPresentationStub.firstCall.returnValue
 
       const response = await request(app).post(`/proofs/${testProof.id}/accept-presentation`)
 
-      expect(spy).toHaveBeenCalledWith(testProof.id)
-      expect(response.statusCode).toBe(200)
-      expect(response.body).toEqual(objectToJson(await getResult()))
+      expect(acceptPresentationStub.calledWith(testProof.id)).equals(true)
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
     test('should give 404 not found when proof is not found', async () => {
       const response = await request(app).post('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-presentation')
 
-      expect(response.statusCode).toBe(404)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
   describe('Proof WebSocket event', () => {
     test('should return proof event sent from test agent to websocket client', async () => {
-      expect.assertions(1)
+      assertion.expectExpects(1)
 
       const now = new Date()
 
@@ -275,7 +298,7 @@ describe('ProofController', () => {
 
       // Wait for event on WebSocket
       const event = await waitForEvent
-      expect(event).toEqual({
+      expect(event).to.deep.equal({
         type: 'ProofStateChanged',
         payload: {
           previousState: null,
@@ -292,7 +315,7 @@ describe('ProofController', () => {
     })
   })
 
-  afterAll(async () => {
+  after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()

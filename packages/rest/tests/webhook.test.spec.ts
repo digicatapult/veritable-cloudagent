@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { describe, before, after, test } from 'mocha'
+import { expect } from 'chai'
+
 import type { WebhookData } from '../src/utils/webhook'
 import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@aries-framework/core'
 import type { Server } from 'net'
@@ -24,7 +27,7 @@ describe('WebhookTests', () => {
   let server: Server
   const webhooks: WebhookData[] = []
 
-  beforeAll(async () => {
+  before(async () => {
     aliceAgent = await getTestAgent('Webhook REST Agent Test Alice', 3042)
     bobAgent = await getTestAgent('Webhook REST Agent Bob', 3043)
     server = await webhookListener(3044, webhooks)
@@ -46,7 +49,7 @@ describe('WebhookTests', () => {
 
     const webhook = webhooks.find((webhook) => webhook.topic !== 'connections')
 
-    expect(webhook).toBeDefined()
+    expect(webhook).to.not.be.an('undefined')
   })
 
   test('should return a webhook event when connection state changed', async () => {
@@ -65,7 +68,7 @@ describe('WebhookTests', () => {
         webhook.topic === 'connections' && webhook.body.id === connection.id && webhook.body.state === connection.state
     )
 
-    expect(JSON.parse(JSON.stringify(connection.toJSON()))).toMatchObject(webhook?.body as Record<string, unknown>)
+    expect(JSON.parse(JSON.stringify(connection.toJSON()))).to.deep.include(webhook?.body as Record<string, unknown>)
   })
 
   test('should return a webhook event when credential state changed', async () => {
@@ -89,7 +92,7 @@ describe('WebhookTests', () => {
      * A sleep is placed here to wait for the event to have processed and sent out
      * an webhook first before searching for the webhook
      */
-    await sleep(100)
+    await sleep(250)
 
     const webhook = webhooks.find(
       (webhook) =>
@@ -98,7 +101,7 @@ describe('WebhookTests', () => {
         webhook.body.state === credentialRecord.state
     )
 
-    expect(JSON.parse(JSON.stringify(credentialRecord.toJSON()))).toMatchObject(
+    expect(JSON.parse(JSON.stringify(credentialRecord.toJSON()))).to.deep.include(
       webhook?.body as Record<string, unknown>
     )
   })
@@ -123,17 +126,17 @@ describe('WebhookTests', () => {
      * A sleep is placed here to wait for the event to have processed and sent out
      * an webhook first before searching for the webhook
      */
-    await sleep(100)
+    await sleep(250)
 
     const webhook = webhooks.find(
       (webhook) =>
         webhook.topic === 'proofs' && webhook.body.id === proofRecord.id && webhook.body.state === proofRecord.state
     )
 
-    expect(JSON.parse(JSON.stringify(proofRecord.toJSON()))).toMatchObject(webhook?.body as Record<string, unknown>)
+    expect(JSON.parse(JSON.stringify(proofRecord.toJSON()))).to.deep.include(webhook?.body as Record<string, unknown>)
   })
 
-  afterAll(async () => {
+  after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()

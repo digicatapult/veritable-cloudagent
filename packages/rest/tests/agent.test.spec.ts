@@ -1,3 +1,6 @@
+import { describe, before, after, test } from 'mocha'
+import { expect } from 'chai'
+
 import type { Agent } from '@aries-framework/core'
 import type { Express } from 'express'
 
@@ -11,7 +14,7 @@ describe('AgentController', () => {
   let app: Express
   let agent: Agent
 
-  beforeAll(async () => {
+  before(async () => {
     agent = await getTestAgent('Agent REST Agent Test', 3001)
     app = await setupServer(agent, { port: 3000 })
   })
@@ -20,20 +23,20 @@ describe('AgentController', () => {
     test('should return agent information', async () => {
       const response = await request(app).get('/agent')
 
-      expect(response.body.label).toBeDefined()
-      expect(response.body.endpoints).toBeDefined()
-      expect(response.body.isInitialized).toBeTruthy()
-      expect(response.body.publicDid).toBeDefined()
+      expect(response.body).to.have.property('label')
+      expect(response.body).to.have.property('endpoints')
+      expect(response.body.isInitialized).to.be.true
+      expect(response.body).to.have.property('publicDid')
     })
 
     test('should response with a 200 status code', async () => {
       const response = await request(app).get('/agent')
 
-      expect(response.statusCode).toBe(200)
+      expect(response.statusCode).to.equal(200)
     })
   })
 
-  afterAll(async () => {
+  after(async () => {
     await agent.shutdown()
     await agent.wallet.delete()
   })

@@ -1,3 +1,7 @@
+import { describe, before, after, afterEach, test } from 'mocha'
+import { expect } from 'chai'
+import { restore as sinonRestore } from 'sinon'
+
 import type { Agent } from '@aries-framework/core'
 import type { Server } from 'net'
 
@@ -11,13 +15,13 @@ describe('DidController', () => {
   let app: Server
   let aliceAgent: Agent
 
-  beforeAll(async () => {
+  before(async () => {
     aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3999)
     app = await startServer(aliceAgent, { port: 3000 })
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    sinonRestore()
   })
 
   describe('Get did resolution result by did', () => {
@@ -25,8 +29,8 @@ describe('DidController', () => {
       const did = 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL'
       const response = await request(app).get(`/dids/${did}`)
 
-      expect(response.statusCode).toBe(200)
-      expect(response.body.didDocument).toEqual({
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body.didDocument).to.deep.equal({
         '@context': [
           'https://w3id.org/did/v1',
           'https://w3id.org/security/suites/ed25519-2018/v1',
@@ -62,15 +66,16 @@ describe('DidController', () => {
           'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
         ],
       })
+
     })
 
     test('should give 500 when did document record is not found', async () => {
       const response = await request(app).get(`/dids/did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)
-      expect(response.statusCode).toBe(500)
+      expect(response.statusCode).to.be.equal(500)
     })
   })
 
-  afterAll(async () => {
+  after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     app.close()
