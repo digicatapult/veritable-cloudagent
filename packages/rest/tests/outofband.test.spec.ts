@@ -196,7 +196,7 @@ describe('OutOfBandController', () => {
         invitationUrl: 'https://example.com/invitation',
       })
 
-      const getResult = (): Promise<any> => createLegacyConnectionlessInvitationStub.firstCall.returnValue
+      const getResult = () => createLegacyConnectionlessInvitationStub.firstCall.returnValue
 
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
 
@@ -231,7 +231,7 @@ describe('OutOfBandController', () => {
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
-      const getResult = (): Promise<any> => receiveInvitationStub.firstCall.returnValue
+      const getResult = () => receiveInvitationStub.firstCall.returnValue
 
       const response = await request(app)
         .post('/oob/receive-invitation')
@@ -289,7 +289,7 @@ describe('OutOfBandController', () => {
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
-      const getResult = (): Promise<any> => receiveInvitationFromUrlStub.firstCall.returnValue
+      const getResult = () => receiveInvitationFromUrlStub.firstCall.returnValue
 
       const response = await request(app)
         .post('/oob/receive-invitation-url')
@@ -344,7 +344,7 @@ describe('OutOfBandController', () => {
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
       })
-      const getResult = (): Promise<any> => acceptInvitationStb.firstCall.returnValue
+      const getResult = () => acceptInvitationStb.firstCall.returnValue
 
       // todo: add tests for routing param
       const params = {
