@@ -26,6 +26,17 @@
   },
 
   "scripts": {
+    "check-types": "echo TBD",
+    "check-types:tests": "echo TBD",
+    "check-types:build": "echo TBD",
+    "prettier": "echo TBD",
+    "format": "echo TBD",
+    "check-format": "echo TBD",
+    "test-root": "echo TBD",
+    "test-watch-root": "echo TBD",
+    "lint": "echo TBD",
+    "validate": "echo TBD",
+    "prepare": "husky install",
 
 
     "tsoa": "tsoa spec-and-routes",
