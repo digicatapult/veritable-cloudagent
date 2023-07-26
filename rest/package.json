@@ -10,7 +10,7 @@
     "OpenAPI", "Blockchain"
   ],
 
-  "private": false,
+  "private": true,
 
   "author": "Digital Catapult",
   "license": "Apache-2.0",
