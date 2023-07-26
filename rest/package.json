@@ -30,8 +30,13 @@
 
     "tsoa": "tsoa spec-and-routes",
     "dev": "tsoa spec-and-routes && tsnd --respawn samples/sampleWithApp.ts",
-    "build": "yarn run clean && echo TBD",
-    "clean": "rimraf -rf ./build"
+    "build": "npm run clean && npm run compile",
+    "clean": "rimraf -rf ./build",
+    "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build",
+    "test": "echo TBD",
+    "test-watch": "echo TBD",
+    "test-watch-fast": "echo TBD"
   },
 
   "dependencies": {
@@ -97,6 +102,12 @@
 
   "engines": {
     "node": ">= 12"
-  }
+  },
+
+  "overrides": {
+     "@types/indy-sdk": "1.16.9",
+     "string-width": "^4.2.3",
+     "wrap-ansi": "^6.2.0"
+   }
 
 }
