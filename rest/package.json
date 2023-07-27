@@ -26,17 +26,17 @@
   },
 
   "scripts": {
-    "check-types": "echo TBD",
-    "check-types:tests": "echo TBD",
-    "check-types:build": "echo TBD",
-    "prettier": "echo TBD",
-    "format": "echo TBD",
-    "check-format": "echo TBD",
+    "check-types": "echo npm run check-types:build && npm run check-types:tests",
+    "check-types:tests": "echo tsc -p tsconfig.test.json --noEmit",
+    "check-types:build": "echo tsc --noEmit -p tsconfig.build.json",
+    "prettier": "echo prettier '**/*.+(js|json|ts|md|yml|yaml)'",
+    "format": "echo npm run prettier --write",
+    "check-format": "echo npm run prettier --list-different",
     "test-root": "echo TBD",
     "test-watch-root": "echo TBD",
-    "lint": "echo TBD",
-    "validate": "echo TBD",
-    "prepare": "husky install",
+    "lint": "echo eslint --ignore-path ../.gitignore .",
+    "validate": "echo npm run lint && npm run check-types && npm run check-format",
+    "prepare": "echo husky install",
 
 
     "tsoa": "tsoa spec-and-routes",
@@ -108,7 +108,10 @@
     "ngrok": "^4.3.1",
     "sinon": "^15.2.0",
     "supertest": "^6.2.3",
-    "ts-node-dev": "^2.0.0"
+    "ts-node-dev": "^2.0.0",
+
+
+    "@types/indy-sdk": "1.16.9"
   },
 
   "engines": {
