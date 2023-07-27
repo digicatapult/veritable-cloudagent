@@ -32,9 +32,9 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        run: echo yarn install
+        run: cd rest/ && npm install
       - name: Compile
-        run: echo yarn check-types
+        run: echo "cd rest/ && npm run check-types"
 
   lint:
     runs-on: ubuntu-20.04
@@ -53,9 +53,9 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        run: echo yarn install
+        run: echo "cd rest/ && npm install"
       - name: Compile
-        run: echo yarn check-types
+        run: echo "npm run check-types:tests"
       - name: Lint 
         run: echo yarn lint 
 
