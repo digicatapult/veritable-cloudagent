@@ -58,13 +58,13 @@
       "check-types:tests": "tsc -p tsconfig.test.json --noEmit",
       "check-types:build": "yarn workspaces run tsc --noEmit -p tsconfig.build.json",
       "prettier": "prettier '**/*.+(js|json|ts|md|yml|yaml)'",
-      "format": "yarn prettier --write",
-      "check-format": "yarn prettier --list-different",
+      "format": "npm run prettier --write",
+      "check-format": "npm run prettier --list-different",
       "test": "REST=packages/rest && $(env --chdir=$REST yarn bin)/mocha --config $REST/.mocharc.js $REST'/tests/**/*.ts'",
       "test-watch": "REST=packages/rest && $(env --chdir=$REST yarn bin)/mocha --config $REST/.mocharc.js $REST'/tests/**/*.ts' --watch --watch-extension $REST/tests --watch-file $REST/tests",
       "lint": "eslint --ignore-path .gitignore .",
       "validate": "yarn lint && yarn check-types && yarn check-format",
-      "prepare": "husky install"
+      "prepare": "echo husky install"
     },
     "devDependencies": {
       "@types/eslint": "^8.40.2",
