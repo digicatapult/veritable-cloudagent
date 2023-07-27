@@ -12,6 +12,7 @@ runs:
   steps:
     - name: Get cache directory path TBD
       run: echo TO_ADD_CACHE
+      shell: bash
     # - name: Get yarn cache directory path
     #   id: yarn-cache-dir-path
     #   shell: bash
