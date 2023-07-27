@@ -32,9 +32,11 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        run: cd rest/ && npm install
+        working-directory: ./rest
+        run: npm install
       - name: Compile
-        run: echo "cd rest/ && npm run check-types"
+        working-directory: ./rest
+        run: npm run check-types:build
 
   lint:
     runs-on: ubuntu-20.04
