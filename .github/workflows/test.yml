@@ -55,7 +55,8 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        run: echo "cd rest/ && npm install"
+        working-directory: ./rest
+        run: npm install
       - name: Compile
         run: echo "npm run check-types:tests"
       - name: Lint 
@@ -106,7 +107,8 @@ jobs:
           node-version: 16
 
       - name: Install dependencies
-        run: echo yarn install
+        working-directory: ./rest
+        run: npm install
 
       - id: get-packages
         name: Get all NPM packages
@@ -146,5 +148,6 @@ jobs:
           node-version: 16
         if: ${{ steps.release-please.outputs.release_created }}
       - name: Install dependencies
-        run: echo yarn install --frozen-lockfile
+        working-directory: ./rest
+        run: npm ci
         if: ${{ steps.release-please.outputs.release_created }}
