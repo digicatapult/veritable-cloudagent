@@ -36,7 +36,7 @@ jobs:
         run: npm install
       - name: Compile
         working-directory: ./rest
-        run: npm run check-types:build
+        run: npm run check-types
 
   lint:
     runs-on: ubuntu-20.04

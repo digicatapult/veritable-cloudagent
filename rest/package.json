@@ -26,8 +26,8 @@
   },
 
   "scripts": {
-    "check-types": "echo npm run check-types:build && npm run check-types:tests",
-    "check-types:tests": "echo tsc -p tsconfig.test.json --noEmit",
+    "check-types": "npm run check-types:build && npm run check-types:tests",
+    "check-types:tests": "tsc -p tsconfig.test.json --noEmit",
     "check-types:build": "tsc --noEmit -p tsconfig.build.json",
     "prettier": "echo prettier '**/*.+(js|json|ts|md|yml|yaml)'",
     "format": "echo npm run prettier --write",
