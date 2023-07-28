@@ -89,7 +89,7 @@ jobs:
         run: npm install
       - name: Integration Test
         working-directory: ./rest
-        run: echo TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} npm run test
+        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} npm run test
 
   package-finder:
     runs-on: ubuntu-latest
