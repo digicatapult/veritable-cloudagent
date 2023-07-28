@@ -5,9 +5,8 @@
     "files": true
   },
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
-      "@aries-framework/*": ["packages/*/src"]
+      "@aries-framework/rest": ["./src"]
     },
     "types": ["mocha", "node"]
   },
