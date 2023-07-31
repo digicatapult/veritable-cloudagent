@@ -32,10 +32,8 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        working-directory: ./rest
         run: npm install
       - name: Compile
-        working-directory: ./rest
         run: npm run check-types
 
   lint:
@@ -55,13 +53,10 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        working-directory: ./rest
         run: npm install
       - name: Compile
-        working-directory: ./rest
         run: npm run check-types
       - name: Lint
-        working-directory: ./rest
         run: npm run lint
 
   integration-test:
@@ -85,10 +80,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        working-directory: ./rest
         run: npm install
       - name: Integration Test
-        working-directory: ./rest
         run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} npm run test
 
   package-finder:
@@ -111,13 +104,11 @@ jobs:
           node-version: 16
 
       - name: Install dependencies
-        working-directory: ./rest
         run: npm install
 
       - id: get-packages
         name: Get all NPM packages
-        working-directory: rest/
-        run: $(npm bin)/ts-node --cwdMode ../scripts/getPackages.ts
+        run: $(npm bin)/ts-node --cwdMode ./scripts/getPackages.ts
 
   release-please:
     runs-on: ubuntu-latest
@@ -153,6 +144,5 @@ jobs:
           node-version: 16
         if: ${{ steps.release-please.outputs.release_created }}
       - name: Install dependencies
-        working-directory: ./rest
         run: npm ci
         if: ${{ steps.release-please.outputs.release_created }}

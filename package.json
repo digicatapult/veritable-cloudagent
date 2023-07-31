@@ -33,7 +33,7 @@
     "format": "npm run prettier --write",
     "check-format": "npm run prettier --list-different",
 
-    "lint": "eslint --ignore-path ../.gitignore .",
+    "lint": "eslint --ignore-path .gitignore .",
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "echo husky install",
 
