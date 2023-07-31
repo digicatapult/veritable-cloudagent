@@ -116,7 +116,7 @@ jobs:
 
       - id: get-packages
         name: Get all NPM packages
-        work-directory: rest/
+        working-directory: rest/
         run: $(npm bin)/ts-node --cwdMode ../scripts/getPackages.ts
 
   release-please:
