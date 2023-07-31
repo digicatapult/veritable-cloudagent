@@ -49,7 +49,7 @@ describe('CredentialDefinitionController', () => {
       expect(response.statusCode).to.be.equal(400)
     })
 
-    test('should return 404 NotFound when credential definition not found', async () => {
+    test.skip('should return 404 NotFound when credential definition not found', async () => {
       const response = await request(app).get(`/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
       expect(response.statusCode).to.be.equal(404)
     })

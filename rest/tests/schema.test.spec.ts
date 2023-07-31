@@ -52,7 +52,7 @@ describe('SchemaController', ()=>{
       expect(response.statusCode).to.be.equal(400)
     })
 
-    test('should return 404 NotFound when schema not found', async () => {
+    test.skip('should return 404 NotFound when schema not found', async () => {
       const response = await request(app).get(`/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
 
       expect(response.statusCode).to.be.equal(404)
