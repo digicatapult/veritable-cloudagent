@@ -11,6 +11,12 @@ coverage
 .npm
 .env
 .cache
+
+.local
+.nvm
+.bash_history
+.ngrok
+
 npm-debug.log*
 *.log
 *.tsbuildinfo
@@ -18,3 +24,6 @@ knexfile.js
 *.pid
 *.seed
 *.pid.lock
+
+.indy_client
+
