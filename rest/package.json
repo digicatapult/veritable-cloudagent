@@ -32,8 +32,7 @@
     "prettier": "prettier '**/*.+(js|json|ts|md|yml|yaml)'",
     "format": "npm run prettier --write",
     "check-format": "npm run prettier --list-different",
-    "test-root": "echo TBD",
-    "test-watch-root": "echo TBD",
+
     "lint": "echo eslint --ignore-path ../.gitignore .",
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "echo husky install",
@@ -46,8 +45,8 @@
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
     "test": "mocha --config .mocharc.js 'tests/*.ts'",
-    "test-watch": "echo TBD",
-    "test-watch-fast": "echo TBD"
+    "test-watch": "mocha --config .mocharc.js 'tests/*.ts' --watch --watch-extensions tests/ 'tests/*.ts' --watch-files tests/*",
+    "test-watch-fast": "TS_NODE_TRANSPILE_ONLY=true mocha --config .mocharc.js 'tests/*.ts' --watch --watch-extensions tests/ 'tests/*.ts' --watch-files tests/*"
   },
 
   "dependencies": {
