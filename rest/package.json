@@ -35,7 +35,7 @@
     "test-root": "echo TBD",
     "test-watch-root": "echo TBD",
     "lint": "echo eslint --ignore-path ../.gitignore .",
-    "validate": "echo npm run lint && npm run check-types && npm run check-format",
+    "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "echo husky install",
 
 
