@@ -35,7 +35,7 @@
 
     "lint": "eslint --ignore-path .gitignore .",
     "validate": "npm run lint && npm run check-types && npm run check-format",
-    "prepare": "echo husky install",
+    "prepare": "husky install",
 
 
     "tsoa": "tsoa spec-and-routes",
