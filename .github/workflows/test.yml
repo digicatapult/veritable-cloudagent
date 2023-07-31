@@ -116,7 +116,8 @@ jobs:
 
       - id: get-packages
         name: Get all NPM packages
-        run: echo yarn ts-node ./scripts/getPackages.ts
+        work-directory: rest/
+        run: $(npm bin)/ts-node --cwdMode ../scripts/getPackages.ts
 
   release-please:
     runs-on: ubuntu-latest
