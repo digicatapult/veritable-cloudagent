@@ -29,7 +29,7 @@ docker run -d -it --network test -v $PWD:/root/ --name aries -h aries --platform
 echo "docker exec -it aries bash"
 
 # Echo hot to test
-echo "GENESIS_TXN_PATH=/root/network/genesis/docker-genesis.txn TEST_AGENT_PUBLIC_DID_SEED=000000000000000000000000Trustee9 yarn test rest"
+echo "GENESIS_TXN_PATH=/root/network/genesis/docker-genesis.txn TEST_AGENT_PUBLIC_DID_SEED=000000000000000000000000Trustee9 npm run test"
 
 # KILL_ALL
 # docker rm -f indy-pool ; docker rm -f aries ; docker network rm test
