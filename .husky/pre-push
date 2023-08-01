@@ -1,1 +1,1 @@
-yarn validate
+npm run validate
