@@ -1162,7 +1162,7 @@
 	},
 	"info": {
 		"title": "@digicatapult/veritable-cloudagent",
-		"version": "0.9.5",
+		"version": "0.1.0",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
 			"name": "Apache-2.0"
