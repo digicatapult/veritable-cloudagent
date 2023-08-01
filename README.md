@@ -2,9 +2,6 @@
 
 This is a forked version of -> https://github.com/hyperledger/aries-framework-javascript-ext/tree/main mainly focusing around OpenApi/Rest client.
 
-## This project uses NPM
-Despite the fact that the other package manager is requirement of older version of NodeJS for `Indy` to run, according to the documentation, npm seems to do the job.
-
 ## Development
 More details on local development can be found [here](https://github.com/hyperledger/aries-framework-javascript/blob/main/DEVREADME.md)
 
