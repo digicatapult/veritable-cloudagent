@@ -1,4 +1,4 @@
-name: Test and Lint 
+name: Test and Lint
 
 on:
   pull_request:
@@ -32,9 +32,9 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        run: yarn install
+        run: npm install
       - name: Compile
-        run: yarn check-types
+        run: npm run check-types
 
   lint:
     runs-on: ubuntu-20.04
@@ -53,11 +53,11 @@ jobs:
         with:
           node-version: 16
       - name: Install dependencies
-        run: yarn install
+        run: npm install
       - name: Compile
-        run: yarn check-types
-      - name: Lint 
-        run: yarn lint 
+        run: npm run check-types
+      - name: Lint
+        run: npm run lint
 
   integration-test:
     runs-on: ubuntu-20.04
@@ -80,9 +80,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: yarn install
+        run: npm install
       - name: Integration Test
-        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} yarn test
+        run: TEST_AGENT_PUBLIC_DID_SEED=${TEST_AGENT_PUBLIC_DID_SEED} GENESIS_TXN_PATH=${GENESIS_TXN_PATH} npm run test
 
   package-finder:
     runs-on: ubuntu-latest
@@ -94,7 +94,7 @@ jobs:
       - name: Checkout veritable-cloudagent
         uses: actions/checkout@v3
 
-      # Some packages need indy-sdk for node as part of yarn install
+      # Some packages need indy-sdk for node as part of npm install
       - name: Setup Libindy
         uses: ./.github/actions/setup-libindy
 
@@ -104,11 +104,11 @@ jobs:
           node-version: 16
 
       - name: Install dependencies
-        run: yarn install
+        run: npm install
 
       - id: get-packages
         name: Get all NPM packages
-        run: yarn ts-node ./scripts/getPackages.ts
+        run: $(npm bin)/ts-node --cwdMode ./scripts/getPackages.ts
 
   release-please:
     runs-on: ubuntu-latest
@@ -134,7 +134,7 @@ jobs:
       - name: Checkout veritable-cloudagent
         uses: actions/checkout@v3
         if: ${{ steps.release-please.outputs.release_created }}
-      # Some packages need indy-sdk for node as part of yarn install
+      # Some packages need indy-sdk for node as part of npm install
       - name: Setup Libindy
         uses: ./.github/actions/setup-libindy
         if: ${{ steps.release-please.outputs.release_created }}
@@ -144,5 +144,5 @@ jobs:
           node-version: 16
         if: ${{ steps.release-please.outputs.release_created }}
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
         if: ${{ steps.release-please.outputs.release_created }}

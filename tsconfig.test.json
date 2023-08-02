@@ -1,6 +1,19 @@
 {
-  "extends": "./tsconfig.build.json",
   "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2017",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "noEmitOnError": true,
+    "lib": [],
+
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     "baseUrl": ".",
     "paths": {
       "@aries-framework/rest": ["packages/rest/src"]
@@ -8,5 +21,16 @@
     "types": ["mocha", "node"]
   },
   "include": ["tests", "samples", "**/tests", "**/samples"],
-  "exclude": ["node_modules", "build", "**/build/**"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "build/**",
+    "**/build/**",
+    "**/__tests__/*.ts",
+    "**/__mocks__/*.ts",
+    "__tests__/*.ts",
+    "__mocks__/*.ts",
+    "build/**",
+    "scripts"
+  ]
 }

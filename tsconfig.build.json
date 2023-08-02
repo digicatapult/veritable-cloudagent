@@ -1,4 +1,5 @@
 {
+
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2017",
@@ -12,15 +13,23 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+
+    "outDir": "./build"
+
   },
+  "include": ["src/**/*", "src/routes"],
+
   "exclude": [
     "node_modules",
     "build",
     "**/*.spec.ts",
     "**/__tests__/*.ts",
     "**/__mocks__/*.ts",
-    "**/build/**",
+    "__tests__/*.ts",
+    "__mocks__/*.ts",
+    "build/**",
     "scripts"
   ]
+
 }
