@@ -34,7 +34,7 @@ jobs:
     name: Integration Tests
     strategy:
       matrix:
-        node-version: [16.x, 18.x]
+        node-version: [18.x]
     steps:
       - name: Checkout veritable-cloudagent
         uses: actions/checkout@v2
