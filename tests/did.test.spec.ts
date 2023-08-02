@@ -16,7 +16,7 @@ describe('DidController', () => {
   let aliceAgent: Agent
 
   before(async () => {
-    aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3999)
+    aliceAgent = await getTestAgent('Did REST Agent Test Alice', 3999)
     app = await startServer(aliceAgent, { port: 3000 })
   })
 
@@ -66,7 +66,6 @@ describe('DidController', () => {
           'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
         ],
       })
-
     })
 
     test('should give 500 when did document record is not found', async () => {

@@ -2,7 +2,13 @@ import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
 import { stub, spy, match, restore as sinonRestore } from 'sinon'
 
-import type { Agent, OutOfBandRecord, ConnectionRecord, OutOfBandInvitation } from '@aries-framework/core'
+import type {
+  Agent,
+  OutOfBandRecord,
+  ConnectionRecord,
+  OutOfBandInvitation,
+  ConnectionInvitationMessage,
+} from '@aries-framework/core'
 import type { Express } from 'express'
 
 import { JsonTransformer, AgentMessage } from '@aries-framework/core'
@@ -14,6 +20,7 @@ import {
   getTestAgent,
   getTestConnection,
   getTestOutOfBandInvitation,
+  getTestOutOfBandLegacyInvitation,
   getTestOutOfBandRecord,
   objectToJson,
 } from './utils/helpers'
@@ -24,6 +31,7 @@ describe('OutOfBandController', () => {
   let bobAgent: Agent
   let outOfBandRecord: OutOfBandRecord
   let outOfBandInvitation: OutOfBandInvitation
+  let outOfBandLegacyInvitation: ConnectionInvitationMessage
   let connectionRecord: ConnectionRecord
 
   before(async () => {
@@ -32,11 +40,12 @@ describe('OutOfBandController', () => {
     app = await setupServer(bobAgent, { port: 3000 })
     outOfBandRecord = getTestOutOfBandRecord()
     outOfBandInvitation = getTestOutOfBandInvitation()
+    outOfBandLegacyInvitation = getTestOutOfBandLegacyInvitation()
     connectionRecord = getTestConnection()
   })
 
   afterEach(() => {
-    sinonRestore
+    sinonRestore()
   })
 
   describe('Get all out of band records', () => {
@@ -49,9 +58,7 @@ describe('OutOfBandController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(result.map(objectToJson))
-      getAllSpy.restore()
     })
-
     test('should return filtered out of band records if query is passed', async () => {
       const getAllStub = stub(bobAgent.oob, 'getAll')
       getAllStub.resolves([outOfBandRecord])
@@ -71,11 +78,9 @@ describe('OutOfBandController', () => {
       const response = await request(app).get(`/oob/${outOfBandRecord.id}`)
 
       expect(response.statusCode).to.be.equal(200)
-      findByIdStub.calledWithMatch(outOfBandRecord.id)
+      expect(findByIdStub.calledWithMatch(outOfBandRecord.id)).equals(true)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
-      findByIdStub.restore()
     })
-
     test('should return 404 if out of band record is not found', async () => {
       const response = await request(app).get(`/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
@@ -91,18 +96,14 @@ describe('OutOfBandController', () => {
       const response = await request(app).post('/oob/create-invitation')
 
       expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal(objectToJson({
+      expect(response.body).to.deep.equal({
         invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
           domain: bobAgent.config.endpoints[0],
         }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-          useLegacyDidSovPrefix: bobAgent.config.useLegacyDidSovPrefix,
-        }),
+        invitation: outOfBandRecord.outOfBandInvitation.toJSON(),
         outOfBandRecord: outOfBandRecord.toJSON(),
-      }))
-      createInvitationStub.restore()
+      })
     })
-
     test('should use parameters', async () => {
       const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
       createInvitationStub.resolves(outOfBandRecord)
@@ -123,7 +124,6 @@ describe('OutOfBandController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(createInvitationStub.lastCall.args[0]).to.be.deep.include(params)
-      createInvitationStub.restore()
     })
   })
 
@@ -132,29 +132,28 @@ describe('OutOfBandController', () => {
       const createLegacyInvitation = stub(bobAgent.oob, 'createLegacyInvitation')
       createLegacyInvitation.resolves({
         outOfBandRecord: outOfBandRecord,
-        invitation: outOfBandInvitation,
+        invitation: outOfBandLegacyInvitation,
       })
 
       const response = await request(app).post('/oob/create-legacy-invitation')
 
       expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal(objectToJson({
-        invitationUrl: outOfBandInvitation.toUrl({
+      expect(response.body).to.deep.equal({
+        invitationUrl: outOfBandLegacyInvitation.toUrl({
           domain: bobAgent.config.endpoints[0],
+          useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
         }),
-        invitation: outOfBandInvitation.toJSON({
-          useLegacyDidSovPrefix: bobAgent.config.useLegacyDidSovPrefix,
+        invitation: outOfBandLegacyInvitation.toJSON({
+          useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
         }),
         outOfBandRecord: outOfBandRecord.toJSON(),
-      }))
-      createLegacyInvitation.restore()
+      })
     })
-
     test('should use parameters', async () => {
       const createLegacyInvitationStub = stub(bobAgent.oob, 'createLegacyInvitation')
       createLegacyInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
-        invitation: outOfBandInvitation,
+        invitation: outOfBandLegacyInvitation,
       })
 
       const params = {
@@ -202,9 +201,7 @@ describe('OutOfBandController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
-      createLegacyConnectionlessInvitationStub.restore()
     })
-
     test('should use parameters', async () => {
       const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
       createLegacyConnectionlessInvitationStub.resolves({
@@ -215,12 +212,10 @@ describe('OutOfBandController', () => {
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
 
       expect(response.statusCode).to.be.equal(200)
-      createLegacyConnectionlessInvitationStub
       expect(createLegacyConnectionlessInvitationStub.lastCall.args[0]).to.be.deep.include({
         ...inputParams,
         message: msg,
       })
-      createLegacyConnectionlessInvitationStub.restore()
     })
   })
 
@@ -239,9 +234,7 @@ describe('OutOfBandController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
-      receiveInvitationStub.restore()
     })
-
     test('should use parameters', async () => {
       const receiveInvitationStub = stub(bobAgent.oob, 'receiveInvitation')
       receiveInvitationStub.resolves({
@@ -267,18 +260,19 @@ describe('OutOfBandController', () => {
         })
 
       expect(response.statusCode).to.be.equal(200)
-      expect(receiveInvitationStub.calledWith(
-        match.any,
-        match({
-          label: params.label,
-          alias: params.alias,
-          imageUrl: params.imageUrl,
-          autoAcceptInvitation: params.autoAcceptInvitation,
-          autoAcceptConnection: params.autoAcceptConnection,
-          reuseConnection: params.reuseConnection,
-        })
-      )).equals(true)
-      receiveInvitationStub.restore()
+      expect(
+        receiveInvitationStub.calledWith(
+          match.any,
+          match({
+            label: params.label,
+            alias: params.alias,
+            imageUrl: params.imageUrl,
+            autoAcceptInvitation: params.autoAcceptInvitation,
+            autoAcceptConnection: params.autoAcceptConnection,
+            reuseConnection: params.reuseConnection,
+          })
+        )
+      ).equals(true)
     })
   })
 
@@ -297,9 +291,7 @@ describe('OutOfBandController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
-      receiveInvitationFromUrlStub.restore()
     })
-
     test('should use parameters', async () => {
       const receiveInvitationFromUrlStub = stub(bobAgent.oob, 'receiveInvitationFromUrl')
       receiveInvitationFromUrlStub.resolves({
@@ -322,18 +314,19 @@ describe('OutOfBandController', () => {
         .send({ invitationUrl: 'https://example.com/test', ...params })
 
       expect(response.statusCode).to.be.equal(200)
-      expect(receiveInvitationFromUrlStub.calledWith(
-        match('https://example.com/test'),
-        match({
-          label: params.label,
-          alias: params.alias,
-          imageUrl: params.imageUrl,
-          autoAcceptInvitation: params.autoAcceptInvitation,
-          autoAcceptConnection: params.autoAcceptConnection,
-          reuseConnection: params.reuseConnection
-      })
-      )).equals(true)
-      receiveInvitationFromUrlStub.restore()
+      expect(
+        receiveInvitationFromUrlStub.calledWith(
+          match('https://example.com/test'),
+          match({
+            label: params.label,
+            alias: params.alias,
+            imageUrl: params.imageUrl,
+            autoAcceptInvitation: params.autoAcceptInvitation,
+            autoAcceptConnection: params.autoAcceptConnection,
+            reuseConnection: params.reuseConnection,
+          })
+        )
+      ).equals(true)
     })
   })
 
@@ -362,9 +355,7 @@ describe('OutOfBandController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
-      acceptInvitationStb.restore()
     })
-
     test('should use parameters', async () => {
       const acceptInvitationStub = stub(bobAgent.oob, 'acceptInvitation')
       acceptInvitationStub.resolves({
@@ -387,11 +378,8 @@ describe('OutOfBandController', () => {
         .send(params)
 
       expect(response.statusCode).to.be.equal(200)
-      expect(acceptInvitationStub.calledWithMatch('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', params))
-        .equals(true)
-      acceptInvitationStub.restore()
+      expect(acceptInvitationStub.calledWithMatch('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', params)).equals(true)
     })
-
     test('should throw 404 if out of band record is not found', async () => {
       const response = await request(app).post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
 
@@ -407,7 +395,6 @@ describe('OutOfBandController', () => {
       const response = await request(app).delete('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
       expect(response.statusCode).to.be.equal(204)
-      deleteByIdStub.restore()
     })
   })
 

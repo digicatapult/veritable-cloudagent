@@ -77,9 +77,11 @@ describe('CredentialController', () => {
 
       const response = await request(app).get('/credentials').query({ state: testCredential.state })
 
-      expect(findByQueryStub.calledWithMatch({
-        state: testCredential.state,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          state: testCredential.state,
+        })
+      ).equals(true)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([testCredential].map(objectToJson))
@@ -94,9 +96,11 @@ describe('CredentialController', () => {
 
       const response = await request(app).get('/credentials').query({ threadId: testCredential.threadId })
 
-      expect(findByQueryStub.calledWithMatch({
-        threadId: testCredential.threadId,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          threadId: testCredential.threadId,
+        })
+      ).equals(true)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([testCredential].map(objectToJson))
@@ -111,9 +115,11 @@ describe('CredentialController', () => {
 
       const response = await request(app).get('/credentials').query({ connectionId: testCredential.connectionId })
 
-      expect(findByQueryStub.calledWithMatch({
-        connectionId: testCredential.connectionId,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          connectionId: testCredential.connectionId,
+        })
+      ).equals(true)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([testCredential].map(objectToJson))
@@ -227,7 +233,10 @@ describe('CredentialController', () => {
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
-      expect(acceptProposalStub.lastCall.args[0]).to.be.deep.include({ ...proposalRequest, credentialRecordId: testCredential.id })
+      expect(acceptProposalStub.lastCall.args[0]).to.be.deep.include({
+        ...proposalRequest,
+        credentialRecordId: testCredential.id,
+      })
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
@@ -270,7 +279,7 @@ describe('CredentialController', () => {
       )
 
       // Emit event
-      bobAgent.events.emit<CredentialStateChangedEvent>({
+      bobAgent.events.emit<CredentialStateChangedEvent>(bobAgent.context, {
         type: CredentialEventTypes.CredentialStateChanged,
         payload: {
           credentialRecord: new CredentialExchangeRecord({
@@ -338,6 +347,9 @@ describe('CredentialController', () => {
             },
           },
           previousState: CredentialState.CredentialIssued,
+        },
+        metadata: {
+          contextCorrelationId: 'default',
         },
       })
     })
@@ -481,10 +493,12 @@ describe('CredentialController', () => {
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
 
       expect(response.statusCode).to.be.equal(200)
-      expect(createLegacyConnectionlessInvitationStub.calledWithMatch({
-        ...inputParams,
-        message: msg,
-      })).equals(true)
+      expect(
+        createLegacyConnectionlessInvitationStub.calledWithMatch({
+          ...inputParams,
+          message: msg,
+        })
+      ).equals(true)
     })
   })
 

@@ -60,9 +60,11 @@ describe('ConnectionController', () => {
 
       const response = await request(app).get('/connections').query({ state: connection.state })
 
-      expect(findByQueryStub.calledWithMatch({
-        state: connection.state,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          state: connection.state,
+        })
+      ).equals(true)
 
       expect(response.statusCode).to.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
@@ -77,11 +79,13 @@ describe('ConnectionController', () => {
 
       const response = await request(app).get('/connections').query({ outOfBandId: connection.outOfBandId })
 
-      expect(findByQueryStub.calledWithMatch({
-        outOfBandId: connection.outOfBandId,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          outOfBandId: connection.outOfBandId,
+        })
+      ).equals(true)
 
-      expect(response.statusCode).to.be.equal(200)
+      expect(response.statusCode).to.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
     })
   })
@@ -94,9 +98,11 @@ describe('ConnectionController', () => {
 
       const response = await request(app).get('/connections').query({ alias: connection.alias })
 
-      expect(findByQueryStub.calledWithMatch({
-        alias: connection.alias,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          alias: connection.alias,
+        })
+      ).equals(true)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
@@ -111,11 +117,13 @@ describe('ConnectionController', () => {
 
       const response = await request(app).get('/connections').query({ myDid: connection.did })
 
-      expect(findByQueryStub.calledWithMatch({
-        myDid: connection.did,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          myDid: connection.did,
+        })
+      ).equals(true)
 
-      expect(response.statusCode).to.be.equal(200)
+      expect(response.statusCode).to.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
     })
   })
@@ -128,11 +136,13 @@ describe('ConnectionController', () => {
 
       const response = await request(app).get('/connections').query({ theirDid: connection.theirDid })
 
-      expect(findByQueryStub.calledWithMatch({
-        theirDid: connection.theirDid,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          theirDid: connection.theirDid,
+        })
+      ).equals(true)
 
-      expect(response.statusCode).to.be.equal(200)
+      expect(response.statusCode).to.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
     })
   })
@@ -145,9 +155,11 @@ describe('ConnectionController', () => {
 
       const response = await request(app).get('/connections').query({ theirLabel: connection.theirLabel })
 
-      expect(findByQueryStub.calledWithMatch({
-        theirLabel: connection.theirLabel,
-      })).equals(true)
+      expect(
+        findByQueryStub.calledWithMatch(bobAgent.context, {
+          theirLabel: connection.theirLabel,
+        })
+      ).equals(true)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
