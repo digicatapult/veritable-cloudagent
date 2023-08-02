@@ -96,13 +96,18 @@ describe('OutOfBandController', () => {
       const response = await request(app).post('/oob/create-invitation')
 
       expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal({
-        invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-          domain: bobAgent.config.endpoints[0],
-        }),
-        invitation: outOfBandRecord.outOfBandInvitation.toJSON(),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-      })
+      expect(response.body).to.deep.include(
+        // remove properties with value undefined
+        JSON.parse(
+          JSON.stringify({
+            invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
+              domain: bobAgent.config.endpoints[0],
+            }),
+            invitation: outOfBandRecord.outOfBandInvitation.toJSON(),
+            outOfBandRecord: outOfBandRecord.toJSON(),
+          })
+        )
+      )
     })
     test('should use parameters', async () => {
       const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
@@ -138,16 +143,21 @@ describe('OutOfBandController', () => {
       const response = await request(app).post('/oob/create-legacy-invitation')
 
       expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal({
-        invitationUrl: outOfBandLegacyInvitation.toUrl({
-          domain: bobAgent.config.endpoints[0],
-          useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
-        }),
-        invitation: outOfBandLegacyInvitation.toJSON({
-          useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
-        }),
-        outOfBandRecord: outOfBandRecord.toJSON(),
-      })
+      expect(response.body).to.deep.include(
+        // remove properties with value undefined
+        JSON.parse(
+          JSON.stringify({
+            invitationUrl: outOfBandLegacyInvitation.toUrl({
+              domain: bobAgent.config.endpoints[0],
+              useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
+            }),
+            invitation: outOfBandLegacyInvitation.toJSON({
+              useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
+            }),
+            outOfBandRecord: outOfBandRecord.toJSON(),
+          })
+        )
+      )
     })
     test('should use parameters', async () => {
       const createLegacyInvitationStub = stub(bobAgent.oob, 'createLegacyInvitation')

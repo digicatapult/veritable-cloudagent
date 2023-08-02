@@ -1,4 +1,4 @@
-'use strict';
+'use strict'
 
 const base = {
   require: ['ts-node/register'],
@@ -19,4 +19,5 @@ module.exports = {
   slow: 100,
   watch: false,
   retries: 0,
+  exit: true,
 }
