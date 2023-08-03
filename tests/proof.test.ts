@@ -211,26 +211,54 @@ describe('ProofController', () => {
   })
 
   describe('Request proof', () => {
+    const requestProofSimple = {
+      connectionId: 'string',
+      proofRequestOptions: {
+        name: 'string',
+        version: '1.0',
+        requestedAttributes: {
+          additionalProp1: {
+            name: 'string',
+          },
+        },
+        requestedPredicates: {},
+      },
+    }
+    const requestProofWthAttrRestrictions = {
+      connectionId: 'string',
+      proofRequestOptions: {
+        name: 'string',
+        version: '1.0',
+        requestedAttributes: {
+          additionalProp1: {
+            name: 'string',
+            restrictions: [
+              {
+                schemaId: 'schemaId',
+                schemaIssuerId: 'schemaIssuerId',
+                schemaName: 'schemaName',
+                schemaVersion: 'schemaVersion',
+                issuerId: 'issuerId',
+                credDefId: 'credDefId',
+                revRegId: 'revRegId',
+                schemaIssuerDid: 'schemaIssuerDid',
+                issuerDid: 'issuerDid',
+                requiredAttributes: ['a', 'b'],
+                requiredAttributeValues: { c: 'd', e: 'f' },
+              },
+            ],
+          },
+        },
+        requestedPredicates: {},
+      },
+    }
+
     test('should return proof record', async () => {
       const requestProofStub = stub(bobAgent.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => requestProofStub.firstCall.returnValue
 
-      const response = await request(app)
-        .post(`/proofs/request-proof`)
-        .send({
-          connectionId: 'string',
-          proofRequestOptions: {
-            name: 'string',
-            version: '1.0',
-            requestedAttributes: {
-              additionalProp1: {
-                name: 'string',
-              },
-            },
-            requestedPredicates: {},
-          },
-        })
+      const response = await request(app).post(`/proofs/request-proof`).send(requestProofSimple)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
@@ -240,36 +268,7 @@ describe('ProofController', () => {
       const requestProofStub = stub(bobAgent.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
 
-      const response = await request(app)
-        .post(`/proofs/request-proof`)
-        .send({
-          connectionId: 'string',
-          proofRequestOptions: {
-            name: 'string',
-            version: '1.0',
-            requestedAttributes: {
-              additionalProp1: {
-                name: 'string',
-                restrictions: [
-                  {
-                    schemaId: 'schemaId',
-                    schemaIssuerId: 'schemaIssuerId',
-                    schemaName: 'schemaName',
-                    schemaVersion: 'schemaVersion',
-                    issuerId: 'issuerId',
-                    credDefId: 'credDefId',
-                    revRegId: 'revRegId',
-                    schemaIssuerDid: 'schemaIssuerDid',
-                    issuerDid: 'issuerDid',
-                    requiredAttributes: ['a', 'b'],
-                    requiredAttributeValues: { c: 'd', e: 'f' },
-                  },
-                ],
-              },
-            },
-            requestedPredicates: {},
-          },
-        })
+      const response = await request(app).post(`/proofs/request-proof`).send(requestProofWthAttrRestrictions)
 
       expect(response.statusCode).to.be.equal(200)
       expect(
@@ -310,21 +309,7 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when connection is not found', async () => {
-      const response = await request(app)
-        .post(`/proofs/request-proof`)
-        .send({
-          connectionId: 'string',
-          proofRequestOptions: {
-            name: 'string',
-            version: '1.0',
-            requestedAttributes: {
-              additionalProp1: {
-                name: 'string',
-              },
-            },
-            requestedPredicates: {},
-          },
-        })
+      const response = await request(app).post(`/proofs/request-proof`).send(requestProofSimple)
 
       expect(response.statusCode).to.be.equal(404)
     })
