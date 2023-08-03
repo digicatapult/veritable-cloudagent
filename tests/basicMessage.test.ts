@@ -68,7 +68,6 @@ describe('BasicMessageController', () => {
             resolve(undefined)
           }
         })
-
       })
 
       await request(server).post(`/basic-messages/${bobConnectionToAlice?.id}`).send({ content: 'Hello!' })

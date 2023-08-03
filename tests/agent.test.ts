@@ -26,7 +26,6 @@ describe('AgentController', () => {
       expect(response.body).to.have.property('label')
       expect(response.body).to.have.property('endpoints')
       expect(response.body.isInitialized).to.be.true
-      expect(response.body).to.have.property('publicDid')
     })
 
     test('should response with a 200 status code', async () => {

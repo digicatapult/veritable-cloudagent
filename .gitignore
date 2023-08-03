@@ -17,6 +17,7 @@ coverage
 .bash_history
 .ngrok
 
+logs.txt
 npm-debug.log*
 *.log
 *.tsbuildinfo
