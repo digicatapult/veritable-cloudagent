@@ -104,6 +104,11 @@ const parsed = yargs
     number: true,
     demandOption: true,
   })
+  .option('ipfs-origin', {
+    string: true,
+    demandOption: true,
+  })
+
   .config()
   .env('AFJ_REST')
   .parseSync()
@@ -130,5 +135,6 @@ export async function runCliServer() {
     connectionImageUrl: parsed['connection-image-url'],
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
+    ipfsOrigin: parsed['ipfs-origin'],
   } as AriesRestConfig)
 }

@@ -15,7 +15,7 @@ import {
   MediatorModule,
   ProofsModule,
 } from '@aries-framework/core'
-import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@aries-framework/indy-vdr'
+import { IndyVdrModule } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
@@ -24,6 +24,8 @@ import path from 'path'
 
 import { TsLogger } from './logger'
 import { BCOVRIN_TEST_GENESIS } from './util'
+import VeritableAnonCredsRegistry from '../anoncreds'
+import Ipfs from '../ipfs'
 
 export type RestAgent = Agent<{
   connections: ConnectionsModule
@@ -78,7 +80,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
         anoncreds,
       }),
       anoncreds: new AnonCredsModule({
-        registries: [new IndyVdrAnonCredsRegistry()],
+        registries: [new VeritableAnonCredsRegistry(new Ipfs('http://localhost:5001'))],
       }),
       askar: new AskarModule({
         ariesAskar,
