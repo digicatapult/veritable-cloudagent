@@ -8,7 +8,7 @@ const base = {
 module.exports = {
   ...base,
   timeout: 120000,
-  extension: ['ts', 'tsx'],
+  extension: ['test.ts'],
   bail: false,
   package: './package.json',
   fullTrace: false,

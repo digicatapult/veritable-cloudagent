@@ -17,7 +17,7 @@ import {
   AutoAcceptProof,
   MediatorModule,
 } from '@aries-framework/core'
-import { IndyVdrAnonCredsRegistry, IndyVdrModule } from '@aries-framework/indy-vdr'
+import { IndyVdrModule } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
@@ -26,6 +26,8 @@ import { readFile } from 'fs/promises'
 
 import { setupServer } from './server'
 import { TsLogger } from './utils/logger'
+import VeritableAnonCredsRegistry from './anoncreds'
+import Ipfs from './ipfs'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -62,6 +64,7 @@ export interface AriesRestConfig {
 
   webhookUrl?: string
   adminPort: number
+  ipfsOrigin: string
 }
 
 export async function readRestConfig(path: string) {
@@ -83,6 +86,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials = AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests = true,
     autoAcceptProofs = AutoAcceptProof.ContentApproved,
+    ipfsOrigin,
     ...afjConfig
   } = restConfig
 
@@ -111,7 +115,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
         networks: indyLedgers,
       }),
       anoncreds: new AnonCredsModule({
-        registries: [new IndyVdrAnonCredsRegistry()],
+        registries: [new VeritableAnonCredsRegistry(new Ipfs(ipfsOrigin))],
       }),
       anoncredsRs: new AnonCredsRsModule({
         anoncreds,

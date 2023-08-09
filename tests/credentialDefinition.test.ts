@@ -82,7 +82,8 @@ describe('CredentialDefinitionController', () => {
     })
 
     test('should return 404 NotFound when credential definition not found', async () => {
-      const response = await request(app).get(`/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
+      const id = encodeURIComponent('ipfs://QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR')
+      const response = await request(app).get(`/credential-definitions/${id}`)
       expect(response.statusCode).to.be.equal(404)
     })
   })

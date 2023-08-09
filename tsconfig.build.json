@@ -2,12 +2,12 @@
 
   "compilerOptions": {
     "module": "commonjs",
-    "target": "ES2017",
+    "target": "ESNext", 
     "declaration": true,
     "sourceMap": true,
     "strict": true,
     "noEmitOnError": true,
-    "lib": [],
+    // "lib": [],  //commenting this out fixes fetch error in src/ipfs/index.ts
     "types": [],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
