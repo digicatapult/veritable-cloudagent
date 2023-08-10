@@ -2,7 +2,7 @@ name: Release (old, as in, using aries-framework-javascript-ext pattern)
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", feature/new-gh-workflows]
 
 jobs:
   preconditions:
