@@ -56,8 +56,8 @@ jobs:
 #   dependency-check:
 #     name: Run dependency check
 #     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+#    steps:
+#      - uses: actions/checkout@v3
 #       - uses: actions/setup-node@v3
 #         with:
 #           node-version: 18.x
@@ -80,18 +80,18 @@ jobs:
 #       matrix:
 #         test-type: [offchain, onchain, unit]
 #     runs-on: ubuntu-latest
-    steps:
+#    steps:
 #       - uses: actions/checkout@v3
 #       - uses: actions/setup-node@v3
-        with:
-          node-version: 18.x
+#        with:
+#          node-version: 18.x
 #       - name: Cache Node.js modules
 #         uses: actions/cache@v3
 #         with:
 #           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
 #           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
+#          restore-keys: |
+#            ${{ runner.OS }}-node-
 #             ${{ runner.OS }}-
 #       - name: Install Packages
 #         run: npm ci
@@ -110,7 +110,7 @@ jobs:
 #         run: npm run flows
 #       - name: Run database migrations
 #         if: matrix.test-type != 'unit'      
-        run: npm run db:migrate
+#        run: npm run db:migrate
 #         env:
 #           NODE_ENV: test
 #       - name: Run tests
