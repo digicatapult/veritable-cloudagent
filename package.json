@@ -25,7 +25,7 @@
     "check-types": "npm run check-types:build && npm run check-types:tests",
     "check-types:tests": "tsc -p tsconfig.test.json --noEmit",
     "check-types:build": "tsc --noEmit -p tsconfig.build.json",
-	"depcheck": "depcheck --skip-missing=true --ignores=@types/eslint,@types/multer,@types/ref-struct-di,@types/uuid,conventional-changelog-conventionalcommits,eslint-import-resolver-typescript,eslint-plugin-import,tsconfig-paths",
+	"depcheck": "depcheck",
     "prettier": "prettier '**/*.+(js|json|ts|md|yml|yaml)'",
     "format": "npm run prettier --write",
     "check-format": "npm run prettier --list-different",
