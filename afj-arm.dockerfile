@@ -1,5 +1,5 @@
 # docker build -t afj-rest .
-FROM ubuntu:22.04 as base
+FROM ubuntu:23.04 as base
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -15,7 +15,7 @@ RUN apt-get update -y && apt-get install -y \
 # RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable"
 
 # nodejs
-RUN curl -sL https://deb.nodesource.com/setup_19.x | bash
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash
 
 # install depdencies
 RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
