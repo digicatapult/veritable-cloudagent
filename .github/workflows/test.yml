@@ -78,7 +78,7 @@ jobs:
     name: Run tests
     strategy:
       matrix:
-        test-type: [offchain, onchain, unit]
+        test-type: [unit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -97,31 +97,6 @@ jobs:
         run: npm install # maybe this should be changed to npm ci
       - name: Build the TypeScript OpenAPI, using the tsoa package
         run: npm run build
-      - name: Test the matrix test type offchain
-        if: matrix.test-type == 'offchain'
-        run: echo OFFCHAIN
-      - name: Test the matrix test type onchain
-        if: matrix.test-type == 'onchain'
-        run: echo ONCHAIN
-      - name: Test the matrix test type unit
-        if: matrix.test-type == 'unit'
-        run: echo UNIT
-      # - name: Setup dependencies
-      #   if: matrix.test-type != 'unit'
-      #   run: docker-compose up -d
-      # - name: Sleep
-      #   if: matrix.test-type != 'unit'
-      #   uses: kibertoad/wait-action@1.0.1
-      #   with:
-      #     time: '30s'
-      # - name: Put process flows on-chain
-      #   if: matrix.test-type == 'onchain'
-      #   run: npm run flows
-      # - name: Run database migrations
-      #   if: matrix.test-type != 'unit'
-      #   run: npm run db:migrate
-      #   env:
-      #     NODE_ENV: test
       - name: Run tests
         run: npm run test
 
