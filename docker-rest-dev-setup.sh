@@ -20,7 +20,7 @@ docker exec indy-pool add-did-from-seed 000000000000000000000000Trustee9 TRUSTEE
 docker exec indy-pool add-did "NkGXDEPgpFGjQKMYmz6SyF" "CrSA1WbYYWLJoHm16Xw1VEeWxFvXtWjtsfEzMsjB5vDT"
 
 # Build rest image
-cd ./packages/rest/ ; docker build -f ./afj-arm.dockerfile -t afj . ; cd ../..
+cd ./packages/rest/ ; docker build --platform=linux/amd64 -f ./afj-arm.dockerfile -t afj . ; cd ../..
 
 # Run aries
 docker run -d -it --network test -v $PWD:/root/ --name aries -h aries --platform linux/amd64 --ip 172.19.0.3 -p 5000 -p 3000 --entrypoint /bin/bash afj
