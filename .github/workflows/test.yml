@@ -71,8 +71,8 @@ jobs:
             ${{ runner.OS }}-
       - name: Install Packages
         run: npm install # maybe this should be changed to npm ci
-      # - name: Dependency Check
-      #   run: npm run depcheck
+      - name: Dependency Check
+        run: npm run depcheck
 
 #   tests:
 #     name: Run tests
