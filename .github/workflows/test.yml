@@ -95,8 +95,8 @@ jobs:
             ${{ runner.OS }}-
       - name: Install Packages
         run: npm install # maybe this should be changed to npm ci
-#       - name: Build OpenAPI
-#         run: npm run build
+      - name: Build the TypeScript OpenAPI, using the tsoa package
+        run: npm run build
 #       - name: Setup dependencies
 #         if: matrix.test-type != 'unit'
 #         run: docker-compose up -d
