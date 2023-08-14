@@ -6,9 +6,9 @@ on:
   push:
     branches-ignore: ["main"]
 
-env:
-  TEST_AGENT_PUBLIC_DID_SEED: 000000000000000000000000Trustee9
-  GENESIS_TXN_PATH: network/genesis/local-genesis.txn
+# env:
+#   TEST_AGENT_PUBLIC_DID_SEED: 000000000000000000000000Trustee9
+#   GENESIS_TXN_PATH: network/genesis/local-genesis.txn
 
 jobs:
 
@@ -49,7 +49,7 @@ jobs:
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
       - name: Install Packages
-        run: npm ci
+        run: npm install # maybe this should be changed to npm ci
       - name: Lint
         run: npm run lint
 
