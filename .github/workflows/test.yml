@@ -32,11 +32,11 @@ jobs:
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
           echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
 
-#   lint:
-#     name: Run lint
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
+  lint:
+    name: Run lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 18.x
@@ -48,10 +48,10 @@ jobs:
           restore-keys: |
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
-#       - name: Install Packages
-#         run: npm ci
-#       - name: Lint
-#         run: npm run lint
+      - name: Install Packages
+        run: npm ci
+      - name: Lint
+        run: npm run lint
 
 #   dependency-check:
 #     name: Run dependency check
