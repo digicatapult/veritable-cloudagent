@@ -15,7 +15,7 @@ RUN apt-get update -y && apt-get install -y \
 # RUN add-apt-repository "deb https://repo.sovrin.org/sdk/deb bionic stable"
 
 # nodejs
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash
+RUN curl -sL https://deb.nodesource.com/setup_19.x | bash
 
 # install depdencies
 RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
@@ -30,6 +30,8 @@ COPY package.json package.json
 RUN npm install --global husky@^8.0.3
 RUN npm install
 # RUN npm install --omit=dev
+
+COPY tsoa.json ./tsoa.json
 
 # COPY build ./build
 
