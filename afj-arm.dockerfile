@@ -32,6 +32,8 @@ RUN npm install
 # RUN npm install --omit=dev
 
 COPY tsoa.json ./tsoa.json
+COPY tsconfig.build.json ./tsconfig.build.json
+COPY src ./src
 
 # COPY build ./build
 
