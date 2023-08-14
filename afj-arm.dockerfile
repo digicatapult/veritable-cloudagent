@@ -30,6 +30,8 @@ COPY package.json package.json
 RUN npm install --global husky@^8.0.3
 RUN npm install --omit=dev
 
-COPY build ./build
+# COPY build ./build
+
+RUN npm run build
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
