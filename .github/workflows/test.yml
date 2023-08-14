@@ -117,25 +117,26 @@ jobs:
         run: |
           exit $([[ "${{steps.get_version.outputs.IS_NEW_VERSION}}" = "true" ]] && echo 0 || echo 1)
 
-#   build-docker:
-#     name: "Build docker image"
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - name: Setup QEMU
-#         uses: docker/setup-qemu-action@v2
-#         with:
-#           platforms: all
-#       - name: Setup Docker Buildx
-#         id: buildx
-#         uses: docker/setup-buildx-action@v2
-#         with:
-#           buildkitd-flags: "--debug"
-#       - name: Build image
-#         uses: docker/build-push-action@v4
-#         with:
-#           builder: ${{ steps.buildx.outputs.name }}
-#           context: .
-#           file: ./Dockerfile
-#           platforms: linux/amd64, linux/arm64
-#           push: false
+  build-docker:
+    name: "Build docker image"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          buildkitd-flags: "--debug"
+      - name: Build image
+        uses: docker/build-push-action@v4
+        with:
+          builder: ${{ steps.buildx.outputs.name }}
+          context: .
+          file: ./afj-arm.dockerfile
+          platforms: linux/amd64
+          # platforms: linux/amd64, linux/arm64
+          push: false
