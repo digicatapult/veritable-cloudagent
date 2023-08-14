@@ -40,7 +40,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections', () => {
-    test.skip('should return all connections', async () => {
+    test('should return all connections', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -53,7 +53,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by state', () => {
-    test.skip('should return all credentials by specified state', async () => {
+    test('should return all credentials by specified state', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -72,7 +72,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by outOfBandId', () => {
-    test.skip('should return all credentials by specified outOfBandId', async () => {
+    test('should return all credentials by specified outOfBandId', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -91,7 +91,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by alias', () => {
-    test.skip('should return all credentials by specified alias', async () => {
+    test('should return all credentials by specified alias', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -110,7 +110,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by myDid', () => {
-    test.skip('should return all credentials by specified peer did', async () => {
+    test('should return all credentials by specified peer did', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -129,7 +129,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by theirDid', () => {
-    test.skip('should return all credentials by specified peer did', async () => {
+    test('should return all credentials by specified peer did', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -148,7 +148,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by theirLabel', () => {
-    test.skip('should return all credentials by specified peer label', async () => {
+    test('should return all credentials by specified peer label', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -167,7 +167,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get connection by id', () => {
-    test.skip('should return connection record', async () => {
+    test('should return connection record', async () => {
       const findByIdStub = stub(bobAgent.connections, 'findById')
       findByIdStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord | null> => findByIdStub.firstCall.returnValue
@@ -179,7 +179,7 @@ describe('ConnectionController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
-    test.skip('should give 404 not found when connection is not found', async () => {
+    test('should give 404 not found when connection is not found', async () => {
       const response = await request(app).get(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
@@ -187,7 +187,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Accept request', () => {
-    test.skip('should return accepted connection record', async () => {
+    test('should return accepted connection record', async () => {
       const acceptRequestStub = stub(bobAgent.connections, 'acceptRequest')
       acceptRequestStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord> => acceptRequestStub.firstCall.returnValue
@@ -199,7 +199,7 @@ describe('ConnectionController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
-    test.skip('should throw error when connection id is not found', async () => {
+    test('should throw error when connection id is not found', async () => {
       const response = await request(app).post(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request`)
 
       expect(response.statusCode).to.be.equal(404)
@@ -207,7 +207,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Accept response', () => {
-    test.skip('should return accepted connection record', async () => {
+    test('should return accepted connection record', async () => {
       const acceptResponseStub = stub(bobAgent.connections, 'acceptResponse')
       acceptResponseStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord | null> => acceptResponseStub.firstCall.returnValue
@@ -219,7 +219,7 @@ describe('ConnectionController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
-    test.skip('should throw error when connectionId is not found', async () => {
+    test('should throw error when connectionId is not found', async () => {
       const response = await request(app).post(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-response`)
 
       expect(response.statusCode).to.be.equal(404)
