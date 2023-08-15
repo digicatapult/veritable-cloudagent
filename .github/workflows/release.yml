@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
       - name: Check token
         run: |
-          if [ -z "${{ secrets.GITHUB_TOKEN }}"]; then
+          if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
             echo "Must provide a GITHUB_TOKEN secret in order to run release workflow"
             exit 1
           fi
