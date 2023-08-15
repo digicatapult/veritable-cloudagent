@@ -152,6 +152,7 @@ jobs:
         # if it's a non new version tag with hash and latest-dev
         run: |
           IS_NEW_VERSION="true"
+          VERSION=0.2.0
           if [ "$IS_NEW_VERSION" == "true" ]; then
             echo "GHCR_VERSION_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
             echo "DOCKERHUB_VERSION_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
@@ -168,10 +169,6 @@ jobs:
             echo "DOCKERHUB_VERSION_TAG=" >> $GITHUB_OUTPUT
             echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
           fi;
-          GHCR_LATEST_TAG="0.2.0"
-          DOCKERHUB_LATEST_TAG="0.2.0"
-          $GHCR_LATEST_TAG >> $GITHUB_OUTPUT
-          $DOCKERHUB_LATEST_TAG >> $GITHUB_OUTPUT
           echo $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
       - name: Login to GitHub Container Registry
