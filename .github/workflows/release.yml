@@ -126,7 +126,8 @@ jobs:
     name: "Publish package"
     needs: [preconditions, lint, dependency-check, tests, check-version]
     runs-on: ubuntu-latest
-    # if: ${{ needs.check-version.outputs.is_new_version == 'true' }}
+    # comment the line above to force publish
+    if: ${{ needs.check-version.outputs.is_new_version == 'true' }}
 
     steps:
       - uses: actions/checkout@v3
@@ -150,9 +151,10 @@ jobs:
         # if it's a new non prerelease version tag with hash, version latest-dev and latest
         # if it's a new prerelease version tag with hash, version and latest-dev
         # if it's a non new version tag with hash and latest-dev
+          # add the two lines above in run to force publish
+          # IS_NEW_VERSION="true"
+          # VERSION=0.2.0
         run: |
-          IS_NEW_VERSION="true"
-          VERSION=0.2.0
           if [ "$IS_NEW_VERSION" == "true" ]; then
             echo "GHCR_VERSION_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
             echo "DOCKERHUB_VERSION_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
@@ -204,3 +206,19 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.version=${{ needs.check-version.outputs.version }}
             org.opencontainers.image.created
+
+      # Build github release
+      - name: Build release version
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: ${{ needs.check-version.outputs.version }}
+          prerelease: false
+          title: Release ${{ needs.check-version.outputs.version }}
+      - name: Build release latest
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: latest
+          prerelease: false
+          title: Latest Release ${{ needs.check-version.outputs.version }}
