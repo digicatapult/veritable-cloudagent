@@ -1,14 +1,10 @@
-name: Lint and Test ( new jobs )
+name: Lint and Test
 
 on:
   pull_request:
     branches-ignore: ["main"]
   push:
     branches-ignore: ["main"]
-
-# env:
-#   TEST_AGENT_PUBLIC_DID_SEED: 000000000000000000000000Trustee9
-#   GENESIS_TXN_PATH: network/genesis/local-genesis.txn
 
 jobs:
 
