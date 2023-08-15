@@ -4,10 +4,6 @@ on:
   push:
     branches: ["main", "feature/new-gh-workflows"]
 
-concurrency:
-  group: aries-framework-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
-  cancel-in-progress: true
-
 jobs:
 
   preconditions:
