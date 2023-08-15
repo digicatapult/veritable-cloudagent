@@ -155,6 +155,7 @@ jobs:
           # IS_NEW_VERSION="true"
           # VERSION=0.2.0
         run: |
+          VERSION=$(echo "$VERSION" | tr -d '"')
           if [ "$IS_NEW_VERSION" == "true" ]; then
             echo "GHCR_VERSION_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
             echo "DOCKERHUB_VERSION_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
