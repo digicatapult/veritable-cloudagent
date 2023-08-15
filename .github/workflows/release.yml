@@ -161,6 +161,12 @@ jobs:
             echo "DOCKERHUB_VERSION_TAG=" >> $GITHUB_OUTPUT
             echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
           fi;
+          GHCR_LATEST_TAG=0.2.0
+          DOCKERHUB_LATEST_TAG=0.2.0
+          $GHCR_LATEST_TAG >> $GITHUB_OUTPUT
+          $DOCKERHUB_LATEST_TAG >> $GITHUB_OUTPUT
+          echo $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
