@@ -114,3 +114,18 @@ jobs:
         shell: bash
         run: |
           exit $([[ "${{steps.get_version.outputs.IS_NEW_VERSION}}" = "true" ]] && echo 0 || echo 1)
+
+  publish:
+    name: "Publish package"
+    needs: [preconditions, lint, dependency-check, tests, check-version]
+    runs-on: ubuntu-latest
+    # if: ${{ needs.check-version.outputs.is_new_version == 'true' }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Docker build
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
