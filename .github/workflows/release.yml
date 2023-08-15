@@ -161,6 +161,14 @@ jobs:
             echo "DOCKERHUB_VERSION_TAG=" >> $GITHUB_OUTPUT
             echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
           fi;
-          echo GITHUB_OUTPUT
-          cat $GITHUB_OUTPUT
-          echo $GITHUB_OUTPUT
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Login to Dockerhub Registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     username: ${{ secrets.DSCP_DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DSCP_DOCKERHUB_TOKEN }}
