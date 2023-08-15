@@ -6,6 +6,10 @@ on:
   push:
     branches-ignore: ["main"]
 
+concurrency:
+  group: aries-framework-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
+  cancel-in-progress: true
+
 jobs:
 
   repo_ids:
