@@ -134,3 +134,33 @@ jobs:
         uses: docker/setup-buildx-action@v2
         with:
           buildkitd-flags: "--debug"
+      - name: Generate tags
+        id: generate-tags
+        env:
+          VERSION: ${{ needs.check-version.outputs.version }}
+          IS_NEW_VERSION: ${{ needs.check-version.outputs.is_new_version }}
+          IS_PRERELEASE: ${{ needs.check-version.outputs.is_prerelease }}
+        # if it's a new non prerelease version tag with hash, version latest-dev and latest
+        # if it's a new prerelease version tag with hash, version and latest-dev
+        # if it's a non new version tag with hash and latest-dev
+        run: |
+          if [ "$IS_NEW_VERSION" == "true" ]; then
+            echo "GHCR_VERSION_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
+            echo "DOCKERHUB_VERSION_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:$VERSION" >> $GITHUB_OUTPUT
+            if [ "$IS_PRERELEASE" == "false" ]; then
+              echo "GHCR_LATEST_TAG=ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:latest" >> $GITHUB_OUTPUT
+              echo "DOCKERHUB_LATEST_TAG=${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:latest" >> $GITHUB_OUTPUT
+            else
+              echo "GHCR_LATEST_TAG=" >> $GITHUB_OUTPUT
+              echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
+            fi;
+          else
+            echo "GHCR_VERSION_TAG=" >> $GITHUB_OUTPUT
+            echo "GHCR_LATEST_TAG=" >> $GITHUB_OUTPUT
+            echo "DOCKERHUB_VERSION_TAG=" >> $GITHUB_OUTPUT
+            echo "DOCKERHUB_LATEST_TAG=" >> $GITHUB_OUTPUT
+            echo "GHCR_VERSION_TAG="
+            echo "GHCR_LATEST_TAG="
+            echo "DOCKERHUB_VERSION_TAG="
+            echo "DOCKERHUB_LATEST_TAG="
+          fi;
