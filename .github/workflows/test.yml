@@ -68,7 +68,7 @@ jobs:
       - name: Install Packages
         run: npm install # maybe this should be changed to npm ci
       - name: Dependency Check
-        run: ./node_modules/.bin/depcheck --ignores=ref-struct-di,@types/multer,@types/ref-struct-di,tsconfig-paths # need to be replaced with: npm run depcheck
+        run: npm run depcheck
 
   tests:
     name: Run tests
