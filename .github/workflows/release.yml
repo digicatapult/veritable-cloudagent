@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    branches: ["main", "feature/new-gh-workflows"]
+    branches: ["main"]
 
 jobs:
 
