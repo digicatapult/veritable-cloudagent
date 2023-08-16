@@ -79,9 +79,6 @@ jobs:
 
   tests:
     name: Run tests
-    strategy:
-      matrix:
-        test-type: [unit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -140,6 +137,6 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./afj-arm.dockerfile
-          # platforms: linux/amd64, linux/arm64
+          # The arm64 img is added only in release ( arm ETA build-time is ~1h )
           platforms: linux/amd64
           push: false

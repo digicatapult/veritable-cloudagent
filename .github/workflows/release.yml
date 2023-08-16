@@ -74,9 +74,6 @@ jobs:
 
   tests:
     name: Run tests
-    strategy:
-      matrix:
-        test-type: [unit]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -187,7 +184,6 @@ jobs:
           context: .
           file: ./afj-arm.dockerfile
           platforms: linux/amd64, linux/arm64
-          # platforms: linux/amd64
           push: true
           tags: |
             ghcr.io/${{ needs.preconditions.outputs.org_name }}/${{ needs.preconditions.outputs.repo_name }}:${{ github.sha }}
