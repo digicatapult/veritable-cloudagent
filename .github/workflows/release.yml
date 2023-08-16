@@ -205,7 +205,7 @@ jobs:
             org.opencontainers.image.version=${{ needs.check-version.outputs.version }}
             org.opencontainers.image.created
 
-      Build github release
+      # Build github release
       - name: Build release version
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
