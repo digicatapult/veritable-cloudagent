@@ -114,6 +114,7 @@ describe('WebhookTests', () => {
   })
 
   after(async () => {
+    await new Promise(r => setTimeout(r, 2000))
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()

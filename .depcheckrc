@@ -1,0 +1,8 @@
+{
+  "ignores": [
+    "ref-struct-di",
+    "@types/multer",
+    "@types/ref-struct-di",
+    "tsconfig-paths"
+  ]
+}
