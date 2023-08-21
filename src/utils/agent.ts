@@ -15,15 +15,12 @@ import {
   MediatorModule,
   ProofsModule,
 } from '@aries-framework/core'
-import { IndyVdrModule } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import path from 'path'
 
 import { TsLogger } from './logger'
-import { BCOVRIN_TEST_GENESIS } from './util'
 import VeritableAnonCredsRegistry from '../anoncreds'
 import Ipfs from '../ipfs'
 
@@ -31,7 +28,6 @@ export type RestAgent = Agent<{
   connections: ConnectionsModule
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol]>
-  indyVdr: IndyVdrModule
   anoncredsRs: AnonCredsRsModule
   anoncreds: AnonCredsModule
   askar: AskarModule
@@ -64,17 +60,6 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       }),
       credentials: new CredentialsModule({
         autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
-      }),
-      indyVdr: new IndyVdrModule({
-        indyVdr,
-        networks: [
-          {
-            isProduction: false,
-            indyNamespace: 'bcovrin:test',
-            genesisTransactions: BCOVRIN_TEST_GENESIS,
-            connectOnStartup: true,
-          },
-        ],
       }),
       anoncredsRs: new AnonCredsRsModule({
         anoncreds,
