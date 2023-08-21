@@ -19,13 +19,6 @@ const parsed = yargs
     string: true,
     demandOption: true,
   })
-  // .option('indy-ledger', {
-  //   array: true,
-  //   // TODO: this default is invalid, fixme
-  //   default: [],
-  //   coerce: (items: unknown[]) => items.map((i) => (typeof i === 'string' ? JSON.parse(i) : i)),
-  // })
-
   .option('endpoint', {
     array: true,
   })
