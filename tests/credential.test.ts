@@ -315,7 +315,7 @@ describe('CredentialController', () => {
             credentials: [
               {
                 credentialRecordId: 'credential-id',
-                credentialRecordType: 'indy',
+                credentialRecordType: 'anoncreds',
               },
             ],
             errorMessage: 'error',
@@ -353,7 +353,7 @@ describe('CredentialController', () => {
             credentials: [
               {
                 credentialRecordId: 'credential-id',
-                credentialRecordType: 'indy',
+                credentialRecordType: 'anoncreds',
               },
             ],
             errorMessage: 'error',

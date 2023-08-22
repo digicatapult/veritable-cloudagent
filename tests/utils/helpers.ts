@@ -186,7 +186,7 @@ export function getTestCredential() {
       },
       offerAttachments: [
         {
-          id: 'libindy-cred-offer-0',
+          id: 'cred-offer-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -224,7 +224,7 @@ export function getTestOffer() {
       },
       offerAttachments: [
         {
-          id: 'libindy-cred-offer-0',
+          id: 'cred-offer-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -264,7 +264,7 @@ export function getTestOffer() {
         },
         offerAttachments: [
           {
-            id: 'libindy-cred-offer-0',
+            id: 'cred-offer-0',
             mimeType: 'application/json',
             data: {
               base64: 'string',
@@ -335,7 +335,7 @@ export function getTestProof() {
       comment: 'string',
       requestPresentationAttachments: [
         {
-          id: 'libindy-request-presentation-0',
+          id: 'request-presentation-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -351,7 +351,7 @@ export function getTestProof() {
       type: 'https://didcomm.org/present-proof/1.0/presentation',
       presentationAttachments: [
         {
-          id: 'libindy-presentation-0',
+          id: 'presentation-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',

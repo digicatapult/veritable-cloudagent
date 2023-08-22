@@ -170,7 +170,7 @@ export const CredentialExchangeRecordExample = {
     connectionId: 'ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b',
   },
   metadata: {
-    '_internal/indyCredential': {
+    '_internal/anoncredsCredential': {
       credentialDefinitionId: 'q7ATwTYbQDgiigVijUAej:3:CL:318187:latest',
       schemaId: 'q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0',
     },
