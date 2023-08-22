@@ -5,12 +5,13 @@ import type {
   AnonCredsPresentationPreviewPredicate,
   AnonCredsNonRevokedInterval,
   AnonCredsPredicateType,
+  AnonCredsCredentialFormatService,
+  AnonCredsCredentialFormat,
 } from '@aries-framework/anoncreds'
 import type {
   AutoAcceptCredential,
   CredentialFormatPayload,
   HandshakeProtocol,
-  CredentialFormat,
   CredentialProtocolVersionType,
   ReceiveOutOfBandInvitationConfig,
   OutOfBandDidCommService,
@@ -44,75 +45,33 @@ export interface ProofRequestMessageResponse {
   proofRecord: ProofExchangeRecord
 }
 
-type CredentialProtocols = [V2CredentialProtocol]
-type CredentialFormats = [CredentialFormat]
+type CredentialProtocols = [V2CredentialProtocol<[AnonCredsCredentialFormatService]>]
+type CredentialFormats = [AnonCredsCredentialFormat]
 
 export interface ProposeCredentialOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: {
-    indy: {
-      schemaIssuerDid: string
-      schemaId: string
-      schemaName: string
-      schemaVersion: string
-      credentialDefinitionId: string
-      issuerDid: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   connectionId: string
 }
 
 export interface AcceptCredentialProposalOptions {
-  credentialFormats?: {
-    indy: {
-      schemaIssuerDid: string
-      schemaId: string
-      schemaName: string
-      schemaVersion: string
-      credentialDefinitionId: string
-      issuerDid: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'acceptProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
 
 export interface CreateOfferOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: {
-    indy: {
-      credentialDefinitionId: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
 
 export interface OfferCredentialOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: {
-    indy: {
-      credentialDefinitionId: string
-      attributes: {
-        name: string
-        value: string
-      }[]
-    }
-  }
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   connectionId: string

@@ -168,7 +168,7 @@ describe('CredentialController', () => {
         connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
         protocolVersion: 'v1',
         credentialFormats: {
-          indy: {
+          anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
             issuerDid: 'WghBqNdoFjaYh6F5N9eBF',
             schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
@@ -205,15 +205,20 @@ describe('CredentialController', () => {
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
 
+      //removed:
+      // issuerDid: 'WghBqNdoFjaYh6F5N9eBF',
+      // schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+      // schemaIssuerDid: 'WghBqNdoFjaYh6F5N9eBF',
+      // schemaName: 'test',
+      // schemaVersion: '1.0',
+
+      // autoAcceptCredential: 'always',
+      // comment: 'test',
+
       const proposalRequest = {
         credentialFormats: {
-          indy: {
+          anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
-            issuerDid: 'WghBqNdoFjaYh6F5N9eBF',
-            schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
-            schemaIssuerDid: 'WghBqNdoFjaYh6F5N9eBF',
-            schemaName: 'test',
-            schemaVersion: '1.0',
             attributes: [
               {
                 name: 'name',
@@ -222,8 +227,6 @@ describe('CredentialController', () => {
             ],
           },
         },
-        autoAcceptCredential: 'always',
-        comment: 'test',
       }
 
       const response = await request(app)
@@ -244,17 +247,31 @@ describe('CredentialController', () => {
       const acceptProposalStub = stub(bobAgent.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
+      //added proposal request - credentialFormars is required even if empty
+      const proposalRequest = {
+        credentialFormats: {},
+      }
 
-      const response = await request(app).post(`/credentials/${testCredential.id}/accept-proposal`)
+      const response = await request(app)
+        .post(`/credentials/${testCredential.id}/accept-proposal`)
+        .send(proposalRequest) //added proposal request
+      console.log('response' + response)
 
       const result = await getResult()
+      console.log('result' + result)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post(`/credentials/000000aa-aa00-00a0-aa00-000a0aa00000/accept-proposal`)
+      //added proposal request - credentialFormars is required even if empty
+      const proposalRequest = {
+        credentialFormats: {},
+      }
+      const response = await request(app)
+        .post(`/credentials/000000aa-aa00-00a0-aa00-000a0aa00000/accept-proposal`)
+        .send(proposalRequest) //added proposal request
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -365,7 +382,7 @@ describe('CredentialController', () => {
       const createOfferRequest = {
         protocolVersion: 'v1',
         credentialFormats: {
-          indy: {
+          anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
             attributes: [
               {
@@ -395,7 +412,7 @@ describe('CredentialController', () => {
       const createOfferRequest = {
         protocolVersion: 'v1',
         credentialFormats: {
-          indy: {
+          anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
             attributes: [
               {
@@ -446,7 +463,7 @@ describe('CredentialController', () => {
       const createOfferRequest = {
         protocolVersion: 'v1',
         credentialFormats: {
-          indy: {
+          anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
             attributes: [
               {
@@ -507,7 +524,7 @@ describe('CredentialController', () => {
       connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
       protocolVersion: 'v1',
       credentialFormats: {
-        indy: {
+        anoncreds: {
           credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
           attributes: [
             {
