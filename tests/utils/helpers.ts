@@ -82,9 +82,6 @@ export function getTestDidRecord() {
   return json
 }
 
-//removed from below:
-//  imageUrl: 'https://example.com/image-url',
-//  goal: 'string',
 export function getTestOutOfBandInvitation() {
   const json = {
     '@type': 'https://didcomm.org/out-of-band/1.1/invitation',

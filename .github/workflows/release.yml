@@ -2,10 +2,9 @@ name: Release
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
 
 jobs:
-
   preconditions:
     runs-on: ubuntu-latest
     outputs:
@@ -96,7 +95,7 @@ jobs:
         run: npm run test
 
   check-version:
-    name: "Check version"
+    name: 'Check version'
     runs-on: ubuntu-latest
     outputs:
       is_new_version: ${{ steps.get_version.outputs.IS_NEW_VERSION }}
@@ -120,7 +119,7 @@ jobs:
           echo "Skipping release as current version has already been published"
 
   publish:
-    name: "Publish package"
+    name: 'Publish package'
     needs: [preconditions, lint, dependency-check, tests, check-version]
     runs-on: ubuntu-latest
     # comment the line above to force publish
@@ -138,7 +137,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v2
         with:
-          buildkitd-flags: "--debug"
+          buildkitd-flags: '--debug'
       - name: Generate tags
         id: generate-tags
         env:
@@ -182,7 +181,7 @@ jobs:
         with:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
-          file: ./afj-arm.dockerfile
+          file: ./Dockerfile
           platforms: linux/amd64, linux/arm64
           push: true
           tags: |
@@ -203,16 +202,16 @@ jobs:
 
       # Build github release
       - name: Build release version
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: 'marvinpinto/action-automatic-releases@latest'
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
           automatic_release_tag: ${{ needs.check-version.outputs.version }}
           prerelease: false
           title: Release ${{ needs.check-version.outputs.version }}
       - name: Build release latest
-        uses: "marvinpinto/action-automatic-releases@latest"
+        uses: 'marvinpinto/action-automatic-releases@latest'
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          repo_token: '${{ secrets.GITHUB_TOKEN }}'
           automatic_release_tag: latest
           prerelease: false
           title: Latest Release ${{ needs.check-version.outputs.version }}

@@ -204,17 +204,6 @@ describe('CredentialController', () => {
       const acceptProposalStub = stub(bobAgent.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
-
-      //removed:
-      // issuerDid: 'WghBqNdoFjaYh6F5N9eBF',
-      // schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
-      // schemaIssuerDid: 'WghBqNdoFjaYh6F5N9eBF',
-      // schemaName: 'test',
-      // schemaVersion: '1.0',
-
-      // autoAcceptCredential: 'always',
-      // comment: 'test',
-
       const proposalRequest = {
         credentialFormats: {
           anoncreds: {
@@ -247,7 +236,7 @@ describe('CredentialController', () => {
       const acceptProposalStub = stub(bobAgent.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
-      //added proposal request - credentialFormars is required even if empty
+      //added proposal request - credentialFormats is required even if empty
       const proposalRequest = {
         credentialFormats: {},
       }
@@ -255,17 +244,15 @@ describe('CredentialController', () => {
       const response = await request(app)
         .post(`/credentials/${testCredential.id}/accept-proposal`)
         .send(proposalRequest) //added proposal request
-      console.log('response' + response)
 
       const result = await getResult()
-      console.log('result' + result)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      //added proposal request - credentialFormars is required even if empty
+      //added proposal request - credentialFormats is required even if empty
       const proposalRequest = {
         credentialFormats: {},
       }
