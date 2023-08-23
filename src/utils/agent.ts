@@ -1,5 +1,5 @@
-import type { AnonCredsProofFormatService } from '@aries-framework/anoncreds'
-import type { V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
+import { AnonCredsCredentialFormatService, AnonCredsProofFormatService } from '@aries-framework/anoncreds'
+import { V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
 
 import { AnonCredsModule } from '@aries-framework/anoncreds'
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
@@ -15,23 +15,19 @@ import {
   MediatorModule,
   ProofsModule,
 } from '@aries-framework/core'
-import { IndyVdrModule } from '@aries-framework/indy-vdr'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import path from 'path'
 
 import { TsLogger } from './logger'
-import { BCOVRIN_TEST_GENESIS } from './util'
 import VeritableAnonCredsRegistry from '../anoncreds'
 import Ipfs from '../ipfs'
 
 export type RestAgent = Agent<{
   connections: ConnectionsModule
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
-  credentials: CredentialsModule<[V2CredentialProtocol]>
-  indyVdr: IndyVdrModule
+  credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncredsRs: AnonCredsRsModule
   anoncreds: AnonCredsModule
   askar: AskarModule
@@ -62,18 +58,12 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       proofs: new ProofsModule({
         autoAcceptProofs: AutoAcceptProof.ContentApproved,
       }),
-      credentials: new CredentialsModule({
+      credentials: new CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>({
         autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
-      }),
-      indyVdr: new IndyVdrModule({
-        indyVdr,
-        networks: [
-          {
-            isProduction: false,
-            indyNamespace: 'bcovrin:test',
-            genesisTransactions: BCOVRIN_TEST_GENESIS,
-            connectOnStartup: true,
-          },
+        credentialProtocols: [
+          new V2CredentialProtocol({
+            credentialFormats: [new AnonCredsCredentialFormatService()],
+          }),
         ],
       }),
       anoncredsRs: new AnonCredsRsModule({

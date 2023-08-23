@@ -84,11 +84,10 @@ export function getTestDidRecord() {
 
 export function getTestOutOfBandInvitation() {
   const json = {
-    '@type': 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation',
+    '@type': 'https://didcomm.org/out-of-band/1.1/invitation',
     '@id': 'd6472943-e5d0-4d95-8b48-790ed5a41931',
     label: 'Aries Test Agent',
-    goal: 'string',
-    imageUrl: 'https://example.com/image-url',
+
     accept: ['didcomm/aip1', 'didcomm/aip2;env=rfc19'],
     handshake_protocols: ['https://didcomm.org/didexchange/1.0', 'https://didcomm.org/connections/1.0'],
     services: [
@@ -129,7 +128,7 @@ export function getTestOutOfBandRecord() {
     id: '42a95528-0e30-4f86-a462-0efb02178b53',
     createdAt: new Date('2022-01-01T00:00:00.000Z'),
     outOfBandInvitation: {
-      '@type': 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation',
+      '@type': 'https://didcomm.org/out-of-band/1.1/invitation',
       '@id': 'd6472943-e5d0-4d95-8b48-790ed5a41931',
       label: 'Aries Test Agent',
       accept: ['didcomm/aip1', 'didcomm/aip2;env=rfc19'],
@@ -184,7 +183,7 @@ export function getTestCredential() {
       },
       offerAttachments: [
         {
-          id: 'libindy-cred-offer-0',
+          id: 'cred-offer-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -222,7 +221,7 @@ export function getTestOffer() {
       },
       offerAttachments: [
         {
-          id: 'libindy-cred-offer-0',
+          id: 'cred-offer-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -262,7 +261,7 @@ export function getTestOffer() {
         },
         offerAttachments: [
           {
-            id: 'libindy-cred-offer-0',
+            id: 'cred-offer-0',
             mimeType: 'application/json',
             data: {
               base64: 'string',
@@ -333,7 +332,7 @@ export function getTestProof() {
       comment: 'string',
       requestPresentationAttachments: [
         {
-          id: 'libindy-request-presentation-0',
+          id: 'request-presentation-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -349,7 +348,7 @@ export function getTestProof() {
       type: 'https://didcomm.org/present-proof/1.0/presentation',
       presentationAttachments: [
         {
-          id: 'libindy-presentation-0',
+          id: 'presentation-0',
           mimeType: 'application/json',
           data: {
             base64: 'string',

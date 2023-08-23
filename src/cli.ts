@@ -19,12 +19,6 @@ const parsed = yargs
     string: true,
     demandOption: true,
   })
-  .option('indy-ledger', {
-    array: true,
-    // TODO: this default is invalid, fixme
-    default: [],
-    coerce: (items: unknown[]) => items.map((i) => (typeof i === 'string' ? JSON.parse(i) : i)),
-  })
   .option('endpoint', {
     array: true,
   })
@@ -120,7 +114,6 @@ export async function runCliServer() {
       id: parsed['wallet-id'],
       key: parsed['wallet-key'],
     },
-    indyLedgers: parsed['indy-ledger'],
     endpoints: parsed.endpoint,
     autoAcceptConnections: parsed['auto-accept-connections'],
     autoAcceptCredentials: parsed['auto-accept-credentials'],

@@ -1,8 +1,7 @@
 import type { InitConfig } from '@aries-framework/core'
 import type { WalletConfig } from '@aries-framework/core/build/types'
-import type { IndyVdrPoolConfig } from '@aries-framework/indy-vdr'
 
-import { AnonCredsModule } from '@aries-framework/anoncreds'
+import { AnonCredsCredentialFormatService, AnonCredsModule } from '@aries-framework/anoncreds'
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { AskarModule } from '@aries-framework/askar'
 import {
@@ -16,12 +15,12 @@ import {
   AutoAcceptCredential,
   AutoAcceptProof,
   MediatorModule,
+  V2CredentialProtocol,
 } from '@aries-framework/core'
-import { IndyVdrModule } from '@aries-framework/indy-vdr'
+
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import { indyVdr } from '@hyperledger/indy-vdr-nodejs'
 import { readFile } from 'fs/promises'
 
 import { setupServer } from './server'
@@ -48,7 +47,6 @@ const outboundTransportMapping = {
 export interface AriesRestConfig {
   label: string
   walletConfig: WalletConfig
-  indyLedgers: [IndyVdrPoolConfig, ...IndyVdrPoolConfig[]]
   endpoints?: string[]
   autoAcceptConnections?: boolean
   autoAcceptCredentials?: AutoAcceptCredential
@@ -81,7 +79,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     outboundTransports = [],
     webhookUrl,
     adminPort,
-    indyLedgers,
     autoAcceptConnections = true,
     autoAcceptCredentials = AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests = true,
@@ -107,12 +104,13 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       proofs: new ProofsModule({
         autoAcceptProofs,
       }),
-      credentials: new CredentialsModule({
+      credentials: new CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>({
         autoAcceptCredentials,
-      }),
-      indyVdr: new IndyVdrModule({
-        indyVdr,
-        networks: indyLedgers,
+        credentialProtocols: [
+          new V2CredentialProtocol({
+            credentialFormats: [new AnonCredsCredentialFormatService()],
+          }),
+        ],
       }),
       anoncreds: new AnonCredsModule({
         registries: [new VeritableAnonCredsRegistry(new Ipfs(ipfsOrigin))],

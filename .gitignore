@@ -26,5 +26,3 @@ knexfile.js
 *.seed
 *.pid.lock
 
-.indy_client
-

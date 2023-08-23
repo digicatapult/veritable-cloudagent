@@ -9,7 +9,7 @@
 <h1 align="center"><b>Aries Framework JavaScript REST API</b></h1>
 <p align="center">
   <a
-    href="https://raw.githubusercontent.com/hyperledger/veritable-cloudagent-tmp/main/LICENSE"
+    href="https://raw.githubusercontent.com/hyperledger/aries-framework-javascript-ext/main/LICENSE"
     ><img
       alt="License"
       src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"
@@ -59,19 +59,20 @@ docker run -p 5000:5000 -p 3000:3000 ghcr.io/hyperledger/afj-rest \
   --inbound-transport http 5000
 ```
 
-See the [docker-compose.yml](https://github.com/hyperledger/veritable-cloudagent-tmp/tree/main/docker-compose.yml) file for an example of using the afj-rest image with Docker Compose.
+See the [docker-compose.yml](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/docker-compose.yml) file for an example of using the afj-rest image with Docker Compose.
 
 > ⚠️ The Docker image is not optimized for ARM architectures and won't work on Apple Silicon Macs. See the **Directly on Computer** below on how to run it directly on your computer without Docker.
 
 **Directly on Computer**
 
-To run AFJ REST API directly on your computer you need to have the indy-sdk installed. Follow the Indy [installation steps](https://github.com/hyperledger/aries-framework-javascript/tree/main/docs/libindy) for your platform and verify Indy is installed.
+To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.
 
-Once you have installed Indy, you can start the REST server using the following command:
+Once you have installed IPFS, you can start the REST server using the following command:
 
 ```sh
 npx -p @aries-framework/rest afj-rest start \
   --label "AFJ Rest" \
+  --ipfs-origin http://localhost:5001 \
   --wallet-id "walletId" \
   --wallet-key "walletKey" \
   --endpoint http://localhost:5000 \
@@ -79,6 +80,8 @@ npx -p @aries-framework/rest afj-rest start \
   --outbound-transport http \
   --inbound-transport http 5000
 ```
+
+If you want to allow cli to communicate with ipfs use the '--ipfs-origin' argument. There is a --help command for more info.
 
 **Configuration**
 
@@ -92,7 +95,7 @@ docker run ghcr.io/hyperledger/afj-rest --help
 npx -p @aries-framework/rest afj-rest start --help
 ```
 
-It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/hyperledger/veritable-cloudagent-tmp/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
+It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
 
 ```json
 {
