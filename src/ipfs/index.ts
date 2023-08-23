@@ -23,7 +23,7 @@ export default class Ipfs {
   //needs to pass on form data
   public async uploadFile(file: Buffer): Promise<string> {
     const form = new FormData()
-    let blob = new Blob([file])
+    const blob = new Blob([file])
     form.append('file', blob, 'file')
     const response = await this.makeIpfsRequest('/api/v0/add', { 'cid-version': '1' }, form)
     const responseJson = await response.json()
