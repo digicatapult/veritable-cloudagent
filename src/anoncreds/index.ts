@@ -17,7 +17,9 @@ import type { AgentContext } from '@aries-framework/core'
 
 export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   public readonly methodName = 'veritable'
-  public readonly supportedIdentifier = /^ipfs:\/\/([a-zA-Z0-9]+)$/
+  public readonly supportedIdentifier =
+    /(?:^did:key:z[a-km-zA-HJ-NP-Z1-9]+$)|(?:^ipfs:\/\/([a-zA-Z0-9]+)$)|(?:^did:web:.+$)/ //did:web matches anything but an empty string
+  private readonly ipfsIdentifier = /^ipfs:\/\/([a-zA-Z0-9]+)$/
 
   constructor(private ipfs: Ipfs) {}
 
@@ -167,7 +169,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     agentContext: AgentContext,
     id: string
   ): Promise<{ type: 'success'; result: AObj } | { type: 'error'; error: AnonCredsResolutionMetadata }> {
-    const match = id.match(this.supportedIdentifier)
+    const match = id.match(this.ipfsIdentifier)
     if (!match) {
       return {
         type: 'error',

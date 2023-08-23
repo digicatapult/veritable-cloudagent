@@ -27,7 +27,6 @@ export const withIpfsCatResponse = (responses: { cid: string; code: number; body
 
   return { ipfsOrigin }
 }
-
 export const withIpfsAddResponse = (responses: { code: number; cid: unknown; body: Buffer }[]) => {
   const ipfsOrigin = `http://ipfs`
   let originalDispatcher: Dispatcher
@@ -45,8 +44,9 @@ export const withIpfsAddResponse = (responses: { code: number; cid: unknown; bod
           method: 'POST',
           body: (calledBody) => {
             // ugly hack as undici mock doesn't allow mocking of Buffer bodies only strings
-            const asBuf = calledBody as unknown as Buffer
-            return body.compare(asBuf) === 0
+            const asBuf = calledBody as unknown as FormData
+            const asArr = [...asBuf.entries()]
+            return asArr.length === 1 && asArr[0][0] === 'file'
           },
         })
         .reply(code, { Hash: cid })
