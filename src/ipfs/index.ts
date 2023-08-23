@@ -1,5 +1,10 @@
 import { addResponseParser } from './responseParser'
 
+export interface MetadataFile {
+  blob: Blob
+  filename: string
+}
+
 export default class Ipfs {
   constructor(private origin: string) {
     try {
@@ -15,9 +20,12 @@ export default class Ipfs {
     })
     return Buffer.from(await response.arrayBuffer())
   }
-
+  //needs to pass on form data
   public async uploadFile(file: Buffer): Promise<string> {
-    const response = await this.makeIpfsRequest('/api/v0/add', { 'cid-version': '1' }, file)
+    const form = new FormData()
+    const blob = new Blob([file])
+    form.append('file', blob, 'file')
+    const response = await this.makeIpfsRequest('/api/v0/add', { 'cid-version': '1' }, form)
     const responseJson = await response.json()
 
     try {
@@ -28,7 +36,7 @@ export default class Ipfs {
     }
   }
 
-  private async makeIpfsRequest(route: string, args: Record<string, string>, body?: Buffer) {
+  private async makeIpfsRequest(route: string, args: Record<string, string>, body?: FormData) {
     const url = new URL(route, this.origin)
     const search = new URLSearchParams(args)
     url.search = search.toString()
