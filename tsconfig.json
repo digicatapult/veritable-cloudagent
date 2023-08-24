@@ -8,6 +8,8 @@
     "paths": {
       "@aries-framework/rest": ["./src"]
     },
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
     "types": ["mocha", "node"]
   },
   "exclude": ["node_modules", "build"]

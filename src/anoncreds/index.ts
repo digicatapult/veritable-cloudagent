@@ -15,6 +15,9 @@ import type {
 import Ipfs from '../ipfs'
 import type { AgentContext } from '@aries-framework/core'
 
+import _schema from '../../definitions/schemaDefinition.json'
+const schema = _schema as AnonCredsSchema
+
 export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   public readonly methodName = 'veritable'
   public readonly supportedIdentifier =

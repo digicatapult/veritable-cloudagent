@@ -1,5 +1,5 @@
 import type { RestAgent } from '../src/utils/agent'
-import type { AnonCredsSchema } from '@aries-framework/anoncreds'
+import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@aries-framework/anoncreds'
 import type { Express } from 'express'
 
 import { describe, before, after, afterEach, test } from 'mocha'
@@ -11,6 +11,8 @@ import request from 'supertest'
 import { setupServer } from '../src/server'
 
 import { getTestAgent, getTestSchema } from './utils/helpers'
+import _schema from '../definitions/schemaDefinition.json'
+const schema = _schema as AnonCredsSchema
 
 describe('SchemaController', () => {
   let app: Express
@@ -59,7 +61,7 @@ describe('SchemaController', () => {
         schemaMetadata: {},
       })
 
-      const response = await request(app).get(`/schemas/x`)
+      const response = await request(app).get(`/schemas/x`) //inspo
 
       expect(response.statusCode).to.be.equal(400)
     })
@@ -127,6 +129,69 @@ describe('SchemaController', () => {
       const response = await request(app).post(`/schemas`).send(omitted)
 
       expect(response.statusCode).to.be.equal(422)
+    })
+  })
+
+  describe('create schema using new json schema ', () => {
+    test('should return created schema ', async () => {
+      const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
+      const registerCredentialDefinitionStub = stub(agent.modules.anoncreds, 'registerCredentialDefinition')
+      //register schema
+      registerSchemaStub.resolves({
+        schemaState: {
+          state: 'finished',
+          schema: schema,
+          schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        },
+        registrationMetadata: {},
+        schemaMetadata: {},
+      })
+
+      const getResult = () => ({
+        id: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        ...schema,
+      })
+
+      const response = await request(app).post(`/schemas/`).send(schema)
+      //register cred. definition using the registered schema
+      let testCredentialDefinitionRes: AnonCredsCredentialDefinition = {
+        issuerId: schema.issuerId,
+        schemaId: getResult().id,
+        type: 'CL',
+        tag: 'definition',
+        value: {
+          primary: {},
+        },
+      }
+      let testCredentialDefinition = {
+        issuerId: schema.issuerId,
+        schemaId: getResult().id,
+        tag: 'definition',
+      }
+
+      registerCredentialDefinitionStub.resolves({
+        credentialDefinitionMetadata: {},
+        registrationMetadata: {},
+        credentialDefinitionState: {
+          state: 'finished',
+          credentialDefinition: testCredentialDefinitionRes,
+          credentialDefinitionId: `ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu`,
+        },
+      })
+
+      const getCredentialDefResult = () => ({
+        id: 'ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu',
+        ...testCredentialDefinitionRes,
+      })
+      const responseCredentialDeff = await request(app).post(`/credential-definitions/`).send(testCredentialDefinition)
+
+      // console.log(responseCredentialDeff)
+
+      expect(responseCredentialDeff.statusCode).to.be.equal(200)
+      expect(responseCredentialDeff.body).to.deep.equal(getCredentialDefResult())
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(getResult())
     })
   })
 
