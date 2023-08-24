@@ -1,6 +1,6 @@
-import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps } from '../types'
+import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../types'
 
-import { Agent, AriesFrameworkError, ImportDidOptions } from '@aries-framework/core'
+import { Agent, AriesFrameworkError, TypedArrayEncoder } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -49,7 +49,14 @@ export class DidController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
-      await this.agent.dids.import(options)
+      const { privateKeys, ...rest } = options
+      await this.agent.dids.import({
+        ...rest,
+        privateKeys: privateKeys?.map(({ keyType, privateKey }) => ({
+          keyType,
+          privateKey: TypedArrayEncoder.fromString(privateKey),
+        })),
+      })
       return this.getDidRecordByDid(options.did)
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
