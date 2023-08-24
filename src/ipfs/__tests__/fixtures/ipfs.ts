@@ -37,7 +37,7 @@ export const withIpfsAddResponse = (responses: { code: number; cid: unknown; bod
     setGlobalDispatcher(mockAgent)
     const mockIpfs = mockAgent.get(`http://ipfs`)
 
-    for (const { code, cid, body } of responses) {
+    for (const { code, cid } of responses) {
       mockIpfs
         .intercept({
           path: '/api/v0/add?cid-version=1',
