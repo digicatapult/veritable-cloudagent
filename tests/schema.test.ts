@@ -131,11 +131,9 @@ describe('SchemaController', () => {
       expect(response.statusCode).to.be.equal(422)
     })
   })
-
   describe('create schema using new json schema ', () => {
-    test('should return created schema ', async () => {
+    test('should return created schema  using new json ', async () => {
       const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
-      const registerCredentialDefinitionStub = stub(agent.modules.anoncreds, 'registerCredentialDefinition')
       //register schema
       registerSchemaStub.resolves({
         schemaState: {
@@ -153,42 +151,6 @@ describe('SchemaController', () => {
       })
 
       const response = await request(app).post(`/schemas/`).send(schema)
-      //register cred. definition using the registered schema
-      let testCredentialDefinitionRes: AnonCredsCredentialDefinition = {
-        issuerId: schema.issuerId,
-        schemaId: getResult().id,
-        type: 'CL',
-        tag: 'definition',
-        value: {
-          primary: {},
-        },
-      }
-      let testCredentialDefinition = {
-        issuerId: schema.issuerId,
-        schemaId: getResult().id,
-        tag: 'definition',
-      }
-
-      registerCredentialDefinitionStub.resolves({
-        credentialDefinitionMetadata: {},
-        registrationMetadata: {},
-        credentialDefinitionState: {
-          state: 'finished',
-          credentialDefinition: testCredentialDefinitionRes,
-          credentialDefinitionId: `ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu`,
-        },
-      })
-
-      const getCredentialDefResult = () => ({
-        id: 'ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu',
-        ...testCredentialDefinitionRes,
-      })
-      const responseCredentialDeff = await request(app).post(`/credential-definitions/`).send(testCredentialDefinition)
-
-      // console.log(responseCredentialDeff)
-
-      expect(responseCredentialDeff.statusCode).to.be.equal(200)
-      expect(responseCredentialDeff.body).to.deep.equal(getCredentialDefResult())
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(getResult())

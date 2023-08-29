@@ -12,6 +12,9 @@ import { setupServer } from '../src/server'
 
 import { getTestAgent, getTestCredDef, getTestSchema } from './utils/helpers'
 
+import _schema from '../definitions/schemaDefinition.json'
+const schema = _schema as AnonCredsSchema
+
 describe('CredentialDefinitionController', () => {
   let app: Express
   let agent: RestAgent
@@ -82,6 +85,15 @@ describe('CredentialDefinitionController', () => {
     })
 
     test('should return 404 NotFound when credential definition not found', async () => {
+      const spy = stub(agent.modules.anoncreds, 'getCredentialDefinition')
+      spy.resolves({
+        credentialDefinitionId: 'x',
+        credentialDefinitionMetadata: {},
+        resolutionMetadata: {
+          error: 'notFound',
+        },
+      })
+
       const id = encodeURIComponent('ipfs://QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR')
       const response = await request(app).get(`/credential-definitions/${id}`)
       expect(response.statusCode).to.be.equal(404)
@@ -137,6 +149,55 @@ describe('CredentialDefinitionController', () => {
         tag: 'latest',
       })
       expect(response.statusCode).to.be.equal(422)
+    })
+  })
+
+  describe('create credential definition using new json schema ', () => {
+    test('should return created credential definitionusing new json ', async () => {
+      const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
+      const registerCredentialDefinitionStub = stub(agent.modules.anoncreds, 'registerCredentialDefinition')
+      //mock out getSchema from CredentialDefinitionController
+      const getSchemaStub = stub(agent.modules.anoncreds, 'getSchema').resolves({
+        resolutionMetadata: {},
+        schemaMetadata: {},
+        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        schema: schema,
+      })
+
+      //register cred. definition using the registered schema
+      let testCredentialDefinition: AnonCredsCredentialDefinition = {
+        issuerId: schema.issuerId,
+        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        type: 'CL',
+        tag: 'definition',
+        value: {
+          primary: {},
+        },
+      }
+
+      registerCredentialDefinitionStub.resolves({
+        credentialDefinitionState: {
+          state: 'finished',
+          credentialDefinition: testCredentialDefinition,
+          credentialDefinitionId: `ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu`,
+        },
+        registrationMetadata: {},
+        credentialDefinitionMetadata: {},
+      })
+
+      const getCredentialDefResult = () => ({
+        id: 'ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu',
+        ...testCredentialDefinition,
+      })
+
+      const responseCredentialDeff = await request(app).post(`/credential-definitions/`).send({
+        issuerId: testCredentialDefinition.issuerId,
+        schemaId: testCredentialDefinition.schemaId,
+        tag: testCredentialDefinition.tag,
+      })
+
+      expect(responseCredentialDeff.statusCode).to.be.equal(200)
+      expect(responseCredentialDeff.body).to.deep.equal(getCredentialDefResult())
     })
   })
 
