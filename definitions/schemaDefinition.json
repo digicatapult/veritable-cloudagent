@@ -3,7 +3,7 @@
     "version": "1.0", 
     "name":"string",
     "attrNames": [ 
-        "Check name",
+        "checkName",
         "companyName" ,
         "companysHouseNumber",
         "issueDate",
