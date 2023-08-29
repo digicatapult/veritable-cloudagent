@@ -100,6 +100,40 @@ describe('CredentialDefinitionController', () => {
     })
   })
 
+  describe('get credential definition by id using schema definition json', () => {
+    test('should return credential definition ', async () => {
+      let testCredentialDefinition: AnonCredsCredentialDefinition = {
+        issuerId: schema.issuerId,
+        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        type: 'CL',
+        tag: 'definition',
+        value: {
+          primary: {},
+        },
+      }
+      const spy = stub(agent.modules.anoncreds, 'getCredentialDefinition')
+      spy.resolves({
+        credentialDefinitionId: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+        credentialDefinitionMetadata: {},
+        resolutionMetadata: {},
+        credentialDefinition: testCredentialDefinition,
+      })
+      const getResult = () => ({
+        id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+        ...testCredentialDefinition,
+      })
+
+      const response = await request(app).get(`/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
+      const result = await getResult()
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body.id).to.deep.equal(result.id)
+      expect(response.body.schemaId).to.deep.equal(result.schemaId)
+      expect(response.body.tag).to.deep.equal(result.tag)
+      expect(response.body.type).to.deep.equal(result.type)
+    })
+  })
+
   describe('create credential definition', () => {
     test('should return created credential definition ', async () => {
       const registerCredentialDefinitionSpy = stub(agent.modules.anoncreds, 'registerCredentialDefinition')
