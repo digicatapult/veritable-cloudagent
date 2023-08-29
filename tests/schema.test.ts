@@ -1,5 +1,5 @@
 import type { RestAgent } from '../src/utils/agent'
-import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@aries-framework/anoncreds'
+import type { AnonCredsSchema } from '@aries-framework/anoncreds'
 import type { Express } from 'express'
 
 import { describe, before, after, afterEach, test } from 'mocha'
@@ -61,7 +61,7 @@ describe('SchemaController', () => {
         schemaMetadata: {},
       })
 
-      const response = await request(app).get(`/schemas/x`) //inspo
+      const response = await request(app).get(`/schemas/x`)
 
       expect(response.statusCode).to.be.equal(400)
     })

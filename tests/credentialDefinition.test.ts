@@ -102,25 +102,17 @@ describe('CredentialDefinitionController', () => {
 
   describe('get credential definition by id using schema definition json', () => {
     test('should return credential definition ', async () => {
-      let testCredentialDefinition: AnonCredsCredentialDefinition = {
-        issuerId: schema.issuerId,
-        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
-        type: 'CL',
-        tag: 'definition',
-        value: {
-          primary: {},
-        },
-      }
+      testCredDef.schemaId = 'ipfs://bafkreihiz6z2hcostlo73fycbflmhsayoyuqkicwinpqc7knxwmhhwahqq'
       const spy = stub(agent.modules.anoncreds, 'getCredentialDefinition')
       spy.resolves({
         credentialDefinitionId: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
         credentialDefinitionMetadata: {},
         resolutionMetadata: {},
-        credentialDefinition: testCredentialDefinition,
+        credentialDefinition: testCredDef,
       })
       const getResult = () => ({
         id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
-        ...testCredentialDefinition,
+        ...testCredDef,
       })
 
       const response = await request(app).get(`/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
@@ -190,29 +182,20 @@ describe('CredentialDefinitionController', () => {
     test('should return created credential definitionusing new json ', async () => {
       const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
       const registerCredentialDefinitionStub = stub(agent.modules.anoncreds, 'registerCredentialDefinition')
-      //mock out getSchema from CredentialDefinitionController
+      // mock out getSchema from CredentialDefinitionController
       const getSchemaStub = stub(agent.modules.anoncreds, 'getSchema').resolves({
         resolutionMetadata: {},
         schemaMetadata: {},
-        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        schemaId: 'ipfs://bafkreihiz6z2hcostlo73fycbflmhsayoyuqkicwinpqc7knxwmhhwahqq',
         schema: schema,
       })
 
-      //register cred. definition using the registered schema
-      let testCredentialDefinition: AnonCredsCredentialDefinition = {
-        issuerId: schema.issuerId,
-        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
-        type: 'CL',
-        tag: 'definition',
-        value: {
-          primary: {},
-        },
-      }
+      testCredDef.schemaId = 'ipfs://bafkreihiz6z2hcostlo73fycbflmhsayoyuqkicwinpqc7knxwmhhwahqq'
 
       registerCredentialDefinitionStub.resolves({
         credentialDefinitionState: {
           state: 'finished',
-          credentialDefinition: testCredentialDefinition,
+          credentialDefinition: testCredDef,
           credentialDefinitionId: `ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu`,
         },
         registrationMetadata: {},
@@ -221,13 +204,13 @@ describe('CredentialDefinitionController', () => {
 
       const getCredentialDefResult = () => ({
         id: 'ipfs://bafkreiafhhldn47xkq4r5frf4lgaqqq35h66xikhttp5s7g5peotmi2szu',
-        ...testCredentialDefinition,
+        ...testCredDef,
       })
 
       const responseCredentialDeff = await request(app).post(`/credential-definitions/`).send({
-        issuerId: testCredentialDefinition.issuerId,
-        schemaId: testCredentialDefinition.schemaId,
-        tag: testCredentialDefinition.tag,
+        issuerId: testCredDef.issuerId,
+        schemaId: testCredDef.schemaId,
+        tag: testCredDef.tag,
       })
 
       expect(responseCredentialDeff.statusCode).to.be.equal(200)
