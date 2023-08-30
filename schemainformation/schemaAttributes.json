@@ -5,7 +5,7 @@
     "attrNames": [ 
         "checkName",
         "companyName" ,
-        "companysHouseNumber",
+        "companiesHouseNumber",
         "issueDate",
         "expiryDate"]
     
