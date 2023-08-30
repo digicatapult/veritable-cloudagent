@@ -188,10 +188,10 @@ For the WebSocket clients, the events are sent as JSON stringified objects
 
 ### Schema Definition
 
-The repo contains 'schemainformation' folder with a schema body json which can be imported into ts files like so:
+The repo contains 'schema' folder with a schema body json which can be imported into ts files like so:
 
 ```
-import _schema from './schemainformation/schemaAttributes.json'
+import _schema from './schema/schemaAttributes.json'
 const schema = _schema as AnonCredsSchema
 ```
 
