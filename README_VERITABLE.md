@@ -185,3 +185,36 @@ So in this case when a connection event is triggered, it will be sent to: http:/
 The payload of the webhook contains the serialized record related to the topic of the event. For the `connections` topic this will be a `ConnectionRecord`, for the `credentials` topic it will be a `CredentialRecord`, and so on.
 
 For the WebSocket clients, the events are sent as JSON stringified objects
+
+### Schema Definition
+
+The repo contains 'schema' folder with a schema body json which can be imported into ts files like so:
+
+```
+import _schema from './schema/schemaAttributes.json'
+const schema = _schema as AnonCredsSchema
+```
+
+The Json file contains attributes required for a schema to be registered.
+The attributes are:
+
+- checkName => what kind of check this is (e.g. NASDAQ, Rev >500, Production Capacity etc)
+- companyName => name of the company that is being checked (max 200 characters)
+- companiesHouseNumber => unique identifier for companies provided by Companiess House (max 8 characters - alphanumeric)
+- issueDate => date when this check was issued (dateInt e.g. 20230101 for 1st Jan 2023)
+- expiryDate => date when this check expires (dateInt e.g. 20230101 for 1st Jan 2023)
+
+The schema definition can be posted to `/schemas` to register it. Upon a successful call a response is returned with an 'id' property which refers to this schema and can be used to refer to the schema when creating a new credential definition like so:
+
+```
+{
+  "tag": "myTestDefinition",
+  "schemaId": "ipfs://example",
+  "issuerId": "did:key:exampleDidKey"
+}
+```
+
+(Note: Each credential definition is unique, because a different set of cryptographic materials is created each time.)
+
+A credential definition can then be used to issue a credential which contains both information about an issuer of a credential and the check itself.
+(Note: Because the schema and definition is saved on ipfs. One must have an instance of ipfs running or be connected to global ipfs when registering a schema and definition.)

@@ -11,6 +11,8 @@ import request from 'supertest'
 import { setupServer } from '../src/server'
 
 import { getTestAgent, getTestSchema } from './utils/helpers'
+import _schema from '../schema/schemaAttributes.json'
+const schema = _schema as AnonCredsSchema
 
 describe('SchemaController', () => {
   let app: Express
@@ -95,6 +97,29 @@ describe('SchemaController', () => {
     })
   })
 
+  describe('get schema by id using schema definition', () => {
+    test('should return schema', async () => {
+      const getSchemaStub = stub(agent.modules.anoncreds, 'getSchema')
+      getSchemaStub.resolves({
+        schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        schema: schema,
+        schemaMetadata: {},
+        resolutionMetadata: {},
+      })
+
+      const getResult = () => ({
+        id: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        ...schema,
+      })
+
+      const response = await request(app).get(`/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
+      const result = await getResult()
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result)
+    })
+  })
+
   describe('create schema', () => {
     test('should return created schema ', async () => {
       const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
@@ -127,6 +152,31 @@ describe('SchemaController', () => {
       const response = await request(app).post(`/schemas`).send(omitted)
 
       expect(response.statusCode).to.be.equal(422)
+    })
+  })
+  describe('create schema using new json schema ', () => {
+    test('should return created schema  using new json ', async () => {
+      const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
+      //register schema
+      registerSchemaStub.resolves({
+        schemaState: {
+          state: 'finished',
+          schema: schema,
+          schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        },
+        registrationMetadata: {},
+        schemaMetadata: {},
+      })
+
+      const getResult = () => ({
+        id: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+        ...schema,
+      })
+
+      const response = await request(app).post(`/schemas/`).send(schema)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(getResult())
     })
   })
 
