@@ -120,6 +120,48 @@ export const DidRecordExample = {
   },
 }
 
+export const DidStateExample = {
+  state: 'finished' as const,
+  did: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+  didDocument: {
+    '@context': [
+      'https://w3id.org/did/v1',
+      'https://w3id.org/security/suites/ed25519-2018/v1',
+      'https://w3id.org/security/suites/x25519-2019/v1',
+    ],
+    id: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+    verificationMethod: [
+      {
+        id: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+        type: 'Ed25519VerificationKey2018',
+        controller: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+        publicKeyBase58: 'ApexJxnhZHC6Ctq4fCoNHKYgu87HuRTZ7oSyfehG57zE',
+      },
+    ],
+    authentication: [
+      'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+    ],
+    assertionMethod: [
+      'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+    ],
+    keyAgreement: [
+      {
+        id: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6LSm5B4fB9NA55xB7PSeMYTMS9sf8uboJvyZBaDLLSZ7Ryd',
+        type: 'X25519KeyAgreementKey2019',
+        controller: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+        publicKeyBase58: 'APzu8sLW4cND5j1g7i2W2qwPozNV6hkpgCrXqso2Q4Cs',
+      },
+    ],
+    capabilityInvocation: [
+      'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+    ],
+    capabilityDelegation: [
+      'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc',
+    ],
+  },
+  secret: {},
+}
+
 type OutOfBandRecordProperties = Omit<OutOfBandRecordProps, 'outOfBandInvitation'>
 export type OutOfBandInvitationProps = Omit<
   OutOfBandInvitationOptions,
@@ -131,7 +173,7 @@ export interface OutOfBandRecordWithInvitationProps extends OutOfBandRecordPrope
 }
 
 export const outOfBandInvitationExample = {
-  '@type': 'https://didcomm.org/out-of-band/2.0/invitation',
+  '@type': 'did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation',
   '@id': 'd6472943-e5d0-4d95-8b48-790ed5a41931',
   label: 'Aries Test Agent',
   accept: ['didcomm/aip1', 'didcomm/aip2;env=rfc19'],
@@ -170,7 +212,7 @@ export const CredentialExchangeRecordExample = {
     connectionId: 'ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b',
   },
   metadata: {
-    '_internal/anoncredsCredential': {
+    '_internal/indyCredential': {
       credentialDefinitionId: 'q7ATwTYbQDgiigVijUAej:3:CL:318187:latest',
       schemaId: 'q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0',
     },

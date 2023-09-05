@@ -1,32 +1,19 @@
-import type { InitConfig } from '@aries-framework/core'
-import type { WalletConfig } from '@aries-framework/core/build/types'
+import type { InitConfig, WalletConfig } from '@aries-framework/core'
 
-import { AnonCredsCredentialFormatService, AnonCredsModule } from '@aries-framework/anoncreds'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { AskarModule } from '@aries-framework/askar'
 import {
   HttpOutboundTransport,
   WsOutboundTransport,
   LogLevel,
   Agent,
-  ConnectionsModule,
-  ProofsModule,
-  CredentialsModule,
   AutoAcceptCredential,
   AutoAcceptProof,
-  MediatorModule,
-  V2CredentialProtocol,
 } from '@aries-framework/core'
-
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
-import { anoncreds } from '@hyperledger/anoncreds-nodejs'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { readFile } from 'fs/promises'
 
 import { setupServer } from './server'
+import { getAgentModules, RestAgent } from './utils/agent'
 import { TsLogger } from './utils/logger'
-import VeritableAnonCredsRegistry from './anoncreds'
-import Ipfs from './ipfs'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -94,37 +81,18 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger,
   }
 
-  const agent = new Agent({
+  const modules = getAgentModules({
+    autoAcceptConnections,
+    autoAcceptProofs,
+    autoAcceptCredentials,
+    autoAcceptMediationRequests,
+    ipfsOrigin,
+  })
+
+  const agent: RestAgent = new Agent({
     config: agentConfig,
     dependencies: agentDependencies,
-    modules: {
-      connections: new ConnectionsModule({
-        autoAcceptConnections,
-      }),
-      proofs: new ProofsModule({
-        autoAcceptProofs,
-      }),
-      credentials: new CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>({
-        autoAcceptCredentials,
-        credentialProtocols: [
-          new V2CredentialProtocol({
-            credentialFormats: [new AnonCredsCredentialFormatService()],
-          }),
-        ],
-      }),
-      anoncreds: new AnonCredsModule({
-        registries: [new VeritableAnonCredsRegistry(new Ipfs(ipfsOrigin))],
-      }),
-      anoncredsRs: new AnonCredsRsModule({
-        anoncreds,
-      }),
-      askar: new AskarModule({
-        ariesAskar,
-      }),
-      mediator: new MediatorModule({
-        autoAcceptMediationRequests,
-      }),
-    },
+    modules,
   })
 
   // Register outbound transports
@@ -140,6 +108,14 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   }
 
   await agent.initialize()
+
+  const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
+  if (existingSecrets.length === 0) {
+    await agent.modules.anoncreds.createLinkSecret({
+      setAsDefault: true,
+    })
+  }
+
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,

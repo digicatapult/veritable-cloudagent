@@ -1,10 +1,10 @@
-import type { DidResolutionResultProps } from '../types'
+import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../types'
 
-import { Agent } from '@aries-framework/core'
-import { Controller, Example, Get, Path, Route, Tags } from 'tsoa'
+import { Agent, AriesFrameworkError, TypedArrayEncoder } from '@aries-framework/core'
+import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { Did, DidRecordExample } from '../examples'
+import { Did, DidRecordExample, DidStateExample } from '../examples'
 
 @Tags('Dids')
 @Route('/dids')
@@ -33,5 +33,61 @@ export class DidController extends Controller {
     }
 
     return { ...resolveResult, didDocument: resolveResult.didDocument.toJSON() }
+  }
+
+  /**
+   * Import a Did to the Agent and return the did resolution result
+   *
+   * @param options
+   * @returns DidResolutionResultProps
+   */
+  @Example<DidResolutionResultProps>(DidRecordExample)
+  @Post('/import')
+  public async importDid(
+    @Body() options: ImportDidOptions,
+    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    try {
+      const { privateKeys, ...rest } = options
+      await this.agent.dids.import({
+        ...rest,
+        privateKeys: privateKeys?.map(({ keyType, privateKey }) => ({
+          keyType,
+          privateKey: TypedArrayEncoder.fromString(privateKey),
+        })),
+      })
+      return this.getDidRecordByDid(options.did)
+    } catch (error) {
+      if (error instanceof AriesFrameworkError) {
+        return badRequestError(400, {
+          reason: `Error importing Did - ${error.message}`,
+        })
+      }
+      return internalServerError(500, { message: `something went wrong: ${error}` })
+    }
+  }
+
+  /**
+   * Create a Did and return the did resolution result
+   *
+   * @param options
+   * @returns DidResolutionResultProps
+   */
+  @Example<DidCreateResult>(DidStateExample)
+  @Post('/create')
+  public async createDid(
+    @Body() options: DidCreateOptions,
+    @Res() internalServerError: TsoaResponse<500, { message: string }>
+  ) {
+    const { didState } = await this.agent.dids.create(options)
+
+    if (didState.state === 'failed') {
+      return internalServerError(500, {
+        message: `Error creating Did - ${didState.reason}`,
+      })
+    }
+
+    return didState
   }
 }

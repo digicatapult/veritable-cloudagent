@@ -1,10 +1,15 @@
-import { AnonCredsCredentialFormatService, AnonCredsProofFormatService } from '@aries-framework/anoncreds'
-import { V2CredentialProtocol, V2ProofProtocol } from '@aries-framework/core'
+import type { ModulesMap } from '@aries-framework/core'
 
-import { AnonCredsModule } from '@aries-framework/anoncreds'
+import {
+  AnonCredsCredentialFormatService,
+  AnonCredsProofFormatService,
+  AnonCredsModule,
+} from '@aries-framework/anoncreds'
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { AskarModule } from '@aries-framework/askar'
 import {
+  V2CredentialProtocol,
+  V2ProofProtocol,
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -24,22 +29,78 @@ import { TsLogger } from './logger'
 import VeritableAnonCredsRegistry from '../anoncreds'
 import Ipfs from '../ipfs'
 
-export type RestAgent = Agent<{
+export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
-  anoncredsRs: AnonCredsRsModule
   anoncreds: AnonCredsModule
-  askar: AskarModule
-  mediator: MediatorModule
-}>
+}
+
+export type RestAgent<
+  modules extends RestAgentModules = {
+    connections: ConnectionsModule
+    proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+    credentials: CredentialsModule<[V2CredentialProtocol]>
+    anoncreds: AnonCredsModule
+  }
+> = Agent<modules>
 
 export const genesisPath = process.env.GENESIS_TXN_PATH
   ? path.resolve(process.env.GENESIS_TXN_PATH)
   : path.join(__dirname, '../../../../network/genesis/local-genesis.txn')
 
+export const getAgentModules = (options: {
+  autoAcceptConnections: boolean
+  autoAcceptProofs: AutoAcceptProof
+  autoAcceptCredentials: AutoAcceptCredential
+  autoAcceptMediationRequests: boolean
+  ipfsOrigin: string
+}): RestAgentModules => {
+  return {
+    connections: new ConnectionsModule({
+      autoAcceptConnections: options.autoAcceptConnections,
+    }),
+    proofs: new ProofsModule({
+      autoAcceptProofs: options.autoAcceptProofs,
+      proofProtocols: [
+        new V2ProofProtocol({
+          proofFormats: [new AnonCredsProofFormatService()],
+        }),
+      ],
+    }),
+    credentials: new CredentialsModule({
+      autoAcceptCredentials: options.autoAcceptCredentials,
+      credentialProtocols: [
+        new V2CredentialProtocol({
+          credentialFormats: [new AnonCredsCredentialFormatService()],
+        }),
+      ],
+    }),
+    anoncreds: new AnonCredsModule({
+      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
+    }),
+    anoncredsRs: new AnonCredsRsModule({
+      anoncreds,
+    }),
+    askar: new AskarModule({
+      ariesAskar,
+    }),
+    mediator: new MediatorModule({
+      autoAcceptMediationRequests: options.autoAcceptMediationRequests,
+    }),
+  }
+}
+
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
+
+  const modules = getAgentModules({
+    autoAcceptConnections: true,
+    autoAcceptProofs: AutoAcceptProof.ContentApproved,
+    autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
+    autoAcceptMediationRequests: true,
+    ipfsOrigin: 'http://localhost:5001',
+  })
 
   const agent = new Agent({
     config: {
@@ -51,34 +112,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       autoUpdateStorageOnStartup: true,
     },
     dependencies: agentDependencies,
-    modules: {
-      connections: new ConnectionsModule({
-        autoAcceptConnections: true,
-      }),
-      proofs: new ProofsModule({
-        autoAcceptProofs: AutoAcceptProof.ContentApproved,
-      }),
-      credentials: new CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>({
-        autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
-        credentialProtocols: [
-          new V2CredentialProtocol({
-            credentialFormats: [new AnonCredsCredentialFormatService()],
-          }),
-        ],
-      }),
-      anoncredsRs: new AnonCredsRsModule({
-        anoncreds,
-      }),
-      anoncreds: new AnonCredsModule({
-        registries: [new VeritableAnonCredsRegistry(new Ipfs('http://localhost:5001'))],
-      }),
-      askar: new AskarModule({
-        ariesAskar,
-      }),
-      mediator: new MediatorModule({
-        autoAcceptMediationRequests: true,
-      }),
-    },
+    modules,
   })
 
   const httpInbound = new HttpInboundTransport({

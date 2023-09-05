@@ -292,15 +292,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_CredentialFormats.createProposal_": {
-				"properties": {
-					"anoncreds": {
-						"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
-					}
-				},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
 			"AutoAcceptCredential": {
 				"description": "Typing of the state for auto acceptance",
 				"enum": [
@@ -316,7 +307,12 @@
 						"$ref": "#/components/schemas/CredentialProtocolVersionType_CredentialProtocols_"
 					},
 					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.createProposal_"
+						"properties": {
+							"anoncreds": {
+								"$ref": "#/components/schemas/AnonCredsProposeCredentialFormat"
+							}
+						},
+						"type": "object"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -358,19 +354,15 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"CredentialFormatPayload_CredentialFormats.acceptProposal_": {
-				"properties": {
-					"anoncreds": {
-						"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
-					}
-				},
-				"type": "object",
-				"description": "Get the payload for a specific method from a list of CredentialFormat interfaces and a method"
-			},
 			"AcceptCredentialProposalOptions": {
 				"properties": {
 					"credentialFormats": {
-						"$ref": "#/components/schemas/CredentialFormatPayload_CredentialFormats.acceptProposal_"
+						"properties": {
+							"anoncreds": {
+								"$ref": "#/components/schemas/AnonCredsAcceptProposalFormat"
+							}
+						},
+						"type": "object"
 					},
 					"autoAcceptCredential": {
 						"$ref": "#/components/schemas/AutoAcceptCredential"
@@ -379,9 +371,6 @@
 						"type": "string"
 					}
 				},
-				"required": [
-					"credentialFormats"
-				],
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -687,6 +676,84 @@
 					"didDocument",
 					"didDocumentMetadata"
 				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"KeyType": {
+				"enum": [
+					"ed25519",
+					"bls12381g1g2",
+					"bls12381g1",
+					"bls12381g2",
+					"x25519",
+					"p256",
+					"p384",
+					"p521"
+				],
+				"type": "string"
+			},
+			"PrivateKey": {
+				"properties": {
+					"keyType": {
+						"$ref": "#/components/schemas/KeyType"
+					},
+					"privateKey": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"keyType",
+					"privateKey"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ImportDidOptions": {
+				"properties": {
+					"did": {
+						"type": "string"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					},
+					"privateKeys": {
+						"items": {
+							"$ref": "#/components/schemas/PrivateKey"
+						},
+						"type": "array"
+					},
+					"overwrite": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"did"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"DidCreateOptions": {
+				"properties": {
+					"method": {
+						"type": "string"
+					},
+					"did": {
+						"type": "string"
+					},
+					"options": {
+						"properties": {},
+						"additionalProperties": {},
+						"type": "object"
+					},
+					"secret": {
+						"properties": {},
+						"additionalProperties": {},
+						"type": "object"
+					},
+					"didDocument": {
+						"$ref": "#/components/schemas/DidDocument"
+					}
+				},
 				"type": "object",
 				"additionalProperties": false
 			},
@@ -999,6 +1066,10 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ProofsProtocolVersionType_ProofProtocols_": {
+				"type": "string",
+				"description": "Get the supported protocol versions based on the provided proof protocols."
+			},
 			"AnonCredsPresentationPreviewAttribute": {
 				"properties": {
 					"name": {
@@ -1057,9 +1128,13 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"RequestProofProposalOptions": {
+			"AnonCredsProposeProofFormat": {
+				"description": "Interface for creating an anoncreds proof proposal.",
 				"properties": {
-					"connectionId": {
+					"name": {
+						"type": "string"
+					},
+					"version": {
 						"type": "string"
 					},
 					"attributes": {
@@ -1073,6 +1148,48 @@
 							"$ref": "#/components/schemas/AnonCredsPresentationPreviewPredicate"
 						},
 						"type": "array"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ProofFormatPayload_ProofFormats.createProposal_": {
+				"properties": {
+					"anoncreds": {
+						"$ref": "#/components/schemas/AnonCredsProposeProofFormat"
+					}
+				},
+				"type": "object",
+				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
+			},
+			"AutoAcceptProof": {
+				"description": "Typing of the state for auto acceptance",
+				"enum": [
+					"always",
+					"contentApproved",
+					"never"
+				],
+				"type": "string"
+			},
+			"ProposeProofOptions": {
+				"properties": {
+					"connectionId": {
+						"type": "string"
+					},
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProofsProtocolVersionType_ProofProtocols_"
+					},
+					"proofFormats": {
+						"$ref": "#/components/schemas/ProofFormatPayload_ProofFormats.createProposal_"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"parentThreadId": {
+						"type": "string"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
 					},
 					"comment": {
 						"type": "string"
@@ -1080,57 +1197,55 @@
 				},
 				"required": [
 					"connectionId",
-					"attributes",
-					"predicates"
+					"protocolVersion",
+					"proofFormats"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
-			"RequestProofOptionsProofRequestRestriction": {
+			"ProofFormatPayload_ProofFormats.acceptProposal_": {
 				"properties": {
-					"schemaId": {
-						"type": "string"
-					},
-					"schemaIssuerId": {
-						"type": "string"
-					},
-					"schemaName": {
-						"type": "string"
-					},
-					"schemaVersion": {
-						"type": "string"
-					},
-					"issuerId": {
-						"type": "string"
-					},
-					"credDefId": {
-						"type": "string"
-					},
-					"revRegId": {
-						"type": "string"
-					},
-					"schemaIssuerDid": {
-						"type": "string"
-					},
-					"issuerDid": {
-						"type": "string"
-					},
-					"requiredAttributes": {
-						"items": {
-							"type": "string"
-						},
-						"type": "array"
-					},
-					"requiredAttributeValues": {
-						"properties": {},
-						"additionalProperties": {
-							"type": "string"
+					"anoncreds": {
+						"properties": {
+							"version": {
+								"type": "string"
+							},
+							"name": {
+								"type": "string"
+							}
 						},
 						"type": "object"
 					}
 				},
 				"type": "object",
+				"description": "Get the payload for a specific method from a list of ProofFormat interfaces and a method"
+			},
+			"AcceptProofProposalOptions": {
+				"properties": {
+					"proofFormats": {
+						"$ref": "#/components/schemas/ProofFormatPayload_ProofFormats.acceptProposal_"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"type": "object",
 				"additionalProperties": false
+			},
+			"AgentMessage": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
+			},
+			"ProofExchangeRecord": {
+				"$ref": "#/components/schemas/Record_string.unknown_"
 			},
 			"AnonCredsNonRevokedInterval": {
 				"properties": {
@@ -1146,7 +1261,54 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"RequestProofOptionsRequestedAttribute": {
+			"AnonCredsProofRequestRestrictionOptions": {
+				"properties": {
+					"schema_id": {
+						"type": "string"
+					},
+					"schema_issuer_id": {
+						"type": "string"
+					},
+					"schema_name": {
+						"type": "string"
+					},
+					"schema_version": {
+						"type": "string"
+					},
+					"issuer_id": {
+						"type": "string"
+					},
+					"cred_def_id": {
+						"type": "string"
+					},
+					"rev_reg_id": {
+						"type": "string"
+					},
+					"schema_issuer_did": {
+						"type": "string"
+					},
+					"issuer_did": {
+						"type": "string"
+					},
+					"attributeValues": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "string"
+						},
+						"type": "object"
+					},
+					"attributeMarkers": {
+						"properties": {},
+						"additionalProperties": {
+							"type": "boolean"
+						},
+						"type": "object"
+					}
+				},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsRequestedAttributeOptions": {
 				"properties": {
 					"name": {
 						"type": "string"
@@ -1159,86 +1321,174 @@
 					},
 					"restrictions": {
 						"items": {
-							"$ref": "#/components/schemas/RequestProofOptionsProofRequestRestriction"
+							"$ref": "#/components/schemas/AnonCredsProofRequestRestrictionOptions"
 						},
 						"type": "array"
 					},
-					"nonRevoked": {
+					"non_revoked": {
 						"$ref": "#/components/schemas/AnonCredsNonRevokedInterval"
 					}
 				},
 				"type": "object",
 				"additionalProperties": false
 			},
-			"RequestProofOptionsRequestedPredicate": {
+			"AnonCredsRequestedPredicateOptions": {
 				"properties": {
 					"name": {
 						"type": "string"
 					},
-					"pType": {
+					"p_type": {
 						"$ref": "#/components/schemas/AnonCredsPredicateType"
 					},
-					"pValue": {
+					"p_value": {
 						"type": "number",
 						"format": "double"
 					},
 					"restrictions": {
 						"items": {
-							"$ref": "#/components/schemas/RequestProofOptionsProofRequestRestriction"
+							"$ref": "#/components/schemas/AnonCredsProofRequestRestrictionOptions"
 						},
 						"type": "array"
 					},
-					"nonRevoked": {
+					"non_revoked": {
 						"$ref": "#/components/schemas/AnonCredsNonRevokedInterval"
 					}
 				},
 				"required": [
 					"name",
-					"pType",
-					"pValue"
+					"p_type",
+					"p_value"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AnonCredsRequestProofFormatOptions": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"version": {
+						"type": "string"
+					},
+					"non_revoked": {
+						"$ref": "#/components/schemas/AnonCredsNonRevokedInterval"
+					},
+					"requested_attributes": {
+						"properties": {},
+						"additionalProperties": {
+							"$ref": "#/components/schemas/AnonCredsRequestedAttributeOptions"
+						},
+						"type": "object"
+					},
+					"requested_predicates": {
+						"properties": {},
+						"additionalProperties": {
+							"$ref": "#/components/schemas/AnonCredsRequestedPredicateOptions"
+						},
+						"type": "object"
+					}
+				},
+				"required": [
+					"name",
+					"version"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"CreateProofRequestOptions": {
+				"properties": {
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProofsProtocolVersionType_ProofProtocols_"
+					},
+					"proofFormats": {
+						"properties": {
+							"anoncreds": {
+								"$ref": "#/components/schemas/AnonCredsRequestProofFormatOptions"
+							}
+						},
+						"type": "object"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"parentThreadId": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"protocolVersion",
+					"proofFormats"
 				],
 				"type": "object",
 				"additionalProperties": false
 			},
 			"RequestProofOptions": {
 				"properties": {
-					"connectionId": {
-						"type": "string"
+					"protocolVersion": {
+						"$ref": "#/components/schemas/ProofsProtocolVersionType_ProofProtocols_"
 					},
-					"proofRequestOptions": {
+					"proofFormats": {
 						"properties": {
-							"requestedPredicates": {
-								"properties": {},
-								"additionalProperties": {
-									"$ref": "#/components/schemas/RequestProofOptionsRequestedPredicate"
-								},
-								"type": "object"
-							},
-							"requestedAttributes": {
-								"properties": {},
-								"additionalProperties": {
-									"$ref": "#/components/schemas/RequestProofOptionsRequestedAttribute"
-								},
-								"type": "object"
-							},
-							"version": {
-								"type": "string"
-							},
-							"name": {
-								"type": "string"
+							"anoncreds": {
+								"$ref": "#/components/schemas/AnonCredsRequestProofFormatOptions"
 							}
 						},
-						"required": [
-							"version",
-							"name"
-						],
 						"type": "object"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"parentThreadId": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					},
+					"connectionId": {
+						"type": "string"
 					}
 				},
 				"required": [
-					"connectionId",
-					"proofRequestOptions"
+					"protocolVersion",
+					"proofFormats",
+					"connectionId"
 				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"AcceptProofRequestOptions": {
+				"properties": {
+					"useReturnRoute": {
+						"type": "boolean"
+					},
+					"goalCode": {
+						"type": "string"
+					},
+					"willConfirm": {
+						"type": "boolean"
+					},
+					"autoAcceptProof": {
+						"$ref": "#/components/schemas/AutoAcceptProof"
+					},
+					"comment": {
+						"type": "string"
+					}
+				},
 				"type": "object",
 				"additionalProperties": false
 			}
@@ -1835,7 +2085,7 @@
 													"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 												},
 												"metadata": {
-													"_internal/anoncredsCredential": {
+													"_internal/indyCredential": {
 														"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 														"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 													}
@@ -1906,7 +2156,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2060,7 +2310,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2151,7 +2401,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2252,7 +2502,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2325,7 +2575,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2416,7 +2666,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2517,7 +2767,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -2618,7 +2868,7 @@
 												"connectionId": "ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b"
 											},
 											"metadata": {
-												"_internal/anoncredsCredential": {
+												"_internal/indyCredential": {
 													"credentialDefinitionId": "q7ATwTYbQDgiigVijUAej:3:CL:318187:latest",
 													"schemaId": "q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0"
 												}
@@ -3226,6 +3476,212 @@
 				]
 			}
 		},
+		"/dids/import": {
+			"post": {
+				"operationId": "ImportDid",
+				"responses": {
+					"200": {
+						"description": "DidResolutionResultProps",
+						"content": {
+							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"didDocument": {
+												"@context": [
+													"https://w3id.org/did/v1",
+													"https://w3id.org/security/suites/ed25519-2018/v1",
+													"https://w3id.org/security/suites/x25519-2019/v1"
+												],
+												"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+												"verificationMethod": [
+													{
+														"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"type": "Ed25519VerificationKey2018",
+														"controller": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"publicKeyBase58": "6fioC1zcDPyPEL19pXRS2E4iJ46zH7xP6uSgAaPdwDrx"
+													}
+												],
+												"authentication": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"assertionMethod": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"capabilityInvocation": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"capabilityDelegation": [
+													"did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+												],
+												"keyAgreement": [
+													{
+														"id": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6LSrdqo4M24WRDJj1h2hXxgtDTyzjjKCiyapYVgrhwZAySn",
+														"type": "X25519KeyAgreementKey2019",
+														"controller": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+														"publicKeyBase58": "FxfdY3DCQxVZddKGAtSjZdFW9bCCW7oRwZn1NFJ2Tbg2"
+													}
+												]
+											},
+											"didDocumentMetadata": {},
+											"didResolutionMetadata": {
+												"contentType": "application/did+ld+json"
+											}
+										}
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"reason": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"reason"
+									],
+									"type": "object"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Import a Did to the Agent and return the did resolution result",
+				"tags": [
+					"Dids"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/ImportDidOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/dids/create": {
+			"post": {
+				"operationId": "CreateDid",
+				"responses": {
+					"200": {
+						"description": "DidResolutionResultProps",
+						"content": {
+							"application/json": {
+								"schema": {},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"did": "did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc",
+											"didDocument": {
+												"@context": [
+													"https://w3id.org/did/v1",
+													"https://w3id.org/security/suites/ed25519-2018/v1",
+													"https://w3id.org/security/suites/x25519-2019/v1"
+												],
+												"id": "did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc",
+												"verificationMethod": [
+													{
+														"id": "did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc",
+														"type": "Ed25519VerificationKey2018",
+														"controller": "did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc",
+														"publicKeyBase58": "ApexJxnhZHC6Ctq4fCoNHKYgu87HuRTZ7oSyfehG57zE"
+													}
+												],
+												"authentication": [
+													"did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc"
+												],
+												"assertionMethod": [
+													"did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc"
+												],
+												"keyAgreement": [
+													{
+														"id": "did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6LSm5B4fB9NA55xB7PSeMYTMS9sf8uboJvyZBaDLLSZ7Ryd",
+														"type": "X25519KeyAgreementKey2019",
+														"controller": "did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc",
+														"publicKeyBase58": "APzu8sLW4cND5j1g7i2W2qwPozNV6hkpgCrXqso2Q4Cs"
+													}
+												],
+												"capabilityInvocation": [
+													"did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc"
+												],
+												"capabilityDelegation": [
+													"did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc#z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMuVvfGzLmc"
+												]
+											},
+											"secret": {}
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"message": {
+											"type": "string"
+										}
+									},
+									"required": [
+										"message"
+									],
+									"type": "object"
+								}
+							}
+						}
+					}
+				},
+				"description": "Create a Did and return the did resolution result",
+				"tags": [
+					"Dids"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/DidCreateOptions"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/oob": {
 			"get": {
 				"operationId": "GetAllOutOfBandRecords",
@@ -3253,7 +3709,7 @@
 													]
 												},
 												"outOfBandInvitation": {
-													"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 													"label": "Aries Test Agent",
 													"accept": [
@@ -3327,7 +3783,7 @@
 												]
 											},
 											"outOfBandInvitation": {
-												"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+												"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 												"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 												"label": "Aries Test Agent",
 												"accept": [
@@ -3475,7 +3931,7 @@
 										"value": {
 											"invitationUrl": "string",
 											"invitation": {
-												"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+												"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 												"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 												"label": "Aries Test Agent",
 												"accept": [
@@ -3508,7 +3964,7 @@
 													]
 												},
 												"outOfBandInvitation": {
-													"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 													"label": "Aries Test Agent",
 													"accept": [
@@ -3594,7 +4050,7 @@
 									"Example 1": {
 										"value": {
 											"invitation": {
-												"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+												"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 												"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 												"label": "Aries Test Agent",
 												"accept": [
@@ -3627,7 +4083,7 @@
 													]
 												},
 												"outOfBandInvitation": {
-													"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 													"label": "Aries Test Agent",
 													"accept": [
@@ -3818,7 +4274,7 @@
 													]
 												},
 												"outOfBandInvitation": {
-													"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 													"label": "Aries Test Agent",
 													"accept": [
@@ -3926,7 +4382,7 @@
 													]
 												},
 												"outOfBandInvitation": {
-													"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 													"label": "Aries Test Agent",
 													"accept": [
@@ -4034,7 +4490,7 @@
 													]
 												},
 												"outOfBandInvitation": {
-													"@type": "https://didcomm.org/out-of-band/2.0/invitation",
+													"@type": "did:sov:BzCbsNYhMrjHiqZDTUASHg;spec/out-of-band/1.1/invitation",
 													"@id": "d6472943-e5d0-4d95-8b48-790ed5a41931",
 													"label": "Aries Test Agent",
 													"accept": [
@@ -4407,7 +4863,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"$ref": "#/components/schemas/RequestProofProposalOptions"
+								"$ref": "#/components/schemas/ProposeProofOptions"
 							}
 						}
 					}
@@ -4494,26 +4950,66 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"comment": {
-										"type": "string"
-									},
-									"request": {
-										"properties": {
-											"version": {
-												"type": "string"
-											},
-											"name": {
-												"type": "string"
-											}
+								"$ref": "#/components/schemas/AcceptProofProposalOptions"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/proofs/create-request": {
+			"post": {
+				"operationId": "CreateRequest",
+				"responses": {
+					"200": {
+						"description": "ProofRequestMessageResponse",
+						"content": {
+							"application/json": {
+								"schema": {
+									"properties": {
+										"proofRecord": {
+											"$ref": "#/components/schemas/ProofExchangeRecord"
 										},
-										"type": "object"
-									}
+										"message": {
+											"$ref": "#/components/schemas/AgentMessage"
+										}
+									},
+									"required": [
+										"proofRecord",
+										"message"
+									],
+									"type": "object"
 								},
-								"required": [
-									"request"
-								],
-								"type": "object"
+								"examples": {
+									"Example 1": {
+										"value": {
+											"message": {},
+											"proofRecord": {
+												"id": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e",
+												"protocolVersion": "v2",
+												"threadId": "0019d466-5eea-4269-8c40-031b4896c5b7",
+												"connectionId": "2aecf74c-3073-4f98-9acb-92415d096834",
+												"createdAt": "2022-01-01T00:00:00.000Z"
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Creates a presentation request not bound to any proposal or existing connection",
+				"tags": [
+					"Proofs"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/CreateProofRequestOptions"
 							}
 						}
 					}
@@ -4678,12 +5174,7 @@
 					"content": {
 						"application/json": {
 							"schema": {
-								"properties": {
-									"comment": {
-										"type": "string"
-									}
-								},
-								"type": "object"
+								"$ref": "#/components/schemas/AcceptProofRequestOptions"
 							}
 						}
 					}

@@ -1,3 +1,4 @@
+import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../src/controllers/types'
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import chaiAssertionsCount from 'chai-assertions-count'
@@ -164,9 +165,9 @@ describe('CredentialController', () => {
       proposeCredentialStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => proposeCredentialStub.firstCall.returnValue
 
-      const proposalRequest = {
+      const proposalRequest: ProposeCredentialOptions = {
         connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
-        protocolVersion: 'v1',
+        protocolVersion: 'v2',
         credentialFormats: {
           anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
@@ -204,7 +205,7 @@ describe('CredentialController', () => {
       const acceptProposalStub = stub(bobAgent.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
-      const proposalRequest = {
+      const proposalRequest: AcceptCredentialProposalOptions = {
         credentialFormats: {
           anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
@@ -216,6 +217,8 @@ describe('CredentialController', () => {
             ],
           },
         },
+        autoAcceptCredential: 'always' as AutoAcceptCredential,
+        comment: 'test',
       }
 
       const response = await request(app)
