@@ -49,19 +49,17 @@ Using the CLI is the easiest way to get started with the REST API.
 Make sure you have [Docker](https://docs.docker.com/get-docker/) installed. To get a minimal version of the agent running the following command is sufficient:
 
 ```sh
-docker run -p 5000:5000 -p 3000:3000 ghcr.io/hyperledger/afj-rest \
+docker run -p 5001:5001 -p 3000:3000 ghcr.io/hyperledger/afj-rest \
   --label "AFJ Rest" \
   --wallet-id "walletId" \
   --wallet-key "walletKey" \
-  --endpoint http://localhost:5000 \
+  --endpoint http://localhost:5002 \
   --admin-port 3000 \
   --outbound-transport http \
-  --inbound-transport http 5000
+  --inbound-transport http 5002
 ```
 
 See the [docker-compose.yml](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/docker-compose.yml) file for an example of using the afj-rest image with Docker Compose.
-
-> ⚠️ The Docker image is not optimized for ARM architectures and won't work on Apple Silicon Macs. See the **Directly on Computer** below on how to run it directly on your computer without Docker.
 
 **Directly on Computer**
 
@@ -75,10 +73,10 @@ npx -p @aries-framework/rest afj-rest start \
   --ipfs-origin http://localhost:5001 \
   --wallet-id "walletId" \
   --wallet-key "walletKey" \
-  --endpoint http://localhost:5000 \
+  --endpoint http://localhost:5002 \
   --admin-port 3000 \
   --outbound-transport http \
-  --inbound-transport http 5000
+  --inbound-transport http 5002
 ```
 
 If you want to allow cli to communicate with ipfs use the '--ipfs-origin' argument. There is a --help command for more info.
