@@ -1,3 +1,4 @@
+#docker-compose up --build -d
 version: '3.5'
 
 services:
