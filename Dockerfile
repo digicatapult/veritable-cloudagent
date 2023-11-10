@@ -1,10 +1,9 @@
 #docker build -t afj-rest .
 
 #Build stage
-FROM node:lts-bookworm as builder
+FROM node:lts as builder
 
 RUN apt-get update -y
-RUN npm install --global husky@^8.0.3
 
 WORKDIR /app
 
@@ -19,7 +18,8 @@ RUN npm ci && npm cache clean --force
 RUN npm run --omit=dev build
 
 # Runtime stage
-FROM node:lts-bookworm-slim
+FROM node:lts-slim
+# NB Debian bookworm-slim doesn't include OpenSSL
 
 WORKDIR /www
 COPY --from=builder ./app .
