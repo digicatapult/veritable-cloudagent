@@ -4,8 +4,8 @@ version: '3.5'
 services:
 
   afj-node01:
-    hostname: alice
-    container_name: alice
+    hostname: alice-agent
+    container_name: alice-agent
     build:
       context: .
       dockerfile: Dockerfile
