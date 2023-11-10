@@ -2,8 +2,13 @@
 version: '3.5'
 
 services:
-  rest-sample:
-    build: ./
+
+  afj-node01:
+    hostname: alice
+    container_name: alice
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
     environment:
       # possible to set values using env variables
@@ -17,3 +22,10 @@ services:
       - '3000:3000'
     # or via command line arguments
     command: --ipfs-origin http://localhost:5001 --config /config.json
+    networks:
+      - veritable-testnet
+
+networks:
+  veritable-testnet:
+    name: veritable-testnet
+    driver: bridge
