@@ -40,28 +40,51 @@ The REST API provides an OpenAPI schema that can easily be viewed using the Swag
 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
-#### Using the CLI
+#### Using Docker (easiest)
 
-Using the CLI is the easiest way to get started with the REST API.
+[Docker](https://docs.docker.com/get-docker/) is the easiest way to get started with the REST API.
 
-**With Docker (easiest)**
+**Single Agent**
 
-Make sure you have [Docker](https://docs.docker.com/get-docker/) installed. To get a minimal version of the agent running the following command is sufficient:
+To get a minimal version of the agent running the following command is sufficient (uses `docker-compose.yml`):
 
 ```sh
-docker run -p 5002:5002 -p 3000:3000 ghcr.io/hyperledger/afj-rest \
-  --label "AFJ Rest" \
-  --wallet-id "walletId" \
-  --wallet-key "walletKey" \
-  --endpoint http://localhost:5002 \
-  --admin-port 3000 \
-  --outbound-transport http \
-  --inbound-transport http 5002
+docker-compose up --build -d
 ```
 
-See the [docker-compose.yml](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/docker-compose.yml) file for an example of using the afj-rest image with Docker Compose.
+The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`.
 
-**Directly on Computer**
+**Single Agent + IPFS Node**
+
+The following command will spin up a single `afj` agent (named `Alice`) and an IPFS node for testing purposes:
+
+```sh
+docker-compose -f docker-compose-agent-ipfs.yml up --build -d
+```
+
+This agent is also accessible via a `Swagger` (OpenAPI) interface on port `3000`.
+
+**Private 3-Agent Testnet**
+
+The following command will create a containerised private network consisting of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
+
+```sh
+docker-compose -f docker-compose-testnet.yml up --build -d
+```
+
+This private testnet has the following ports available to the user for testing:
+
+| Agent | OpenAPI | HTTP | WS |
+| --- | --- | --- | --- |
+|Alice   | 3000  | 5002 | 5003 |
+|Bob     | 3001  | 5102 | 5103 |
+|Charlie | 3002  | 5202 | 5203 |
+|IPFS    | 5001 (internal, not exposed)
+
+Network name: `testnet`
+
+
+#### Via CLI
 
 To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.
 
