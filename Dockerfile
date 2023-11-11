@@ -24,4 +24,6 @@ FROM node:lts-slim
 WORKDIR /www
 COPY --from=builder ./app .
 
+EXPOSE 3000 5002 5003
+
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
