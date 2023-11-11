@@ -56,6 +56,8 @@ services:
       - "8080:8080" # ipfs gateway - expose if needed/wanted
     volumes:
       - ipfs0:/data/ipfs
+    networks:
+      - testnet
 
 volumes:
   ipfs0:

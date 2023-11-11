@@ -108,6 +108,8 @@ services:
 #     - "8080:8080" # ipfs gateway - expose if needed/wanted
     volumes:
       - ipfs0:/data/ipfs
+    networks:
+      - testnet
 
   cluster0:
     container_name: cluster0
@@ -132,6 +134,8 @@ services:
           # - "9096:9096" # Cluster swarm endpoint
     volumes:
       - cluster0:/data/ipfs-cluster
+    networks:
+      - testnet
 
 ##################################################################################
 ## Cluster PEER 1 ################################################################
@@ -142,6 +146,8 @@ services:
     image: ipfs/kubo:release
     volumes:
       - ipfs1:/data/ipfs
+    networks:
+      - testnet
 
   cluster1:
     container_name: cluster1
@@ -157,6 +163,8 @@ services:
       CLUSTER_MONITORPINGINTERVAL: 2s
     volumes:
       - cluster1:/data/ipfs-cluster
+    networks:
+      - testnet
 
 ##################################################################################
 ## Cluster PEER 2 ################################################################
@@ -167,6 +175,8 @@ services:
     image: ipfs/kubo:release
     volumes:
       - ipfs2:/data/ipfs
+    networks:
+      - testnet
 
   cluster2:
     container_name: cluster2
@@ -182,6 +192,8 @@ services:
       CLUSTER_MONITORPINGINTERVAL: 2s
     volumes:
       - cluster2:/data/ipfs-cluster
+    networks:
+      - testnet
 
 volumes:
   ipfs0:
