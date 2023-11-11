@@ -1,5 +1,5 @@
 #docker-compose up --build -d
-version: '3.5'
+version: '3.8'
 
 services:
 
@@ -23,9 +23,9 @@ services:
     # or via command line arguments
     command: --ipfs-origin http://localhost:5001 --config /config.json
     networks:
-      - veritable-testnet
+      - testnet
 
 networks:
   veritable-testnet:
-    name: veritable-testnet
+    name: testnet
     driver: bridge
