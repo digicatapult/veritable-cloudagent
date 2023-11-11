@@ -26,6 +26,6 @@ services:
       - testnet
 
 networks:
-  veritable-testnet:
+  testnet:
     name: testnet
     driver: bridge
