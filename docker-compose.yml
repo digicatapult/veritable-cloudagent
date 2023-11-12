@@ -21,7 +21,7 @@ services:
       - '5003:5003'
       - '3000:3000'
     # or via command line arguments
-    command: --ipfs-origin http://localhost:5001 --config /config.json
+    command: --config /config.json
     networks:
       - testnet
 
