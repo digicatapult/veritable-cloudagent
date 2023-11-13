@@ -4,11 +4,11 @@
 ## Docker-Compose for a 3-agent testnet + 3-node private IPFS cluster ############
 ##
 ## Agents: Alice, Bob, Charlie
-## Ports: 
+## Ports for testing purposes (HTTP): 
 ##    Alice   = 3000 [ 5002 (HTTP) & 5003 (WS) internal ]
 ##    Bob     = 3001 [ 5102 (HTTP) & 5103 (WS) internal ]
 ##    Charlie = 3002 [ 5202 (HTTP) & 5203 (WS) internal ]
-##    IPFS    = 5001 [ internal ]
+##    IPFS    = 8080 [ 5001 used for internal traffic   ]
 ## Network: testnet
 ##
 ##################################################################################
@@ -102,10 +102,10 @@ services:
   ipfs0:
     container_name: ipfs0
     image: ipfs/kubo:release
-#   ports:
+    ports:
 #     - "4001:4001" # ipfs swarm - expose if needed/wanted
 #     - "5001:5001" # ipfs api - expose if needed/wanted
-#     - "8080:8080" # ipfs gateway - expose if needed/wanted
+      - "8080:8080" # ipfs HTTP gateway
     volumes:
       - ipfs0:/data/ipfs
     networks:
@@ -127,7 +127,7 @@ services:
     #ports:
           # Open API port (allows ipfs-cluster-ctl usage on host)
           # - "9094:9094"
-          # The cluster swarm port would need  to be exposed if this container
+          # The cluster swarm port would need to be exposed if this container
           # was to connect to cluster peers on other hosts.
           # But this is just a testing cluster.
           # - "9095:9095" # Cluster IPFS Proxy endpoint
