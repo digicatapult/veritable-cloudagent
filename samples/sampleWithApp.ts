@@ -27,7 +27,7 @@ const run = async () => {
 
   const conf: ServerConfig = {
     port: 3000,
-    webhookUrl: 'http://localhost:5000/agent-events',
+    webhookUrl: 'http://localhost:5002/agent-events',
     app: app,
   }
 
