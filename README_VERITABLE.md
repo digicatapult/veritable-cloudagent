@@ -79,7 +79,7 @@ This private testnet has the following ports available to the user for testing:
 |Alice   | 3000  | 5002 | 5003 |
 |Bob     | 3001  | 5102 | 5103 |
 |Charlie | 3002  | 5202 | 5203 |
-|IPFS    | 5001 (internal, not exposed)
+|IPFS    | | 8080 | |
 
 Network name: `testnet`
 
