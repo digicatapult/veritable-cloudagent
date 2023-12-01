@@ -83,7 +83,6 @@ This private testnet has the following ports available to the user for testing:
 
 Network name: `testnet`
 
-
 #### Via CLI
 
 To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.

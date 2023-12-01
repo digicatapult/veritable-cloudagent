@@ -1,4 +1,5 @@
 #docker-compose up --build -d
+
 version: '3.8'
 
 services:
@@ -28,4 +29,5 @@ services:
 networks:
   testnet:
     name: testnet
+
     driver: bridge
