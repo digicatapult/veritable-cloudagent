@@ -1,37 +1,29 @@
-# docker build -t afj-rest .
-FROM ubuntu:23.04 as base
+#docker build -t afj-rest .
 
-ENV DEBIAN_FRONTEND noninteractive
+#Build stage
+FROM node:lts as builder
 
-RUN apt-get update -y && apt-get install -y \
-    software-properties-common \
-    apt-transport-https \
-    curl \
-    build-essential
+RUN apt-get update -y
 
-# nodejs
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash
+WORKDIR /app
 
-# install depdencies
-RUN apt-get update -y && apt-get install -y --allow-unauthenticated \
-	nodejs
-
-
-# AFJ specifc setup
-WORKDIR /www
-
-COPY bin ./bin
-COPY package.json package.json
-RUN npm install --global husky@^8.0.3
-RUN npm install
-# RUN npm install --omit=dev
-
+COPY package.json ./package.json
+COPY package-lock.json ./package-lock.json
 COPY tsoa.json ./tsoa.json
 COPY tsconfig.build.json ./tsconfig.build.json
+COPY bin ./bin
 COPY src ./src
 
-# COPY build ./build
+RUN npm ci && npm cache clean --force
+RUN npm run --omit=dev build
 
-RUN npm run build
+# Runtime stage
+FROM node:lts-slim
+# NB Debian bookworm-slim doesn't include OpenSSL
+
+WORKDIR /www
+COPY --from=builder ./app .
+
+EXPOSE 3000 5002 5003
 
 ENTRYPOINT [ "./bin/afj-rest.js", "start" ]

@@ -3,8 +3,8 @@
   "walletId": "walletId",
   "walletKey": "walletKey",
   "publicDidSeed": "testtesttesttesttesttesttesttest",
-  "endpoint": ["http://localhost:5000", "ws://localhost:5001"],
-  "autoAcceptConnections": false,
+  "endpoint": ["http://localhost:5002", "ws://localhost:5003"],
+  "autoAcceptConnections": true,
   "autoAcceptCredentials": "never",
   "autoAcceptProofs": "never",
   "useLegacyDidSovPrefix": true,
@@ -12,11 +12,11 @@
   "inboundTransport": [
     {
       "transport": "http",
-      "port": 5000
+      "port": 5002
     },
     {
       "transport": "ws",
-      "port": 5001
+      "port": 5003
     }
   ],
   "outboundTransport": ["http", "ws"],
