@@ -1,0 +1,68 @@
+#docker-compose -f docker-compose-agent-ipfs.yml up --build -d
+
+##################################################################################
+## Docker-Compose for a Single agent + Single IPFS node
+##
+## Agent: alice
+## Ports: 
+##    Alice   = 3000 / 5002 (HTTP) & 5003 (WS)
+##    IPFS    = 8080 (HTTP)
+## Network: testnet
+##
+##################################################################################
+
+version: '3.8'
+
+services:
+
+##################################################################################
+## Alice #########################################################################
+##################################################################################
+
+  agent0:
+    container_name: alice
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      ipfs0:
+        condition: service_healthy
+    environment:
+      # possible to set values using env variables
+      AFJ_REST_LOG_LEVEL: 1
+    volumes:
+      # also possible to set values using json
+      - ./samples/cliConfig.json:/config.json
+    ports:
+      - '5002:5002' #5000 is used for AirPlay in MacOS
+      - '5003:5003'
+      - '3000:3000'
+    # or via command line arguments
+    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --config /config.json
+    networks:
+      - testnet
+
+##################################################################################
+## IPFS ##########################################################################
+##################################################################################
+
+  ipfs0:
+    container_name: ipfs0
+    image: ipfs/kubo:release
+    ports:
+#     - "4001:4001" # ipfs swarm - expose if needed/wanted
+#     - "5001:5001" # ipfs api - expose if needed/wanted
+      - "8080:8080" # ipfs gateway - expose if needed/wanted
+    volumes:
+      - ipfs0:/data/ipfs
+    networks:
+      - testnet
+
+volumes:
+  ipfs0:
+
+networks:
+  testnet:
+    name: testnet
+    driver: bridge
