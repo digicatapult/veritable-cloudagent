@@ -74,12 +74,12 @@ docker-compose -f docker-compose-testnet.yml up --build -d
 
 This private testnet has the following ports available to the user for testing:
 
-| Agent | OpenAPI | HTTP | WS |
-| --- | --- | --- | --- |
-|Alice   | 3000  | 5002 | 5003 |
-|Bob     | 3001  | 5102 | 5103 |
-|Charlie | 3002  | 5202 | 5203 |
-|IPFS    | | 8080 | |
+| Agent   | OpenAPI | HTTP | WS   |
+| ------- | ------- | ---- | ---- |
+| Alice   | 3000    | 5002 | 5003 |
+| Bob     | 3001    | 5102 | 5103 |
+| Charlie | 3002    | 5202 | 5203 |
+| IPFS    |         | 8080 |      |
 
 Network name: `testnet`
 
@@ -238,3 +238,159 @@ The schema definition can be posted to `/schemas` to register it. Upon a success
 
 A credential definition can then be used to issue a credential which contains both information about an issuer of a credential and the check itself.
 (Note: Because the schema and definition is saved on ipfs. One must have an instance of ipfs running or be connected to global ipfs when registering a schema and definition.)
+
+# Demoing issuing credentials
+
+OOB connection
+POST `http://localhost:3000/oob/create-invitation`.
+
+```json
+{
+  "handshake": true,
+  "handshakeProtocols": ["https://didcomm.org/connections/1.0"],
+  "multiUseInvitation": true,
+  "autoAcceptConnection": true
+}
+```
+
+Use the `invitationUrl` to POST `http://localhost:3001/oob/receive-invitation-url` e.g.
+
+```json
+{
+  "invitationUrl": "http://alice:5002,?oob=eyJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvb3V0LW9mLWJhbmQvMS4xL2ludml0YXRpb24iLCJAaWQiOiI3NDk3MTc0Yi02MzIwLTQ5ZWYtYmMyYS04Y2I3M2E3ZDJhYWEiLCJsYWJlbCI6IkFGSiBSZXN0IEFnZW50IiwiYWNjZXB0IjpbImRpZGNvbW0vYWlwMSIsImRpZGNvbW0vYWlwMjtlbnY9cmZjMTkiXSwiaGFuZHNoYWtlX3Byb3RvY29scyI6WyJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMCJdLCJzZXJ2aWNlcyI6W3siaWQiOiIjaW5saW5lLTAiLCJzZXJ2aWNlRW5kcG9pbnQiOiJodHRwOi8vYWxpY2U6NTAwMiwiLCJ0eXBlIjoiZGlkLWNvbW11bmljYXRpb24iLCJyZWNpcGllbnRLZXlzIjpbImRpZDprZXk6ejZNa2pNQ256UlhZWjR1ZlBSUmVKc0xjUkhROUhRUzZ3S1dUZXVDdjFSTFoyZVI2Il0sInJvdXRpbmdLZXlzIjpbXX0seyJpZCI6IiNpbmxpbmUtMSIsInNlcnZpY2VFbmRwb2ludCI6IndzOi8vYWxpY2U6NTAwMyIsInR5cGUiOiJkaWQtY29tbXVuaWNhdGlvbiIsInJlY2lwaWVudEtleXMiOlsiZGlkOmtleTp6Nk1rak1DbnpSWFlaNHVmUFJSZUpzTGNSSFE5SFFTNndLV1RldUN2MVJMWjJlUjYiXSwicm91dGluZ0tleXMiOltdfV0sImltYWdlVXJsIjoiaHR0cHM6Ly9pbWFnZS5jb20vaW1hZ2UucG5nIn0"
+}
+```
+
+Create schema POST `http://localhost:3000/schemas`
+
+```json
+{
+  "issuerId": "did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1",
+  "version": "1.0",
+  "name": "string",
+  "attrNames": ["checkName", "companyName", "companiesHouseNumber", "issueDate", "expiryDate"]
+}
+```
+
+Use ID returned to POST `http://localhost:3000/credential-definitions`
+
+```json
+{
+  "tag": "someCredDef",
+  "schemaId": "ipfs://bafkreibx3sernhcqhh7tlu5lkur2npksgsxtle7niri7siopaf2whfviy4",
+  "issuerId": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+}
+```
+
+`http://localhost:3000/credentials/offer-credential`
+
+```json
+{
+  "protocolVersion": "v2",
+  "credentialFormats": {
+    "anoncreds": {
+      "credentialDefinitionId": "ipfs://bafkreicdeamqb5kqjs6sxffcera2k7lqi7lolmf4a2nvgwahxapwpsnxay",
+      "attributes": [
+        {
+          "name": "checkName",
+          "value": ""
+        },
+        {
+          "name": "companyName",
+          "value": ""
+        },
+        {
+          "name": "companiesHouseNumber",
+          "value": ""
+        },
+        {
+          "name": "issueDate",
+          "value": ""
+        },
+        {
+          "name": "expiryDate",
+          "value": ""
+        }
+      ]
+    }
+  },
+  "autoAcceptCredential": "always",
+  "connectionId": "5652c902-c0ce-4792-86aa-62e10bacca93"
+}
+```
+
+`http://localhost:3001/credentials/b3cc696b-428d-402f-8c4b-f864448c8517/accept-offer'`
+
+```json
+{
+  "autoAcceptCredential": "always"
+}
+```
+
+Done credential
+
+```json
+{
+  "_tags": {
+    "connectionId": "841d1016-278f-44fa-82c9-d34023711d7c",
+    "credentialIds": ["5ca19083-1325-42dd-9e06-17326506c266"],
+    "state": "done",
+    "threadId": "dcaa6a3b-5924-473a-b866-94340fb68f9a"
+  },
+  "metadata": {
+    "_anoncreds/credentialRequest": {
+      "link_secret_blinding_data": {
+        "v_prime": "7780384658720139883051520777737145609154845534058249238107616168677146440354815999489173180818556002623796392349623759810287924257858919253787022482374506783739110736544797024028886378848655808050835469953792943949086771743127711513528885689689149928515385980647022923107914714929238070342856381821023767770451017868663895496311571214765761584854759291179904150766620863370767033104057622669423839372026147701783055904618087679461301419201122943843063642985341761776737614666012546857527244553498335564257414434094184194466636576590173580184821524025551510352276882525848712373468409319155285422091616968569115294880633605680293196851923300",
+        "vr_prime": null
+      },
+      "nonce": "297465335850252833804416",
+      "link_secret_name": "8ed424ec-16d7-48a5-93f2-434601112848"
+    },
+    "_anoncreds/credential": {
+      "credentialDefinitionId": "ipfs://bafkreicdeamqb5kqjs6sxffcera2k7lqi7lolmf4a2nvgwahxapwpsnxay",
+      "schemaId": "ipfs://bafkreibx3sernhcqhh7tlu5lkur2npksgsxtle7niri7siopaf2whfviy4"
+    }
+  },
+  "credentials": [
+    {
+      "credentialRecordType": "anoncreds",
+      "credentialRecordId": "5ca19083-1325-42dd-9e06-17326506c266"
+    }
+  ],
+  "id": "b3cc696b-428d-402f-8c4b-f864448c8517",
+  "createdAt": "2023-12-07T17:23:04.966Z",
+  "state": "done",
+  "connectionId": "841d1016-278f-44fa-82c9-d34023711d7c",
+  "threadId": "dcaa6a3b-5924-473a-b866-94340fb68f9a",
+  "protocolVersion": "v2",
+  "updatedAt": "2023-12-07T17:24:23.194Z",
+  "credentialAttributes": [
+    {
+      "mime-type": "text/plain",
+      "name": "checkName",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "companyName",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "companiesHouseNumber",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "issueDate",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "expiryDate",
+      "value": ""
+    }
+  ],
+  "autoAcceptCredential": "always"
+}
+```
