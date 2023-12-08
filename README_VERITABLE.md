@@ -282,7 +282,11 @@ Use ID returned to POST `http://localhost:3000/credential-definitions`
 }
 ```
 
-`http://localhost:3000/credentials/offer-credential`
+From the response, save the new credential definition id.
+
+The connection id to Bob (3001) is also needed. To fetch this, on Alice (3000) `GET /connections` with empty parameters. From the response, save the connection ID of the only connection. (If there is more than one connection, look for the one with a DID of the format `did:peer:<...>`) 
+
+Using these two values, on Alice (3000), `POST http://localhost:3000/credentials/offer-credential` with the following request body, replace `credentialDefinitionId` and `connectionId` with the values previously fetched:
 
 ```json
 {
@@ -319,7 +323,9 @@ Use ID returned to POST `http://localhost:3000/credential-definitions`
 }
 ```
 
-`http://localhost:3001/credentials/b3cc696b-428d-402f-8c4b-f864448c8517/accept-offer'`
+Bob must now accept the credentials offer. To get the Bob's credential offer record ID, on Bob (3001) `GET /credentials`. If there is more than one credential, look for one with the state `offer-received`.
+
+Using this credential ID `POST http://localhost:3001/credentials/{credentialRecordId}/accept-offer` with the following body, replacing `credentialRecordId` with the one previously fetched:
 
 ```json
 {
