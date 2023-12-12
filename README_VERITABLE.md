@@ -239,10 +239,23 @@ The schema definition can be posted to `/schemas` to register it. Upon a success
 A credential definition can then be used to issue a credential which contains both information about an issuer of a credential and the check itself.
 (Note: Because the schema and definition is saved on ipfs. One must have an instance of ipfs running or be connected to global ipfs when registering a schema and definition.)
 
-# Demoing issuing credentials
+# Demoing credential issuance and verification
 
-OOB connection
-POST `http://localhost:3000/oob/create-invitation`.
+This demo uses the containerised private network of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
+
+```sh
+docker-compose -f docker-compose-testnet.yml up --build -d
+```
+
+| Name    | Role         | API                                     |
+| :------ | :----------- | :-------------------------------------- |
+| Alice   | **Issuer**   | [localhost:3000](http://localhost:3000) |
+| Bob     | **Holder**   | [localhost:3001](http://localhost:3001) |
+| Charlie | **Verifier** | [localhost:3002](http://localhost:3002) |
+
+## OOB connection
+
+Before any communication between two agents, an out of band connection must be established. First establish a connection between Alice and Bob by POSTing with Alice to `http://localhost:3000/oob/create-invitation`.
 
 ```json
 {
@@ -253,7 +266,7 @@ POST `http://localhost:3000/oob/create-invitation`.
 }
 ```
 
-Use the `invitationUrl` to POST `http://localhost:3001/oob/receive-invitation-url` e.g.
+Use the `invitationUrl` to POST `http://localhost:3001/oob/receive-invitation-url` with Bob e.g.
 
 ```json
 {
@@ -261,7 +274,7 @@ Use the `invitationUrl` to POST `http://localhost:3001/oob/receive-invitation-ur
 }
 ```
 
-Create schema POST `http://localhost:3000/schemas`
+Create schema with Alice - POST `http://localhost:3000/schemas`
 
 ```json
 {
@@ -272,7 +285,7 @@ Create schema POST `http://localhost:3000/schemas`
 }
 ```
 
-Use ID returned to POST `http://localhost:3000/credential-definitions`
+Use the `id` and `issuerId` returned by creating a as `schemaId` and `issuerId` to create a credential definition with Alice - POST `http://localhost:3000/credential-definitions`
 
 ```json
 {
@@ -284,7 +297,7 @@ Use ID returned to POST `http://localhost:3000/credential-definitions`
 
 From the response, save the new credential definition id.
 
-The connection id to Bob (3001) is also needed. To fetch this, on Alice (3000) `GET /connections` with empty parameters. From the response, save the connection ID of the only connection. (If there is more than one connection, look for the one with a DID of the format `did:peer:<...>`) 
+The connection id to Bob (3001) is also needed. To fetch this, on Alice (3000) `GET /connections` with empty parameters. From the response, save the connection ID of the only connection. (If there is more than one connection, look for the one with a DID of the format `did:peer:<...>`)
 
 Using these two values, on Alice (3000), `POST http://localhost:3000/credentials/offer-credential` with the following request body, replace `credentialDefinitionId` and `connectionId` with the values previously fetched:
 
@@ -333,7 +346,8 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 }
 ```
 
-Done credential
+<details>
+  <summary>Example of an issued credential</summary>
 
 ```json
 {
@@ -400,3 +414,98 @@ Done credential
   "autoAcceptCredential": "always"
 }
 ```
+
+</details>
+
+## Verification
+
+Setup an out of band connection between Charlie and Bob.
+
+As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://localhost:3002/proofs/request-proof`. Use the `connectionId` to Bob and the `cred_def_id` either from the credential definition created earlier by Alice or the credential owned by Bob (the credential definition ID is consistent across all agents because it's an IPFS CID).
+
+```json
+{
+  "protocolVersion": "v2",
+  "proofFormats": {
+    "anoncreds": {
+      "name": "proof-request",
+      "version": "1.0",
+
+      "requested_attributes": {
+        "name": {
+          "name": "checkName",
+          "restrictions": [
+            {
+              "cred_def_id": "ipfs://bafkreicdeamqb5kqjs6sxffcera2k7lqi7lolmf4a2nvgwahxapwpsnxay"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "willConfirm": true,
+  "autoAcceptProof": "always",
+  "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d"
+}
+```
+
+The proof will be automatically accepted and verified by Bob. View the proof - GET `http://localhost:3001/proofs`
+
+<details>
+  <summary>Example of a verified proof on Charlie</summary>
+
+```json
+[
+  {
+    "_tags": {
+      "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+      "state": "done",
+      "threadId": "9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7"
+    },
+    "metadata": {},
+    "id": "d5e6433f-0666-4e04-bd31-580b6e570be4",
+    "createdAt": "2023-12-11T18:19:46.771Z",
+    "protocolVersion": "v2",
+    "state": "done",
+    "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+    "threadId": "9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7",
+    "autoAcceptProof": "always",
+    "updatedAt": "2023-12-11T18:20:14.128Z",
+    "isVerified": true
+  },
+  {
+    "_tags": {
+      "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+      "state": "request-sent",
+      "threadId": "1771f381-ae65-42d2-b041-830fbf50ff85"
+    },
+    "metadata": {},
+    "id": "03d72143-1b08-472a-8237-eda0c3e1c771",
+    "createdAt": "2023-12-11T17:44:13.572Z",
+    "protocolVersion": "v2",
+    "state": "request-sent",
+    "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+    "threadId": "1771f381-ae65-42d2-b041-830fbf50ff85",
+    "autoAcceptProof": "always",
+    "updatedAt": "2023-12-11T17:44:13.587Z"
+  },
+  {
+    "_tags": {
+      "connectionId": "4a99c6d8-66b1-46c3-b165-f3f426d39d4a",
+      "state": "request-sent",
+      "threadId": "8fa0c627-d9a4-43e5-8d7b-25691b5b30d0"
+    },
+    "metadata": {},
+    "id": "707a731c-984b-4abd-88e7-7699fe1576f9",
+    "createdAt": "2023-12-11T18:19:08.556Z",
+    "protocolVersion": "v2",
+    "state": "request-sent",
+    "connectionId": "4a99c6d8-66b1-46c3-b165-f3f426d39d4a",
+    "threadId": "8fa0c627-d9a4-43e5-8d7b-25691b5b30d0",
+    "autoAcceptProof": "always",
+    "updatedAt": "2023-12-11T18:19:08.575Z"
+  }
+]
+```
+
+</details>
