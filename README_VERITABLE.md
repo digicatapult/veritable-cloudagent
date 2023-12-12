@@ -449,7 +449,15 @@ As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://loc
 }
 ```
 
-The proof will be automatically accepted and verified by Bob. View the proof - GET `http://localhost:3001/proofs`
+The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proofRecordId}/accept-request` with the following body, replacing `proofRecordId` with the `id` of the proof from GET `http://localhost:3001/proofs`:
+
+```json
+{
+  "useReturnRoute": true,
+  "willConfirm": true,
+  "autoAcceptProof": "always"
+}
+```
 
 <details>
   <summary>Example of a verified proof on Charlie</summary>
