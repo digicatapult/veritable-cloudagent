@@ -551,6 +551,16 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
+      const findByIdStub = stub(bobAgent.connections, 'findById')
+      findByIdStub.resolves(connection) //connection is present - fails on missing credential definition
+      const response = await request(app)
+        .post('/credentials/accept-offer')
+        .send({ credentialRecordId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+    test('should give 404 not found when connection is not found', async () => {
+      //fails on missing connection
       const response = await request(app)
         .post('/credentials/accept-offer')
         .send({ credentialRecordId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })

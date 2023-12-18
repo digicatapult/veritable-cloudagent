@@ -14,7 +14,6 @@ import {
   AcceptCredentialOfferOptions,
   CreateOfferOptions,
 } from '../types'
-import { option } from 'yargs'
 
 @Tags('Credentials')
 @Route('/credentials')
