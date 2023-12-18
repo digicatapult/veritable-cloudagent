@@ -328,6 +328,8 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when proof request is not found', async () => {
+      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
+      selectCredentialForRequestStub.resolves({ proofFormats: {} })
       const response = await request(app).post('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
 
       expect(response.statusCode).to.be.equal(404)
