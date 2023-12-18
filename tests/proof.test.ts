@@ -18,7 +18,7 @@ import WebSocket from 'ws'
 
 import { startServer } from '../src'
 
-import { getTestAgent, getTestProof, objectToJson } from './utils/helpers'
+import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers'
 
 chaiUse(chaiAssertionsCount)
 
@@ -28,6 +28,7 @@ describe('ProofController', () => {
   let bobAgent: Agent
   let testMessage: AgentMessage
   let testProof: ProofExchangeRecord
+  let testProofResponse: ProofExchangeRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Proof REST Agent Test Alice', 3032)
@@ -35,6 +36,7 @@ describe('ProofController', () => {
     app = await startServer(bobAgent, { port: 3033 })
 
     testProof = getTestProof()
+    testProofResponse = getTestProofResponse()
     testMessage = new AgentMessage()
   })
 
@@ -305,12 +307,39 @@ describe('ProofController', () => {
     })
   })
 
+  describe('Accept proof request', () => {
+    test('should accept proof request', async () => {
+      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
+      selectCredentialForRequestStub.resolves({ proofFormats: {} })
+      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+
+      acceptProofStub.resolves(testProofResponse)
+      const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
+
+      const response = await request(app).post(`/proofs/${testProofResponse.id}/accept-request`)
+
+      expect(
+        acceptProofStub.calledWithMatch({
+          proofRecordId: testProofResponse.id,
+        })
+      ).equals(true)
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
+    test('should give 404 not found when proof request is not found', async () => {
+      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
+      selectCredentialForRequestStub.resolves({ proofFormats: {} })
+      const response = await request(app).post('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
   describe('Accept proof presentation', () => {
     test('should return proof record', async () => {
       const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
       acceptPresentationStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => acceptPresentationStub.firstCall.returnValue
-
       const response = await request(app).post(`/proofs/${testProof.id}/accept-presentation`)
 
       expect(
