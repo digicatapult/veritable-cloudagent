@@ -14,6 +14,7 @@ import {
   AcceptCredentialOfferOptions,
   CreateOfferOptions,
 } from '../types'
+import { option } from 'yargs'
 
 @Tags('Credentials')
 @Route('/credentials')
@@ -198,12 +199,17 @@ export class CredentialController extends Controller {
     @Res() internalServerError: TsoaResponse<500, { message: string }>
   ) {
     try {
+      //check connection exists
+      const connection = await this.agent.connections.findById(options.connectionId)
+      if (!connection)
+        return notFoundError(404, { reason: `connection with connection id "${options.connectionId}" not found.` })
+
       const credential = await this.agent.credentials.offerCredential(options)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         return notFoundError(404, {
-          reason: `connection with connection record id "${options.connectionId}" not found.`,
+          reason: `the credential definition id "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found.`,
         })
       }
       return internalServerError(500, { message: `something went wrong: ${error}` })

@@ -4,7 +4,7 @@ import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
-import type { Agent, CredentialStateChangedEvent, OutOfBandRecord } from '@aries-framework/core'
+import type { Agent, ConnectionRecord, CredentialStateChangedEvent, OutOfBandRecord } from '@aries-framework/core'
 import type { Server } from 'net'
 
 import {
@@ -22,7 +22,14 @@ import WebSocket from 'ws'
 
 import { startServer } from '../src'
 
-import { objectToJson, getTestCredential, getTestAgent, getTestOffer, getTestOutOfBandRecord } from './utils/helpers'
+import {
+  objectToJson,
+  getTestCredential,
+  getTestAgent,
+  getTestOffer,
+  getTestOutOfBandRecord,
+  getTestConnection,
+} from './utils/helpers'
 
 chaiUse(chaiAssertionsCount)
 
@@ -36,6 +43,7 @@ describe('CredentialController', () => {
     credentialRecord: CredentialExchangeRecord
   }
   let outOfBandRecord: OutOfBandRecord
+  let connection: ConnectionRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Credential REST Agent Test Alice', 3022)
@@ -45,6 +53,7 @@ describe('CredentialController', () => {
     testCredential = getTestCredential() as CredentialExchangeRecord
     testOffer = getTestOffer()
     outOfBandRecord = getTestOutOfBandRecord()
+    connection = getTestConnection()
   })
 
   beforeEach(() => {
@@ -527,8 +536,11 @@ describe('CredentialController', () => {
     }
 
     test('should return credential record', async () => {
+      const findByIdStub = stub(bobAgent.connections, 'findById')
+      findByIdStub.resolves(connection)
       const offerCredentialStub = stub(bobAgent.credentials, 'offerCredential')
       offerCredentialStub.resolves(testCredential)
+
       const getResult = (): Promise<CredentialExchangeRecord> => offerCredentialStub.firstCall.returnValue
 
       const response = await request(app).post(`/credentials/offer-credential`).send(offerRequest)
