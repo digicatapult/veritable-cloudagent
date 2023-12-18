@@ -317,6 +317,28 @@ export function getTestCredDef(): AnonCredsCredentialDefinition {
   }
 }
 
+export function getTestProofResponse() {
+  const json = {
+    _tags: {
+      connectionId: '4b70e399-d0d3-42c9-b511-dc0b972e362d',
+      state: 'done',
+      threadId: '9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7',
+    },
+    metadata: {},
+    id: '222222aa-aa22-22a2-aa22-222a2aa22222',
+    createdAt: '2023-12-11T18:19:46.771Z',
+    protocolVersion: 'v2',
+    state: 'done',
+    connectionId: '4b70e399-d0d3-42c9-b511-dc0b972e362d',
+    threadId: '9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7',
+    autoAcceptProof: 'always',
+    updatedAt: '2023-12-11T18:20:14.128Z',
+    isVerified: true,
+  }
+
+  return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+}
+
 export function getTestProof() {
   const json = {
     _tags: {
