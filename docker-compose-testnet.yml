@@ -4,7 +4,7 @@
 ## Docker-Compose for a 3-agent testnet + 3-node private IPFS cluster ############
 ##
 ## Agents: Alice, Bob, Charlie
-## Ports for testing purposes (HTTP): 
+## Ports for testing purposes (HTTP):
 ##    Alice   = 3000 [ 5002 (HTTP) & 5003 (WS) internal ]
 ##    Bob     = 3001 [ 5102 (HTTP) & 5103 (WS) internal ]
 ##    Charlie = 3002 [ 5202 (HTTP) & 5203 (WS) internal ]
@@ -16,10 +16,9 @@
 version: '3.8'
 
 services:
-
-##################################################################################
-## Alice #########################################################################
-##################################################################################
+  ##################################################################################
+  ## Alice #########################################################################
+  ##################################################################################
 
   alice:
     container_name: alice
@@ -33,6 +32,8 @@ services:
     environment:
       # possible to set values using env variables
       AFJ_REST_LOG_LEVEL: 1
+      PERSONA_TITLE: TA
+      PERSONA_COLOR: '#eddedf'
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
@@ -45,9 +46,9 @@ services:
     networks:
       - testnet
 
-##################################################################################
-## Bob ###########################################################################
-##################################################################################
+  ##################################################################################
+  ## Bob ###########################################################################
+  ##################################################################################
 
   bob:
     container_name: bob
@@ -60,6 +61,8 @@ services:
         condition: service_healthy
     environment:
       AFJ_REST_LOG_LEVEL: 1
+      PERSONA_TITLE: OEM
+      PERSONA_COLOR: '#dfedde'
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:
@@ -70,9 +73,9 @@ services:
     networks:
       - testnet
 
-##################################################################################
-## Charlie #######################################################################
-##################################################################################
+  ##################################################################################
+  ## Charlie #######################################################################
+  ##################################################################################
 
   charlie:
     container_name: charlie
@@ -85,6 +88,8 @@ services:
         condition: service_healthy
     environment:
       AFJ_REST_LOG_LEVEL: 1
+      PERSONA_TITLE: Supplier
+      PERSONA_COLOR: '#dedfed'
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:
@@ -95,17 +100,17 @@ services:
     networks:
       - testnet
 
-##################################################################################
-## Cluster PEER 0 ################################################################
-##################################################################################
+  ##################################################################################
+  ## Cluster PEER 0 ################################################################
+  ##################################################################################
 
   ipfs0:
     container_name: ipfs0
     image: ipfs/kubo:release
     ports:
-#     - "4001:4001" # ipfs swarm - expose if needed/wanted
-#     - "5001:5001" # ipfs api - expose if needed/wanted
-      - "8080:8080" # ipfs HTTP gateway
+      #     - "4001:4001" # ipfs swarm - expose if needed/wanted
+      #     - "5001:5001" # ipfs api - expose if needed/wanted
+      - '8080:8080' # ipfs HTTP gateway
     volumes:
       - ipfs0:/data/ipfs
     networks:
@@ -125,21 +130,21 @@ services:
       CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose API
       CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
     #ports:
-          # Open API port (allows ipfs-cluster-ctl usage on host)
-          # - "9094:9094"
-          # The cluster swarm port would need to be exposed if this container
-          # was to connect to cluster peers on other hosts.
-          # But this is just a testing cluster.
-          # - "9095:9095" # Cluster IPFS Proxy endpoint
-          # - "9096:9096" # Cluster swarm endpoint
+    # Open API port (allows ipfs-cluster-ctl usage on host)
+    # - "9094:9094"
+    # The cluster swarm port would need to be exposed if this container
+    # was to connect to cluster peers on other hosts.
+    # But this is just a testing cluster.
+    # - "9095:9095" # Cluster IPFS Proxy endpoint
+    # - "9096:9096" # Cluster swarm endpoint
     volumes:
       - cluster0:/data/ipfs-cluster
     networks:
       - testnet
 
-##################################################################################
-## Cluster PEER 1 ################################################################
-##################################################################################
+  ##################################################################################
+  ## Cluster PEER 1 ################################################################
+  ##################################################################################
 
   ipfs1:
     container_name: ipfs1
@@ -166,9 +171,9 @@ services:
     networks:
       - testnet
 
-##################################################################################
-## Cluster PEER 2 ################################################################
-##################################################################################
+  ##################################################################################
+  ## Cluster PEER 2 ################################################################
+  ##################################################################################
 
   ipfs2:
     container_name: ipfs2

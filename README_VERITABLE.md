@@ -74,12 +74,12 @@ docker-compose -f docker-compose-testnet.yml up --build -d
 
 This private testnet has the following ports available to the user for testing:
 
-| Agent | OpenAPI | HTTP | WS |
-| --- | --- | --- | --- |
-|Alice   | 3000  | 5002 | 5003 |
-|Bob     | 3001  | 5102 | 5103 |
-|Charlie | 3002  | 5202 | 5203 |
-|IPFS    | | 8080 | |
+| Agent   | OpenAPI | HTTP | WS   |
+| ------- | ------- | ---- | ---- |
+| Alice   | 3000    | 5002 | 5003 |
+| Bob     | 3001    | 5102 | 5103 |
+| Charlie | 3002    | 5202 | 5203 |
+| IPFS    |         | 8080 |      |
 
 Network name: `testnet`
 
