@@ -11,6 +11,8 @@ module.exports = {
   extension: ['test.ts'],
   bail: false,
   package: './package.json',
+  exclude: 'node_modules/**/*',
+  watch: false,
   fullTrace: false,
   ui: 'bdd',
   color: true,

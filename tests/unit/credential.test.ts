@@ -1,4 +1,4 @@
-import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../src/controllers/types'
+import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '@src/controllers/types'
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import chaiAssertionsCount from 'chai-assertions-count'
@@ -20,7 +20,7 @@ import {
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '../src'
+import { startServer } from '@src'
 
 import {
   objectToJson,

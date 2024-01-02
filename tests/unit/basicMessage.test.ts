@@ -10,7 +10,7 @@ import { BasicMessageEventTypes } from '@aries-framework/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '../src'
+import { startServer } from '@src'
 
 import { getTestAgent, objectToJson } from './utils/helpers'
 

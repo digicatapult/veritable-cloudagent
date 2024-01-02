@@ -6,7 +6,10 @@
   },
   "compilerOptions": {
     "paths": {
-      "@aries-framework/rest": ["./src"]
+      "@aries-framework/rest": ["./src"],
+      "@src": ["src"],
+      "@src/*": ["./src/*"],
+      "@schema/*": ["./schema/*"]
     },
     "esModuleInterop": true,
     "resolveJsonModule": true,

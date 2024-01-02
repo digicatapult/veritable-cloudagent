@@ -38,9 +38,9 @@
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "test": "mocha --config .mocharc.js '{,!(node_modules)/**/}*.test.ts'",
-    "test-watch": "mocha --config .mocharc.js '{,!(node_modules)/**/}*.test.ts' --watch --watch-extensions tests/ '{,!(node_modules)/**/}*.test.ts' --watch-files tests/*",
-    "test-watch-fast": "TS_NODE_TRANSPILE_ONLY=true mocha --config .mocharc.js '{,!(node_modules)/**/}*.test.ts' --watch --watch-extensions tests/ '{,!(node_modules)/**/}*.test.ts' --watch-files tests/*"
+    "test": "mocha --config .mocharc.js tests/unit/**/*.test.ts **/__tests__/*.test.ts",
+    "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/",
+    "test-watch-fast": "TS_NODE_TRANSPILE_ONLY=true npm run test-watch"
   },
   "dependencies": {
     "@aries-framework/anoncreds": "^0.4.0",

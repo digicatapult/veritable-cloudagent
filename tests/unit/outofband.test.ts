@@ -14,7 +14,7 @@ import type { Express } from 'express'
 import { JsonTransformer, AgentMessage } from '@aries-framework/core'
 import request from 'supertest'
 
-import { setupServer } from '../src/server'
+import { setupServer } from '@src/server'
 
 import {
   getTestAgent,
