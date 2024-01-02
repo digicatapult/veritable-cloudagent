@@ -9,12 +9,12 @@ WORKDIR /app
 
 COPY package.json ./package.json
 COPY package-lock.json ./package-lock.json
+RUN npm ci && npm cache clean --force
+
 COPY tsoa.json ./tsoa.json
 COPY tsconfig.build.json ./tsconfig.build.json
 COPY bin ./bin
 COPY src ./src
-
-RUN npm ci && npm cache clean --force
 RUN npm run --omit=dev build
 
 # Runtime stage
