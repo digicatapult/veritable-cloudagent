@@ -17,7 +17,6 @@ import { connectionEvents } from './events/ConnectionEvents'
 import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
-import env from './env'
 
 export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   container.registerInstance(Agent, agent as Agent)
@@ -43,7 +42,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(
       generateHTML(await import('./routes/swagger.json'), {
-        customCss: `body { background-color: ${env.PERSONA_COLOR} } 
+        customCss: `body { background-color: ${process.env.PERSONA_COLOR ? process.env.PERSONA_COLOR : 'white'} } 
         .swagger-ui .scheme-container { background-color: inherit }
         .swagger-ui .opblock .opblock-section-header { background: inherit }
         .topbar { display: none }
@@ -52,7 +51,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
         .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) } 
         .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) } 
         .swagger-ui section.models { background-color: #fff } `,
-        customSiteTitle: env.PERSONA_TITLE,
+        customSiteTitle: process.env.PERSONA_TITLE ? process.env.PERSONA_TITLE : 'Veritable Cloudagent',
       })
     )
   })
