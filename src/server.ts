@@ -47,11 +47,11 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
         .swagger-ui .scheme-container { background-color: inherit }
         .swagger-ui .opblock .opblock-section-header { background: inherit }
         .topbar { display: none }
-        .swagger-ui .btn.authorize { background-color: #fff } 
+        .swagger-ui .btn.authorize { background-color: #f7f7f7 } 
         .swagger-ui .opblock.opblock-post { background: rgba(73,204,144,.3) } 
         .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) } 
         .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) } 
-        .swagger-ui section.models { background-color: #fff } `,
+        .swagger-ui section.models { background-color: #f7f7f7 } `,
         }),
         ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
       })
