@@ -102,6 +102,14 @@ const parsed = yargs
     string: true,
     demandOption: true,
   })
+  .option('persona-title', {
+    string: true,
+    default: 'Veritable Cloudagent',
+  })
+  .option('persona-color', {
+    string: true,
+    default: 'white',
+  })
 
   .config()
   .env('AFJ_REST')
@@ -129,5 +137,7 @@ export async function runCliServer() {
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
     ipfsOrigin: parsed['ipfs-origin'],
+    personaTitle: parsed['persona-title'],
+    personaColor: parsed['persona-color'],
   } as AriesRestConfig)
 }

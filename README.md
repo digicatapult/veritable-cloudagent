@@ -10,9 +10,9 @@ For more information read [README_VERITABLE.md](./README_VERITABLE.md)
 
 ## Configuration
 
-Use a `.env` at root of the repository to set values for the environment variables defined in `.env` file.
+`veritable-cloudagent` takes the following arguments to configure the `AFJ Rest agent`:
 
 | variable      | required |        default         | description                                                         |
 | :------------ | :------: | :--------------------: | :------------------------------------------------------------------ |
-| PERSONA_TITLE |    N     | `Veritable Cloudagent` | Site title for the service's OpenAPI documentation                  |
-| PERSONA_COLOR |    N     |        `white`         | CSS colour value for the service's OpenAPI documentation background |
+| persona-title |    N     | `Veritable Cloudagent` | Site title for the service's OpenAPI documentation                  |
+| persona-color |    N     |        `white`         | CSS colour value for the service's OpenAPI documentation background |

@@ -42,7 +42,8 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(
       generateHTML(await import('./routes/swagger.json'), {
-        customCss: `body { background-color: ${process.env.PERSONA_COLOR ? process.env.PERSONA_COLOR : 'white'} } 
+        ...(config.personaColor && {
+          customCss: `body { background-color: ${config.personaColor} } 
         .swagger-ui .scheme-container { background-color: inherit }
         .swagger-ui .opblock .opblock-section-header { background: inherit }
         .topbar { display: none }
@@ -51,7 +52,8 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
         .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) } 
         .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) } 
         .swagger-ui section.models { background-color: #fff } `,
-        customSiteTitle: process.env.PERSONA_TITLE ? process.env.PERSONA_TITLE : 'Veritable Cloudagent',
+        }),
+        ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
       })
     )
   })

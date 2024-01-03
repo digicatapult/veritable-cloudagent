@@ -32,8 +32,6 @@ services:
     environment:
       # possible to set values using env variables
       AFJ_REST_LOG_LEVEL: 1
-      PERSONA_TITLE: TA
-      PERSONA_COLOR: '#eddedf'
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
@@ -42,7 +40,7 @@ services:
       #- '5003:5003'
       - '3000:3000'
     # or via command line arguments
-    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --config /config.json
+    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --config /config.json --persona-title "TA" --persona-color "#eddedf"
     networks:
       - testnet
 
@@ -61,15 +59,13 @@ services:
         condition: service_healthy
     environment:
       AFJ_REST_LOG_LEVEL: 1
-      PERSONA_TITLE: OEM
-      PERSONA_COLOR: '#dfedde'
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:
       #- '5102:5002'
       #- '5103:5003'
       - '3001:3000'
-    command: --endpoint "http://bob:5002", "ws://bob:5003" --ipfs-origin http://ipfs1:5001 --config /config.json
+    command: --endpoint "http://bob:5002", "ws://bob:5003" --ipfs-origin http://ipfs1:5001 --config /config.json --persona-title "OEM" --persona-color "#dfedde"
     networks:
       - testnet
 
@@ -88,15 +84,13 @@ services:
         condition: service_healthy
     environment:
       AFJ_REST_LOG_LEVEL: 1
-      PERSONA_TITLE: Supplier
-      PERSONA_COLOR: '#dedfed'
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:
       #- '5202:5002'
       #- '5203:5003'
       - '3002:3000'
-    command: --endpoint "http://charlie:5002", "ws://charlie:5003" --ipfs-origin http://ipfs2:5001 --config /config.json
+    command: --endpoint "http://charlie:5002", "ws://charlie:5003" --ipfs-origin http://ipfs2:5001 --config /config.json --persona-title "Supplier" --persona-color "#dedfed"
     networks:
       - testnet
 
