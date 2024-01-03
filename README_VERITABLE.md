@@ -74,12 +74,12 @@ docker-compose -f docker-compose-testnet.yml up --build -d
 
 This private testnet has the following ports available to the user for testing:
 
-| Agent | OpenAPI | HTTP | WS |
-| --- | --- | --- | --- |
-|Alice   | 3000  | 5002 | 5003 |
-|Bob     | 3001  | 5102 | 5103 |
-|Charlie | 3002  | 5202 | 5203 |
-|IPFS    | | 8080 | |
+| Agent   | OpenAPI | HTTP | WS   |
+| ------- | ------- | ---- | ---- |
+| Alice   | 3000    | 5002 | 5003 |
+| Bob     | 3001    | 5102 | 5103 |
+| Charlie | 3002    | 5202 | 5203 |
+| IPFS    |         | 8080 |      |
 
 Network name: `testnet`
 
@@ -238,3 +238,282 @@ The schema definition can be posted to `/schemas` to register it. Upon a success
 
 A credential definition can then be used to issue a credential which contains both information about an issuer of a credential and the check itself.
 (Note: Because the schema and definition is saved on ipfs. One must have an instance of ipfs running or be connected to global ipfs when registering a schema and definition.)
+
+# Demoing credential issuance and verification
+
+This demo uses the containerised private network of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
+
+```sh
+docker-compose -f docker-compose-testnet.yml up --build -d
+```
+
+| Name    | Role         | API                                     |
+| :------ | :----------- | :-------------------------------------- |
+| Alice   | **Issuer**   | [localhost:3000](http://localhost:3000) |
+| Bob     | **Holder**   | [localhost:3001](http://localhost:3001) |
+| Charlie | **Verifier** | [localhost:3002](http://localhost:3002) |
+
+## OOB connection
+
+Before any communication between two agents, an out of band connection must be established. First establish a connection between Alice and Bob by POSTing with Alice to `http://localhost:3000/oob/create-invitation`.
+
+```json
+{
+  "handshake": true,
+  "handshakeProtocols": ["https://didcomm.org/connections/1.0"],
+  "multiUseInvitation": true,
+  "autoAcceptConnection": true
+}
+```
+
+Use the `invitationUrl` to POST `http://localhost:3001/oob/receive-invitation-url` with Bob e.g.
+
+```json
+{
+  "invitationUrl": "http://alice:5002,?oob=eyJAdHlwZSI6Imh0dHBzOi8vZGlkY29tbS5vcmcvb3V0LW9mLWJhbmQvMS4xL2ludml0YXRpb24iLCJAaWQiOiI3NDk3MTc0Yi02MzIwLTQ5ZWYtYmMyYS04Y2I3M2E3ZDJhYWEiLCJsYWJlbCI6IkFGSiBSZXN0IEFnZW50IiwiYWNjZXB0IjpbImRpZGNvbW0vYWlwMSIsImRpZGNvbW0vYWlwMjtlbnY9cmZjMTkiXSwiaGFuZHNoYWtlX3Byb3RvY29scyI6WyJodHRwczovL2RpZGNvbW0ub3JnL2Nvbm5lY3Rpb25zLzEuMCJdLCJzZXJ2aWNlcyI6W3siaWQiOiIjaW5saW5lLTAiLCJzZXJ2aWNlRW5kcG9pbnQiOiJodHRwOi8vYWxpY2U6NTAwMiwiLCJ0eXBlIjoiZGlkLWNvbW11bmljYXRpb24iLCJyZWNpcGllbnRLZXlzIjpbImRpZDprZXk6ejZNa2pNQ256UlhZWjR1ZlBSUmVKc0xjUkhROUhRUzZ3S1dUZXVDdjFSTFoyZVI2Il0sInJvdXRpbmdLZXlzIjpbXX0seyJpZCI6IiNpbmxpbmUtMSIsInNlcnZpY2VFbmRwb2ludCI6IndzOi8vYWxpY2U6NTAwMyIsInR5cGUiOiJkaWQtY29tbXVuaWNhdGlvbiIsInJlY2lwaWVudEtleXMiOlsiZGlkOmtleTp6Nk1rak1DbnpSWFlaNHVmUFJSZUpzTGNSSFE5SFFTNndLV1RldUN2MVJMWjJlUjYiXSwicm91dGluZ0tleXMiOltdfV0sImltYWdlVXJsIjoiaHR0cHM6Ly9pbWFnZS5jb20vaW1hZ2UucG5nIn0"
+}
+```
+
+Create schema with Alice - POST `http://localhost:3000/schemas`
+
+```json
+{
+  "issuerId": "did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1",
+  "version": "1.0",
+  "name": "string",
+  "attrNames": ["checkName", "companyName", "companiesHouseNumber", "issueDate", "expiryDate"]
+}
+```
+
+Use the `id` and `issuerId` returned by creating a as `schemaId` and `issuerId` to create a credential definition with Alice - POST `http://localhost:3000/credential-definitions`
+
+```json
+{
+  "tag": "someCredDef",
+  "schemaId": "ipfs://bafkreibx3sernhcqhh7tlu5lkur2npksgsxtle7niri7siopaf2whfviy4",
+  "issuerId": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+}
+```
+
+From the response, save the new credential definition id.
+
+The connection id to Bob (3001) is also needed. To fetch this, on Alice (3000) `GET /connections` with empty parameters. From the response, save the connection ID of the only connection. (If there is more than one connection, look for the one with a DID of the format `did:peer:<...>`)
+
+Using these two values, on Alice (3000), `POST http://localhost:3000/credentials/offer-credential` with the following request body, replace `credentialDefinitionId` and `connectionId` with the values previously fetched:
+
+```json
+{
+  "protocolVersion": "v2",
+  "credentialFormats": {
+    "anoncreds": {
+      "credentialDefinitionId": "ipfs://bafkreicdeamqb5kqjs6sxffcera2k7lqi7lolmf4a2nvgwahxapwpsnxay",
+      "attributes": [
+        {
+          "name": "checkName",
+          "value": ""
+        },
+        {
+          "name": "companyName",
+          "value": ""
+        },
+        {
+          "name": "companiesHouseNumber",
+          "value": ""
+        },
+        {
+          "name": "issueDate",
+          "value": ""
+        },
+        {
+          "name": "expiryDate",
+          "value": ""
+        }
+      ]
+    }
+  },
+  "autoAcceptCredential": "always",
+  "connectionId": "5652c902-c0ce-4792-86aa-62e10bacca93"
+}
+```
+
+Bob must now accept the credentials offer. To get the Bob's credential offer record ID, on Bob (3001) `GET /credentials`. If there is more than one credential, look for one with the state `offer-received`.
+
+Using this credential ID `POST http://localhost:3001/credentials/{credentialRecordId}/accept-offer` with the following body, replacing `credentialRecordId` with the one previously fetched:
+
+```json
+{
+  "autoAcceptCredential": "always"
+}
+```
+
+<details>
+  <summary>Example of an issued credential</summary>
+
+```json
+{
+  "_tags": {
+    "connectionId": "841d1016-278f-44fa-82c9-d34023711d7c",
+    "credentialIds": ["5ca19083-1325-42dd-9e06-17326506c266"],
+    "state": "done",
+    "threadId": "dcaa6a3b-5924-473a-b866-94340fb68f9a"
+  },
+  "metadata": {
+    "_anoncreds/credentialRequest": {
+      "link_secret_blinding_data": {
+        "v_prime": "7780384658720139883051520777737145609154845534058249238107616168677146440354815999489173180818556002623796392349623759810287924257858919253787022482374506783739110736544797024028886378848655808050835469953792943949086771743127711513528885689689149928515385980647022923107914714929238070342856381821023767770451017868663895496311571214765761584854759291179904150766620863370767033104057622669423839372026147701783055904618087679461301419201122943843063642985341761776737614666012546857527244553498335564257414434094184194466636576590173580184821524025551510352276882525848712373468409319155285422091616968569115294880633605680293196851923300",
+        "vr_prime": null
+      },
+      "nonce": "297465335850252833804416",
+      "link_secret_name": "8ed424ec-16d7-48a5-93f2-434601112848"
+    },
+    "_anoncreds/credential": {
+      "credentialDefinitionId": "ipfs://bafkreicdeamqb5kqjs6sxffcera2k7lqi7lolmf4a2nvgwahxapwpsnxay",
+      "schemaId": "ipfs://bafkreibx3sernhcqhh7tlu5lkur2npksgsxtle7niri7siopaf2whfviy4"
+    }
+  },
+  "credentials": [
+    {
+      "credentialRecordType": "anoncreds",
+      "credentialRecordId": "5ca19083-1325-42dd-9e06-17326506c266"
+    }
+  ],
+  "id": "b3cc696b-428d-402f-8c4b-f864448c8517",
+  "createdAt": "2023-12-07T17:23:04.966Z",
+  "state": "done",
+  "connectionId": "841d1016-278f-44fa-82c9-d34023711d7c",
+  "threadId": "dcaa6a3b-5924-473a-b866-94340fb68f9a",
+  "protocolVersion": "v2",
+  "updatedAt": "2023-12-07T17:24:23.194Z",
+  "credentialAttributes": [
+    {
+      "mime-type": "text/plain",
+      "name": "checkName",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "companyName",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "companiesHouseNumber",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "issueDate",
+      "value": ""
+    },
+    {
+      "mime-type": "text/plain",
+      "name": "expiryDate",
+      "value": ""
+    }
+  ],
+  "autoAcceptCredential": "always"
+}
+```
+
+</details>
+
+## Verification
+
+Setup an out of band connection between Charlie and Bob.
+
+As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://localhost:3002/proofs/request-proof`. Use the `connectionId` to Bob and the `cred_def_id` either from the credential definition created earlier by Alice or the credential owned by Bob (the credential definition ID is consistent across all agents because it's an IPFS CID).
+
+```json
+{
+  "protocolVersion": "v2",
+  "proofFormats": {
+    "anoncreds": {
+      "name": "proof-request",
+      "version": "1.0",
+
+      "requested_attributes": {
+        "name": {
+          "name": "checkName",
+          "restrictions": [
+            {
+              "cred_def_id": "ipfs://bafkreicdeamqb5kqjs6sxffcera2k7lqi7lolmf4a2nvgwahxapwpsnxay"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "willConfirm": true,
+  "autoAcceptProof": "always",
+  "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d"
+}
+```
+
+The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proofRecordId}/accept-request` with the following body, replacing `proofRecordId` with the `id` of the proof from GET `http://localhost:3001/proofs`:
+
+```json
+{
+  "useReturnRoute": true,
+  "willConfirm": true,
+  "autoAcceptProof": "always"
+}
+```
+
+<details>
+  <summary>Example of a verified proof on Charlie</summary>
+
+```json
+[
+  {
+    "_tags": {
+      "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+      "state": "done",
+      "threadId": "9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7"
+    },
+    "metadata": {},
+    "id": "d5e6433f-0666-4e04-bd31-580b6e570be4",
+    "createdAt": "2023-12-11T18:19:46.771Z",
+    "protocolVersion": "v2",
+    "state": "done",
+    "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+    "threadId": "9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7",
+    "autoAcceptProof": "always",
+    "updatedAt": "2023-12-11T18:20:14.128Z",
+    "isVerified": true
+  },
+  {
+    "_tags": {
+      "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+      "state": "request-sent",
+      "threadId": "1771f381-ae65-42d2-b041-830fbf50ff85"
+    },
+    "metadata": {},
+    "id": "03d72143-1b08-472a-8237-eda0c3e1c771",
+    "createdAt": "2023-12-11T17:44:13.572Z",
+    "protocolVersion": "v2",
+    "state": "request-sent",
+    "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d",
+    "threadId": "1771f381-ae65-42d2-b041-830fbf50ff85",
+    "autoAcceptProof": "always",
+    "updatedAt": "2023-12-11T17:44:13.587Z"
+  },
+  {
+    "_tags": {
+      "connectionId": "4a99c6d8-66b1-46c3-b165-f3f426d39d4a",
+      "state": "request-sent",
+      "threadId": "8fa0c627-d9a4-43e5-8d7b-25691b5b30d0"
+    },
+    "metadata": {},
+    "id": "707a731c-984b-4abd-88e7-7699fe1576f9",
+    "createdAt": "2023-12-11T18:19:08.556Z",
+    "protocolVersion": "v2",
+    "state": "request-sent",
+    "connectionId": "4a99c6d8-66b1-46c3-b165-f3f426d39d4a",
+    "threadId": "8fa0c627-d9a4-43e5-8d7b-25691b5b30d0",
+    "autoAcceptProof": "always",
+    "updatedAt": "2023-12-11T18:19:08.575Z"
+  }
+]
+```
+
+</details>
