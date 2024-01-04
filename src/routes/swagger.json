@@ -41,6 +41,30 @@
 				"type": "string",
 				"example": "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
 			},
+			"HttpResponse": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					},
+					"stack": {
+						"type": "string"
+					},
+					"code": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"name",
+					"message",
+					"code"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"Record_content.string_": {
 				"properties": {
 					"content": {
@@ -1497,7 +1521,7 @@
 	},
 	"info": {
 		"title": "@digicatapult/veritable-cloudagent",
-		"version": "0.4.6",
+		"version": "0.4.7",
 		"description": "Rest endpoint wrapper for using your agent over HTTP",
 		"license": {
 			"name": "Apache-2.0"
@@ -1587,28 +1611,15 @@
 			"post": {
 				"operationId": "SendMessage",
 				"responses": {
-					"200": {
-						"description": "Ok",
-						"content": {
-							"application/json": {
-								"schema": {}
-							}
-						}
+					"204": {
+						"description": "No content"
 					},
 					"404": {
 						"description": "",
 						"content": {
 							"application/json": {
 								"schema": {
-									"properties": {
-										"reason": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"reason"
-									],
-									"type": "object"
+									"type": "string"
 								}
 							}
 						}
@@ -1618,15 +1629,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"properties": {
-										"message": {
-											"type": "string"
-										}
-									},
-									"required": [
-										"message"
-									],
-									"type": "object"
+									"$ref": "#/components/schemas/HttpResponse"
 								}
 							}
 						}

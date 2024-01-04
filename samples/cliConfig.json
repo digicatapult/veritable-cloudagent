@@ -8,7 +8,7 @@
   "autoAcceptCredentials": "never",
   "autoAcceptProofs": "never",
   "useLegacyDidSovPrefix": true,
-  "logLevel": 5,
+  "logLevel": 2,
   "inboundTransport": [
     {
       "transport": "http",

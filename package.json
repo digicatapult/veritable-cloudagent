@@ -33,7 +33,7 @@
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "husky install",
     "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes && tsnd --respawn samples/sampleWithApp.ts",
+    "dev": "tsoa spec-and-routes && tsc && ./bin/afj-rest.js start --ipfs-origin http://localhost:5001 --config samples/cliConfig.json",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
