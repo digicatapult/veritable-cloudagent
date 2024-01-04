@@ -3,7 +3,6 @@
 version: '3.8'
 
 services:
-
   afj-node01:
     hostname: alice-agent
     container_name: alice-agent
@@ -11,9 +10,6 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    environment:
-      # possible to set values using env variables
-      AFJ_REST_LOG_LEVEL: 1
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json

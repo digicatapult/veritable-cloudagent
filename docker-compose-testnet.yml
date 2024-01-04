@@ -54,8 +54,6 @@ services:
     depends_on:
       ipfs1:
         condition: service_healthy
-    environment:
-      AFJ_REST_LOG_LEVEL: 1
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:
