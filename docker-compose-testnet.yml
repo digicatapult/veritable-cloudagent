@@ -4,7 +4,7 @@
 ## Docker-Compose for a 3-agent testnet + 3-node private IPFS cluster ############
 ##
 ## Agents: Alice, Bob, Charlie
-## Ports for testing purposes (HTTP): 
+## Ports for testing purposes (HTTP):
 ##    Alice   = 3000 [ 5002 (HTTP) & 5003 (WS) internal ]
 ##    Bob     = 3001 [ 5102 (HTTP) & 5103 (WS) internal ]
 ##    Charlie = 3002 [ 5202 (HTTP) & 5203 (WS) internal ]
@@ -16,10 +16,9 @@
 version: '3.8'
 
 services:
-
-##################################################################################
-## Alice #########################################################################
-##################################################################################
+  ##################################################################################
+  ## Alice #########################################################################
+  ##################################################################################
 
   alice:
     container_name: alice
@@ -41,13 +40,13 @@ services:
       #- '5003:5003'
       - '3000:3000'
     # or via command line arguments
-    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --config /config.json
+    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --config /config.json --persona-title "TA" --persona-color "#eddedf"
     networks:
       - testnet
 
-##################################################################################
-## Bob ###########################################################################
-##################################################################################
+  ##################################################################################
+  ## Bob ###########################################################################
+  ##################################################################################
 
   bob:
     container_name: bob
@@ -66,13 +65,13 @@ services:
       #- '5102:5002'
       #- '5103:5003'
       - '3001:3000'
-    command: --endpoint "http://bob:5002", "ws://bob:5003" --ipfs-origin http://ipfs1:5001 --config /config.json
+    command: --endpoint "http://bob:5002", "ws://bob:5003" --ipfs-origin http://ipfs1:5001 --config /config.json --persona-title "OEM" --persona-color "#dfedde"
     networks:
       - testnet
 
-##################################################################################
-## Charlie #######################################################################
-##################################################################################
+  ##################################################################################
+  ## Charlie #######################################################################
+  ##################################################################################
 
   charlie:
     container_name: charlie
@@ -91,21 +90,21 @@ services:
       #- '5202:5002'
       #- '5203:5003'
       - '3002:3000'
-    command: --endpoint "http://charlie:5002", "ws://charlie:5003" --ipfs-origin http://ipfs2:5001 --config /config.json
+    command: --endpoint "http://charlie:5002", "ws://charlie:5003" --ipfs-origin http://ipfs2:5001 --config /config.json --persona-title "Supplier" --persona-color "#dedfed"
     networks:
       - testnet
 
-##################################################################################
-## Cluster PEER 0 ################################################################
-##################################################################################
+  ##################################################################################
+  ## Cluster PEER 0 ################################################################
+  ##################################################################################
 
   ipfs0:
     container_name: ipfs0
     image: ipfs/kubo:release
     ports:
-#     - "4001:4001" # ipfs swarm - expose if needed/wanted
-#     - "5001:5001" # ipfs api - expose if needed/wanted
-      - "8080:8080" # ipfs HTTP gateway
+      #     - "4001:4001" # ipfs swarm - expose if needed/wanted
+      #     - "5001:5001" # ipfs api - expose if needed/wanted
+      - '8080:8080' # ipfs HTTP gateway
     volumes:
       - ipfs0:/data/ipfs
     networks:
@@ -125,21 +124,21 @@ services:
       CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose API
       CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
     #ports:
-          # Open API port (allows ipfs-cluster-ctl usage on host)
-          # - "9094:9094"
-          # The cluster swarm port would need to be exposed if this container
-          # was to connect to cluster peers on other hosts.
-          # But this is just a testing cluster.
-          # - "9095:9095" # Cluster IPFS Proxy endpoint
-          # - "9096:9096" # Cluster swarm endpoint
+    # Open API port (allows ipfs-cluster-ctl usage on host)
+    # - "9094:9094"
+    # The cluster swarm port would need to be exposed if this container
+    # was to connect to cluster peers on other hosts.
+    # But this is just a testing cluster.
+    # - "9095:9095" # Cluster IPFS Proxy endpoint
+    # - "9096:9096" # Cluster swarm endpoint
     volumes:
       - cluster0:/data/ipfs-cluster
     networks:
       - testnet
 
-##################################################################################
-## Cluster PEER 1 ################################################################
-##################################################################################
+  ##################################################################################
+  ## Cluster PEER 1 ################################################################
+  ##################################################################################
 
   ipfs1:
     container_name: ipfs1
@@ -166,9 +165,9 @@ services:
     networks:
       - testnet
 
-##################################################################################
-## Cluster PEER 2 ################################################################
-##################################################################################
+  ##################################################################################
+  ## Cluster PEER 2 ################################################################
+  ##################################################################################
 
   ipfs2:
     container_name: ipfs2

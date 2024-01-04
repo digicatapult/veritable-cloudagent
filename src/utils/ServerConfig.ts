@@ -8,4 +8,6 @@ export interface ServerConfig {
   webhookUrl?: string
   /* Socket server is used for sending events over websocket to clients */
   socketServer?: Server
+  personaTitle?: string
+  personaColor?: string
 }
