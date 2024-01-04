@@ -50,6 +50,8 @@ export interface AriesRestConfig {
   webhookUrl?: string
   adminPort: number
   ipfsOrigin: string
+  personaTitle: string
+  personaColor: string
 }
 
 export async function readRestConfig(path: string) {
@@ -71,6 +73,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptMediationRequests = true,
     autoAcceptProofs = AutoAcceptProof.ContentApproved,
     ipfsOrigin,
+    personaTitle,
+    personaColor,
     ...afjConfig
   } = restConfig
 
@@ -119,6 +123,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,
+    personaTitle,
+    personaColor,
   })
 
   app.listen(adminPort, () => {
