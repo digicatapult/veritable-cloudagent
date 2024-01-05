@@ -50,5 +50,5 @@ export const errorHandler =
       return res.status(500).json(err)
     }
 
-    next()
+    next(err)
   }
