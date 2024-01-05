@@ -29,9 +29,6 @@ services:
     depends_on:
       ipfs0:
         condition: service_healthy
-    environment:
-      # possible to set values using env variables
-      AFJ_REST_LOG_LEVEL: 1
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
@@ -57,8 +54,6 @@ services:
     depends_on:
       ipfs1:
         condition: service_healthy
-    environment:
-      AFJ_REST_LOG_LEVEL: 1
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:
@@ -82,8 +77,6 @@ services:
     depends_on:
       ipfs2:
         condition: service_healthy
-    environment:
-      AFJ_REST_LOG_LEVEL: 1
     volumes:
       - ./samples/cliConfig.json:/config.json
     ports:

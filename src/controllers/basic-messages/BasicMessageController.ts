@@ -1,10 +1,11 @@
 import type { BasicMessageRecord, BasicMessageStorageProps } from '@aries-framework/core'
 
 import { Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { BasicMessageRecordExample, RecordId } from '../examples'
+import { HttpResponse, NotFound } from '../../error'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
@@ -36,20 +37,17 @@ export class BasicMessageController extends Controller {
    * @param content The content of the message
    */
   @Post('/:connectionId')
-  public async sendMessage(
-    @Path('connectionId') connectionId: RecordId,
-    @Body() request: Record<'content', string>,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  @Response<NotFound['message']>(404)
+  @Response<HttpResponse>(500)
+  public async sendMessage(@Path('connectionId') connectionId: RecordId, @Body() request: Record<'content', string>) {
     try {
       this.setStatus(204)
       await this.agent.basicMessages.sendMessage(connectionId, request.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        return notFoundError(404, { reason: `connection with connection id "${connectionId}" not found.` })
+        throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw error
     }
   }
 }

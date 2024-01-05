@@ -4,7 +4,7 @@
 ## Docker-Compose for a Single agent + Single IPFS node
 ##
 ## Agent: alice
-## Ports: 
+## Ports:
 ##    Alice   = 3000 / 5002 (HTTP) & 5003 (WS)
 ##    IPFS    = 8080 (HTTP)
 ## Network: testnet
@@ -14,10 +14,9 @@
 version: '3.8'
 
 services:
-
-##################################################################################
-## Alice #########################################################################
-##################################################################################
+  ##################################################################################
+  ## Alice #########################################################################
+  ##################################################################################
 
   agent0:
     container_name: alice
@@ -28,9 +27,6 @@ services:
     depends_on:
       ipfs0:
         condition: service_healthy
-    environment:
-      # possible to set values using env variables
-      AFJ_REST_LOG_LEVEL: 1
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
@@ -43,17 +39,17 @@ services:
     networks:
       - testnet
 
-##################################################################################
-## IPFS ##########################################################################
-##################################################################################
+  ##################################################################################
+  ## IPFS ##########################################################################
+  ##################################################################################
 
   ipfs0:
     container_name: ipfs0
     image: ipfs/kubo:release
     ports:
-#     - "4001:4001" # ipfs swarm - expose if needed/wanted
-#     - "5001:5001" # ipfs api - expose if needed/wanted
-      - "8080:8080" # ipfs gateway - expose if needed/wanted
+      #     - "4001:4001" # ipfs swarm - expose if needed/wanted
+      #     - "5001:5001" # ipfs api - expose if needed/wanted
+      - '8080:8080' # ipfs gateway - expose if needed/wanted
     volumes:
       - ipfs0:/data/ipfs
     networks:
