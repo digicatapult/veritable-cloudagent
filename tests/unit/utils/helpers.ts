@@ -17,7 +17,7 @@ import {
 import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder'
 import { randomUUID } from 'crypto'
 
-import { setupAgent } from '../../src/utils/agent'
+import { setupAgent } from '@src/utils/agent'
 
 export async function getTestAgent(name: string, port: number) {
   return await setupAgent({

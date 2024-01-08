@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.4.9",
+  "version": "0.4.10",
   "main": "build/index",
   "types": "build/index",
   "files": [
@@ -29,18 +29,19 @@
     "prettier": "prettier '**/*.+(js|json|ts|md|yml|yaml)'",
     "format": "npm run prettier --write",
     "check-format": "npm run prettier --list-different",
-    "lint": "eslint --ignore-path .gitignore .",
+    "lint": "eslint .",
     "validate": "npm run lint && npm run check-types && npm run check-format",
-    "prepare": "husky install",
+    "prepare": "test -d node_modules/husky && husky install || echo \"husky is not installed\"",
     "tsoa": "tsoa spec-and-routes",
     "dev": "tsoa spec-and-routes && tsc && ./bin/afj-rest.js start --ipfs-origin http://localhost:5001 --config samples/cliConfig.json",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "test": "mocha --config .mocharc.js '{,!(node_modules)/**/}*.test.ts'",
-    "test-watch": "mocha --config .mocharc.js '{,!(node_modules)/**/}*.test.ts' --watch --watch-extensions tests/ '{,!(node_modules)/**/}*.test.ts' --watch-files tests/*",
-    "test-watch-fast": "TS_NODE_TRANSPILE_ONLY=true mocha --config .mocharc.js '{,!(node_modules)/**/}*.test.ts' --watch --watch-extensions tests/ '{,!(node_modules)/**/}*.test.ts' --watch-files tests/*"
+    "test": "mocha --config .mocharc.js tests/unit/**/*.test.ts **/__tests__/*.test.ts",
+    "test:integration": "mocha --config .mocharc.js tests/integration/**/*.test.ts",
+    "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/",
+    "test-watch-fast": "TS_NODE_TRANSPILE_ONLY=true npm run test-watch"
   },
   "dependencies": {
     "@aries-framework/anoncreds": "^0.4.0",
