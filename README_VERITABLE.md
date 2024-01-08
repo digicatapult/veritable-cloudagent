@@ -264,7 +264,7 @@ docker run -it \
 ```
 docker-compose \
   -f docker-compose-testnet.yml \
-  -f docker-compose-integration-tests.yaml \
+  -f docker-compose-integration-tests.yml \
   up --build --exit-code-from integration-tests
 ```
 
