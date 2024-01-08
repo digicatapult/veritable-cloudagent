@@ -34,13 +34,13 @@ The Aries Framework JavaScript REST API is the most convenient way for self-sove
 - 💻 **CLI** that makes it super easy to start an instance of the REST API.
 - 🌐 **Interoperable** with all major Aries implementations.
 
-### Quick start
+## Quick start
 
 The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI that is provided with the server. The docs can be viewed on the `/docs` endpoint (e.g. http://localhost:3000/docs).
 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
-#### Using Docker (easiest)
+### Using Docker (easiest)
 
 [Docker](https://docs.docker.com/get-docker/) is the easiest way to get started with the REST API.
 
@@ -83,7 +83,7 @@ This private testnet has the following ports available to the user for testing:
 
 Network name: `testnet`
 
-#### Via CLI
+### Via CLI
 
 To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.
 
@@ -136,7 +136,7 @@ docker run -e AFJ_REST_WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
 AFJ_REST_WALLET_KEY="my-secret-key" npx -p @aries-framework/rest afj-rest start ...
 ```
 
-#### Starting Own Server
+### Starting Own Server
 
 Starting your own server is more involved than using the CLI, but allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
 
@@ -163,7 +163,7 @@ const run = async () => {
 run()
 ```
 
-### WebSocket & webhooks
+## WebSocket & webhooks
 
 The REST API provides the option to connect as a client and receive events emitted from your agent using WebSocket and webhooks.
 
@@ -206,7 +206,7 @@ The payload of the webhook contains the serialized record related to the topic o
 
 For the WebSocket clients, the events are sent as JSON stringified objects
 
-### Schema Definition
+## Schema Definition
 
 The repo contains 'schema' folder with a schema body json which can be imported into ts files like so:
 
@@ -239,7 +239,36 @@ The schema definition can be posted to `/schemas` to register it. Upon a success
 A credential definition can then be used to issue a credential which contains both information about an issuer of a credential and the check itself.
 (Note: Because the schema and definition is saved on ipfs. One must have an instance of ipfs running or be connected to global ipfs when registering a schema and definition.)
 
-# Demoing credential issuance and verification
+## Testing
+
+Unit tests and integration tests are defined in the top-level `tests` directory.
+
+Unit test can be run with `npm run test`. 
+
+Integration tests, however, require the testnet orchestration to be deployed.
+
+**If the testnet is already running locally:** (through the command `docker-compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
+
+```
+docker build --target test -t afj-rest-integration-tests . && \
+docker run -it \
+  --network=testnet \
+  -e ALICE_BASE_URL=http://alice:3000 \
+  -e BOB_BASE_URL=http://bob:3000 \
+  -e CHARLIE_BASE_URL=http://charlie:3000 \
+  afj-rest-integration-tests
+```
+
+**If the testnet is not already running:** The entire stack can be run with integration tests using the following command:
+
+```
+docker-compose \
+  -f docker-compose-testnet.yml \
+  -f docker-compose-integration-tests.yml \
+  up --build --exit-code-from integration-tests
+```
+
+## Demoing credential issuance and verification
 
 This demo uses the containerised private network of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
 
@@ -253,7 +282,7 @@ docker-compose -f docker-compose-testnet.yml up --build -d
 | Bob     | **Holder**   | [localhost:3001](http://localhost:3001) |
 | Charlie | **Verifier** | [localhost:3002](http://localhost:3002) |
 
-## OOB connection
+### OOB connection
 
 Before any communication between two agents, an out of band connection must be established. First establish a connection between Alice and Bob by POSTing with Alice to `http://localhost:3000/oob/create-invitation`.
 
@@ -417,7 +446,7 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 
 </details>
 
-## Verification
+### Verification
 
 Setup an out of band connection between Charlie and Bob.
 

@@ -10,7 +10,7 @@ import { ConnectionEventTypes, ConnectionRepository } from '@aries-framework/cor
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '../src'
+import { startServer } from '@src'
 
 import { getTestConnection, getTestAgent, objectToJson } from './utils/helpers'
 

@@ -6,7 +6,7 @@ import type { Express } from 'express'
 
 import request from 'supertest'
 
-import { setupServer } from '../src/server'
+import { setupServer } from '@src/server'
 
 import { getTestAgent } from './utils/helpers'
 

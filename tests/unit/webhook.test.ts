@@ -2,7 +2,7 @@
 import { describe, before, after, test } from 'mocha'
 import { expect } from 'chai'
 
-import type { WebhookData } from '../src/utils/webhook'
+import type { WebhookData } from '@src/utils/webhook'
 import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@aries-framework/core'
 import type { Server } from 'net'
 
@@ -15,8 +15,8 @@ import {
   CredentialEventTypes,
 } from '@aries-framework/core'
 
-import { setupServer } from '../src/server'
-import { waitForHook, webhookListener } from '../src/utils/webhook'
+import { setupServer } from '@src/server'
+import { waitForHook, webhookListener } from '@src/utils/webhook'
 
 import { getTestAgent } from './utils/helpers'
 
