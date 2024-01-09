@@ -3,10 +3,11 @@ import type { Did, Version } from '../examples'
 import type { AnonCredsSchemaResponse } from '../types'
 
 import { Agent } from '@aries-framework/core'
-import { Body, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { SchemaId, SchemaExample } from '../examples'
+import { HttpResponse, NotFound, BadRequest } from '../../error'
 
 @Tags('Schemas')
 @Route('/schemas')
@@ -26,30 +27,24 @@ export class SchemaController {
    */
   @Example<AnonCredsSchemaResponse>(SchemaExample)
   @Get('/:schemaId')
-  public async getSchemaById(
-    @Path('schemaId') schemaId: SchemaId,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  @Response<BadRequest['message']>(400)
+  @Response<NotFound['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getSchemaById(@Path('schemaId') schemaId: SchemaId) {
     const { schema, resolutionMetadata } = await this.agent.modules.anoncreds.getSchema(schemaId)
 
     const error = resolutionMetadata?.error
 
     if (error === 'notFound') {
-      return notFoundError(404, {
-        reason: `schema definition with schemaId "${schemaId}" not found.`,
-      })
+      throw new NotFound(`schema definition with schemaId "${schemaId}" not found.`)
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      return badRequestError(400, {
-        reason: `schemaId "${schemaId}" has invalid structure.`,
-      })
+      throw new BadRequest(`schemaId "${schemaId}" has invalid structure.`)
     }
 
     if (error !== undefined || schema === undefined) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw new HttpResponse({ message: `something went wrong: schema is undefined or ${error}` })
     }
 
     return {
@@ -66,6 +61,7 @@ export class SchemaController {
    */
   @Example<AnonCredsSchemaResponse>(SchemaExample)
   @Post('/')
+  @Response<HttpResponse>(500)
   public async createSchema(
     @Body()
     schema: {
@@ -73,8 +69,7 @@ export class SchemaController {
       name: string
       version: Version
       attrNames: string[]
-    },
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    }
   ) {
     const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
       schema: {
@@ -87,11 +82,11 @@ export class SchemaController {
     })
 
     if (schemaState.state === 'failed') {
-      return internalServerError(500, { message: `something went wrong: ${schemaState.reason}` })
+      throw new HttpResponse({ message: `something went wrong: ${schemaState.reason}` })
     }
 
     if (schemaState.state !== 'finished' || schemaState.schemaId === undefined || schemaState.schema === undefined) {
-      return internalServerError(500, { message: `something went wrong: unknown` })
+      throw new HttpResponse({ message: `something went wrong creating schema: unknown` })
     }
 
     return {

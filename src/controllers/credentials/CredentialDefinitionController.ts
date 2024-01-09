@@ -3,10 +3,11 @@ import type { Did, SchemaId } from '../examples'
 import type { AnonCredsCredentialDefinitionResponse } from '../types'
 
 import { Agent } from '@aries-framework/core'
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { CredentialDefinitionExample, CredentialDefinitionId } from '../examples'
+import { HttpResponse, NotFound, BadRequest } from '../../error'
 
 @Tags('Credential Definitions')
 @Route('/credential-definitions')
@@ -27,11 +28,11 @@ export class CredentialDefinitionController extends Controller {
    */
   @Example<AnonCredsCredentialDefinitionResponse>(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
+  @Response<BadRequest['message']>(400)
+  @Response<NotFound['message']>(404)
+  @Response<HttpResponse>(500)
   public async getCredentialDefinitionById(
-    @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId
   ): Promise<AnonCredsCredentialDefinitionResponse> {
     const {
       credentialDefinition,
@@ -39,19 +40,15 @@ export class CredentialDefinitionController extends Controller {
     } = await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
 
     if (error === 'notFound') {
-      return notFoundError(404, {
-        reason: `credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`,
-      })
+      throw new NotFound(`credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`)
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      return badRequestError(400, {
-        reason: `credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`,
-      })
+      throw new BadRequest(`credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`)
     }
 
     if (error !== undefined || credentialDefinition === undefined) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw error
     }
 
     return {
@@ -68,27 +65,25 @@ export class CredentialDefinitionController extends Controller {
    */
   @Example<AnonCredsCredentialDefinitionResponse & { id: string }>(CredentialDefinitionExample)
   @Post('/')
+  @Response<NotFound['message']>(404)
+  @Response<HttpResponse>(500)
   public async createCredentialDefinition(
     @Body()
     credentialDefinitionRequest: {
       issuerId: Did
       schemaId: SchemaId
       tag: string
-    },
-    @Res() notFoundError: TsoaResponse<404, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
+    }
   ): Promise<AnonCredsCredentialDefinitionResponse> {
     const {
       resolutionMetadata: { error },
     } = await this.agent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
 
     if (error === 'notFound' || error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      return notFoundError(404, {
-        reason: `schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`,
-      })
+      throw new NotFound(`schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`)
     }
     if (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw error
     }
 
     const {
@@ -103,7 +98,7 @@ export class CredentialDefinitionController extends Controller {
     })
 
     if (state !== 'finished' || credentialDefinitionId === undefined || credentialDefinition === undefined) {
-      return internalServerError(500, { message: `something went wrong` })
+      throw new HttpResponse({ message: `something went wrong creating credential definition` })
     }
 
     return {
