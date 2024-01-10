@@ -1,10 +1,11 @@
 import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../types'
 
 import { Agent, AriesFrameworkError, TypedArrayEncoder } from '@aries-framework/core'
-import { Body, Controller, Example, Get, Path, Post, Res, Route, Tags, TsoaResponse } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { Did, DidRecordExample, DidStateExample } from '../examples'
+import { HttpResponse, BadRequest } from '../../error'
 
 @Tags('Dids')
 @Route('/dids')
@@ -43,11 +44,9 @@ export class DidController extends Controller {
    */
   @Example<DidResolutionResultProps>(DidRecordExample)
   @Post('/import')
-  public async importDid(
-    @Body() options: ImportDidOptions,
-    @Res() badRequestError: TsoaResponse<400, { reason: string }>,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  @Response<BadRequest['message']>(400)
+  @Response<HttpResponse>(500)
+  public async importDid(@Body() options: ImportDidOptions) {
     try {
       const { privateKeys, ...rest } = options
       await this.agent.dids.import({
@@ -60,11 +59,9 @@ export class DidController extends Controller {
       return this.getDidRecordByDid(options.did)
     } catch (error) {
       if (error instanceof AriesFrameworkError) {
-        return badRequestError(400, {
-          reason: `Error importing Did - ${error.message}`,
-        })
+        throw new BadRequest(`Error importing Did - ${error.message}`)
       }
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+      throw error
     }
   }
 
@@ -76,14 +73,12 @@ export class DidController extends Controller {
    */
   @Example<DidCreateResult>(DidStateExample)
   @Post('/create')
-  public async createDid(
-    @Body() options: DidCreateOptions,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
+  @Response<HttpResponse>(500)
+  public async createDid(@Body() options: DidCreateOptions) {
     const { didState } = await this.agent.dids.create(options)
 
     if (didState.state === 'failed') {
-      return internalServerError(500, {
+      throw new HttpResponse({
         message: `Error creating Did - ${didState.reason}`,
       })
     }
