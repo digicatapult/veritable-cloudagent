@@ -54,7 +54,7 @@ export class DidController extends Controller {
         ...rest,
         privateKeys: privateKeys?.map(({ keyType, privateKey }) => ({
           keyType,
-          privateKey: TypedArrayEncoder.fromString(privateKey),
+          privateKey: TypedArrayEncoder.fromBase64(privateKey),
         })),
       })
       return this.getDidRecordByDid(options.did)
