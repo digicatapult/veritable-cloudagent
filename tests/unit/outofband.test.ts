@@ -8,6 +8,7 @@ import type {
   ConnectionRecord,
   OutOfBandInvitation,
   ConnectionInvitationMessage,
+  ReceiveOutOfBandImplicitInvitationConfig,
 } from '@aries-framework/core'
 import type { Express } from 'express'
 
@@ -280,6 +281,60 @@ describe('OutOfBandController', () => {
             autoAcceptInvitation: params.autoAcceptInvitation,
             autoAcceptConnection: params.autoAcceptConnection,
             reuseConnection: params.reuseConnection,
+          })
+        )
+      ).equals(true)
+    })
+  })
+  describe('Receive out of band implicit invitation', () => {
+    const config: ReceiveOutOfBandImplicitInvitationConfig = {
+      did: 'z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+    }
+    test('should return out of band invitation', async () => {
+      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      receiveImplicitInvitationStub.resolves({
+        outOfBandRecord: outOfBandRecord,
+        connectionRecord: connectionRecord,
+      })
+      const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
+
+      const response = await request(app).post('/oob/receive-implicit-invitation').send(config) //use barebones config
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+    test('should use parameters', async () => {
+      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      receiveImplicitInvitationStub.resolves({
+        outOfBandRecord: outOfBandRecord,
+        connectionRecord: connectionRecord,
+      })
+
+      // todo: add tests for routing param
+      const params = {
+        label: 'test',
+        alias: 'test',
+        imageUrl: 'test',
+        autoAcceptInvitation: false,
+        autoAcceptConnection: false,
+      }
+
+      const response = await request(app)
+        .post('/oob/receive-implicit-invitation')
+        .send({
+          ...config, //send config only containing did
+          ...params,
+        })
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        receiveImplicitInvitationStub.calledWith(
+          match({
+            label: params.label,
+            alias: params.alias,
+            imageUrl: params.imageUrl,
+            autoAcceptInvitation: params.autoAcceptInvitation,
+            autoAcceptConnection: params.autoAcceptConnection,
           })
         )
       ).equals(true)

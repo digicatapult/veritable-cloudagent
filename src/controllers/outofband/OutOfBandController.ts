@@ -4,6 +4,7 @@ import type {
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
   CreateLegacyInvitationConfig,
+  ReceiveOutOfBandImplicitInvitationConfig,
 } from '@aries-framework/core'
 
 import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
@@ -175,6 +176,29 @@ export class OutOfBandController extends Controller {
     const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
     const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveInvitation(invite, config)
 
+    return {
+      outOfBandRecord: outOfBandRecord.toJSON(),
+      connectionRecord: connectionRecord?.toJSON(),
+    }
+  }
+  /**
+   * Creates inbound out-of-band record from an implicit invitation, given as public DID the agent should be able to resolve
+   * It automatically passes out-of-band invitation for further
+   * processing to `acceptInvitation` method. If you don't want to do that you can set
+   * `autoAcceptInvitation` attribute in `config` parameter to `false` and accept the message later by
+   * calling `acceptInvitation`.
+   *
+   * @param config config for creating and handling invitation
+   * @returns out-of-band record and connection record if one has been created.
+   */
+  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: ConnectionRecordProps }>({
+    outOfBandRecord: outOfBandRecordExample,
+    connectionRecord: ConnectionRecordExample,
+  })
+  @Post('/receive-implicit-invitation')
+  @Response<HttpResponse>(500)
+  public async receiveImplicitInvitation(@Body() config: ReceiveOutOfBandImplicitInvitationConfig) {
+    const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation(config)
     return {
       outOfBandRecord: outOfBandRecord.toJSON(),
       connectionRecord: connectionRecord?.toJSON(),
