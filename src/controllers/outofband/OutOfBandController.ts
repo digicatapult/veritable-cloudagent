@@ -196,18 +196,12 @@ export class OutOfBandController extends Controller {
     connectionRecord: ConnectionRecordExample,
   })
   @Post('/receive-implicit-invitation')
-  public async receiveImplicitInvitation(
-    @Body() config: ReceiveOutOfBandImplicitInvitationConfig,
-    @Res() internalServerError: TsoaResponse<500, { message: string }>
-  ) {
-    try {
-      const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation(config)
-      return {
-        outOfBandRecord: outOfBandRecord.toJSON(),
-        connectionRecord: connectionRecord?.toJSON(),
-      }
-    } catch (error) {
-      return internalServerError(500, { message: `something went wrong: ${error}` })
+  @Response<HttpResponse>(500)
+  public async receiveImplicitInvitation(@Body() config: ReceiveOutOfBandImplicitInvitationConfig) {
+    const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation(config)
+    return {
+      outOfBandRecord: outOfBandRecord.toJSON(),
+      connectionRecord: connectionRecord?.toJSON(),
     }
   }
 
