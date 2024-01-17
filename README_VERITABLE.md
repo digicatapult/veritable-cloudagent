@@ -258,7 +258,7 @@ docker run -it \
   -e ALICE_BASE_URL=http://alice:3000 \
   -e BOB_BASE_URL=http://bob:3000 \
   -e CHARLIE_BASE_URL=http://charlie:3000 \
-  afj-rest-integration-tests
+  afj-rest-integration-tests npm run test:integration
 ```
 
 **If the testnet is not already running:** The entire stack can be run with integration tests using the following command:
