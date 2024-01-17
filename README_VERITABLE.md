@@ -489,7 +489,7 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
 
 4.  you can view your did in your browser like so: https://your_username.github.io/dids/1/did.json
 
-# Implicit Invitation
+### Implicit Invitation
 
 For the did doc above we have generated a key-pair (OKP, Ed25519) and you can see in the did doc above that we are using the public portion of the key.
 
