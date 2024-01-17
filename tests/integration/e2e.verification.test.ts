@@ -1,6 +1,7 @@
 import request from 'supertest'
 import { describe, it, beforeEach, afterEach } from 'mocha'
 import { expect } from 'chai'
+import { ProofExchangeRecord, ProofExchangeRecordProps } from '@aries-framework/core'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL
@@ -26,6 +27,8 @@ describe('Verification flow', function () {
   let issuerCredentialRecordId: string
   let holderCredentialRecordId: string
   let holderProofRequestId: string
+  let threadIdOnVerifier: string
+  let threadIdOnHolder: string
   let failed = false
 
   beforeEach(function (done) {
@@ -299,14 +302,21 @@ describe('Verification flow', function () {
       .expect('Content-Type', /json/)
       .expect(200)
     expect(response.body).to.have.property('state', 'request-sent')
+    threadIdOnVerifier = response.body.threadId
   })
 
   it('should let the Holder see all proof requests they received', async function () {
     const response = await holderClient.get(`/proofs`).expect('Content-Type', /json/).expect(200)
     expect(response.body.length).to.be.above(0)
-    // choose 1st request's id
-    holderProofRequestId = response.body[0].id
+
+    let result: ProofExchangeRecordProps = response.body.find(
+      ({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier
+    )
+    if (result.id) {
+      holderProofRequestId = result.id
+    }
   })
+
   it('should let the Holder see specific proof reques', async function () {
     const response = await holderClient
       .get(`/proofs/${holderProofRequestId}`)
