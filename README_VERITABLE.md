@@ -454,7 +454,8 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
 1.  create public repo called `YOUR_USERNAME.github.io`
 2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
 3.  body to include in your did.json:
-    {
+
+    ````{
     "@context": [
     "https://www.w3.org/ns/did/v1",
     "https://w3id.org/security/suites/jws-2020/v1"
@@ -486,7 +487,9 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
         }
 
     ]
-    }
+    }```
+
+    ````
 
 4.  you can view your did in your browser like so: https://your_username.github.io/dids/1/did.json
 
@@ -496,17 +499,17 @@ For the did doc above we have generated a key-pair (OKP, Ed25519) and you can se
 
 Key-pair here:
 
-{
+````{
 "kty": "OKP",
 "d": "\_ekRZ7kLMfsg50o4ICf4kocAVQzEo3uoi7miIQz8b_s",
 "crv": "Ed25519",
 "x": "A35kxICNVG-ICgG4PMx4W6QZcA7Yo07nvBajotrBqIs"
-}
+}```
 
 In order to send an invite from bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
 We need to import our did with the private key on Alice using endpoint `dids/import`:
 
-{
+```{
 "did": "did:web:Ellenn-A.github.io:dids:1",
 
 "privateKeys": [
@@ -516,16 +519,16 @@ We need to import our did with the private key on Alice using endpoint `dids/imp
 }
 ]
 
-}
+}```
 Once the did and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation`` body:
 
-{
+```{
 
 "did": "did:web:Ellenn-A.github.io:dids:1",
 "handshakeProtocols": [
 "https://didcomm.org/connections/1.0"
 ]
-}
+}```
 This creates a connection record for Bob and Alice - for both this record is in a state `request-sent` and `request-received` respectively.
 
 To move the connection to a completed state - on Alice we take the connection id and use `connections/{connectionId}/accept-request` endpoint.
@@ -556,7 +559,7 @@ As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://loc
   "autoAcceptProof": "always",
   "connectionId": "4b70e399-d0d3-42c9-b511-dc0b972e362d"
 }
-```
+````
 
 The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proofRecordId}/accept-request` with the following body, replacing `proofRecordId` with the `id` of the proof from GET `http://localhost:3001/proofs`:
 
