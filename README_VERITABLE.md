@@ -519,7 +519,7 @@ We need to import our did with the private key on Alice using endpoint `dids/imp
 }
 ```
 
-Once the did and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation`` body:
+Once the did and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation` body:
 
 ```json
 {
