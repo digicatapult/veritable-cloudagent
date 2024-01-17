@@ -449,8 +449,7 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 ### Verification
 
 Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
-In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages: (example)https://github.com/Ellenn-A/Ellenn-A.github.io/blob/main/dids/1/did.json  
-To host a did doc on your github:
+In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
 
 1.  create public repo called `YOUR_USERNAME.github.io`
 2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
