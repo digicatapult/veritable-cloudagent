@@ -243,7 +243,7 @@ A credential definition can then be used to issue a credential which contains bo
 
 Unit tests and integration tests are defined in the top-level `tests` directory.
 
-Unit test can be run with `npm run test`. 
+Unit test can be run with `npm run test`.
 
 Integration tests, however, require the testnet orchestration to be deployed.
 
@@ -448,7 +448,88 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 
 ### Verification
 
-Setup an out of band connection between Charlie and Bob.
+Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
+In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages: (example)https://github.com/Ellenn-A/Ellenn-A.github.io/blob/main/dids/1/did.json  
+To host a did doc on your github:
+
+1.  create public repo called `YOUR_USERNAME.github.io`
+2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
+3.  body to include in your did.json:
+    {
+    "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+    ],
+    "id": "did:web:YOUR_USERNAME.github.io:dids:1",
+    "verificationMethod": [
+    {
+    "id": "did:web:YOUR_USERNAME.github.io:dids:1#owner",
+    "type": "JsonWebKey2020",
+    "controller": "did:web:YOUR_USERNAME.github.io:dids:1",
+    "publicKeyJwk": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "A35kxICNVG-ICgG4PMx4W6QZcA7Yo07nvBajotrBqIs"
+    }
+    }
+    ],
+    "authentication": ["did:web:YOUR_USERNAME.github.io:dids:1#owner"],
+    "assertionMethod": ["did:web:YOUR_USERNAME.github.io:dids:1:1#owner"],
+    "service": [
+    {
+    "id": "did:web:YOUR_USERNAME.github.io:dids:1#did-communication",
+    "type": "did-communication",
+    "priority": 0,
+    "recipientKeys": ["did:web:YOUR_USERNAME.github.io:dids:1#owner"],
+    "routingKeys": [],
+
+          "serviceEndpoint": "http://alice:5002"
+        }
+
+    ]
+    }
+
+4.  you can view your did in your browser like so: https://your_username.github.io/dids/1/did.json
+
+# Implicit Invitation
+
+For the did doc above we have generated a key-pair (OKP, Ed25519) and you can see in the did doc above that we are using the public portion of the key.
+
+Key-pair here:
+
+{
+"kty": "OKP",
+"d": "\_ekRZ7kLMfsg50o4ICf4kocAVQzEo3uoi7miIQz8b_s",
+"crv": "Ed25519",
+"x": "A35kxICNVG-ICgG4PMx4W6QZcA7Yo07nvBajotrBqIs"
+}
+
+In order to send an invite from bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
+We need to import our did with the private key on Alice using endpoint `dids/import`:
+
+{
+"did": "did:web:Ellenn-A.github.io:dids:1",
+
+"privateKeys": [
+{
+"keyType": "ed25519",
+"privateKey": "_ekRZ7kLMfsg50o4ICf4kocAVQzEo3uoi7miIQz8b_s"
+}
+]
+
+}
+Once the did and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation`` body:
+
+{
+
+"did": "did:web:Ellenn-A.github.io:dids:1",
+"handshakeProtocols": [
+"https://didcomm.org/connections/1.0"
+]
+}
+This creates a connection record for Bob and Alice - for both this record is in a state `request-sent` and `request-received` respectively.
+
+To move the connection to a completed state - on Alice we take the connection id and use `connections/{connectionId}/accept-request` endpoint.
 
 As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://localhost:3002/proofs/request-proof`. Use the `connectionId` to Bob and the `cred_def_id` either from the credential definition created earlier by Alice or the credential owned by Bob (the credential definition ID is consistent across all agents because it's an IPFS CID).
 
