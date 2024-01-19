@@ -467,7 +467,7 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
           "publicKeyJwk": {
             "kty": "OKP",
             "crv": "Ed25519",
-            "x": "public_key"
+            "x": "PUBLIC_KEY"
           }
         }
       ],
@@ -498,9 +498,9 @@ Key-pair here:
 ```json
 {
   "kty": "OKP",
-  "d": "private_key",
+  "d": "PRIVATE_KEY",
   "crv": "Ed25519",
-  "x": "public_key"
+  "x": "PUBLIC_KEY"
 }
 ```
 
@@ -513,7 +513,7 @@ We need to import our did with the private key on Alice using endpoint `dids/imp
   "privateKeys": [
     {
       "keyType": "ed25519",
-      "privateKey": "private_key"
+      "privateKey": "PRIVATE_KEY"
     }
   ]
 }
