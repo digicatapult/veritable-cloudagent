@@ -467,7 +467,7 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
           "publicKeyJwk": {
             "kty": "OKP",
             "crv": "Ed25519",
-            "x": "A35kxICNVG-ICgG4PMx4W6QZcA7Yo07nvBajotrBqIs"
+            "x": "public_key"
           }
         }
       ],
@@ -491,16 +491,16 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
 
 ### Implicit Invitation
 
-For the did doc above we have generated a key-pair (OKP, Ed25519) and you can see in the did doc above that we are using the public portion of the key.
+For the did doc above we have generated a key-pair using https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc above that we are using the public portion of the key.
 
 Key-pair here:
 
 ```json
 {
   "kty": "OKP",
-  "d": "_ekRZ7kLMfsg50o4ICf4kocAVQzEo3uoi7miIQz8b_s",
+  "d": "private_key",
   "crv": "Ed25519",
-  "x": "A35kxICNVG-ICgG4PMx4W6QZcA7Yo07nvBajotrBqIs"
+  "x": "public_key"
 }
 ```
 
@@ -509,11 +509,11 @@ We need to import our did with the private key on Alice using endpoint `dids/imp
 
 ```json
 {
-  "did": "did:web:Ellenn-A.github.io:dids:1",
+  "did": "did:web:YOUR_USERNAME.github.io:dids:1",
   "privateKeys": [
     {
       "keyType": "ed25519",
-      "privateKey": "_ekRZ7kLMfsg50o4ICf4kocAVQzEo3uoi7miIQz8b_s"
+      "privateKey": "private_key"
     }
   ]
 }
@@ -523,7 +523,7 @@ Once the did and private key is successfully imported on Alice, we can attempt t
 
 ```json
 {
-  "did": "did:web:Ellenn-A.github.io:dids:1",
+  "did": "did:web:YOUR_USERNAME.github.io:dids:1",
   "handshakeProtocols": ["https://didcomm.org/connections/1.0"]
 }
 ```
