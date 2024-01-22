@@ -451,6 +451,21 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
 In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
 
+For our did doc above we will need to generate a key-pair. This could be doe through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc below we will be using the public portion of the key.
+
+Example key-pair will look like this:
+
+```json
+{
+  "kty": "OKP",
+  "d": "PRIVATE_KEY",
+  "crv": "Ed25519",
+  "x": "PUBLIC_KEY"
+}
+```
+
+#### Publishing a web:did
+
 1.  create public repo called `YOUR_USERNAME.github.io`
 2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
 3.  body to include in your did.json:
@@ -489,20 +504,7 @@ In order to use the implicit invitation we need a public did hosted ‘somewhere
 
 4.  you can view your did in your browser like so: https://your_username.github.io/dids/1/did.json
 
-### Implicit Invitation
-
-For the did doc above we have generated a key-pair using https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc above that we are using the public portion of the key.
-
-Key-pair here:
-
-```json
-{
-  "kty": "OKP",
-  "d": "PRIVATE_KEY",
-  "crv": "Ed25519",
-  "x": "PUBLIC_KEY"
-}
-```
+#### Implicit Invitation
 
 In order to send an invite from bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
 We need to import our did with the private key on Alice using endpoint `dids/import`:
