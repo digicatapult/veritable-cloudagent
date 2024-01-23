@@ -190,6 +190,21 @@ services:
     networks:
       - testnet
 
+  ##################################################################################
+  ## OPA ###########################################################################
+  ##################################################################################
+
+  opa:
+    container_name: opa
+    image: openpolicyagent/opa:0.60.0-static
+    ports:
+      - '8181:8181'
+    volumes:
+      - ./samples/supplierCustomer.rego:/supplierCustomer.rego
+    command: run --server --log-level debug supplierCustomer.rego
+    networks:
+      - testnet
+
 volumes:
   ipfs0:
   ipfs1:

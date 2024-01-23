@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import type { ServerConfig } from './utils/ServerConfig'
-import type { RestAgent } from './utils/agent'
+import type { RestAgent } from './policyAgent'
 import type { Response as ExResponse, Request as ExRequest } from 'express'
 
 import { Agent } from '@aries-framework/core'

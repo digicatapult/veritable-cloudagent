@@ -50,6 +50,7 @@ export interface AriesRestConfig {
   webhookUrl?: string
   adminPort: number
   ipfsOrigin: string
+  opaOrigin: string
   personaTitle: string
   personaColor: string
 }
@@ -73,6 +74,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptMediationRequests = true,
     autoAcceptProofs = AutoAcceptProof.ContentApproved,
     ipfsOrigin,
+    opaOrigin,
     personaTitle,
     personaColor,
     ...afjConfig
@@ -91,6 +93,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptMediationRequests,
     ipfsOrigin,
+    opaOrigin,
   })
 
   const agent: RestAgent = new Agent({

@@ -93,6 +93,7 @@ Once you have installed IPFS, you can start the REST server using the following 
 npx -p @aries-framework/rest afj-rest start \
   --label "AFJ Rest" \
   --ipfs-origin http://localhost:5001 \
+  --opa-origin http://localhost:8181 \
   --wallet-id "walletId" \
   --wallet-key "walletKey" \
   --endpoint http://localhost:5002 \
@@ -243,7 +244,7 @@ A credential definition can then be used to issue a credential which contains bo
 
 Unit tests and integration tests are defined in the top-level `tests` directory.
 
-Unit test can be run with `npm run test`. 
+Unit test can be run with `npm run test`.
 
 Integration tests, however, require the testnet orchestration to be deployed.
 

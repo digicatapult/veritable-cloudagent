@@ -1,4 +1,4 @@
-import type { RestAgent } from '../../utils/agent'
+import type { RestAgent } from '../../policyAgent'
 import type { AnonCredsRequestProofFormatOptions, AnonCredsProofRequestRestrictionOptions } from '../types'
 import type { AnonCredsProofRequestRestriction, AnonCredsRequestProofFormat } from '@aries-framework/anoncreds'
 import type { ProofExchangeRecordProps } from '@aries-framework/core'
