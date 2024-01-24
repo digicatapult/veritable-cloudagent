@@ -56,7 +56,7 @@ The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`.
 
 **Single Agent + IPFS Node**
 
-The following command will spin up a single `afj` agent (named `Alice`) and an IPFS node for testing purposes:
+The following command will spin up a single `afj` agent (named `Alice`), an IPFS node and a OpenPolicyAgent instance for testing purposes:
 
 ```sh
 docker-compose -f docker-compose-agent-ipfs.yml up --build -d
@@ -80,6 +80,7 @@ This private testnet has the following ports available to the user for testing:
 | Bob     | 3001    | 5102 | 5103 |
 | Charlie | 3002    | 5202 | 5203 |
 | IPFS    |         | 8080 |      |
+| OPA     |         | 8181 |      |
 
 Network name: `testnet`
 
