@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import type { ServerConfig } from './utils/ServerConfig'
-import type { RestAgent } from './policyAgent'
+import type { RestAgent } from './utils/agent'
 import type { Response as ExResponse, Request as ExRequest } from 'express'
 
 import { Agent } from '@aries-framework/core'
@@ -16,9 +16,11 @@ import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
 import { errorHandler } from './error'
+import PolicyAgent from './policyAgent'
 
 export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   container.registerInstance(Agent, agent as Agent)
+  container.registerInstance(PolicyAgent, new PolicyAgent(config.opaOrigin))
 
   const app = config.app ?? express()
   if (config.cors) app.use(cors())

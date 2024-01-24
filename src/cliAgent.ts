@@ -93,7 +93,6 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptMediationRequests,
     ipfsOrigin,
-    opaOrigin,
   })
 
   const agent: RestAgent = new Agent({
@@ -128,6 +127,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     port: adminPort,
     personaTitle,
     personaColor,
+    opaOrigin,
   })
 
   app.listen(adminPort, () => {

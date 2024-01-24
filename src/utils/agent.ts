@@ -19,8 +19,6 @@ import {
   LogLevel,
   MediatorModule,
   ProofsModule,
-  Module,
-  DependencyManager,
 } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
@@ -30,19 +28,12 @@ import path from 'path'
 import { TsLogger } from './logger'
 import VeritableAnonCredsRegistry from '../anoncreds'
 import Ipfs from '../ipfs'
-import PolicyAgent from '../policyAgent'
-
-export declare class PoliciesModule implements Module {
-  constructor(policyAgent: PolicyAgent)
-  register(dependencyManager: DependencyManager): void
-}
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncreds: AnonCredsModule
-  policies: PoliciesModule
 }
 
 export type RestAgent<
@@ -51,7 +42,6 @@ export type RestAgent<
     proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
-    policies: PoliciesModule
   }
 > = Agent<modules>
 
@@ -65,7 +55,6 @@ export const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
-  opaOrigin: string
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -99,7 +88,6 @@ export const getAgentModules = (options: {
     mediator: new MediatorModule({
       autoAcceptMediationRequests: options.autoAcceptMediationRequests,
     }),
-    policies: new PoliciesModule(new PolicyAgent(options.opaOrigin)),
   }
 }
 
@@ -112,7 +100,6 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
     autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests: true,
     ipfsOrigin: 'http://localhost:5001',
-    opaOrigin: 'http://localhost:8181',
   })
 
   const agent = new Agent({

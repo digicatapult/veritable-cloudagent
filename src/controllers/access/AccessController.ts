@@ -1,24 +1,21 @@
 import { Controller, Route, Tags, Get } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import type { RestAgent } from '../../utils/agent'
+import PolicyAgent from '../../policyAgent'
 
 @Tags('Access')
 @Route('/access')
 @injectable()
 export class AccessController extends Controller {
-  private agent: RestAgent
-
-  public constructor(agent: RestAgent) {
+  constructor(private policyAgent: PolicyAgent) {
     super()
-    this.agent = agent
   }
 
   /**
-   * Retrieve basic agent information
+   * Retrieve all access policies
    */
   @Get('/policies')
   public async getPolicies() {
-    return this.agent.modules
+    return this.policyAgent.getPolicies()
   }
 }
