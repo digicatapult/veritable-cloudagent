@@ -11,6 +11,11 @@ import type {
   AnonCredsResolutionMetadata,
   AnonCredsCredentialDefinition,
   RegisterCredentialDefinitionOptions,
+  RegisterRevocationRegistryDefinitionOptions,
+  RegisterRevocationRegistryDefinitionReturn,
+  RegisterRevocationStatusListOptions,
+  RegisterRevocationStatusListReturn,
+  AnonCredsRevocationRegistryDefinition,
 } from '@aries-framework/anoncreds'
 import Ipfs from '../ipfs'
 import type { AgentContext } from '@aries-framework/core'
@@ -150,6 +155,16 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
       credentialDefinitionMetadata: {},
     }
   }
+  public async registerRevocationRegistryDefinition(): // agentContext: AgentContext,
+  // options: RegisterRevocationRegistryDefinitionOptions // options in options can contain either 'Internal', 'ExternalSubmit' or 'ExternalCreate' options in itself
+  Promise<RegisterRevocationRegistryDefinitionReturn> {
+    throw new Error('Method not implemented.')
+  }
+  public async registerRevocationStatusList(): // agentContext: AgentContext,
+  // options: RegisterRevocationStatusListOptions
+  Promise<RegisterRevocationStatusListReturn> {
+    throw new Error('Method not implemented.')
+  }
 
   public async getRevocationRegistryDefinition(): // agentContext: AgentContext,
   // revocationRegistryDefinitionId: string
@@ -222,6 +237,16 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     return {
       type: 'success',
       result: result,
+    }
+  }
+
+  private async parseDid(did: string) {
+    const match = did.match(this.supportedIdentifier)
+    if (match) {
+      const [, namespace, namespaceIdentifier] = match
+      return { namespace, namespaceIdentifier }
+    } else {
+      throw new Error(`${did} is not a valid did:key or did:web did`)
     }
   }
 }

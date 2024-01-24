@@ -73,6 +73,7 @@ export class CredentialDefinitionController extends Controller {
       issuerId: Did
       schemaId: SchemaId
       tag: string
+      supportRevocation: boolean
     }
   ): Promise<AnonCredsCredentialDefinitionResponse> {
     const {
@@ -94,7 +95,7 @@ export class CredentialDefinitionController extends Controller {
         schemaId: credentialDefinitionRequest.schemaId,
         tag: credentialDefinitionRequest.tag,
       },
-      options: {},
+      options: { supportRevocation: credentialDefinitionRequest.supportRevocation },
     })
 
     if (state !== 'finished' || credentialDefinitionId === undefined || credentialDefinition === undefined) {
