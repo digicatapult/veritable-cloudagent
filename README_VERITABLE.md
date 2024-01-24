@@ -449,7 +449,91 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 
 ### Verification
 
-Setup an out of band connection between Charlie and Bob.
+Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
+In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
+
+For our did doc above we will need to generate a key-pair. This could be doe through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc below we will be using the public portion of the key.
+
+Example key-pair will look like this:
+
+```json
+{
+  "kty": "OKP",
+  "d": "PRIVATE_KEY",
+  "crv": "Ed25519",
+  "x": "PUBLIC_KEY"
+}
+```
+
+#### Publishing a web:did
+
+1.  create public repo called `YOUR_USERNAME.github.io`
+2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
+3.  body to include in your did.json:
+
+    ```json
+    {
+      "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/suites/jws-2020/v1"],
+      "id": "did:web:YOUR_USERNAME.github.io:dids:1",
+      "verificationMethod": [
+        {
+          "id": "did:web:YOUR_USERNAME.github.io:dids:1#owner",
+          "type": "JsonWebKey2020",
+          "controller": "did:web:YOUR_USERNAME.github.io:dids:1",
+          "publicKeyJwk": {
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "PUBLIC_KEY"
+          }
+        }
+      ],
+      "authentication": ["did:web:YOUR_USERNAME.github.io:dids:1#owner"],
+      "assertionMethod": ["did:web:YOUR_USERNAME.github.io:dids:1:1#owner"],
+      "service": [
+        {
+          "id": "did:web:YOUR_USERNAME.github.io:dids:1#did-communication",
+          "type": "did-communication",
+          "priority": 0,
+          "recipientKeys": ["did:web:YOUR_USERNAME.github.io:dids:1#owner"],
+          "routingKeys": [],
+
+          "serviceEndpoint": "http://alice:5002"
+        }
+      ]
+    }
+    ```
+
+4.  you can view your did in your browser like so: https://your_username.github.io/dids/1/did.json
+
+#### Implicit Invitation
+
+In order to send an invite from bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
+We need to import our did with the private key on Alice using endpoint `dids/import`:
+
+```json
+{
+  "did": "did:web:YOUR_USERNAME.github.io:dids:1",
+  "privateKeys": [
+    {
+      "keyType": "ed25519",
+      "privateKey": "PRIVATE_KEY"
+    }
+  ]
+}
+```
+
+Once the did and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation` body:
+
+```json
+{
+  "did": "did:web:YOUR_USERNAME.github.io:dids:1",
+  "handshakeProtocols": ["https://didcomm.org/connections/1.0"]
+}
+```
+
+This creates a connection record for Bob and Alice - for both this record is in a state `request-sent` and `request-received` respectively.
+
+To move the connection to a completed state - on Alice we take the connection id and use `connections/{connectionId}/accept-request` endpoint.
 
 As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://localhost:3002/proofs/request-proof`. Use the `connectionId` to Bob and the `cred_def_id` either from the credential definition created earlier by Alice or the credential owned by Bob (the credential definition ID is consistent across all agents because it's an IPFS CID).
 
