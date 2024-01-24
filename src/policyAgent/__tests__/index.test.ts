@@ -1,6 +1,7 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 import PolicyAgent from '..'
+import { withGetPoliciesResponse } from './fixtures/mock'
 
 describe('policy agent', function () {
   describe('ctor', function () {
@@ -24,12 +25,15 @@ describe('policy agent', function () {
     })
   })
 
-  describe('getPolicies success', function () {
+  describe('getPolicies', function () {
+    const { origin } = withGetPoliciesResponse()
+
     it('should return all policies', async function () {
-      const policyAgent = new PolicyAgent('http://localhost:8181')
+      const policyAgent = new PolicyAgent(origin)
       const { result } = await policyAgent.getPolicies()
       expect(result).to.be.an('array')
-      expect(result[0].id).to.equal('supplierCustomer.rego')
+      expect(result[0]).to.include.all.keys('id', 'raw', 'ast')
+      expect(result[0].id).to.equal('example.rego')
     })
   })
 })
