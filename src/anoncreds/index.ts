@@ -240,13 +240,13 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     }
   }
 
-  private async parseDid(did: string) {
-    const match = did.match(this.supportedIdentifier)
-    if (match) {
-      const [, namespace, namespaceIdentifier] = match
-      return { namespace, namespaceIdentifier }
-    } else {
-      throw new Error(`${did} is not a valid did:key or did:web did`)
-    }
-  }
+  // private async parseDid(did: string) {
+  //   const match = did.match(this.supportedIdentifier)
+  //   if (match) {
+  //     const [, namespace, namespaceIdentifier] = match
+  //     return { namespace, namespaceIdentifier }
+  //   } else {
+  //     throw new Error(`${did} is not a valid did:key or did:web did`)
+  //   }
+  // }
 }
