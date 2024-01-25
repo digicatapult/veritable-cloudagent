@@ -1,7 +1,9 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 import PolicyAgent from '..'
-import { withGetPoliciesResponse } from './fixtures/mock'
+import { withGetPoliciesResponse, withGetPolicyResponse } from './fixtures/mock'
+
+const exampleId = 'example.rego'
 
 describe('policy agent', function () {
   describe('ctor', function () {
@@ -26,14 +28,26 @@ describe('policy agent', function () {
   })
 
   describe('getPolicies', function () {
-    const { origin } = withGetPoliciesResponse()
+    const { origin } = withGetPoliciesResponse(exampleId)
 
     it('should return all policies', async function () {
       const policyAgent = new PolicyAgent(origin)
       const { result } = await policyAgent.getPolicies()
       expect(result).to.be.an('array')
       expect(result[0]).to.include.all.keys('id', 'raw', 'ast')
-      expect(result[0].id).to.equal('example.rego')
+      expect(result[0].id).to.equal(exampleId)
+    })
+  })
+
+  describe('getPolicy', function () {
+    const { origin } = withGetPolicyResponse(exampleId)
+
+    it('should return a single policy', async function () {
+      const policyAgent = new PolicyAgent(origin)
+      const { result } = await policyAgent.getPolicy(exampleId)
+      expect(result).to.be.an('object')
+      expect(result).to.include.all.keys('id', 'raw', 'ast')
+      expect(result.id).to.equal(exampleId)
     })
   })
 })
