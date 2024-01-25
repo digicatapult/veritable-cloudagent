@@ -1,4 +1,4 @@
-import { Controller, Route, Tags, Get, Response, Path } from 'tsoa'
+import { Controller, Route, Tags, Get, Response, Path, Post, Body } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import PolicyAgent from '../../policyAgent'
@@ -26,7 +26,17 @@ export class AccessController extends Controller {
    */
   @Get('policies/:policyId')
   @Response<NotFound['message']>(404)
-  public async getConnectionById(@Path('policyId') policyId: string) {
+  public async getPolicyById(@Path('policyId') policyId: string) {
     return this.policyAgent.getPolicy(policyId)
+  }
+
+  /**
+   * Evaluate against a package from a policy
+   * @param packageId package identifier
+   */
+  @Post('data/:packageId/eval')
+  @Response<NotFound['message']>(404)
+  public async evaluate(@Path('packageId') packageId: string, @Body() requestBody: object) {
+    return this.policyAgent.evaluate(packageId, requestBody)
   }
 }

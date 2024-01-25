@@ -1,9 +1,10 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 import PolicyAgent from '..'
-import { withGetPoliciesResponse, withGetPolicyResponse } from './fixtures/mock'
+import { withGetPoliciesResponse, withGetPolicyResponse, withEvaluateResponse } from './fixtures/mock'
 
 const exampleId = 'example.rego'
+const examplePackageId = 'example'
 
 describe('policy agent', function () {
   describe('ctor', function () {
@@ -32,10 +33,9 @@ describe('policy agent', function () {
 
     it('should return all policies', async function () {
       const policyAgent = new PolicyAgent(origin)
-      const { result } = await policyAgent.getPolicies()
-      expect(result).to.be.an('array')
-      expect(result[0]).to.include.all.keys('id', 'raw', 'ast')
-      expect(result[0].id).to.equal(exampleId)
+      const policies = await policyAgent.getPolicies()
+      expect(policies).to.be.an('array')
+      expect(policies[0].id).to.equal(exampleId)
     })
   })
 
@@ -44,10 +44,29 @@ describe('policy agent', function () {
 
     it('should return a single policy', async function () {
       const policyAgent = new PolicyAgent(origin)
-      const { result } = await policyAgent.getPolicy(exampleId)
-      expect(result).to.be.an('object')
-      expect(result).to.include.all.keys('id', 'raw', 'ast')
-      expect(result.id).to.equal(exampleId)
+      const policy = await policyAgent.getPolicy(exampleId)
+      expect(policy).to.be.an('object')
+      expect(policy.id).to.equal(exampleId)
+    })
+  })
+
+  describe('evaluate success', function () {
+    const { origin } = withEvaluateResponse(examplePackageId, true)
+
+    it('should return allow true', async function () {
+      const policyAgent = new PolicyAgent(origin)
+      const result = await policyAgent.evaluate(examplePackageId, {})
+      expect(result.allow).to.equal(true)
+    })
+  })
+
+  describe('evaluate fail', function () {
+    const { origin } = withEvaluateResponse(examplePackageId, false)
+
+    it('should return allow false', async function () {
+      const policyAgent = new PolicyAgent(origin)
+      const result = await policyAgent.evaluate(examplePackageId, {})
+      expect(result.allow).to.equal(false)
     })
   })
 })

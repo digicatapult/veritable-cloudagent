@@ -73,3 +73,30 @@ export const withGetPolicyResponse = (id: string) => {
 
   return { origin }
 }
+
+export const withEvaluateResponse = (packageId: string, success: boolean) => {
+  const origin = `http://policy-agent`
+  let originalDispatcher: Dispatcher
+  let mockAgent: MockAgent
+  before(function () {
+    originalDispatcher = getGlobalDispatcher()
+    mockAgent = new MockAgent()
+    setGlobalDispatcher(mockAgent)
+    const mockPolicyAgent = mockAgent.get(origin)
+
+    mockPolicyAgent
+      .intercept({
+        path: `/v1/data/${packageId}`,
+        method: 'POST',
+      })
+      .reply(200, {
+        result: { allow: success },
+      })
+  })
+
+  after(function () {
+    setGlobalDispatcher(originalDispatcher)
+  })
+
+  return { origin }
+}
