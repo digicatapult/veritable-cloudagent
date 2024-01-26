@@ -16,9 +16,11 @@ import { credentialEvents } from './events/CredentialEvents'
 import { proofEvents } from './events/ProofEvents'
 import { RegisterRoutes } from './routes/routes'
 import { errorHandler } from './error'
+import PolicyAgent from './policyAgent'
 
 export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   container.registerInstance(Agent, agent as Agent)
+  container.registerInstance(PolicyAgent, new PolicyAgent(config.opaOrigin || 'http://localhost:8181'))
 
   const app = config.app ?? express()
   if (config.cors) app.use(cors())

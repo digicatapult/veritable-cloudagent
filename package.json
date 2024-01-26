@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.4.14",
+  "version": "0.4.15",
   "main": "build/index",
   "types": "build/index",
   "files": [
@@ -33,7 +33,7 @@
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "test -d node_modules/husky && husky install || echo \"husky is not installed\"",
     "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes && tsc && ./bin/afj-rest.js start --ipfs-origin http://localhost:5001 --config samples/cliConfig.json",
+    "dev": "tsoa spec-and-routes && tsc && ./bin/afj-rest.js start --ipfs-origin http://localhost:5001 --opa-origin http://localhost:8181 --config samples/cliConfig.json",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
