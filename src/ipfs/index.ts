@@ -1,4 +1,5 @@
 import { addResponseParser } from './responseParser'
+import { generateKeyPairSync } from 'crypto'
 
 export interface MetadataFile {
   blob: Blob
@@ -36,6 +37,18 @@ export default class Ipfs {
     }
   }
 
+  public async publishToIPNS(key: string, file: Buffer): Promise<Buffer> {
+    //need topublish to ipfs - which can be done before ==upload file
+    const cid = this.uploadFile(file)
+    //generate ipns keypair to sign and update ipns record -> done before publishing to ipns
+    //publish ipns record
+    const response = await this.makeIpfsRequest('/api/v0/name/publish', {
+      arg: `/ipfs/${cid}`,
+      key: key,
+    })
+    return Buffer.from(await response.arrayBuffer()) //we would want a name from the buffer
+  }
+
   private async makeIpfsRequest(route: string, args: Record<string, string>, body?: FormData) {
     const url = new URL(route, this.origin)
     const search = new URLSearchParams(args)
@@ -51,5 +64,17 @@ export default class Ipfs {
     }
 
     return response
+  }
+
+  private async generateIPNSKeyPair() {
+    const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+      modulusLength: 2048,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    })
+    return {
+      publicKey: publicKey.toString(),
+      privateKey: privateKey.toString(),
+    }
   }
 }

@@ -7,12 +7,15 @@ import Ipfs from '../../ipfs'
 import fs from 'fs'
 import { uuid } from '@aries-framework/core/build/utils/uuid'
 import { randomUUID } from 'crypto'
+import FormData from 'form-data'
 
 export class BasicTailsFileService implements TailsFileService {
   private tailsDirectoryPath?: string
+  private tailsServerBaseUrl?: string
   private ipfs: Ipfs
 
   public constructor(ipfs: Ipfs, options?: { tailsDirectoryPath?: string; tailsServerBaseUrl?: string }) {
+    this.tailsServerBaseUrl = options?.tailsServerBaseUrl
     this.tailsDirectoryPath = options?.tailsDirectoryPath
     this.ipfs = ipfs
   }
@@ -39,10 +42,10 @@ export class BasicTailsFileService implements TailsFileService {
     try {
       const localTailsFilePath = options.revocationRegistryDefinition.value.tailsLocation
 
-      const tailsFileId = randomUUID()
+      // const tailsFileId = randomUUID() //probably don't need this anyway
       const data = new FormData()
       const readStream = fs.createReadStream(localTailsFilePath)
-      // data.append('file', readStream)
+      data.append('file', readStream)
       // const response = await agentContext.config.agentDependencies.fetch(
       //   `${this.tailsServerBaseUrl}/${encodeURIComponent(tailsFileId)}`,
       //   {
