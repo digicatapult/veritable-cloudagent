@@ -78,6 +78,7 @@ export const getAgentModules = (options: {
     }),
     anoncreds: new AnonCredsModule({
       registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
+      // tailsFileService: ???
     }),
     anoncredsRs: new AnonCredsRsModule({
       anoncreds,
