@@ -1,5 +1,4 @@
 import type { InitConfig, WalletConfig } from '@aries-framework/core'
-
 import {
   HttpOutboundTransport,
   WsOutboundTransport,
@@ -9,6 +8,8 @@ import {
   AutoAcceptProof,
 } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
+import { create as createIpfsClient } from 'ipfs-http-client'
+
 import { readFile } from 'fs/promises'
 
 import { setupServer } from './server'
@@ -87,12 +88,14 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     logger,
   }
 
+  const ipfs = createIpfsClient({ url: ipfsOrigin + '/api/v0' })
+
   const modules = getAgentModules({
     autoAcceptConnections,
     autoAcceptProofs,
     autoAcceptCredentials,
     autoAcceptMediationRequests,
-    ipfsOrigin,
+    ipfs,
   })
 
   const agent: RestAgent = new Agent({

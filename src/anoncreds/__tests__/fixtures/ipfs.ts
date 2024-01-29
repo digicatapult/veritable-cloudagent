@@ -1,31 +1,38 @@
 import sinon from 'sinon'
 
-import Ipfs from '../../../ipfs'
-
 export const exampleCid = 'QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR'
 export const exampleContent = { id: '1234' }
 
-export const withHappyIpfs = (getFileResult: Buffer = Buffer.from(JSON.stringify(exampleContent), 'utf8')) => {
-  const ipfs = sinon.createStubInstance(Ipfs, {
-    getFile: sinon.stub<[string], Promise<Buffer>>().withArgs(exampleCid).resolves(getFileResult),
-    uploadFile: sinon.stub<[Buffer], Promise<string>>().resolves(exampleCid),
-  })
+export const withHappyIpfs = (
+  catResult: Uint8Array = new Uint8Array(Buffer.from(JSON.stringify(exampleContent), 'utf8'))
+) => {
+  const ipfs = {
+    cat: sinon
+      .stub<[string], AsyncIterator<Uint8Array>>()
+      .withArgs(exampleCid)
+      .callsFake(async function* () {
+        yield catResult
+      }),
+    add: sinon.stub<[Buffer], Promise<{ cid: string }>>().resolves({ cid: exampleCid }),
+  }
 
   return ipfs
 }
 
 export const withIpfsErrors = (errOnGet = true, errOnUpload = true) => {
-  const ipfs = sinon.createStubInstance(Ipfs, {
-    getFile: errOnGet
-      ? sinon.stub<[string], Promise<Buffer>>().withArgs(exampleCid).rejects(new Error())
+  const ipfs = {
+    cat: errOnGet
+      ? sinon.stub<[string], AsyncIterator<Uint8Array>>().withArgs(exampleCid).rejects(new Error())
       : sinon
-          .stub<[string], Promise<Buffer>>()
+          .stub<[string], AsyncIterator<Uint8Array>>()
           .withArgs(exampleCid)
-          .resolves(Buffer.from(JSON.stringify(exampleContent), 'utf8')),
-    uploadFile: errOnUpload
-      ? sinon.stub<[Buffer], Promise<string>>().rejects(new Error())
-      : sinon.stub<[Buffer], Promise<string>>().resolves(exampleCid),
-  })
+          .callsFake(async function* () {
+            yield new Uint8Array(Buffer.from(JSON.stringify(exampleContent), 'utf8'))
+          }),
+    add: errOnUpload
+      ? sinon.stub<[Buffer], Promise<{ cid: string }>>().rejects(new Error())
+      : sinon.stub<[Buffer], Promise<{ cid: string }>>().resolves({ cid: exampleCid }),
+  }
 
   return ipfs
 }

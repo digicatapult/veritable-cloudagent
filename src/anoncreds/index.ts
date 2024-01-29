@@ -12,8 +12,8 @@ import type {
   AnonCredsCredentialDefinition,
   RegisterCredentialDefinitionOptions,
 } from '@aries-framework/anoncreds'
-import Ipfs from '../ipfs'
 import type { AgentContext } from '@aries-framework/core'
+import type { IPFSHTTPClient } from 'ipfs-http-client'
 
 export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   public readonly methodName = 'veritable'
@@ -21,7 +21,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     /(?:^did:key:z[a-km-zA-HJ-NP-Z1-9]+$)|(?:^ipfs:\/\/([a-zA-Z0-9]+)$)|(?:^did:web:.+$)/ //did:web matches anything but an empty string
   private readonly ipfsIdentifier = /^ipfs:\/\/([a-zA-Z0-9]+)$/
 
-  constructor(private ipfs: Ipfs) {}
+  constructor(private ipfs: IPFSHTTPClient) {}
 
   public async getSchema(agentContext: AgentContext, schemaId: string): Promise<GetSchemaReturn> {
     const thing = await this.getAnonCredsObj<AnonCredsSchema>(agentContext, schemaId)
@@ -48,7 +48,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   ): Promise<RegisterSchemaReturn> {
     let cid: string | null = null
     try {
-      cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.schema), 'utf8'))
+      cid = (await this.ipfs.add(Buffer.from(JSON.stringify(options.schema), 'utf8'))).cid.toString()
     } catch (err) {
       agentContext.config.logger.error(`Failed to upload schema to IPFS`, {
         schema: options.schema,
@@ -123,7 +123,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
 
     let cid: string | null = null
     try {
-      cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.credentialDefinition), 'utf8'))
+      cid = (await this.ipfs.add(Buffer.from(JSON.stringify(options.credentialDefinition), 'utf8'))).cid.toString()
     } catch (err) {
       agentContext.config.logger.error(`Failed to upload schema to IPFS`, {
         credentialDefinition: options.credentialDefinition,
@@ -184,7 +184,11 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
 
     let schemaBuffer: Buffer | null = null
     try {
-      schemaBuffer = await this.ipfs.getFile(cid)
+      const chunks: Uint8Array[] = []
+      for await (const chunk of this.ipfs.cat(cid)) {
+        chunks.push(chunk)
+      }
+      schemaBuffer = Buffer.from(await new Blob(chunks).arrayBuffer())
     } catch (err) {
       agentContext.config.logger.error(`Failed to fetch ${cid} from IPFS`, {
         cid,

@@ -23,11 +23,12 @@ import {
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { create as createIpfsClient, type IPFSHTTPClient } from 'ipfs-http-client'
+
 import path from 'path'
 
 import { TsLogger } from './logger'
 import VeritableAnonCredsRegistry from '../anoncreds'
-import Ipfs from '../ipfs'
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
@@ -54,7 +55,7 @@ export const getAgentModules = (options: {
   autoAcceptProofs: AutoAcceptProof
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
-  ipfsOrigin: string
+  ipfs: IPFSHTTPClient
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -77,7 +78,7 @@ export const getAgentModules = (options: {
       ],
     }),
     anoncreds: new AnonCredsModule({
-      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
+      registries: [new VeritableAnonCredsRegistry(options.ipfs)],
     }),
     anoncredsRs: new AnonCredsRsModule({
       anoncreds,
@@ -93,13 +94,14 @@ export const getAgentModules = (options: {
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
+  const ipfs = createIpfsClient({ url: 'http://localhost:5001/api/v0' })
 
   const modules = getAgentModules({
     autoAcceptConnections: true,
     autoAcceptProofs: AutoAcceptProof.ContentApproved,
     autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests: true,
-    ipfsOrigin: 'http://localhost:5001',
+    ipfs,
   })
 
   const agent = new Agent({

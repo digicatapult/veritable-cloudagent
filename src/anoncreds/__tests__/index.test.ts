@@ -1,6 +1,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
+import type { IPFSHTTPClient }  from 'ipfs-http-client'
+
 import { withHappyIpfs, withIpfsErrors, exampleCid, exampleContent } from './fixtures/ipfs'
 import { withMockedAgentContext } from './fixtures/agentContext'
 import VeritableAnonCredsRegistry from '..'
@@ -8,7 +10,7 @@ import VeritableAnonCredsRegistry from '..'
 describe('VeritableAnonCredsRegistry', function () {
   describe('methodName', function () {
     const ipfs = withHappyIpfs()
-    const registry = new VeritableAnonCredsRegistry(ipfs)
+    const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
     it('should export the correct methodName', function () {
       expect(registry.methodName).to.equal('veritable')
@@ -17,7 +19,7 @@ describe('VeritableAnonCredsRegistry', function () {
 
   describe('supportedIdentifier', function () {
     const ipfs = withHappyIpfs()
-    const registry = new VeritableAnonCredsRegistry(ipfs)
+    const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
     const cases: [string, string, boolean][] = [
       ['cid v0', 'ipfs://QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR', true],
@@ -43,7 +45,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
       const schemaId = `ipfs://${exampleCid}`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getSchema(agentContext, schemaId)
       expect(result).to.deep.equal({
@@ -58,7 +60,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
       const schemaId = `invalid`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getSchema(agentContext, schemaId)
 
@@ -76,7 +78,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withIpfsErrors()
       const schemaId = `ipfs://${exampleCid}`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getSchema(agentContext, schemaId)
 
@@ -94,7 +96,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs(Buffer.from('invalid', 'utf8'))
       const schemaId = `ipfs://${exampleCid}`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getSchema(agentContext, schemaId)
 
@@ -123,7 +125,7 @@ describe('VeritableAnonCredsRegistry', function () {
     it('should upload the schema to IPFS and return the cid', async function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.registerSchema(agentContext, exampleRegisterSchemaOptions)
       expect(result).to.deep.equal({
@@ -135,8 +137,8 @@ describe('VeritableAnonCredsRegistry', function () {
         registrationMetadata: {},
         schemaMetadata: {},
       })
-      expect(ipfs.uploadFile.callCount).to.equal(1)
-      expect(ipfs.uploadFile.firstCall.args).to.deep.equal([
+      expect(ipfs.add.callCount).to.equal(1)
+      expect(ipfs.add.firstCall.args).to.deep.equal([
         Buffer.from(JSON.stringify(exampleRegisterSchemaOptions.schema), 'utf8'),
       ])
     })
@@ -144,7 +146,7 @@ describe('VeritableAnonCredsRegistry', function () {
     it('should return an unknown error on ipfs error', async function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withIpfsErrors()
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.registerSchema(agentContext, exampleRegisterSchemaOptions)
       expect(result).to.deep.equal({
@@ -164,7 +166,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
       const credentialDefinitionId = `ipfs://${exampleCid}`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getCredentialDefinition(agentContext, credentialDefinitionId)
       expect(result).to.deep.equal({
@@ -179,7 +181,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
       const credentialDefinitionId = `invalid`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getCredentialDefinition(agentContext, credentialDefinitionId)
 
@@ -197,7 +199,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withIpfsErrors()
       const credentialDefinitionId = `ipfs://${exampleCid}`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getCredentialDefinition(agentContext, credentialDefinitionId)
 
@@ -215,7 +217,7 @@ describe('VeritableAnonCredsRegistry', function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs(Buffer.from('invalid', 'utf8'))
       const credentialDefinitionId = `ipfs://${exampleCid}`
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.getCredentialDefinition(agentContext, credentialDefinitionId)
 
@@ -247,7 +249,7 @@ describe('VeritableAnonCredsRegistry', function () {
     it('should upload the credential definition to IPFS and return the cid', async function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.registerCredentialDefinition(agentContext, exampleRegisterOptions)
       expect(result).to.deep.equal({
@@ -259,8 +261,8 @@ describe('VeritableAnonCredsRegistry', function () {
         registrationMetadata: {},
         credentialDefinitionMetadata: {},
       })
-      expect(ipfs.uploadFile.callCount).to.equal(1)
-      expect(ipfs.uploadFile.firstCall.args).to.deep.equal([
+      expect(ipfs.add.callCount).to.equal(1)
+      expect(ipfs.add.firstCall.args).to.deep.equal([
         Buffer.from(JSON.stringify(exampleRegisterOptions.credentialDefinition), 'utf8'),
       ])
     })
@@ -268,7 +270,7 @@ describe('VeritableAnonCredsRegistry', function () {
     it('should return an unknown error on ipfs error', async function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withIpfsErrors(false, true)
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.registerCredentialDefinition(agentContext, exampleRegisterOptions)
       expect(result).to.deep.equal({
@@ -285,7 +287,7 @@ describe('VeritableAnonCredsRegistry', function () {
     it('should return an invalid error if schema fetch fails', async function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withIpfsErrors(true, false)
-      const registry = new VeritableAnonCredsRegistry(ipfs)
+      const registry = new VeritableAnonCredsRegistry(ipfs as unknown as IPFSHTTPClient)
 
       const result = await registry.registerCredentialDefinition(agentContext, exampleRegisterOptions)
       expect(result).to.deep.equal({
