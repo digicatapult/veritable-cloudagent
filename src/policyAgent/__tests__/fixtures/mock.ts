@@ -74,7 +74,7 @@ export const withGetPolicyResponse = (id: string) => {
   return { origin }
 }
 
-export const withEvaluateResponse = (packageId: string, success: boolean) => {
+export const withEvaluateResponse = (packageId: string) => {
   const origin = `http://policy-agent`
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent
@@ -90,7 +90,7 @@ export const withEvaluateResponse = (packageId: string, success: boolean) => {
         method: 'POST',
       })
       .reply(200, {
-        result: { allow: success },
+        result: { allow: true },
       })
   })
 

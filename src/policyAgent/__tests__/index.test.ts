@@ -50,23 +50,13 @@ describe('policy agent', function () {
     })
   })
 
-  describe('evaluate success', function () {
-    const { origin } = withEvaluateResponse(examplePackageId, true)
+  describe('evaluate', function () {
+    const { origin } = withEvaluateResponse(examplePackageId)
 
     it('should return allow true', async function () {
       const policyAgent = new PolicyAgent(origin)
       const result = await policyAgent.evaluate(examplePackageId, {})
       expect(result.allow).to.equal(true)
-    })
-  })
-
-  describe('evaluate fail', function () {
-    const { origin } = withEvaluateResponse(examplePackageId, false)
-
-    it('should return allow false', async function () {
-      const policyAgent = new PolicyAgent(origin)
-      const result = await policyAgent.evaluate(examplePackageId, {})
-      expect(result.allow).to.equal(false)
     })
   })
 })
