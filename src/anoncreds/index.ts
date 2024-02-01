@@ -21,6 +21,8 @@ import {
 } from '@aries-framework/anoncreds'
 import Ipfs from '../ipfs'
 import type { AgentContext } from '@aries-framework/core'
+import VeritableIdentifiers from './utils/identifiers'
+import { anonCredsRevocationStatusListFromIPFS } from './utils/transform'
 
 export type RevocationRegistryDelta = {
   accum: string
@@ -32,20 +34,13 @@ enum RevocationState {
   Active,
   Revoked,
 }
-interface ParsedRevocationRegistryId {
-  did: string
-  namespaceIdentifier: string
-  schemaSeqNo: string
-  credentialDefinitionTag: string
-  revocationRegistryTag: string
-  namespace?: string
-}
 
 export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   public readonly methodName = 'veritable'
   public readonly supportedIdentifier =
     /(?:^did:key:z[a-km-zA-HJ-NP-Z1-9]+$)|(?:^ipfs:\/\/([a-zA-Z0-9]+)$)|(?:^did:web:.+$)/ //did:web matches anything but an empty string
   private readonly ipfsIdentifier = /^ipfs:\/\/([a-zA-Z0-9]+)$/
+  public veritableIdentifiers = new VeritableIdentifiers()
 
   constructor(private ipfs: Ipfs) {}
 
@@ -182,6 +177,111 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   ): // options in options can contain either 'Internal', 'ExternalSubmit' or 'ExternalCreate' options in itself
   Promise<RegisterRevocationRegistryDefinitionReturn> {
     try {
+      // const { namespaceIdentifier, namespace } = parseIndyDid(revocationRegistryDefinition.issuerId)
+      // const indyVdrPoolService = agentContext.dependencyManager.resolve(IndyVdrPoolService)
+      // const pool = indyVdrPoolService.getPoolForNamespace(namespace)
+
+      // agentContext.config.logger.debug(
+      //   `Registering revocation registry definition on ledger '${namespace}' with did '${revocationRegistryDefinition.issuerId}'`,
+      //   revocationRegistryDefinition
+      // )
+
+      // let writeRequest: CustomRequest
+      // let didIndyRevocationRegistryDefinitionId: string
+
+      // const { schemaSeqNo, tag: credentialDefinitionTag } = parseIndyCredentialDefinitionId(
+      //   revocationRegistryDefinition.credDefId
+      // )
+
+      // const { endorsedTransaction, endorserDid, endorserMode } = options
+      // if (endorsedTransaction) {
+      //   agentContext.config.logger.debug(
+      //     `Preparing endorsed tx '${endorsedTransaction}' for submission on ledger '${namespace}' with did '${revocationRegistryDefinition.issuerId}'`,
+      //     revocationRegistryDefinition
+      //   )
+      //   writeRequest = new CustomRequest({ customRequest: endorsedTransaction })
+      //   didIndyRevocationRegistryDefinitionId = getDidIndyRevocationRegistryDefinitionId(
+      //     namespace,
+      //     namespaceIdentifier,
+      //     schemaSeqNo,
+      //     credentialDefinitionTag,
+      //     revocationRegistryDefinition.tag
+      //   )
+      // } else {
+      //   const legacyRevocationRegistryDefinitionId = getUnqualifiedRevocationRegistryDefinitionId(
+      //     namespaceIdentifier,
+      //     schemaSeqNo,
+      //     credentialDefinitionTag,
+      //     revocationRegistryDefinition.tag
+      //   )
+
+      //   didIndyRevocationRegistryDefinitionId = getDidIndyRevocationRegistryDefinitionId(
+      //     namespace,
+      //     namespaceIdentifier,
+      //     schemaSeqNo,
+      //     credentialDefinitionTag,
+      //     revocationRegistryDefinition.tag
+      //   )
+
+      //   const legacyCredentialDefinitionId = getUnqualifiedCredentialDefinitionId(
+      //     namespaceIdentifier,
+      //     schemaSeqNo,
+      //     credentialDefinitionTag
+      //   )
+
+      //   const revocationRegistryDefinitionRequest = new RevocationRegistryDefinitionRequest({
+      //     submitterDid: namespaceIdentifier,
+      //     revocationRegistryDefinitionV1: {
+      //       id: legacyRevocationRegistryDefinitionId,
+      //       ver: '1.0',
+      //       credDefId: legacyCredentialDefinitionId,
+      //       tag: revocationRegistryDefinition.tag,
+      //       revocDefType: revocationRegistryDefinition.revocDefType,
+      //       value: {
+      //         issuanceType: 'ISSUANCE_BY_DEFAULT',
+      //         ...revocationRegistryDefinition.value,
+      //       },
+      //     },
+      //   })
+
+      //   const submitterKey = await verificationKeyForIndyDid(agentContext, revocationRegistryDefinition.issuerId)
+      //   writeRequest = await pool.prepareWriteRequest(
+      //     agentContext,
+      //     revocationRegistryDefinitionRequest,
+      //     submitterKey,
+      //     endorserDid !== revocationRegistryDefinition.issuerId ? endorserDid : undefined
+      //   )
+
+      //   if (endorserMode === 'external') {
+      //     return {
+      //       jobId: didIndyRevocationRegistryDefinitionId,
+      //       revocationRegistryDefinitionState: {
+      //         state: 'action',
+      //         action: 'endorseIndyTransaction',
+      //         revocationRegistryDefinition,
+      //         revocationRegistryDefinitionId: didIndyRevocationRegistryDefinitionId,
+      //         revocationRegistryDefinitionRequest: writeRequest.body,
+      //       },
+      //       registrationMetadata: {},
+      //       revocationRegistryDefinitionMetadata: {},
+      //     }
+      //   }
+
+      //   if (endorserMode === 'internal' && endorserDid !== revocationRegistryDefinition.issuerId) {
+      //     const endorserKey = await verificationKeyForIndyDid(agentContext, endorserDid as string)
+      //     await multiSignRequest(agentContext, writeRequest, endorserKey, parseIndyDid(endorserDid).namespaceIdentifier)
+      //   }
+      // }
+
+      // const response = await pool.submitRequest(writeRequest)
+      // agentContext.config.logger.debug(
+      //   `Registered revocation registry definition '${didIndyRevocationRegistryDefinitionId}' on ledger '${pool.indyNamespace}'`,
+      //   {
+      //     response,
+      //     revocationRegistryDefinition,
+      //   }
+      // )
+
       const cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(revocationRegistryDefinition), 'utf8'))
       return {
         revocationRegistryDefinitionMetadata: {},
@@ -208,7 +308,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
         revocationRegistryDefinitionState: {
           revocationRegistryDefinition,
           state: 'failed',
-          reason: `unknownError: ${error.message}`,
+          reason: `unknownError: ${error}`,
         },
       }
     }
@@ -218,29 +318,131 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     { options, revocationStatusList }: RegisterRevocationStatusListOptions
   ): Promise<RegisterRevocationStatusListReturn> {
     try {
-      const { namespaceIdentifier, namespace } = await this.parseDid(revocationStatusList.issuerId)
+      const { namespaceIdentifier, namespace } = await this.veritableIdentifiers.parseDid(
+        revocationStatusList.issuerId,
+        this.supportedIdentifier
+      )
       agentContext.config.logger.debug(
         `Registering revocation status list on ipfs'${namespace}' with did '${revocationStatusList.issuerId}'`,
         revocationStatusList
       )
-      //do we need to fetch the latest delta for anything?
-      //do we need the below?
-      // const submitterKey = await verificationKeyForIndyDid(agentContext, revocationStatusList.issuerId)
-      // writeRequest = await pool.prepareWriteRequest(
-      //   agentContext,
-      //   revocationRegistryDefinitionRequest,
-      //   submitterKey,
-      //   endorserDid !== revocationStatusList.issuerId ? endorserDid : undefined
+      // let writeRequest: CustomRequest
+
+      // Parse the revocation registry id
+      const {
+        // schemaSeqNo,
+        // credentialDefinitionTag,
+        namespaceIdentifier: revocationRegistryNamespaceIdentifier,
+        // revocationRegistryTag,
+        namespace: revocationRegistryNamespace,
+      } = await this.veritableIdentifiers.parseRevocationRegistryId(
+        revocationStatusList.revRegDefId,
+        this.ipfsIdentifier
+      )
+      // const legacyRevocationRegistryDefinitionId = getUnqualifiedRevocationRegistryDefinitionId(
+      //   namespaceIdentifier,
+      //   schemaSeqNo,
+      //   credentialDefinitionTag,
+      //   revocationRegistryTag
       // )
+
+      // const didIndyRevocationRegistryEntryId = getDidIndyRevocationRegistryEntryId(
+      //   namespace,
+      //   namespaceIdentifier,
+      //   schemaSeqNo,
+      //   credentialDefinitionTag,
+      //   revocationRegistryTag
+      // )
+      if (revocationRegistryNamespace && revocationRegistryNamespace !== namespace) {
+        throw new Error(
+          `Issued id '${revocationStatusList.issuerId}' does not have the same namespace (${namespace}) as the revocation registry definition '${revocationRegistryNamespace}'`
+        )
+      }
+
+      if (revocationRegistryNamespaceIdentifier !== namespaceIdentifier) {
+        throw new Error(
+          `Cannot register revocation registry definition using a different DID. Revocation registry definition contains '${revocationRegistryNamespaceIdentifier}', but DID used was '${namespaceIdentifier}'`
+        )
+      }
+
+      const revocationRegistryDefinitionRequest = {
+        currentAccumulator: revocationStatusList.currentAccumulator,
+        revocationList: revocationStatusList.revocationList,
+        revRegDefId: revocationStatusList.revRegDefId,
+      }
+      const cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(revocationRegistryDefinitionRequest), 'utf8'))
+
+      // if (endorsedTransaction) {
+      //   agentContext.config.logger.debug(
+      //     `Preparing endorsed tx '${endorsedTransaction}' for submission on ledger '${namespace}' with did '${revocationStatusList.issuerId}'`,
+      //     revocationStatusList
+      //   )
+
+      //   writeRequest = new CustomRequest({ customRequest: endorsedTransaction })
+      // } else {
+      //   const previousDelta = await this.fetchIndyRevocationDelta(
+      //     agentContext,
+      //     legacyRevocationRegistryDefinitionId,
+      //     // Fetch revocation delta for current timestamp
+      //     dateToTimestamp(new Date())
+      //   )
+
+      //   const revocationRegistryDefinitionEntryValue = indyVdrCreateLatestRevocationDelta(
+      //     revocationStatusList.currentAccumulator,
+      //     revocationStatusList.revocationList,
+      //     previousDelta ?? undefined
+      //   )
+
+      //   const revocationRegistryDefinitionRequest = new RevocationRegistryEntryRequest({
+      //     submitterDid: namespaceIdentifier,
+      //     revocationRegistryEntry: {
+      //       ver: '1.0',
+      //       value: revocationRegistryDefinitionEntryValue,
+      //     },
+      //     revocationRegistryDefinitionType: 'CL_ACCUM',
+      //     revocationRegistryDefinitionId: legacyRevocationRegistryDefinitionId,
+      //   })
+
+      //   const submitterKey = await verificationKeyForIndyDid(agentContext, revocationStatusList.issuerId)
+      //   writeRequest = await pool.prepareWriteRequest(
+      //     agentContext,
+      //     revocationRegistryDefinitionRequest,
+      //     submitterKey,
+      //     endorserDid !== revocationStatusList.issuerId ? endorserDid : undefined
+      //   )
+
+      //   if (endorserMode === 'external') {
+      //     return {
+      //       jobId: didIndyRevocationRegistryEntryId,
+      //       revocationStatusListState: {
+      //         state: 'action',
+      //         action: 'endorseIndyTransaction',
+      //         revocationStatusList,
+      //         revocationStatusListRequest: writeRequest.body,
+      //       },
+      //       registrationMetadata: {},
+      //       revocationStatusListMetadata: {},
+      //     }
+      //   }
+
+      //   if (endorserMode === 'internal' && endorserDid !== revocationStatusList.issuerId) {
+      //     const endorserKey = await verificationKeyForIndyDid(agentContext, endorserDid as string)
+      //     await multiSignRequest(agentContext, writeRequest, endorserKey, parseIndyDid(endorserDid).namespaceIdentifier)
+      //   }
+      // }
       // const response = await pool.submitRequest<RevocationRegistryEntryRequest>(
       //   writeRequest as RevocationRegistryEntryRequest
       // )
+      agentContext.config.logger.debug(`Registered revocation status list '${cid}' on IPFS`, {
+        cid,
+        revocationStatusList,
+      })
       return {
-        revocationStatusListMetadata: {},
+        revocationStatusListMetadata: { cid: cid }, //we need to somehow return the cid ...how?
         revocationStatusListState: {
           revocationStatusList: {
             ...revocationStatusList,
-            timestamp: dateToTimestamp(new Date()), //response.result.txnMetadata.txnTime, //do we keep this?
+            timestamp: dateToTimestamp(new Date()), //response.result.txnMetadata.txnTime, //credo-ts
           },
           state: 'finished',
         },
@@ -261,11 +463,10 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
         revocationStatusListState: {
           revocationStatusList,
           state: 'failed',
-          reason: `unknownError: ${error.message}`,
+          reason: `unknownError: ${error}`,
         },
       }
     }
-    throw new Error('Method not implemented.')
   }
 
   public async getRevocationRegistryDefinition(
@@ -273,6 +474,82 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     revocationRegistryDefinitionId: string
   ): Promise<GetRevocationRegistryDefinitionReturn> {
     try {
+      // const indySdkPoolService = agentContext.dependencyManager.resolve(IndyVdrPoolService)
+
+      // const { did, namespaceIdentifier, credentialDefinitionTag, revocationRegistryTag, schemaSeqNo } =
+      //   parseIndyRevocationRegistryId(revocationRegistryDefinitionId)
+      // const { pool } = await indySdkPoolService.getPoolForDid(agentContext, did)
+
+      // agentContext.config.logger.debug(
+      //   `Using ledger '${pool.indyNamespace}' to retrieve revocation registry definition '${revocationRegistryDefinitionId}'`
+      // )
+
+      // const legacyRevocationRegistryId = getUnqualifiedRevocationRegistryDefinitionId(
+      //   namespaceIdentifier,
+      //   schemaSeqNo,
+      //   credentialDefinitionTag,
+      //   revocationRegistryTag
+      // )
+      // const request = new GetRevocationRegistryDefinitionRequest({
+      //   revocationRegistryId: legacyRevocationRegistryId,
+      // })
+
+      // agentContext.config.logger.trace(
+      //   `Submitting get revocation registry definition request for revocation registry definition '${revocationRegistryDefinitionId}' to ledger`
+      // )
+      // const response = await pool.submitRequest(request)
+
+      // if (!response.result.data) {
+      //   agentContext.config.logger.error(
+      //     `Error retrieving revocation registry definition '${revocationRegistryDefinitionId}' from ledger`,
+      //     {
+      //       revocationRegistryDefinitionId,
+      //     }
+      //   )
+
+      //   return {
+      //     resolutionMetadata: {
+      //       error: 'notFound',
+      //       message: 'unable to resolve revocation registry definition',
+      //     },
+      //     revocationRegistryDefinitionId,
+      //     revocationRegistryDefinitionMetadata: {},
+      //   }
+      // }
+
+      // agentContext.config.logger.trace(
+      //   `Got revocation registry definition '${revocationRegistryDefinitionId}' from ledger '${pool.indyNamespace}'`,
+      //   {
+      //     response,
+      //   }
+      // )
+
+      // const credentialDefinitionId = revocationRegistryDefinitionId.startsWith('did:indy:')
+      //   ? getDidIndyCredentialDefinitionId(
+      //       pool.indyNamespace,
+      //       namespaceIdentifier,
+      //       schemaSeqNo,
+      //       credentialDefinitionTag
+      //     )
+      //   : getUnqualifiedCredentialDefinitionId(namespaceIdentifier, schemaSeqNo, credentialDefinitionTag)
+
+      // const revocationRegistryDefinition = {
+      //   issuerId: did,
+      //   revocDefType: response.result.data.revocDefType,
+      //   value: {
+      //     maxCredNum: response.result.data.value.maxCredNum,
+      //     tailsHash: response.result.data.value.tailsHash,
+      //     tailsLocation: response.result.data.value.tailsLocation,
+      //     publicKeys: {
+      //       accumKey: {
+      //         z: response.result.data.value.publicKeys.accumKey.z,
+      //       },
+      //     },
+      //   },
+      //   tag: response.result.data.tag,
+      //   credDefId: credentialDefinitionId,
+      // } satisfies AnonCredsRevocationRegistryDefinition
+
       const result = await this.getAnonCredsObj<AnonCredsRevocationRegistryDefinition>(
         agentContext,
         revocationRegistryDefinitionId
@@ -284,6 +561,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
           resolutionMetadata: result.error,
           revocationRegistryDefinitionMetadata: {},
         }
+        throw new Error(`${res}`)
       } else {
         res = {
           revocationRegistryDefinition: result.result,
@@ -331,7 +609,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
       return {
         resolutionMetadata: {
           error: 'notFound',
-          message: `unable to resolve revocation registry definition: ${error.message}`,
+          message: `unable to resolve revocation registry definition: ${error}`,
         },
         revocationRegistryDefinitionId,
         revocationRegistryDefinitionMetadata: {},
@@ -345,72 +623,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     revocationRegistryDefinitionId: string,
     timestamp: number
   ): Promise<GetRevocationStatusListReturn> {
-    try {
-      //finish up fetch delta
-      const revocationDelta = await this.fetchIndyRevocationDelta(
-        agentContext,
-        revocationRegistryDefinitionId,
-        timestamp
-      )
-
-      if (!revocationDelta) {
-        return {
-          resolutionMetadata: {
-            error: 'notFound',
-            message: `Error retrieving revocation registry delta '${revocationRegistryDefinitionId}' from ledger, potentially revocation interval ends before revocation registry creation`,
-          },
-          revocationStatusListMetadata: {},
-        }
-      }
-      const { revocationRegistryDefinition, resolutionMetadata, revocationRegistryDefinitionMetadata } =
-        await this.getRevocationRegistryDefinition(agentContext, revocationRegistryDefinitionId)
-      if (
-        !revocationRegistryDefinition ||
-        !revocationRegistryDefinitionMetadata.issuanceType ||
-        typeof revocationRegistryDefinitionMetadata.issuanceType !== 'string'
-      ) {
-        return {
-          resolutionMetadata: {
-            error: `error resolving revocation registry definition with id ${revocationRegistryDefinitionId}: ${resolutionMetadata.error} ${resolutionMetadata.message}`,
-          },
-          revocationStatusListMetadata: {
-            // didIndyNamespace: pool.indyNamespace,
-          },
-        }
-      }
-      const isIssuanceByDefault = revocationRegistryDefinitionMetadata.issuanceType === 'ISSUANCE_BY_DEFAULT'
-
-      return {
-        resolutionMetadata: {},
-        revocationStatusList: await this.anonCredsRevocationStatusListFromIPFS(
-          revocationRegistryDefinitionId,
-          revocationRegistryDefinition,
-          revocationDelta,
-          isIssuanceByDefault
-        ),
-        revocationStatusListMetadata: {
-          // not sure if we need this param?
-          // didIndyNamespace: pool.indyNamespace,
-        },
-      }
-    } catch (error) {
-      agentContext.config.logger.error(
-        `Error retrieving revocation registry delta '${revocationRegistryDefinitionId}' from ledger, potentially revocation interval ends before revocation registry creation?"`,
-        {
-          error,
-          revocationRegistryId: revocationRegistryDefinitionId,
-        }
-      )
-
-      return {
-        resolutionMetadata: {
-          error: 'notFound',
-          message: `Error retrieving revocation registry delta '${revocationRegistryDefinitionId}' from ledger, potentially revocation interval ends before revocation registry creation: ${error.message}`,
-        },
-        revocationStatusListMetadata: {},
-      }
-    }
-    throw new Error('Not implemented yet')
+    throw new Error(`not implemented`)
   }
 
   private async getAnonCredsObj<AObj>(
@@ -473,116 +686,43 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     }
   }
 
-  private async anonCredsRevocationStatusListFromIPFS(
-    revocationRegistryDefinitionId: string,
-    revocationRegistryDefinition: AnonCredsRevocationRegistryDefinition,
-    delta: RevocationRegistryDelta,
-    isIssuanceByDefault: boolean
-  ): Promise<AnonCredsRevocationStatusList> {
-    // Check whether the highest delta index is supported in the `maxCredNum` field of the
-    // revocation registry definition. This will likely also be checked on other levels as well
-    // by the ledger or the indy-vdr library itself
-    if (Math.max(...delta.issued, ...delta.revoked) >= revocationRegistryDefinition.value.maxCredNum) {
-      throw new Error(
-        `Highest delta index '${Math.max(
-          ...delta.issued,
-          ...delta.revoked
-        )}' is too large for the Revocation registry maxCredNum '${revocationRegistryDefinition.value.maxCredNum}' `
-      )
-    }
-
-    // 0 means unrevoked, 1 means revoked
-    const defaultState = isIssuanceByDefault ? RevocationState.Active : RevocationState.Revoked
-
-    // Fill with default value
-    const revocationList = new Array(revocationRegistryDefinition.value.maxCredNum).fill(defaultState)
-
-    // Set all `issuer` indexes to 0 (not revoked)
-    for (const issued of delta.issued ?? []) {
-      revocationList[issued] = RevocationState.Active
-    }
-
-    // Set all `revoked` indexes to 1 (revoked)
-    for (const revoked of delta.revoked ?? []) {
-      revocationList[revoked] = RevocationState.Revoked
-    }
-
-    return {
-      issuerId: revocationRegistryDefinition.issuerId,
-      currentAccumulator: delta.accum,
-      revRegDefId: revocationRegistryDefinitionId,
-      revocationList,
-      timestamp: delta.txnTime,
-    }
-  }
-
   private async fetchIndyRevocationDelta(
     agentContext: AgentContext,
     revocationRegistryDefinitionId: string,
     toTs: number
   ): Promise<null | RevocationRegistryDelta> {
+    //   const { did, namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag } =
+    //     await this.veritableIdentifiers.parseRevocationRegistryId(revocationRegistryDefinitionId, this.ipfsIdentifier)
 
-    const { did, namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag } = 
-    await this.parseRevocationRegistryId(revocationRegistryDefinitionId)
+    //   agentContext.config.logger.debug(
+    //     `Using IPFS to retrieve revocation registry deltas with revocation registry definition id '${revocationRegistryDefinitionId}' until ${toTs}`
+    //   )
+    //   const legacyRevocationRegistryDefinitionId = this.veritableIdentifiers.getUnqualifiedRevocationRegistryDefinitionId(
+    //     namespaceIdentifier,
+    //     schemaSeqNo,
+    //     credentialDefinitionTag,
+    //     revocationRegistryTag
+    //   )
+    //   const deltaRequest = new GetRevocationRegistryDeltaRequest({
+    //     toTs,
+    //     submitterDid: namespaceIdentifier,
+    //     revocationRegistryId: legacyRevocationRegistryDefinitionId,
+    //   })
 
-    agentContext.config.logger.debug(
-      `Using IPFS to retrieve revocation registry deltas with revocation registry definition id '${revocationRegistryDefinitionId}' until ${toTs}`
-    )
+    //   // Indicating there are no deltas
+    //   if (type !== '117' || data === null || !txnTime) {
+    //     agentContext.config.logger.warn(
+    //       `Could not get any deltas from ledger for revocation registry definition '${revocationRegistryDefinitionId}' from ledger '${pool.indyNamespace}'`
+    //     )
+    //     return null
+    //   }
 
-    // Indicating there are no deltas
-    if (type !== '117' || data === null || !txnTime) {
-      agentContext.config.logger.warn(
-        `Could not get any deltas from ledger for revocation registry definition '${revocationRegistryDefinitionId}' from ledger '${pool.indyNamespace}'`
-      )
-      return null
-    }
-
-    return {
-      revoked: data.value.revoked,
-      issued: data.value.issued,
-      accum: data.value.accum_to.value.accum,
-      txnTime,
-    }
+    //   return {
+    //     revoked: data.value.revoked,
+    //     issued: data.value.issued,
+    //     accum: data.value.accum_to.value.accum,
+    //     txnTime,
+    //   }
+    return null
   }
-  private async parseDid(did: string) {
-    const match = did.match(this.supportedIdentifier)
-    if (match) {
-      const [, namespace, namespaceIdentifier] = match
-      return { namespace, namespaceIdentifier }
-    } else {
-      throw new Error(`${did} is not a valid did:key or did:web did`)
-    }
-  }
-
- 
-  private async parseRevocationRegistryId(revocationRegistryId: string): Promise<ParsedRevocationRegistryId> {
-    const didIndyMatch = revocationRegistryId.match(this.ipfsIdentifier) //should this be matching sth else than below? 
-    if (didIndyMatch) {
-      const [, did, namespace, namespaceIdentifier, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag] =
-        didIndyMatch
-  
-      return {
-        did,
-        namespaceIdentifier,
-        schemaSeqNo,
-        credentialDefinitionTag,
-        revocationRegistryTag,
-        namespace,
-      }
-    }
-  
-    const legacyMatch = revocationRegistryId.match(this.ipfsIdentifier) //should this be asth else than above? 
-    if (legacyMatch) {
-      const [, did, schemaSeqNo, credentialDefinitionTag, revocationRegistryTag] = legacyMatch
-  
-      return {
-        did,
-        namespaceIdentifier: did,
-        schemaSeqNo,
-        credentialDefinitionTag,
-        revocationRegistryTag,
-      }
-    }
-  
-    throw new Error(`Invalid revocation registry id: ${revocationRegistryId}`)
 }

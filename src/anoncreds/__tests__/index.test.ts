@@ -4,6 +4,7 @@ import { expect } from 'chai'
 import { withHappyIpfs, withIpfsErrors, exampleCid, exampleContent } from './fixtures/ipfs'
 import { withMockedAgentContext } from './fixtures/agentContext'
 import VeritableAnonCredsRegistry from '..'
+import { RegisterRevocationRegistryDefinitionOptions } from '@aries-framework/anoncreds/build/services/registry'
 
 describe('VeritableAnonCredsRegistry', function () {
   describe('methodName', function () {
@@ -297,6 +298,51 @@ describe('VeritableAnonCredsRegistry', function () {
           reason: `invalid`,
         },
       })
+    })
+  })
+
+  // =====REVOCATION=========
+  describe.only('registerRevocationRegistryDefinition', function () {
+    const revocRegisterOptions: RegisterRevocationRegistryDefinitionOptions = {
+      revocationRegistryDefinition: {
+        issuerId: 'did:key:1234',
+        revocDefType: 'CL_ACCUM',
+        credDefId: `ipfs://${exampleCid}`,
+        tag: '1',
+        value: {
+          publicKeys: {
+            accumKey: {
+              z: `some_key`,
+            },
+          },
+          maxCredNum: 20,
+          tailsLocation: `some/tails/location`,
+          tailsHash: ``,
+        },
+      },
+      options: {},
+    }
+
+    it.only('should upload the revocation registry definition to IPFS and return the positive response containing a cid', async function () {
+      const agentContext = withMockedAgentContext()
+      const ipfs = withHappyIpfs()
+      const registry = new VeritableAnonCredsRegistry(ipfs)
+
+      const result = await registry.registerRevocationRegistryDefinition(agentContext, revocRegisterOptions)
+      console.log(result)
+      expect(result).to.deep.equal({
+        revocationRegistryDefinitionMetadata: {},
+        revocationRegistryDefinitionState: {
+          revocationRegistryDefinition: revocRegisterOptions.revocationRegistryDefinition,
+          revocationRegistryDefinitionId: `ipfs://${exampleCid}`,
+          state: 'finished',
+        },
+        registrationMetadata: {},
+      })
+      expect(ipfs.uploadFile.callCount).to.equal(1)
+      expect(ipfs.uploadFile.firstCall.args).to.deep.equal([
+        Buffer.from(JSON.stringify(revocRegisterOptions.revocationRegistryDefinition), 'utf8'),
+      ])
     })
   })
 })
