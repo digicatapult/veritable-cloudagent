@@ -13,7 +13,8 @@
     },
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["mocha", "node"]
+    "types": ["mocha", "node"],
+    "noEmitOnError": false
   },
   "exclude": ["node_modules", "build"]
 }
