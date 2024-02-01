@@ -137,6 +137,7 @@ export async function runCliServer() {
     webhookUrl: parsed['webhook-url'],
     adminPort: parsed['admin-port'],
     ipfsOrigin: parsed['ipfs-origin'],
+    opaOrigin: parsed['opa-origin'],
     personaTitle: parsed['persona-title'],
     personaColor: parsed['persona-color'],
   } as AriesRestConfig)

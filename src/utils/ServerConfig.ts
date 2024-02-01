@@ -10,4 +10,5 @@ export interface ServerConfig {
   socketServer?: Server
   personaTitle?: string
   personaColor?: string
+  opaOrigin?: string
 }
