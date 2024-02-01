@@ -7,8 +7,6 @@ interface ParsedRevocationRegistryId {
   namespace?: string
 }
 export default class VeritableIdentifiers {
-  constructor() {}
-
   // TZQuLp43UcYTdtc3HewcDz:4:TZQuLp43UcYTdtc3HewcDz:3:CL:98158:BaustellenzertifikateNU1:CL_ACCUM:1-100
   public async getUnqualifiedRevocationRegistryDefinitionId(
     unqualifiedDid: string,

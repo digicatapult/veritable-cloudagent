@@ -1,28 +1,28 @@
 import {
-  type AnonCredsRegistry,
-  type GetCredentialDefinitionReturn,
-  type GetRevocationStatusListReturn,
-  type GetRevocationRegistryDefinitionReturn,
-  type GetSchemaReturn,
-  type RegisterCredentialDefinitionReturn,
-  type RegisterSchemaReturn,
-  type AnonCredsSchema,
-  type RegisterSchemaOptions,
-  type AnonCredsResolutionMetadata,
-  type AnonCredsCredentialDefinition,
-  type RegisterCredentialDefinitionOptions,
-  type RegisterRevocationRegistryDefinitionOptions,
-  type RegisterRevocationRegistryDefinitionReturn,
-  type RegisterRevocationStatusListOptions,
-  type RegisterRevocationStatusListReturn,
-  type AnonCredsRevocationRegistryDefinition,
+  AnonCredsRegistry,
+  GetCredentialDefinitionReturn,
+  GetRevocationStatusListReturn,
+  GetRevocationRegistryDefinitionReturn,
+  GetSchemaReturn,
+  RegisterCredentialDefinitionReturn,
+  RegisterSchemaReturn,
+  AnonCredsSchema,
+  RegisterSchemaOptions,
+  AnonCredsResolutionMetadata,
+  AnonCredsCredentialDefinition,
+  RegisterCredentialDefinitionOptions,
+  RegisterRevocationRegistryDefinitionOptions,
+  RegisterRevocationRegistryDefinitionReturn,
+  RegisterRevocationStatusListOptions,
+  RegisterRevocationStatusListReturn,
+  AnonCredsRevocationRegistryDefinition,
   dateToTimestamp,
-  AnonCredsRevocationStatusList,
+  // AnonCredsRevocationStatusList,
 } from '@aries-framework/anoncreds'
 import Ipfs from '../ipfs'
 import type { AgentContext } from '@aries-framework/core'
 import VeritableIdentifiers from './utils/identifiers'
-import { anonCredsRevocationStatusListFromIPFS } from './utils/transform'
+// import { anonCredsRevocationStatusListFromIPFS } from './utils/transform'
 
 export type RevocationRegistryDelta = {
   accum: string
@@ -30,10 +30,10 @@ export type RevocationRegistryDelta = {
   revoked: number[]
   txnTime: number
 }
-enum RevocationState {
-  Active,
-  Revoked,
-}
+// enum RevocationState {
+//   Active,
+//   Revoked,
+// }
 
 export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   public readonly methodName = 'veritable'
@@ -586,7 +586,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
         },
         tag: res.revocationRegistryDefinition.tag,
         credDefId: res.revocationRegistryDefinition.credentialDefinitionId,
-      } satisfies AnonCredsRevocationRegistryDefinition
+      } as AnonCredsRevocationRegistryDefinition
       return {
         revocationRegistryDefinitionId,
         revocationRegistryDefinition,
@@ -618,11 +618,10 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   }
 
   // FIXME: this method doesn't retrieve the revocation status list at a specified time, it just resolves the revocation registry definition
-  public async getRevocationStatusList(
-    agentContext: AgentContext,
-    revocationRegistryDefinitionId: string,
-    timestamp: number
-  ): Promise<GetRevocationStatusListReturn> {
+  public async getRevocationStatusList(): // agentContext: AgentContext,
+  // revocationRegistryDefinitionId: string,
+  // timestamp: number
+  Promise<GetRevocationStatusListReturn> {
     throw new Error(`not implemented`)
   }
 
