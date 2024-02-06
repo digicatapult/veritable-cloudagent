@@ -4,12 +4,12 @@ import type { ServerConfig } from './utils/ServerConfig.js'
 import type { Agent } from '@aries-framework/core'
 import type { Socket } from 'net'
 
-import { Server } from 'ws'
+import WebSocketServer from 'ws'
 
 import { setupServer } from './server.js'
 
 export const startServer = async (agent: Agent, config: ServerConfig) => {
-  const socketServer = config.socketServer ?? new Server({ noServer: true })
+  const socketServer = config.socketServer ?? new WebSocketServer.Server({ noServer: true })
   const app = await setupServer(agent, { ...config, socketServer })
   const server = app.listen(config.port)
 

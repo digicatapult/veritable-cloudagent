@@ -24,7 +24,7 @@ import {
   getTestOutOfBandLegacyInvitation,
   getTestOutOfBandRecord,
   objectToJson,
-} from './utils/helpers'
+} from './utils/helpers.js'
 
 describe('OutOfBandController', () => {
   let app: Express

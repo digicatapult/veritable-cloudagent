@@ -57,7 +57,7 @@ describe('policy agent', function () {
     it('should return allow true', async function () {
       const policyAgent = new PolicyAgent(origin)
       const result = await policyAgent.evaluate(examplePackageId, {})
-      expect(result.allow).to.equal(true)
+      expect(result).to.deep.equal({ allow: true })
     })
   })
 })
