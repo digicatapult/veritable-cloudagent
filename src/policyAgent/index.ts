@@ -34,7 +34,7 @@ export default class PolicyAgent {
       throw new HttpResponse({ message: `Error calling Policy Agent` })
     }
 
-    const { result } = await response.json()
+    const { result } = (await response.json()) as { result: Policy[] }
     return result
   }
 
@@ -42,7 +42,7 @@ export default class PolicyAgent {
     const response = await fetch(`${this.origin}/v1/policies/${id}`)
 
     if (response.ok) {
-      const { result } = await response.json()
+      const { result } = (await response.json()) as { result: Policy }
       return result
     }
 
@@ -65,7 +65,7 @@ export default class PolicyAgent {
     })
 
     if (response.ok) {
-      const { result } = await response.json()
+      const { result } = (await response.json()) as { result: object }
       return result
     }
 
