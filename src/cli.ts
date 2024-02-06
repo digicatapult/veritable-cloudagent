@@ -110,6 +110,10 @@ const parsed = yargs
     string: true,
     default: 'white',
   })
+  .option('opa-origin', {
+    string: true,
+    default: 'http://localhost:8181',
+  })
 
   .config()
   .env('AFJ_REST')
