@@ -1,4 +1,4 @@
-import { addResponseParser } from './responseParser'
+import { addResponseParser } from './responseParser.js'
 
 export interface MetadataFile {
   blob: Blob

@@ -5,8 +5,8 @@ import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } fro
 import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { CredentialExchangeRecordExample, RecordId } from '../examples'
-import { HttpResponse, NotFound } from '../../error'
+import { CredentialExchangeRecordExample, RecordId } from '../examples.js'
+import { HttpResponse, NotFound } from '../../error.js'
 import {
   AcceptCredentialRequestOptions,
   OfferCredentialOptions,
@@ -14,7 +14,7 @@ import {
   AcceptCredentialProposalOptions,
   AcceptCredentialOfferOptions,
   CreateOfferOptions,
-} from '../types'
+} from '../types.js'
 
 @Tags('Credentials')
 @Route('/credentials')

@@ -6,7 +6,7 @@ import type { Socket } from 'net'
 
 import { Server } from 'ws'
 
-import { setupServer } from './server'
+import { setupServer } from './server.js'
 
 export const startServer = async (agent: Agent, config: ServerConfig) => {
   const socketServer = config.socketServer ?? new Server({ noServer: true })

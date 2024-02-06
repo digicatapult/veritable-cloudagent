@@ -11,9 +11,12 @@
       "@src/*": ["./src/*"],
       "@schema/*": ["./schema/*"]
     },
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "types": ["mocha", "node"]
+    "types": ["mocha", "node"],
+    "module": "ESNext",
   },
-  "exclude": ["node_modules", "build"]
+  "exclude": ["node_modules", "build", "**/*.test.ts", "test", "**/__test__", "**/__tests__"],
+  "include": ["src/**/*.ts", "src/swagger.json"]
 }

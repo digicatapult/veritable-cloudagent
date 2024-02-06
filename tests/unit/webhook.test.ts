@@ -2,7 +2,7 @@
 import { describe, before, after, test } from 'mocha'
 import { expect } from 'chai'
 
-import type { WebhookData } from '@src/utils/webhook'
+import type { WebhookData } from '../../src/utils/webhook.js'
 import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@aries-framework/core'
 import type { Server } from 'net'
 
@@ -15,10 +15,10 @@ import {
   CredentialEventTypes,
 } from '@aries-framework/core'
 
-import { setupServer } from '@src/server'
-import { waitForHook, webhookListener } from '@src/utils/webhook'
+import { setupServer } from '../../src/server.js'
+import { waitForHook, webhookListener } from '../../src/utils/webhook.js'
 
-import { getTestAgent } from './utils/helpers'
+import { getTestAgent } from './utils/helpers.js'
 
 describe('WebhookTests', () => {
   let aliceAgent: Agent
@@ -114,7 +114,7 @@ describe('WebhookTests', () => {
   })
 
   after(async () => {
-    await new Promise(r => setTimeout(r, 2000))
+    await new Promise((r) => setTimeout(r, 2000))
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()

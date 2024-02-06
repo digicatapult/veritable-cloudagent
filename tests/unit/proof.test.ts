@@ -3,7 +3,7 @@ import type {
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
-} from '@src/controllers/types'
+} from '../../src/controllers/types.js'
 import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
 import type { Server } from 'net'
 
@@ -16,9 +16,9 @@ import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofState } from '
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '@src'
+import { startServer } from '../../src/index.js'
 
-import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers'
+import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers.js'
 
 chaiUse(chaiAssertionsCount)
 

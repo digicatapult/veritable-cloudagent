@@ -3,8 +3,8 @@ import type { Agent, BasicMessageStateChangedEvent } from '@aries-framework/core
 
 import { BasicMessageEventTypes } from '@aries-framework/core'
 
-import { sendWebSocketEvent } from './WebSocketEvents'
-import { sendWebhookEvent } from './WebhookEvent'
+import { sendWebSocketEvent } from './WebSocketEvents.js'
+import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const basicMessageEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(BasicMessageEventTypes.BasicMessageStateChanged, async (event: BasicMessageStateChangedEvent) => {

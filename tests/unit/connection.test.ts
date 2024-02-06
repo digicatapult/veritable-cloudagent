@@ -10,9 +10,8 @@ import { ConnectionEventTypes, ConnectionRepository } from '@aries-framework/cor
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '@src'
-
-import { getTestConnection, getTestAgent, objectToJson } from './utils/helpers'
+import { startServer } from '../../src/index.js'
+import { getTestConnection, getTestAgent, objectToJson } from './utils/helpers.js'
 
 chaiUse(chaiAssertionsCount)
 

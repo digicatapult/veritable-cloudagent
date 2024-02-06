@@ -8,6 +8,7 @@
   },
   "routes": {
     "routesDir": "src/routes",
-    "iocModule": "./src/utils/tsyringeTsoaIocContainer"
+    "iocModule": "./src/utils/tsyringeTsoaIocContainer",
+    "esm": true
   }
 }

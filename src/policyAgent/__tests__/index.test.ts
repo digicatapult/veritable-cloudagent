@@ -1,7 +1,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import PolicyAgent from '..'
-import { withGetPoliciesResponse, withGetPolicyResponse, withEvaluateResponse } from './fixtures/mock'
+
+import PolicyAgent from '../index.js'
+import { withGetPoliciesResponse, withGetPolicyResponse, withEvaluateResponse } from './fixtures/mock.js'
 
 const exampleId = 'example.rego'
 const examplePackageId = 'example'

@@ -1,8 +1,8 @@
 import { singleton } from 'tsyringe'
 import { LogLevel } from '@aries-framework/core'
 
-import { TsLogger } from '../utils/logger'
-import { HttpResponse, NotFound } from '../error'
+import { TsLogger } from '../utils/logger.js'
+import { HttpResponse, NotFound } from '../error.js'
 
 type Policy = {
   id: string

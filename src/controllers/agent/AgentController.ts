@@ -1,9 +1,8 @@
-import type { AgentInfo } from '../types'
-
 import { Agent } from '@aries-framework/core'
 import { Controller, Get, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import type { AgentInfo } from '../types.js'
 @Tags('Agent')
 @Route('/agent')
 @injectable()

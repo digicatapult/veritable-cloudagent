@@ -1,10 +1,11 @@
-import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent'
+import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent.js'
 
 import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
-import { runRestAgent } from './cliAgent'
+import { runRestAgent } from './cliAgent.js'
 
-const parsed = yargs
+const parsed = yargs(hideBin(process.argv))
   .command('start', 'Start AFJ Rest agent')
   .option('label', {
     alias: 'l',

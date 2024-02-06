@@ -10,8 +10,8 @@ import {
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { ConnectionRecordExample, RecordId } from '../examples'
-import { HttpResponse, NotFound } from '../../error'
+import { ConnectionRecordExample, RecordId } from '../examples.js'
+import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Connections')
 @Route('/connections')

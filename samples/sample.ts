@@ -23,3 +23,8 @@ const run = async () => {
 }
 
 run()
+
+const protocolsArray = { protocols: [{ name: string }] }
+protocolsArray.protocols.find((p) => {
+  p.name === testCastDescriptorProtocol
+})

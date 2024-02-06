@@ -10,9 +10,8 @@ import { BasicMessageEventTypes } from '@aries-framework/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '@src'
-
-import { getTestAgent, objectToJson } from './utils/helpers'
+import { startServer } from '../../src/index.js'
+import { getTestAgent, objectToJson } from './utils/helpers.js'
 
 describe('BasicMessageController', () => {
   let server: Server

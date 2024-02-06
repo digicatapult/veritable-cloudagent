@@ -3,8 +3,8 @@ import type { Agent, CredentialStateChangedEvent } from '@aries-framework/core'
 
 import { CredentialEventTypes } from '@aries-framework/core'
 
-import { sendWebSocketEvent } from './WebSocketEvents'
-import { sendWebhookEvent } from './WebhookEvent'
+import { sendWebSocketEvent } from './WebSocketEvents.js'
+import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(CredentialEventTypes.CredentialStateChanged, async (event: CredentialStateChangedEvent) => {

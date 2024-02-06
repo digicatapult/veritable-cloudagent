@@ -11,9 +11,9 @@ import {
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
 import { readFile } from 'fs/promises'
 
-import { setupServer } from './server'
-import { getAgentModules, RestAgent } from './utils/agent'
-import { TsLogger } from './utils/logger'
+import { setupServer } from './server.js'
+import { getAgentModules, RestAgent } from './utils/agent.js'
+import { TsLogger } from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
