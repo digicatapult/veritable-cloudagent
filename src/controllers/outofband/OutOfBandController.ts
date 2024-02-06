@@ -1,5 +1,10 @@
-import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps } from '../examples.js'
-import type { AgentMessageType } from '../types.js'
+import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps, RecordId } from '../examples.js'
+import type {
+  AgentMessageType,
+  ReceiveInvitationProps,
+  ReceiveInvitationByUrlProps,
+  AcceptInvitationConfig,
+} from '../types.js'
 import type {
   ConnectionRecordProps,
   CreateOutOfBandInvitationConfig,
@@ -11,8 +16,7 @@ import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFou
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample, RecordId } from '../examples.js'
-import { AcceptInvitationConfig, ReceiveInvitationByUrlProps, ReceiveInvitationProps } from '../types.js'
+import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample } from '../examples.js'
 import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Out Of Band')

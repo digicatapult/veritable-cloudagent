@@ -14,7 +14,7 @@ import {
   ConnectionInvitationMessage,
   DidDocument,
 } from '@aries-framework/core'
-import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder'
+import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
 
 import { setupAgent } from '../../../src/utils/agent.js'

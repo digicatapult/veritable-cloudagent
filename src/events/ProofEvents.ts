@@ -1,4 +1,4 @@
-import type { ServerConfig } from '../utils/ServerConfig'
+import type { ServerConfig } from '../utils/ServerConfig.js'
 import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
 
 import { ProofEventTypes } from '@aries-framework/core'

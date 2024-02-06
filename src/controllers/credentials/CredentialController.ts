@@ -1,20 +1,21 @@
-import type { RestAgent } from '../../utils/agent'
+import type { RestAgent } from '../../utils/agent.js'
 import type { CredentialExchangeRecordProps } from '@aries-framework/core'
+import type { RecordId } from '../examples.js'
+import type {
+  ProposeCredentialOptions,
+  AcceptCredentialProposalOptions,
+  CreateOfferOptions,
+  AcceptCredentialRequestOptions,
+  AcceptCredentialOfferOptions,
+  OfferCredentialOptions,
+} from '../types.js'
 
 import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
 import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { CredentialExchangeRecordExample, RecordId } from '../examples.js'
+import { CredentialExchangeRecordExample } from '../examples.js'
 import { HttpResponse, NotFound } from '../../error.js'
-import {
-  AcceptCredentialRequestOptions,
-  OfferCredentialOptions,
-  ProposeCredentialOptions,
-  AcceptCredentialProposalOptions,
-  AcceptCredentialOfferOptions,
-  CreateOfferOptions,
-} from '../types.js'
 
 @Tags('Credentials')
 @Route('/credentials')
@@ -47,7 +48,7 @@ export class CredentialController extends Controller {
       state,
     })
 
-    return credentials.map((c) => c.toJSON())
+    return credentials.map((c: any) => c.toJSON())
   }
 
   /**

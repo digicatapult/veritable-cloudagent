@@ -1,4 +1,5 @@
 import type { ConnectionRecordProps } from '@aries-framework/core'
+import type { RecordId } from '../examples.js'
 
 import {
   ConnectionRepository,
@@ -10,7 +11,7 @@ import {
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { ConnectionRecordExample, RecordId } from '../examples.js'
+import { ConnectionRecordExample } from '../examples.js'
 import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Connections')

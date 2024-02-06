@@ -1,4 +1,4 @@
-import type { ServerConfig } from '../utils/ServerConfig'
+import type { ServerConfig } from '../utils/ServerConfig.js'
 import type { Agent, CredentialStateChangedEvent } from '@aries-framework/core'
 
 import { CredentialEventTypes } from '@aries-framework/core'

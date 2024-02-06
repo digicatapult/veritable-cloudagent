@@ -1,10 +1,11 @@
 import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../types.js'
+import type { Did } from '../examples.js'
 
 import { Agent, AriesFrameworkError, TypedArrayEncoder } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { Did, DidRecordExample, DidStateExample } from '../examples.js'
+import { DidRecordExample, DidStateExample } from '../examples.js'
 import { HttpResponse, BadRequest } from '../../error.js'
 
 @Tags('Dids')

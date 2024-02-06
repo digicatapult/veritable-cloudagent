@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 
-import type { ServerConfig } from './utils/ServerConfig'
+import type { ServerConfig } from './utils/ServerConfig.js'
 import type { Agent } from '@aries-framework/core'
 import type { Socket } from 'net'
 

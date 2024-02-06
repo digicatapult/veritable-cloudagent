@@ -1,4 +1,4 @@
-import type { ServerConfig } from '../utils/ServerConfig'
+import type { ServerConfig } from '../utils/ServerConfig.js'
 import type { Agent, BasicMessageStateChangedEvent } from '@aries-framework/core'
 
 import { BasicMessageEventTypes } from '@aries-framework/core'
