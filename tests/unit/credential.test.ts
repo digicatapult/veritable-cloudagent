@@ -504,6 +504,7 @@ describe('CredentialController', () => {
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
+        outOfBandRecord,
       })
 
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)

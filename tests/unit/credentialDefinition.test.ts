@@ -156,6 +156,7 @@ describe('CredentialDefinitionController', () => {
         issuerId: testCredDef.issuerId,
         schemaId: testCredDef.schemaId,
         tag: testCredDef.tag,
+        supportRevocation: false,
       })
 
       const result = await getResult()
@@ -211,6 +212,7 @@ describe('CredentialDefinitionController', () => {
         issuerId: testCredDef.issuerId,
         schemaId: testCredDef.schemaId,
         tag: testCredDef.tag,
+        supportRevocation: false,
       })
 
       expect(responseCredentialDeff.statusCode).to.be.equal(200)

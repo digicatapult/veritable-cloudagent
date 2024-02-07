@@ -302,7 +302,7 @@ describe('VeritableAnonCredsRegistry', function () {
   })
 
   // =====REVOCATION=========
-  describe.only('registerRevocationRegistryDefinition', function () {
+  describe('registerRevocationRegistryDefinition', function () {
     const revocRegisterOptions: RegisterRevocationRegistryDefinitionOptions = {
       revocationRegistryDefinition: {
         issuerId: 'did:key:1234',
@@ -323,13 +323,12 @@ describe('VeritableAnonCredsRegistry', function () {
       options: {},
     }
 
-    it.only('should upload the revocation registry definition to IPFS and return the positive response containing a cid', async function () {
+    it('should upload the revocation registry definition to IPFS and return the positive response containing a cid', async function () {
       const agentContext = withMockedAgentContext()
       const ipfs = withHappyIpfs()
       const registry = new VeritableAnonCredsRegistry(ipfs)
 
       const result = await registry.registerRevocationRegistryDefinition(agentContext, revocRegisterOptions)
-      console.log(result)
       expect(result).to.deep.equal({
         revocationRegistryDefinitionMetadata: {},
         revocationRegistryDefinitionState: {
