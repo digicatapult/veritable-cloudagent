@@ -51,8 +51,8 @@ Bellow you will find commands for starting up the containers in docker (see the 
 The CLI args are defined under `src > cli.ts ` They are used to start up a service.
 | Argument added | Required | Default | Description |
 | :------------- | :------: | :------ | :------- |
-| ipfs-origin | Y | http://ipfs0:5001 | IPFS endpoint |
-|opa-origin |Y |http://opa:8181 |OPA endpoint |
+| ipfs-origin | Y | http://localhost:5001 | IPFS endpoint |
+|opa-origin |N |http://localhost:8181 |OPA endpoint |
 |persona-title | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
 |persona-color |N |"white" |Defines the background colour of swagger documentation|
 
