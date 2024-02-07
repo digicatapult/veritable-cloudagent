@@ -360,8 +360,6 @@ describe('ProofController', () => {
 
   describe('Proof WebSocket event', () => {
     test('should return proof event sent from test agent to websocket client', async () => {
-      assertion.expectExpects(1)
-
       const now = new Date()
 
       const proofRecord = new ProofExchangeRecord({

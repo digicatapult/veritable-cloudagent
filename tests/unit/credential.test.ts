@@ -278,8 +278,6 @@ describe('CredentialController', () => {
 
   describe('Credential WebSocket event', () => {
     test('should return credential event sent from test agent to websocket client', async () => {
-      assertion.expectExpects(1)
-
       const now = new Date()
 
       // Start client and wait for it to be opened

@@ -15,5 +15,5 @@
     "target": "ESNext",
   },
   "exclude": ["node_modules", "build", "**/*.test.ts", "test", "**/__test__", "**/__tests__"],
-  "include": ["src/**/*.ts", "src/swagger.json"]
+  "include": ["src/**/*.ts"]
 }
