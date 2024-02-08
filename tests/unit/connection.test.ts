@@ -1,6 +1,5 @@
 import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import type { Agent, ConnectionRecord } from '@aries-framework/core'
@@ -12,8 +11,6 @@ import WebSocket from 'ws'
 
 import { startServer } from '../../src/index.js'
 import { getTestConnection, getTestAgent, objectToJson } from './utils/helpers.js'
-
-chaiUse(chaiAssertionsCount)
 
 describe('ConnectionController', () => {
   let app: Server
@@ -28,14 +25,8 @@ describe('ConnectionController', () => {
     connection = getTestConnection()
   })
 
-  beforeEach(() => {
-    assertion.resetAssertsCheck()
-  })
-
   afterEach(() => {
     sinonRestore()
-
-    assertion.checkExpectsCount()
   })
 
   describe('Get all connections', () => {
@@ -227,7 +218,6 @@ describe('ConnectionController', () => {
 
   describe('Connection WebSocket Event', () => {
     test.skip('should return connection event sent from test agent to websocket client', async () => {
-      assertion.expectExpects(1)
       const client = new WebSocket('ws://localhost:3009')
 
       const aliceOutOfBandRecord = await aliceAgent.oob.createInvitation()

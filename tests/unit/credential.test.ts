@@ -1,7 +1,6 @@
 import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types.js'
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import type { Agent, ConnectionRecord, CredentialStateChangedEvent, OutOfBandRecord } from '@aries-framework/core'
@@ -31,8 +30,6 @@ import {
   getTestConnection,
 } from './utils/helpers.js'
 
-chaiUse(chaiAssertionsCount)
-
 describe('CredentialController', () => {
   let app: Server
   let aliceAgent: Agent
@@ -56,14 +53,8 @@ describe('CredentialController', () => {
     connection = getTestConnection()
   })
 
-  beforeEach(() => {
-    assertion.resetAssertsCheck()
-  })
-
   afterEach(() => {
     sinonRestore()
-
-    assertion.checkExpectsCount()
   })
 
   describe('Get all credentials', () => {

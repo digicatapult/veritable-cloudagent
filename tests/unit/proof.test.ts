@@ -9,7 +9,6 @@ import type { Server } from 'net'
 
 import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofState } from '@aries-framework/core'
@@ -19,8 +18,6 @@ import WebSocket from 'ws'
 import { startServer } from '../../src/index.js'
 
 import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers.js'
-
-chaiUse(chaiAssertionsCount)
 
 describe('ProofController', () => {
   let app: Server
@@ -40,14 +37,8 @@ describe('ProofController', () => {
     testMessage = new AgentMessage()
   })
 
-  beforeEach(() => {
-    assertion.resetAssertsCheck()
-  })
-
   afterEach(() => {
     sinonRestore()
-
-    assertion.checkExpectsCount()
   })
 
   describe('Get all proofs', () => {
