@@ -51,7 +51,7 @@ export class CredentialController extends Controller {
       state,
     })
 
-    return credentials.map((c: any) => c.toJSON())
+    return credentials.map((c) => c.toJSON())
   }
 
   /**
