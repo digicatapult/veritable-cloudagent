@@ -1,12 +1,10 @@
-import type { RestAgent } from '../../utils/agent.js'
-import type { Did, SchemaId, CredentialDefinitionId } from '../examples.js'
-import type { AnonCredsCredentialDefinitionResponse } from '../types.js'
-
 import { Agent } from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { CredentialDefinitionExample } from '../examples.js'
+import type { RestAgent } from '../../utils/agent.js'
+import { type Did, type SchemaId, type CredentialDefinitionId, CredentialDefinitionExample } from '../examples.js'
+import type { AnonCredsCredentialDefinitionResponse } from '../types.js'
 import { HttpResponse, NotFound, BadRequest } from '../../error.js'
 
 @Tags('Credential Definitions')

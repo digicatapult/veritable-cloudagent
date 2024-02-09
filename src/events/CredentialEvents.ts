@@ -1,8 +1,6 @@
+import { type Agent, type CredentialStateChangedEvent, CredentialEventTypes } from '@aries-framework/core'
+
 import type { ServerConfig } from '../utils/ServerConfig.js'
-import type { Agent, CredentialStateChangedEvent } from '@aries-framework/core'
-
-import { CredentialEventTypes } from '@aries-framework/core'
-
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 

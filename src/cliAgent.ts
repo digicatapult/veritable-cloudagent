@@ -1,6 +1,6 @@
-import type { InitConfig, WalletConfig } from '@aries-framework/core'
-
 import {
+  type InitConfig,
+  type WalletConfig,
   HttpOutboundTransport,
   WsOutboundTransport,
   LogLevel,

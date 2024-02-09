@@ -1,6 +1,14 @@
 import type { RestAgent } from '../../utils/agent.js'
-import type { CredentialExchangeRecordProps } from '@aries-framework/core'
-import type { RecordId } from '../examples.js'
+import {
+  type CredentialExchangeRecordProps,
+  CredentialRepository,
+  CredentialState,
+  Agent,
+  RecordNotFoundError,
+} from '@aries-framework/core'
+import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
+import { injectable } from 'tsyringe'
+
 import type {
   ProposeCredentialOptions,
   AcceptCredentialProposalOptions,
@@ -9,12 +17,7 @@ import type {
   AcceptCredentialOfferOptions,
   OfferCredentialOptions,
 } from '../types.js'
-
-import { CredentialRepository, CredentialState, Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
-import { injectable } from 'tsyringe'
-
-import { CredentialExchangeRecordExample } from '../examples.js'
+import { type RecordId, CredentialExchangeRecordExample } from '../examples.js'
 import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Credentials')

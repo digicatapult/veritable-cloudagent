@@ -1,5 +1,3 @@
-import type { ModulesMap } from '@aries-framework/core'
-
 import {
   AnonCredsCredentialFormatService,
   AnonCredsProofFormatService,
@@ -8,6 +6,7 @@ import {
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { AskarModule } from '@aries-framework/askar'
 import {
+  type ModulesMap,
   V2CredentialProtocol,
   V2ProofProtocol,
   Agent,

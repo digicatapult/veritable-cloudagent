@@ -1,8 +1,6 @@
+import { type Agent, type BasicMessageStateChangedEvent, BasicMessageEventTypes } from '@aries-framework/core'
+
 import type { ServerConfig } from '../utils/ServerConfig.js'
-import type { Agent, BasicMessageStateChangedEvent } from '@aries-framework/core'
-
-import { BasicMessageEventTypes } from '@aries-framework/core'
-
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 

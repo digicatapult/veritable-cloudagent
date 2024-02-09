@@ -1,8 +1,6 @@
+import { type Agent, type ProofStateChangedEvent, ProofEventTypes } from '@aries-framework/core'
+
 import type { ServerConfig } from '../utils/ServerConfig.js'
-import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
-
-import { ProofEventTypes } from '@aries-framework/core'
-
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 

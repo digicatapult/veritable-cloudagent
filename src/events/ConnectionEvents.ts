@@ -1,8 +1,6 @@
+import { type Agent, type ConnectionStateChangedEvent, ConnectionEventTypes } from '@aries-framework/core'
+
 import type { ServerConfig } from '../utils/ServerConfig.js'
-import type { Agent, ConnectionStateChangedEvent } from '@aries-framework/core'
-
-import { ConnectionEventTypes } from '@aries-framework/core'
-
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 

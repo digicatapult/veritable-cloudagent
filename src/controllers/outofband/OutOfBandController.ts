@@ -1,22 +1,31 @@
-import type { OutOfBandInvitationProps, OutOfBandRecordWithInvitationProps, RecordId } from '../examples.js'
+import {
+  type ConnectionRecordProps,
+  type CreateOutOfBandInvitationConfig,
+  type CreateLegacyInvitationConfig,
+  type ReceiveOutOfBandImplicitInvitationConfig,
+  AgentMessage,
+  JsonTransformer,
+  OutOfBandInvitation,
+  Agent,
+  RecordNotFoundError,
+} from '@aries-framework/core'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
+import { injectable } from 'tsyringe'
+
+import {
+  type OutOfBandInvitationProps,
+  type OutOfBandRecordWithInvitationProps,
+  type RecordId,
+  ConnectionRecordExample,
+  outOfBandInvitationExample,
+  outOfBandRecordExample,
+} from '../examples.js'
 import type {
   AgentMessageType,
   ReceiveInvitationProps,
   ReceiveInvitationByUrlProps,
   AcceptInvitationConfig,
 } from '../types.js'
-import type {
-  ConnectionRecordProps,
-  CreateOutOfBandInvitationConfig,
-  CreateLegacyInvitationConfig,
-  ReceiveOutOfBandImplicitInvitationConfig,
-} from '@aries-framework/core'
-
-import { AgentMessage, JsonTransformer, OutOfBandInvitation, Agent, RecordNotFoundError } from '@aries-framework/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
-import { injectable } from 'tsyringe'
-
-import { ConnectionRecordExample, outOfBandInvitationExample, outOfBandRecordExample } from '../examples.js'
 import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Out Of Band')

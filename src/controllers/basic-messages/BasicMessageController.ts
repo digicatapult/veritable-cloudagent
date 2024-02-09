@@ -1,11 +1,13 @@
-import type { BasicMessageRecord, BasicMessageStorageProps } from '@aries-framework/core'
-import type { RecordId } from '../examples.js'
-
-import { Agent, RecordNotFoundError } from '@aries-framework/core'
+import {
+  type BasicMessageRecord,
+  type BasicMessageStorageProps,
+  Agent,
+  RecordNotFoundError,
+} from '@aries-framework/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { BasicMessageRecordExample } from '../examples.js'
+import { type RecordId, BasicMessageRecordExample } from '../examples.js'
 import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Basic Messages')

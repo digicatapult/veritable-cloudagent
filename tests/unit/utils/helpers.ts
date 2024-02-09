@@ -1,7 +1,7 @@
 import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@aries-framework/anoncreds'
-import type { ConnectionRecordProps, DidCreateResult } from '@aries-framework/core'
-
 import {
+  type ConnectionRecordProps,
+  type DidCreateResult,
   AgentMessage,
   OutOfBandRecord,
   ConnectionRecord,
