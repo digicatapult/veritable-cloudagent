@@ -1,6 +1,6 @@
 import sinon from 'sinon'
 
-import Ipfs from '../../../ipfs'
+import Ipfs from '../../../ipfs/index.js'
 
 export const exampleCid = 'QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR'
 export const exampleContent = { id: '1234' }

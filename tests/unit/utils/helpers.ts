@@ -1,7 +1,7 @@
 import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@aries-framework/anoncreds'
-import type { ConnectionRecordProps, DidCreateResult } from '@aries-framework/core'
-
 import {
+  type ConnectionRecordProps,
+  type DidCreateResult,
   AgentMessage,
   OutOfBandRecord,
   ConnectionRecord,
@@ -14,10 +14,10 @@ import {
   ConnectionInvitationMessage,
   DidDocument,
 } from '@aries-framework/core'
-import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder'
+import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
 
-import { setupAgent } from '@src/utils/agent'
+import { setupAgent } from '../../../src/utils/agent.js'
 
 export async function getTestAgent(name: string, port: number) {
   return await setupAgent({

@@ -1,7 +1,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import { withIpfsAddResponse, withIpfsCatResponse } from './fixtures/ipfs'
-import Ipfs from '..'
+
+import { withIpfsAddResponse, withIpfsCatResponse } from './fixtures/ipfs.js'
+import Ipfs from '../index.js'
 
 describe('ipfs', function () {
   describe('ctor', function () {

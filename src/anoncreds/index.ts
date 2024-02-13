@@ -12,8 +12,9 @@ import type {
   AnonCredsCredentialDefinition,
   RegisterCredentialDefinitionOptions,
 } from '@aries-framework/anoncreds'
-import Ipfs from '../ipfs'
 import type { AgentContext } from '@aries-framework/core'
+
+import Ipfs from '../ipfs/index.js'
 
 export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
   public readonly methodName = 'veritable'

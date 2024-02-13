@@ -1,7 +1,5 @@
 import type { Logger } from '@aries-framework/core'
 
-import fetch from 'node-fetch'
-
 export const sendWebhookEvent = async (webhookUrl: string, body: Record<string, unknown>, logger: Logger) => {
   try {
     await fetch(webhookUrl, {

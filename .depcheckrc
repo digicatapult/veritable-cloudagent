@@ -5,6 +5,8 @@
     "@types/ref-struct-di",
     "tsconfig-paths",
     "@src/*",
-    "@schema/*"
+    "@schema/*",
+    "tsimp",
+    "@types/node-fetch"
   ]
 }

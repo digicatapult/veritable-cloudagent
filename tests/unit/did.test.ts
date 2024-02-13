@@ -8,10 +8,10 @@ import request from 'supertest'
 
 import { KeyType } from '@aries-framework/core'
 
-import { startServer } from '@src'
+import { startServer } from '../../src/index.js'
 
-import { getTestAgent, getTestDidCreate, getTestDidDocument, objectToJson } from './utils/helpers'
-import { DidCreateOptions, ImportDidOptions } from '@src/controllers/types'
+import { getTestAgent, getTestDidCreate, getTestDidDocument, objectToJson } from './utils/helpers.js'
+import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types.js'
 
 describe('DidController', () => {
   let app: Server

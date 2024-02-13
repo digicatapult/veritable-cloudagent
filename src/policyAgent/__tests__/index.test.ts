@@ -1,7 +1,8 @@
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
-import PolicyAgent from '..'
-import { withGetPoliciesResponse, withGetPolicyResponse, withEvaluateResponse } from './fixtures/mock'
+
+import PolicyAgent from '../index.js'
+import { withGetPoliciesResponse, withGetPolicyResponse, withEvaluateResponse } from './fixtures/mock.js'
 
 const exampleId = 'example.rego'
 const examplePackageId = 'example'
@@ -56,7 +57,7 @@ describe('policy agent', function () {
     it('should return allow true', async function () {
       const policyAgent = new PolicyAgent(origin)
       const result = await policyAgent.evaluate(examplePackageId, {})
-      expect(result.allow).to.equal(true)
+      expect(result).to.deep.equal({ allow: true })
     })
   })
 })

@@ -1,0 +1,18 @@
+{
+  "node-option": ["import=tsimp/import"],
+  "ignore": ["/build/", "/node_modules/", "./build/", "./node_modules/"],
+  "timeout": 120000,
+  "extension": ["test.ts"],
+  "bail": false,
+  "package": "./package.json",
+  "exclude": "node_modules/**/*",
+  "watch": false,
+  "fullTrace": false,
+  "ui": "bdd",
+  "color": true,
+  "recursive": true,
+  "reporter": "spec",
+  "slow": 100,
+  "retries": 0,
+  "exit": true
+}

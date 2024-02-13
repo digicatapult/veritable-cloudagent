@@ -6,9 +6,8 @@ import type { Express } from 'express'
 
 import request from 'supertest'
 
-import { setupServer } from '@src/server'
-
-import { getTestAgent } from './utils/helpers'
+import { setupServer } from '../../src/server.js'
+import { getTestAgent } from './utils/helpers.js'
 
 describe('AgentController', () => {
   let app: Express

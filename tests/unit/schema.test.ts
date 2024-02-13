@@ -1,4 +1,4 @@
-import type { RestAgent } from '@src/utils/agent'
+import type { RestAgent } from '../../src/utils/agent.js'
 import type { AnonCredsSchema } from '@aries-framework/anoncreds'
 import type { Express } from 'express'
 
@@ -8,10 +8,10 @@ import { stub, restore as sinonRestore } from 'sinon'
 
 import request from 'supertest'
 
-import { setupServer } from '@src/server'
+import { setupServer } from '../../src/server.js'
 
-import { getTestAgent, getTestSchema } from './utils/helpers'
-import _schema from '@schema/schemaAttributes.json'
+import { getTestAgent, getTestSchema } from './utils/helpers.js'
+import _schema from '../../schema/schemaAttributes.json'
 const schema = _schema as AnonCredsSchema
 
 describe('SchemaController', () => {
