@@ -6,7 +6,7 @@
     "tsconfig-paths",
     "@src/*",
     "@schema/*",
-    "tsimp",
+    "ts-node",
     "@types/node-fetch"
   ]
 }
