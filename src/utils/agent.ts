@@ -27,8 +27,8 @@ import { create as createIpfsClient, type IPFSHTTPClient } from 'ipfs-http-clien
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import { TsLogger } from './logger'
-import VeritableAnonCredsRegistry from '../anoncreds'
+import { TsLogger } from './logger.js'
+import VeritableAnonCredsRegistry from '../anoncreds/index.js'
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule

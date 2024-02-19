@@ -1,5 +1,6 @@
 {
-  "node-option": ["import=tsimp/import"],
+  "loader": "ts-node/esm",
+  "extensions": ["ts", "tsx"],
   "ignore": ["/build/", "/node_modules/", "./build/", "./node_modules/"],
   "timeout": 120000,
   "extension": ["test.ts"],

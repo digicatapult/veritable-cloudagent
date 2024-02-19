@@ -3,9 +3,9 @@ import { expect } from 'chai'
 
 import type { IPFSHTTPClient }  from 'ipfs-http-client'
 
-import { withHappyIpfs, withIpfsErrors, exampleCid, exampleContent } from './fixtures/ipfs'
-import { withMockedAgentContext } from './fixtures/agentContext'
-import VeritableAnonCredsRegistry from '..'
+import { withHappyIpfs, withIpfsErrors, exampleCid, exampleContent } from './fixtures/ipfs.js'
+import { withMockedAgentContext } from './fixtures/agentContext.js'
+import VeritableAnonCredsRegistry from '../index.js'
 
 describe('VeritableAnonCredsRegistry', function () {
   describe('methodName', function () {

@@ -12,7 +12,7 @@ import { setupServer } from '../../src/server.js'
 
 import { getTestAgent, getTestCredDef, getTestSchema } from './utils/helpers.js'
 
-import _schema from '../../schema/schemaAttributes.json'
+import _schema from '../../schema/schemaAttributes.json' assert { type: "json" }
 const schema = _schema as AnonCredsSchema
 
 describe('CredentialDefinitionController', () => {
