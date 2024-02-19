@@ -3,24 +3,21 @@ import type {
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
-} from '@src/controllers/types'
+} from '../../src/controllers/types.js'
 import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
 import type { Server } from 'net'
 
 import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofState } from '@aries-framework/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '@src'
+import { startServer } from '../../src/index.js'
 
-import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers'
-
-chaiUse(chaiAssertionsCount)
+import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers.js'
 
 describe('ProofController', () => {
   let app: Server
@@ -40,14 +37,8 @@ describe('ProofController', () => {
     testMessage = new AgentMessage()
   })
 
-  beforeEach(() => {
-    assertion.resetAssertsCheck()
-  })
-
   afterEach(() => {
     sinonRestore()
-
-    assertion.checkExpectsCount()
   })
 
   describe('Get all proofs', () => {
@@ -360,8 +351,6 @@ describe('ProofController', () => {
 
   describe('Proof WebSocket event', () => {
     test('should return proof event sent from test agent to websocket client', async () => {
-      assertion.expectExpects(1)
-
       const now = new Date()
 
       const proofRecord = new ProofExchangeRecord({

@@ -1,7 +1,7 @@
 {
 
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ESNext",
     "target": "ESNext", 
     "declaration": true,
     "sourceMap": true,
@@ -14,12 +14,11 @@
     "resolveJsonModule": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-
-    "outDir": "./build"
+    "outDir": "./build",
+    "moduleResolution": "node"
 
   },
-  "include": ["src/**/*", "src/routes"],
-
+  "include": ["src/**/*", "src/routes", "src/routes/swagger.json"],
   "exclude": [
     "node_modules",
     "build",

@@ -65,8 +65,8 @@ services:
     ports:
       - '8181:8181'
     volumes:
-      - ./samples/supplierCustomer.rego:/supplierCustomer.rego
-    command: run --server --log-level debug supplierCustomer.rego
+      - ./samples/suppliers.rego:/suppliers.rego
+    command: run --server --log-level debug suppliers.rego
     networks:
       - testnet
 

@@ -1,10 +1,9 @@
-import type { InboundTransport, Transports, AriesRestConfig } from './cliAgent'
+import { runRestAgent, type InboundTransport, type Transports, type AriesRestConfig } from './cliAgent.js'
 
 import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
-import { runRestAgent } from './cliAgent'
-
-const parsed = yargs
+const parsed = yargs(hideBin(process.argv))
   .command('start', 'Start AFJ Rest agent')
   .option('label', {
     alias: 'l',
@@ -109,6 +108,10 @@ const parsed = yargs
   .option('persona-color', {
     string: true,
     default: 'white',
+  })
+  .option('opa-origin', {
+    string: true,
+    default: 'http://localhost:8181',
   })
 
   .config()

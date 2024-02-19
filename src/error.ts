@@ -1,5 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
+import { isHttpError } from 'http-errors'
 
 import { Logger } from '@aries-framework/core'
 
@@ -42,6 +43,11 @@ export const errorHandler =
       logger.warn(`Error thrown in handler: ${err.message}`)
 
       return res.status(err.code).json(err.message)
+    }
+    // capture body parser errors
+    if (isHttpError(err)) {
+      logger.warn(`HTTPError in request: ${err.message}`)
+      return res.status(err.statusCode).json(err.message)
     }
     if (err instanceof Error) {
       logger.error(`Unexpected error thrown in handler: ${err.message}`)

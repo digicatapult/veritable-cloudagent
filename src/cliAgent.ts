@@ -1,5 +1,6 @@
-import type { InitConfig, WalletConfig } from '@aries-framework/core'
 import {
+  type InitConfig,
+  type WalletConfig,
   HttpOutboundTransport,
   WsOutboundTransport,
   LogLevel,
@@ -12,9 +13,9 @@ import { create as createIpfsClient } from 'ipfs-http-client'
 
 import { readFile } from 'fs/promises'
 
-import { setupServer } from './server'
-import { getAgentModules, RestAgent } from './utils/agent'
-import { TsLogger } from './utils/logger'
+import { setupServer } from './server.js'
+import { getAgentModules, RestAgent } from './utils/agent.js'
+import { TsLogger } from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {

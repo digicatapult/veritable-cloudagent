@@ -1,5 +1,3 @@
-import type { ModulesMap } from '@aries-framework/core'
-
 import {
   AnonCredsCredentialFormatService,
   AnonCredsProofFormatService,
@@ -8,6 +6,7 @@ import {
 import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
 import { AskarModule } from '@aries-framework/askar'
 import {
+  type ModulesMap,
   V2CredentialProtocol,
   V2ProofProtocol,
   Agent,
@@ -26,6 +25,7 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import { create as createIpfsClient, type IPFSHTTPClient } from 'ipfs-http-client'
 
 import path from 'path'
+import { fileURLToPath } from 'url'
 
 import { TsLogger } from './logger'
 import VeritableAnonCredsRegistry from '../anoncreds'
@@ -46,6 +46,8 @@ export type RestAgent<
   }
 > = Agent<modules>
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 export const genesisPath = process.env.GENESIS_TXN_PATH
   ? path.resolve(process.env.GENESIS_TXN_PATH)
   : path.join(__dirname, '../../../../network/genesis/local-genesis.txn')

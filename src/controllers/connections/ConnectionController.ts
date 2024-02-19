@@ -1,6 +1,5 @@
-import type { ConnectionRecordProps } from '@aries-framework/core'
-
 import {
+  type ConnectionRecordProps,
   ConnectionRepository,
   DidExchangeState,
   Agent,
@@ -10,8 +9,8 @@ import {
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { ConnectionRecordExample, RecordId } from '../examples'
-import { HttpResponse, NotFound } from '../../error'
+import { type RecordId, ConnectionRecordExample } from '../examples.js'
+import { HttpResponse, NotFound } from '../../error.js'
 
 @Tags('Connections')
 @Route('/connections')

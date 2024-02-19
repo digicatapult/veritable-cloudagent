@@ -1,10 +1,8 @@
-import type { ServerConfig } from '../utils/ServerConfig'
-import type { Agent, ConnectionStateChangedEvent } from '@aries-framework/core'
+import { type Agent, type ConnectionStateChangedEvent, ConnectionEventTypes } from '@aries-framework/core'
 
-import { ConnectionEventTypes } from '@aries-framework/core'
-
-import { sendWebSocketEvent } from './WebSocketEvents'
-import { sendWebhookEvent } from './WebhookEvent'
+import type { ServerConfig } from '../utils/ServerConfig.js'
+import { sendWebSocketEvent } from './WebSocketEvents.js'
+import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ConnectionEventTypes.ConnectionStateChanged, async (event: ConnectionStateChangedEvent) => {

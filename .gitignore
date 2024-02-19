@@ -6,6 +6,7 @@ src/routes/swagger.json
 src/routes/routes.ts
 dist
 coverage
+.tsimp
 
 .DS_Store
 .npm

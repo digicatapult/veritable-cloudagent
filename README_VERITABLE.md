@@ -34,11 +34,27 @@ The Aries Framework JavaScript REST API is the most convenient way for self-sove
 - 💻 **CLI** that makes it super easy to start an instance of the REST API.
 - 🌐 **Interoperable** with all major Aries implementations.
 
+## Description
+
+The project aims to enable supply chains to share insights and data across multiple data platforms, enhancing the efficiency of the supply chain network. Specifically it facilitates the onboarding of new actors into a network, facilitationg connections between those and allows for interaction between the actors. Interactions include issuance of credentials, acceptance of issued credentials, requesting proofs of credentials from other actors and those being able to verify those requests.
+
 ## Quick start
 
 The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI that is provided with the server. The docs can be viewed on the `/docs` endpoint (e.g. http://localhost:3000/docs).
 
+Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section) or via cli (see [Via Cli](#via-cli)).
+
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
+
+### Rest Client Args
+
+The CLI args are defined under `src > cli.ts ` They are used to start up a service.
+| Argument added | Required | Default | Description |
+| :------------- | :------: | :------ | :------- |
+| ipfs-origin | Y | http://localhost:5001 | IPFS endpoint |
+|opa-origin |N |http://localhost:8181 |OPA endpoint |
+|persona-title | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
+|persona-color |N |"white" |Defines the background colour of swagger documentation|
 
 ### Using Docker (easiest)
 
@@ -85,6 +101,8 @@ This private testnet has the following ports available to the user for testing:
 Network name: `testnet`
 
 ### Via CLI
+
+<a id="via-cli"></a>
 
 To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.
 

@@ -1,22 +1,21 @@
-import type { RestAgent } from '../../utils/agent'
-import type { AnonCredsRequestProofFormatOptions, AnonCredsProofRequestRestrictionOptions } from '../types'
 import type { AnonCredsProofRequestRestriction, AnonCredsRequestProofFormat } from '@aries-framework/anoncreds'
-import type { ProofExchangeRecordProps } from '@aries-framework/core'
-
-import { Agent, RecordNotFoundError } from '@aries-framework/core'
+import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@aries-framework/core'
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { maybeMapValues } from '../../utils/helpers'
-import { ProofRecordExample, RecordId } from '../examples'
-import {
-  RequestProofOptions,
-  AcceptProofProposalOptions,
+import { type RecordId, ProofRecordExample } from '../examples.js'
+import { maybeMapValues } from '../../utils/helpers.js'
+import { HttpResponse, NotFound } from '../../error.js'
+import type { RestAgent } from '../../utils/agent.js'
+import type {
+  AnonCredsRequestProofFormatOptions,
+  AnonCredsProofRequestRestrictionOptions,
   AcceptProofRequestOptions,
-  ProposeProofOptions,
+  RequestProofOptions,
   CreateProofRequestOptions,
-} from '../types'
-import { HttpResponse, NotFound } from '../../error'
+  ProposeProofOptions,
+  AcceptProofProposalOptions,
+} from '../types.js'
 
 const transformAttributeMarkers = (attributes?: { [key: string]: boolean }) => {
   if (!attributes) {

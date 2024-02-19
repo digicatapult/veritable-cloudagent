@@ -1,24 +1,31 @@
 import 'reflect-metadata'
-import type { ServerConfig } from './utils/ServerConfig'
-import type { RestAgent } from './utils/agent'
-import type { Response as ExResponse, Request as ExRequest } from 'express'
-
+import express, { type Response as ExResponse, type Request as ExRequest } from 'express'
 import { Agent } from '@aries-framework/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import express from 'express'
 import { serve, generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
+import fs from 'fs/promises'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-import { basicMessageEvents } from './events/BasicMessageEvents'
-import { connectionEvents } from './events/ConnectionEvents'
-import { credentialEvents } from './events/CredentialEvents'
-import { proofEvents } from './events/ProofEvents'
-import { RegisterRoutes } from './routes/routes'
-import { errorHandler } from './error'
-import PolicyAgent from './policyAgent'
+import type { ServerConfig } from './utils/ServerConfig.js'
+import type { RestAgent } from './utils/agent.js'
+import { basicMessageEvents } from './events/BasicMessageEvents.js'
+import { connectionEvents } from './events/ConnectionEvents.js'
+import { credentialEvents } from './events/CredentialEvents.js'
+import { proofEvents } from './events/ProofEvents.js'
+import { RegisterRoutes } from './routes/routes.js'
+import { errorHandler } from './error.js'
+import PolicyAgent from './policyAgent/index.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
+  const swaggerBuffer = await fs.readFile(path.join(__dirname, './routes/swagger.json'))
+  const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
+
   container.registerInstance(Agent, agent as Agent)
   container.registerInstance(PolicyAgent, new PolicyAgent(config.opaOrigin || 'http://localhost:8181'))
 
@@ -42,7 +49,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
 
   app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(
-      generateHTML(await import('./routes/swagger.json'), {
+      generateHTML(swaggerJson, {
         ...(config.personaColor && {
           customCss: `body { background-color: ${config.personaColor} } 
         .swagger-ui .scheme-container { background-color: inherit }

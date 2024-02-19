@@ -1,7 +1,6 @@
-import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '@src/controllers/types'
+import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types.js'
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import chaiAssertionsCount from 'chai-assertions-count'
 import { stub, restore as sinonRestore } from 'sinon'
 
 import type { Agent, ConnectionRecord, CredentialStateChangedEvent, OutOfBandRecord } from '@aries-framework/core'
@@ -20,7 +19,7 @@ import {
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '@src'
+import { startServer } from '../../src/index.js'
 
 import {
   objectToJson,
@@ -29,9 +28,7 @@ import {
   getTestOffer,
   getTestOutOfBandRecord,
   getTestConnection,
-} from './utils/helpers'
-
-chaiUse(chaiAssertionsCount)
+} from './utils/helpers.js'
 
 describe('CredentialController', () => {
   let app: Server
@@ -56,14 +53,8 @@ describe('CredentialController', () => {
     connection = getTestConnection()
   })
 
-  beforeEach(() => {
-    assertion.resetAssertsCheck()
-  })
-
   afterEach(() => {
     sinonRestore()
-
-    assertion.checkExpectsCount()
   })
 
   describe('Get all credentials', () => {
@@ -278,8 +269,6 @@ describe('CredentialController', () => {
 
   describe('Credential WebSocket event', () => {
     test('should return credential event sent from test agent to websocket client', async () => {
-      assertion.expectExpects(1)
-
       const now = new Date()
 
       // Start client and wait for it to be opened

@@ -15,7 +15,7 @@ import type { Express } from 'express'
 import { JsonTransformer, AgentMessage } from '@aries-framework/core'
 import request from 'supertest'
 
-import { setupServer } from '@src/server'
+import { setupServer } from '../../src/server.js'
 
 import {
   getTestAgent,
@@ -24,7 +24,7 @@ import {
   getTestOutOfBandLegacyInvitation,
   getTestOutOfBandRecord,
   objectToJson,
-} from './utils/helpers'
+} from './utils/helpers.js'
 
 describe('OutOfBandController', () => {
   let app: Express

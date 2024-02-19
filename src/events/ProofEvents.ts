@@ -1,10 +1,8 @@
-import type { ServerConfig } from '../utils/ServerConfig'
-import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
+import { type Agent, type ProofStateChangedEvent, ProofEventTypes } from '@aries-framework/core'
 
-import { ProofEventTypes } from '@aries-framework/core'
-
-import { sendWebSocketEvent } from './WebSocketEvents'
-import { sendWebhookEvent } from './WebhookEvent'
+import type { ServerConfig } from '../utils/ServerConfig.js'
+import { sendWebSocketEvent } from './WebSocketEvents.js'
+import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const proofEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
