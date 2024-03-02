@@ -24,6 +24,22 @@ export class ConnectionController extends Controller {
   }
 
   /**
+   * Send a trust ping to an established connection
+   * @param connectionId the id of the connection for which to accept the response
+   * @param responseRequested do we want a response to our ping
+   * @param withReturnRouting do we want a response at the time of posting
+   * @returns TrustPingMessage
+   */
+  @Post('/:connectionId/send-ping')
+  public async sendPing(
+    @Path('connectionId') connectionId: string,
+    @Query('responseRequested') responseRequested: boolean = true,
+    @Query('withReturnRouting') withReturnRouting?: boolean
+  ) {
+    return this.agent.connections.sendPing(connectionId, { responseRequested, withReturnRouting })
+  }
+
+  /**
    * Retrieve all connections records
    * @param alias Alias
    * @param state Connection state

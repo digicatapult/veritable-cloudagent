@@ -5,12 +5,12 @@ import { stub, restore as sinonRestore } from 'sinon'
 import type { Agent, ConnectionRecord } from '@aries-framework/core'
 import type { Server } from 'net'
 
-import { ConnectionEventTypes, ConnectionRepository } from '@aries-framework/core'
+import { ConnectionEventTypes, ConnectionRepository, type TrustPingMessage } from '@aries-framework/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
 import { startServer } from '../../src/index.js'
-import { getTestConnection, getTestAgent, objectToJson } from './utils/helpers.js'
+import { getTestConnection, getTestAgent, objectToJson, getTestTrustPingMessage } from './utils/helpers.js'
 
 describe('ConnectionController', () => {
   let app: Server
@@ -27,6 +27,21 @@ describe('ConnectionController', () => {
 
   afterEach(() => {
     sinonRestore()
+  })
+
+  describe('Send trust ping', () => {
+    test('Should send a ping on an established connection', async () => {
+      const sendPingStub = stub(bobAgent.connections, 'sendPing')
+      const message = getTestTrustPingMessage()
+      sendPingStub.resolves(message)
+      const getResult = (): Promise<TrustPingMessage> => sendPingStub.firstCall.returnValue
+
+      const response = await request(app).post(`/connections/${connection.id}/send-ping`)
+
+      expect(response.statusCode)
+      expect(sendPingStub.calledWithMatch(connection.id)).equals(true)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
   })
 
   describe('Get all connections', () => {
