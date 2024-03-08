@@ -15,6 +15,7 @@ import { basicMessageEvents } from './events/BasicMessageEvents.js'
 import { connectionEvents } from './events/ConnectionEvents.js'
 import { credentialEvents } from './events/CredentialEvents.js'
 import { proofEvents } from './events/ProofEvents.js'
+import { trustPingEvents } from './events/TrustPingEvents.js'
 import { RegisterRoutes } from './routes/routes.js'
 import { errorHandler } from './error.js'
 import PolicyAgent from './policyAgent/index.js'
@@ -37,6 +38,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
     connectionEvents(agent, config)
     credentialEvents(agent, config)
     proofEvents(agent, config)
+    trustPingEvents(agent, config)
   }
 
   // Use body parser to read sent json payloads

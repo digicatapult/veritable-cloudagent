@@ -13,6 +13,7 @@ import {
   OutOfBandInvitation,
   ConnectionInvitationMessage,
   DidDocument,
+  TrustPingMessage,
 } from '@aries-framework/core'
 import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
@@ -387,6 +388,14 @@ export function getTestProof() {
     },
   }
   return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+}
+
+export function getTestTrustPingMessage({
+  id = 'test',
+  comment = 'test-comment',
+  responseRequested = true,
+}: Partial<TrustPingMessage> = {}) {
+  return new TrustPingMessage({ id, comment, responseRequested })
 }
 
 export function getTestConnection({
