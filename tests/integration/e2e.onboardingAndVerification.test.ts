@@ -1,7 +1,7 @@
 import request from 'supertest'
 import { describe, it, beforeEach, afterEach } from 'mocha'
 import { expect } from 'chai'
-import { ProofExchangeRecord, ProofExchangeRecordProps } from '@aries-framework/core'
+import { ProofExchangeRecord, ProofExchangeRecordProps } from '@credo-ts/core'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL
@@ -83,7 +83,7 @@ describe('Onboarding & Verification flow', function () {
   it('should allow an Issuer to create an OOB invitation', async function () {
     const createInvitationPayload = {
       handshake: true,
-      handshakeProtocols: ['https://didcomm.org/connections/1.0'],
+      handshakeProtocols: ['https://didcomm.org/connections/1.x'],
       autoAcceptConnection: true,
     }
 
@@ -223,7 +223,7 @@ describe('Onboarding & Verification flow', function () {
   it('should allow a Verifier to create an OOB invitation', async function () {
     const createInvitationPayload = {
       handshake: true,
-      handshakeProtocols: ['https://didcomm.org/connections/1.0'],
+      handshakeProtocols: ['https://didcomm.org/connections/1.x'],
       autoAcceptConnection: true,
     }
 

@@ -1,6 +1,6 @@
 import 'reflect-metadata'
 import express, { type Response as ExResponse, type Request as ExRequest } from 'express'
-import { Agent } from '@aries-framework/core'
+import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import { serve, generateHTML } from 'swagger-ui-express'

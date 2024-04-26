@@ -1,4 +1,4 @@
-import { Agent } from '@aries-framework/core'
+import { Agent } from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -92,7 +92,7 @@ export class CredentialDefinitionController extends Controller {
         schemaId: credentialDefinitionRequest.schemaId,
         tag: credentialDefinitionRequest.tag,
       },
-      options: {},
+      options: { supportRevocation: false },
     })
 
     if (state !== 'finished' || credentialDefinitionId === undefined || credentialDefinition === undefined) {

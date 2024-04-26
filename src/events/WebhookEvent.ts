@@ -1,4 +1,4 @@
-import type { Logger } from '@aries-framework/core'
+import type { Logger } from '@credo-ts/core'
 
 export const sendWebhookEvent = async (webhookUrl: string, body: Record<string, unknown>, logger: Logger) => {
   try {

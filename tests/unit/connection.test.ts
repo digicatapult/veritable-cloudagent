@@ -2,10 +2,10 @@ import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import { stub, restore as sinonRestore } from 'sinon'
 
-import type { Agent, ConnectionRecord } from '@aries-framework/core'
+import type { Agent, ConnectionRecord } from '@credo-ts/core'
 import type { Server } from 'net'
 
-import { ConnectionEventTypes, ConnectionRepository, type TrustPingMessage } from '@aries-framework/core'
+import { ConnectionEventTypes, ConnectionRepository, type TrustPingMessage } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 

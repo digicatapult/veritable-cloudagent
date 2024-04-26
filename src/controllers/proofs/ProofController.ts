@@ -1,5 +1,5 @@
-import type { AnonCredsProofRequestRestriction, AnonCredsRequestProofFormat } from '@aries-framework/anoncreds'
-import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@aries-framework/core'
+import type { AnonCredsProofRequestRestriction, AnonCredsRequestProofFormat } from '@credo-ts/anoncreds'
+import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@credo-ts/core'
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 

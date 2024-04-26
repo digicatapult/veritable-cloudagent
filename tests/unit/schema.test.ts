@@ -1,5 +1,5 @@
 import type { RestAgent } from '../../src/utils/agent.js'
-import type { AnonCredsSchema } from '@aries-framework/anoncreds'
+import type { AnonCredsSchema } from '@credo-ts/anoncreds'
 import type { Express } from 'express'
 
 import { describe, before, after, afterEach, test } from 'mocha'

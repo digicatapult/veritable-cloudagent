@@ -1,4 +1,4 @@
-import type { Agent, DidCreateResult } from '@aries-framework/core'
+import type { Agent, DidCreateResult } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import { describe, before, after, afterEach, test } from 'mocha'
@@ -6,7 +6,7 @@ import { expect } from 'chai'
 import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
-import { KeyType } from '@aries-framework/core'
+import { KeyType } from '@credo-ts/core'
 
 import { startServer } from '../../src/index.js'
 

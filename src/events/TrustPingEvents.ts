@@ -3,7 +3,7 @@ import {
   type Agent,
   type TrustPingReceivedEvent,
   type TrustPingResponseReceivedEvent,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'

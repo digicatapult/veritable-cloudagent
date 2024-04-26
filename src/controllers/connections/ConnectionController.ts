@@ -3,9 +3,9 @@ import {
   ConnectionRepository,
   DidExchangeState,
   Agent,
-  AriesFrameworkError,
+  CredoError,
   RecordNotFoundError,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -139,7 +139,7 @@ export class ConnectionController extends Controller {
       const connection = await this.agent.connections.acceptRequest(connectionId)
       return connection.toJSON()
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
       throw error

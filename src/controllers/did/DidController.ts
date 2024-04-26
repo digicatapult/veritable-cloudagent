@@ -1,4 +1,4 @@
-import { Agent, AriesFrameworkError, TypedArrayEncoder } from '@aries-framework/core'
+import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -57,7 +57,7 @@ export class DidController extends Controller {
       })
       return this.getDidRecordByDid(options.did)
     } catch (error) {
-      if (error instanceof AriesFrameworkError) {
+      if (error instanceof CredoError) {
         throw new BadRequest(`Error importing Did - ${error.message}`)
       }
       throw error

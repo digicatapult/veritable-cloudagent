@@ -1,15 +1,15 @@
 <p align="center">
   <br />
   <img
-    alt="Hyperledger Aries logo"
-    src="https://raw.githubusercontent.com/hyperledger/aries-framework-javascript/aa31131825e3331dc93694bc58414d955dcb1129/images/aries-logo.png"
+    alt="Credo logo"
+    src="https://github.com/openwallet-foundation/credo-ts/blob/c7886cb8377ceb8ee4efe8d264211e561a75072d/images/credo-logo.png"
     height="250px"
   />
 </p>
-<h1 align="center"><b>Aries Framework JavaScript REST API</b></h1>
+<h1 align="center"><b>Credo REST API</b></h1>
 <p align="center">
   <a
-    href="https://raw.githubusercontent.com/hyperledger/aries-framework-javascript-ext/main/LICENSE"
+    href="https://raw.githubusercontent.com/openwallet-foundation/credo-ts-ext/main/LICENSE"
     ><img
       alt="License"
       src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"
@@ -19,24 +19,25 @@
       alt="typescript"
       src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg"
   /></a>
-    <a href="https://www.npmjs.com/package/@aries-framework/rest"
+    <a href="https://www.npmjs.com/package/@credo-ts/rest"
     ><img
-      alt="@aries-framework/rest version"
-      src="https://img.shields.io/npm/v/@aries-framework/rest"
+      alt="@credo-ts/rest version"
+      src="https://img.shields.io/npm/v/@credo-ts/rest"
   /></a>
 
 </p>
 <br />
 
-The Aries Framework JavaScript REST API is the most convenient way for self-sovereign identity (SSI) developers to interact with SSI agents.
+The Credo REST API is the most convenient way to get started with Credo in the cloud.
 
-- ⭐ **Endpoints** to create connections, issue credentials, and request proofs.
+- ⭐ **Endpoints** to work with both DIDComm and OpenID4VC.
 - 💻 **CLI** that makes it super easy to start an instance of the REST API.
 - 🌐 **Interoperable** with all major Aries implementations.
+- 🧑 **Multi-tenant** Use the same agent and server for as many tenants as you want. Each tenant has its own separate encrypted storage.
 
 ## Description
 
-The project aims to enable supply chains to share insights and data across multiple data platforms, enhancing the efficiency of the supply chain network. Specifically it facilitates the onboarding of new actors into a network, facilitationg connections between those and allows for interaction between the actors. Interactions include issuance of credentials, acceptance of issued credentials, requesting proofs of credentials from other actors and those being able to verify those requests.
+The project aims to enable supply chains to share insights and data across multiple data platforms, enhancing the efficiency of the supply chain network. Specifically it facilitates the onboarding of new actors into a network, facilitating connections between those and allows for interaction between the actors. Interactions include issuance of credentials, acceptance of issued credentials, requesting proofs of credentials from other actors and those being able to verify those requests.
 
 ## Quick start
 
@@ -109,7 +110,7 @@ To run AFJ REST API directly on your computer you need to have the ipfs client i
 Once you have installed IPFS, you can start the REST server using the following command:
 
 ```sh
-npx -p @aries-framework/rest afj-rest start \
+npx -p @credo-ts/rest afj-rest start \
   --label "AFJ Rest" \
   --ipfs-origin http://localhost:5001 \
   --opa-origin http://localhost:8181 \
@@ -132,10 +133,10 @@ To find out all available configuration options from the CLI, you can run the CL
 docker run ghcr.io/hyperledger/afj-rest --help
 
 # Directly on computer
-npx -p @aries-framework/rest afj-rest start --help
+npx -p @credo-ts/rest afj-rest start --help
 ```
 
-It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/hyperledger/aries-framework-javascript-ext/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
+It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/openwallet-foundation/credo-ts-ext/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
 
 ```json
 {
@@ -153,7 +154,7 @@ As a final option it is possible to configure the agent using environment variab
 docker run -e AFJ_REST_WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
 
 # Directly on computer
-AFJ_REST_WALLET_KEY="my-secret-key" npx -p @aries-framework/rest afj-rest start ...
+AFJ_REST_WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
 ```
 
 ### Starting Own Server
@@ -163,9 +164,9 @@ Starting your own server is more involved than using the CLI, but allows more fi
 You can create an agent instance and import the `startServer` method from the `rest` package. That's all you have to do.
 
 ```ts
-import { startServer } from '@aries-framework/rest'
-import { Agent } from '@aries-framework/core'
-import { agentDependencies } from '@aries-framework/node'
+import { startServer } from '@credo-ts/rest'
+import { Agent } from '@credo-ts/core'
+import { agentDependencies } from '@credo-ts/node'
 
 // The startServer function requires an initialized agent and a port.
 // An example of how to setup an agent is located in the `samples` directory.
@@ -309,7 +310,7 @@ Before any communication between two agents, an out of band connection must be e
 ```json
 {
   "handshake": true,
-  "handshakeProtocols": ["https://didcomm.org/connections/1.0"],
+  "handshakeProtocols": ["https://didcomm.org/connections/1.x"],
   "multiUseInvitation": true,
   "autoAcceptConnection": true
 }
@@ -546,7 +547,7 @@ Once the did and private key is successfully imported on Alice, we can attempt t
 ```json
 {
   "did": "did:web:YOUR_USERNAME.github.io:dids:1",
-  "handshakeProtocols": ["https://didcomm.org/connections/1.0"]
+  "handshakeProtocols": ["https://didcomm.org/connections/1.x"]
 }
 ```
 

@@ -1,5 +1,5 @@
-import { JsonTransformer } from '@aries-framework/core'
-import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder.js'
+import { JsonTransformer } from '@credo-ts/core'
+import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
 
 export function maybeMapValues<V, U>(
   transform: (input: V) => U,

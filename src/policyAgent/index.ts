@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe'
-import { LogLevel } from '@aries-framework/core'
+import { LogLevel } from '@credo-ts/core'
 
 import { TsLogger } from '../utils/logger.js'
 import { HttpResponse, NotFound } from '../error.js'

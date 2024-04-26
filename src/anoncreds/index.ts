@@ -11,8 +11,10 @@ import type {
   AnonCredsResolutionMetadata,
   AnonCredsCredentialDefinition,
   RegisterCredentialDefinitionOptions,
-} from '@aries-framework/anoncreds'
-import type { AgentContext } from '@aries-framework/core'
+  RegisterRevocationRegistryDefinitionReturn,
+  RegisterRevocationStatusListReturn,
+} from '@credo-ts/anoncreds'
+import type { AgentContext } from '@credo-ts/core'
 
 import Ipfs from '../ipfs/index.js'
 
@@ -158,12 +160,20 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     throw new Error('Not implemented yet')
   }
 
+  public registerRevocationRegistryDefinition(): Promise<RegisterRevocationRegistryDefinitionReturn> {
+    throw new Error('Method not implemented.')
+  }
+
   // FIXME: this method doesn't retrieve the revocation status list at a specified time, it just resolves the revocation registry definition
   public async getRevocationStatusList(): // agentContext: AgentContext,
   // revocationRegistryId: string,
   // timestamp: number
   Promise<GetRevocationStatusListReturn> {
     throw new Error('Not implemented yet')
+  }
+
+  public registerRevocationStatusList(): Promise<RegisterRevocationStatusListReturn> {
+    throw new Error('Method not implemented.')
   }
 
   private async getAnonCredsObj<AObj>(

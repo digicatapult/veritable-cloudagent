@@ -9,10 +9,10 @@ import type {
   OutOfBandInvitation,
   ConnectionInvitationMessage,
   ReceiveOutOfBandImplicitInvitationConfig,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import type { Express } from 'express'
 
-import { JsonTransformer, AgentMessage } from '@aries-framework/core'
+import { JsonTransformer, AgentMessage } from '@credo-ts/core'
 import request from 'supertest'
 
 import { setupServer } from '../../src/server.js'
@@ -122,7 +122,7 @@ describe('OutOfBandController', () => {
         goalCode: 'string',
         goal: 'string',
         handshake: true,
-        handshakeProtocols: ['https://didcomm.org/connections/1.0'],
+        handshakeProtocols: ['https://didcomm.org/connections/1.x'],
         multiUseInvitation: true,
         autoAcceptConnection: true,
       }
@@ -185,7 +185,7 @@ describe('OutOfBandController', () => {
     const msg = JsonTransformer.fromJSON(
       {
         '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
-        '@type': 'https://didcomm.org/connections/1.0/invitation',
+        '@type': 'https://didcomm.org/connections/1.x/invitation',
       },
       AgentMessage
     )
@@ -194,7 +194,7 @@ describe('OutOfBandController', () => {
       domain: 'string',
       message: {
         '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
-        '@type': 'https://didcomm.org/connections/1.0/invitation',
+        '@type': 'https://didcomm.org/connections/1.x/invitation',
       },
       recordId: 'string',
     }
@@ -204,6 +204,7 @@ describe('OutOfBandController', () => {
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
+        outOfBandRecord,
       })
 
       const getResult = () => createLegacyConnectionlessInvitationStub.firstCall.returnValue
@@ -218,6 +219,7 @@ describe('OutOfBandController', () => {
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
+        outOfBandRecord,
       })
 
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
