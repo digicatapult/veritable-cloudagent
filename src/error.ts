@@ -2,7 +2,7 @@ import { Response as ExResponse, Request as ExRequest, NextFunction } from 'expr
 import { ValidateError } from 'tsoa'
 import { isHttpError } from 'http-errors'
 
-import { Logger } from '@aries-framework/core'
+import { Logger } from '@credo-ts/core'
 
 export class HttpResponse extends Error {
   public code: number

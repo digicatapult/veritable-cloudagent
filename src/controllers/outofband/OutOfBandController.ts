@@ -8,7 +8,7 @@ import {
   OutOfBandInvitation,
   Agent,
   RecordNotFoundError,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -140,7 +140,7 @@ export class OutOfBandController extends Controller {
   @Example<{ message: AgentMessageType; invitationUrl: string }>({
     message: {
       '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
-      '@type': 'https://didcomm.org/connections/1.0/invitation',
+      '@type': 'https://didcomm.org/connections/1.x/invitation',
     },
     invitationUrl: 'http://example.com/invitation_url',
   })

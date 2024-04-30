@@ -3,10 +3,10 @@ import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
 import { spy, restore as sinonRestore } from 'sinon'
 
-import type { Agent, BasicMessageRecord, ConnectionRecord } from '@aries-framework/core'
+import type { Agent, BasicMessageRecord, ConnectionRecord } from '@credo-ts/core'
 import type { Server } from 'net'
 
-import { BasicMessageEventTypes } from '@aries-framework/core'
+import { BasicMessageEventTypes } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 

@@ -1,4 +1,4 @@
-import { Agent } from '@aries-framework/core'
+import { Agent } from '@credo-ts/core'
 import { Body, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 

@@ -16,7 +16,7 @@
 
     "baseUrl": ".",
     "paths": {
-      "@aries-framework/rest": ["packages/rest/src"]
+      "@credo-ts/rest": ["packages/rest/src"]
     },
     "types": ["mocha", "node"]
   },

@@ -2,7 +2,7 @@
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "paths": {
-      "@aries-framework/rest": ["./src"],
+      "@credo-ts/rest": ["./src"],
       "@src": ["./src"],
       "@src/*": ["./src/*"],
       "@schema/*": ["./schema/*"],

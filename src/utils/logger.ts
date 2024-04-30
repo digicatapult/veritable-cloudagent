@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { type ILogObject, Logger } from 'tslog'
-import { LogLevel, BaseLogger } from '@aries-framework/core'
+import { LogLevel, BaseLogger } from '@credo-ts/core'
 import { appendFileSync } from 'fs'
 
 function logToTransport(logObject: ILogObject) {

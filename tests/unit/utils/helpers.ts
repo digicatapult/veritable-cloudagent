@@ -1,4 +1,4 @@
-import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@aries-framework/anoncreds'
+import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@credo-ts/anoncreds'
 import {
   type ConnectionRecordProps,
   type DidCreateResult,
@@ -14,8 +14,8 @@ import {
   ConnectionInvitationMessage,
   DidDocument,
   TrustPingMessage,
-} from '@aries-framework/core'
-import { JsonEncoder } from '@aries-framework/core/build/utils/JsonEncoder.js'
+} from '@credo-ts/core'
+import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
 
 import { setupAgent } from '../../../src/utils/agent.js'
@@ -91,7 +91,7 @@ export function getTestOutOfBandInvitation() {
     label: 'Aries Test Agent',
 
     accept: ['didcomm/aip1', 'didcomm/aip2;env=rfc19'],
-    handshake_protocols: ['https://didcomm.org/didexchange/1.0', 'https://didcomm.org/connections/1.0'],
+    handshake_protocols: ['https://didcomm.org/didexchange/1.x', 'https://didcomm.org/connections/1.x'],
     services: [
       {
         id: '#inline-0',
@@ -134,7 +134,7 @@ export function getTestOutOfBandRecord() {
       '@id': 'd6472943-e5d0-4d95-8b48-790ed5a41931',
       label: 'Aries Test Agent',
       accept: ['didcomm/aip1', 'didcomm/aip2;env=rfc19'],
-      handshake_protocols: ['https://didcomm.org/didexchange/1.0', 'https://didcomm.org/connections/1.0'],
+      handshake_protocols: ['https://didcomm.org/didexchange/1.x', 'https://didcomm.org/connections/1.x'],
       services: [
         {
           id: '#inline-0',

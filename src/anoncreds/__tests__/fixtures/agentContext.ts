@@ -1,4 +1,4 @@
-import { AgentContext, ConsoleLogger } from '@aries-framework/core'
+import { AgentContext, ConsoleLogger } from '@credo-ts/core'
 
 import sinon from 'sinon'
 

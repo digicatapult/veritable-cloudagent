@@ -1,17 +1,20 @@
-import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@aries-framework/anoncreds'
-import type {
-  AutoAcceptProof,
-  BasicMessageRole,
-  CredentialState,
-  DidExchangeRole,
-  DidExchangeState,
-  OutOfBandInvitationOptions,
-  OutOfBandRecordProps,
-  ProofState,
-  OutOfBandRole,
-  OutOfBandState,
-  ProofExchangeRecordProps,
-} from '@aries-framework/core'
+import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@credo-ts/anoncreds'
+import {
+  type AutoAcceptProof,
+  type BasicMessageRole,
+  type CredentialState,
+  type DidExchangeRole,
+  type DidExchangeState,
+  type OutOfBandInvitationOptions,
+  type OutOfBandRecordProps,
+  type ProofState,
+  type OutOfBandRole,
+  type OutOfBandState,
+  type ProofExchangeRecordProps,
+  type CredentialExchangeRecordProps,
+  CredentialRole,
+  ProofRole,
+} from '@credo-ts/core'
 
 /**
  * @example "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
@@ -177,7 +180,7 @@ export const outOfBandInvitationExample = {
   '@id': 'd6472943-e5d0-4d95-8b48-790ed5a41931',
   label: 'Aries Test Agent',
   accept: ['didcomm/aip1', 'didcomm/aip2;env=rfc19'],
-  handshake_protocols: ['https://didcomm.org/didexchange/1.0', 'https://didcomm.org/connections/1.0'],
+  handshake_protocols: ['https://didcomm.org/didexchange/1.x', 'https://didcomm.org/connections/1.x'],
   services: [
     {
       id: '#inline-0',
@@ -205,18 +208,13 @@ export const outOfBandRecordExample = {
   reusable: false,
 }
 
-export const CredentialExchangeRecordExample = {
-  _tags: {
+export const CredentialExchangeRecordExample: CredentialExchangeRecordProps = {
+  tags: {
     state: 'offer-sent',
     threadId: '82701488-b43c-4d7b-9244-4bb204a7ae26',
     connectionId: 'ac6d0fdd-0db8-4f52-8a3d-de7ff8ddc14b',
   },
-  metadata: {
-    '_internal/indyCredential': {
-      credentialDefinitionId: 'q7ATwTYbQDgiigVijUAej:3:CL:318187:latest',
-      schemaId: 'q7ATwTYbQDgiigVijUAej:2:Employee Badge:1.0',
-    },
-  },
+  role: CredentialRole.Issuer,
   credentials: [],
   id: '821f9b26-ad04-4f56-89b6-e2ef9c72b36e',
   createdAt: new Date('2022-01-01T00:00:00.000Z'),
@@ -230,6 +228,7 @@ export const CredentialExchangeRecordExample = {
 export const ProofRecordExample: ProofExchangeRecordProps = {
   id: '821f9b26-ad04-4f56-89b6-e2ef9c72b36e',
   protocolVersion: 'v2',
+  role: ProofRole.Verifier,
   state: 'proposal-sent' as ProofState,
   threadId: '0019d466-5eea-4269-8c40-031b4896c5b7',
   connectionId: '2aecf74c-3073-4f98-9acb-92415d096834',

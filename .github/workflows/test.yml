@@ -14,7 +14,7 @@ env:
 # Ideally we only add this to the 'release' job so it doesn't limit PR runs, but github can't guarantee the job order in that case:
 # "When concurrency is specified at the job level, order is not guaranteed for jobs or runs that queue within 5 minutes of each other."
 concurrency:
-  group: aries-framework-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
+  group: credo-ts-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:

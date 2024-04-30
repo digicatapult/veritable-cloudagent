@@ -4,14 +4,14 @@ import type {
   ProposeProofOptions,
   RequestProofOptions,
 } from '../../src/controllers/types.js'
-import type { Agent, ProofStateChangedEvent } from '@aries-framework/core'
+import type { Agent, ProofStateChangedEvent } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import { stub, restore as sinonRestore } from 'sinon'
 
-import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofState } from '@aries-framework/core'
+import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofRole, ProofState } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
@@ -359,6 +359,7 @@ describe('ProofController', () => {
         state: ProofState.ProposalSent,
         threadId: 'random',
         createdAt: now,
+        role: ProofRole.Verifier,
       })
 
       // Start client and wait for it to be opened
@@ -395,6 +396,7 @@ describe('ProofController', () => {
             createdAt: now.toISOString(),
             state: 'proposal-sent',
             threadId: 'random',
+            role: ProofRole.Verifier,
           },
         },
         metadata: {

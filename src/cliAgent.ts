@@ -7,8 +7,8 @@ import {
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
-} from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@aries-framework/node'
+} from '@credo-ts/core'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
 import { readFile } from 'fs/promises'
 
 import { setupServer } from './server.js'

@@ -1,7 +1,7 @@
 import { describe, before, after, test } from 'mocha'
 import { expect } from 'chai'
 
-import type { Agent } from '@aries-framework/core'
+import type { Agent } from '@credo-ts/core'
 import type { Express } from 'express'
 
 import request from 'supertest'

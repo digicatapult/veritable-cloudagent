@@ -1,10 +1,5 @@
-import {
-  AnonCredsCredentialFormatService,
-  AnonCredsProofFormatService,
-  AnonCredsModule,
-} from '@aries-framework/anoncreds'
-import { AnonCredsRsModule } from '@aries-framework/anoncreds-rs'
-import { AskarModule } from '@aries-framework/askar'
+import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsModule } from '@credo-ts/anoncreds'
+import { AskarModule } from '@credo-ts/askar'
 import {
   type ModulesMap,
   V2CredentialProtocol,
@@ -18,12 +13,12 @@ import {
   LogLevel,
   MediatorModule,
   ProofsModule,
-} from '@aries-framework/core'
-import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
-import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+} from '@credo-ts/core'
+import { agentDependencies, HttpInboundTransport } from '@credo-ts/node'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
 import { TsLogger } from './logger.js'
 import VeritableAnonCredsRegistry from '../anoncreds/index.js'
@@ -80,8 +75,6 @@ export const getAgentModules = (options: {
     }),
     anoncreds: new AnonCredsModule({
       registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
-    }),
-    anoncredsRs: new AnonCredsRsModule({
       anoncreds,
     }),
     askar: new AskarModule({

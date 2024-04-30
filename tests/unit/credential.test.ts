@@ -3,7 +3,7 @@ import { describe, before, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import { stub, restore as sinonRestore } from 'sinon'
 
-import type { Agent, ConnectionRecord, CredentialStateChangedEvent, OutOfBandRecord } from '@aries-framework/core'
+import type { Agent, ConnectionRecord, CredentialStateChangedEvent, OutOfBandRecord } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import {
@@ -15,7 +15,8 @@ import {
   AgentMessage,
   JsonTransformer,
   CredentialRepository,
-} from '@aries-framework/core'
+  CredentialRole,
+} from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
@@ -312,6 +313,7 @@ describe('CredentialController', () => {
               revocationDate: now,
               comment: 'test',
             },
+            role: CredentialRole.Holder,
           }),
           previousState: CredentialState.CredentialIssued,
         },
@@ -350,6 +352,7 @@ describe('CredentialController', () => {
               revocationDate: now.toISOString(),
               comment: 'test',
             },
+            role: CredentialRole.Holder,
           },
           previousState: CredentialState.CredentialIssued,
         },
@@ -430,7 +433,7 @@ describe('CredentialController', () => {
         goalCode: 'string',
         goal: 'string',
         handshake: true,
-        handshakeProtocols: ['https://didcomm.org/connections/1.0'],
+        handshakeProtocols: ['https://didcomm.org/connections/1.x'],
         multiUseInvitation: true,
         autoAcceptConnection: true,
       }
@@ -475,7 +478,7 @@ describe('CredentialController', () => {
       const msg = JsonTransformer.fromJSON(
         {
           '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
-          '@type': 'https://didcomm.org/connections/1.0/invitation',
+          '@type': 'https://didcomm.org/connections/1.x/invitation',
         },
         AgentMessage
       )
@@ -484,7 +487,7 @@ describe('CredentialController', () => {
         domain: 'string',
         message: {
           '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
-          '@type': 'https://didcomm.org/connections/1.0/invitation',
+          '@type': 'https://didcomm.org/connections/1.x/invitation',
         },
         recordId: 'string',
       }
@@ -493,6 +496,7 @@ describe('CredentialController', () => {
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
+        outOfBandRecord,
       })
 
       const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)

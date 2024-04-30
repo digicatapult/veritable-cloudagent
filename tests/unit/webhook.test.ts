@@ -3,7 +3,7 @@ import { describe, before, after, test } from 'mocha'
 import { expect } from 'chai'
 
 import type { WebhookData } from '../../src/utils/webhook.js'
-import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@aries-framework/core'
+import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import {
@@ -13,7 +13,9 @@ import {
   ProofExchangeRecord,
   CredentialState,
   CredentialEventTypes,
-} from '@aries-framework/core'
+  CredentialRole,
+  ProofRole,
+} from '@credo-ts/core'
 
 import { setupServer } from '../../src/server.js'
 import { waitForHook, webhookListener } from '../../src/utils/webhook.js'
@@ -65,6 +67,7 @@ describe('WebhookTests', () => {
       state: CredentialState.OfferSent,
       threadId: 'random',
       protocolVersion: 'v1',
+      role: CredentialRole.Holder,
     })
 
     bobAgent.events.emit<CredentialStateChangedEvent>(bobAgent.context, {
@@ -94,6 +97,7 @@ describe('WebhookTests', () => {
       protocolVersion: 'v2',
       state: ProofState.ProposalSent,
       threadId: 'random',
+      role: ProofRole.Prover,
     })
 
     bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {

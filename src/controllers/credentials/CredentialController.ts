@@ -5,7 +5,7 @@ import {
   CredentialState,
   Agent,
   RecordNotFoundError,
-} from '@aries-framework/core'
+} from '@credo-ts/core'
 import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
