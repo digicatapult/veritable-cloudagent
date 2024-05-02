@@ -21,6 +21,23 @@ services:
     command: --ipfs-origin http://localhost:5001 --config /config.json
     networks:
       - testnet
+  postgres:
+    container_name: alice-agent-postgres
+    image: postgres:16.2-alpine
+    restart: on-failure
+    ports:
+      - 5432:5432
+    volumes:
+      - veritable-cloudagent-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres-veritable-cloudagent
+    networks:
+      - testnet
+
+volumes:
+  veritable-cloudagent-storage:
 
 networks:
   testnet:

@@ -1,5 +1,5 @@
 import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsModule } from '@credo-ts/anoncreds'
-import { AskarModule } from '@credo-ts/askar'
+import { AskarModule, AskarWalletPostgresStorageConfig } from '@credo-ts/askar'
 import {
   type ModulesMap,
   V2CredentialProtocol,
@@ -85,6 +85,16 @@ export const getAgentModules = (options: {
     }),
   }
 }
+export const askarPostgresStorageConfig: AskarWalletPostgresStorageConfig = {
+  type: 'postgres',
+  config: {
+    host: 'localhost:5432',
+  },
+  credentials: {
+    account: 'postgres',
+    password: 'postgres',
+  },
+}
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
@@ -101,10 +111,11 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
     config: {
       label: name,
       endpoints,
-      walletConfig: { id: name, key: name },
+      walletConfig: { id: name, key: name, storage: askarPostgresStorageConfig },
       useDidSovPrefixWhereAllowed: true,
       logger: logger,
       autoUpdateStorageOnStartup: true,
+      backupBeforeStorageUpdate: false,
     },
     dependencies: agentDependencies,
     modules,
