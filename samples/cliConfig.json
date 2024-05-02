@@ -2,7 +2,7 @@
   "label": "AFJ Rest Agent",
   "walletId": "walletId",
   "walletKey": "walletKey",
-  "postgresHost": "localhost:5432",
+  "postgresHost": "alice-agent-postgres:5432",
   "postgresUsername": "postgres",
   "postgresPassword": "postgres",
   "publicDidSeed": "testtesttesttesttesttesttesttest",
@@ -11,7 +11,8 @@
   "autoAcceptCredentials": "never",
   "autoAcceptProofs": "never",
   "useLegacyDidSovPrefix": true,
-  "logLevel": 2,
+  "backupBeforeStorageUpdate": false,
+  "logLevel": 0,
   "inboundTransport": [
     {
       "transport": "http",

@@ -35,7 +35,7 @@ services:
       - '5003:5003'
       - '3000:3000'
     # or via command line arguments
-    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --opa-origin http://opa:8181 --config /config.json
+    command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --opa-origin http://opa:8181 --config /config.json --postgres-host postgres:5432
     networks:
       - testnet
 
@@ -69,9 +69,23 @@ services:
     command: run --server --log-level debug suppliers.rego
     networks:
       - testnet
-
+  postgres:
+    container_name: veritable-cloudagent-postgres
+    image: postgres:16.2-alpine
+    restart: on-failure
+    ports:
+      - 5432:5432
+    volumes:
+      - veritable-cloudagent-storage:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres-veritable-cloudagent
+    networks:
+      - testnet
 volumes:
   ipfs0:
+  veritable-cloudagent-storage:
 
 networks:
   testnet:
