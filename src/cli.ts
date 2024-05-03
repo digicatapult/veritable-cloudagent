@@ -129,17 +129,6 @@ const parsed = yargs(hideBin(process.argv))
   .option('postgres-password', {
     string: true,
   })
-  .check((argv) => {
-    if (
-      argv['storage-type'] === 'postgres' &&
-      (!argv['postgres-host'] || !argv['postgres-username'] || !argv['postgres-password'] || !argv['postgres-port'])
-    ) {
-      throw new Error(
-        "--postgres-host, --postgres-port, --postgres-username, and postgres-password are required when setting --storage-type to 'postgres'"
-      )
-    }
-    return true
-  })
   .config()
   .env('AFJ_REST')
   .parseSync()
