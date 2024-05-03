@@ -85,16 +85,16 @@ export const getAgentModules = (options: {
     }),
   }
 }
-export const askarPostgresStorageConfig: AskarWalletPostgresStorageConfig = {
-  type: 'postgres',
-  config: {
-    host: 'localhost:5432',
-  },
-  credentials: {
-    account: 'postgres',
-    password: 'postgres',
-  },
-}
+// export const askarPostgresStorageConfig: AskarWalletPostgresStorageConfig = {
+//   type: 'postgres',
+//   config: {
+//     host: 'localhost:5432',
+//   },
+//   credentials: {
+//     account: 'postgres',
+//     password: 'postgres',
+//   },
+// }
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
   const logger = new TsLogger(LogLevel.debug)
@@ -111,7 +111,8 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
     config: {
       label: name,
       endpoints,
-      walletConfig: { id: name, key: name, storage: askarPostgresStorageConfig },
+      // walletConfig: { id: name, key: name, storage: askarPostgresStorageConfig },
+      walletConfig: { id: name, key: name },
       useDidSovPrefixWhereAllowed: true,
       logger: logger,
       autoUpdateStorageOnStartup: true,
