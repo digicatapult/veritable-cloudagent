@@ -117,9 +117,6 @@ const parsed = yargs(hideBin(process.argv))
     string: true,
     default: 'http://localhost:8181',
   })
-  .option('storage-type', {
-    choices: ['postgres'] as const,
-  })
   .option('postgres-host', {
     string: true,
   })
