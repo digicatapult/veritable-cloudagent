@@ -87,7 +87,7 @@ const parsed = yargs(hideBin(process.argv))
     boolean: true,
     default: true,
   })
-  .option(' backup-before-storage-update', {
+  .option('backup-before-storage-update', {
     boolean: true,
     default: false,
   })
@@ -123,6 +123,9 @@ const parsed = yargs(hideBin(process.argv))
   .option('postgres-host', {
     string: true,
   })
+  .option('postgres-port', {
+    string: true,
+  })
   .option('postgres-username', {
     string: true,
   })
@@ -132,10 +135,10 @@ const parsed = yargs(hideBin(process.argv))
   .check((argv) => {
     if (
       argv['storage-type'] === 'postgres' &&
-      (!argv['postgres-host'] || !argv['postgres-username'] || !argv['postgres-password'])
+      (!argv['postgres-host'] || !argv['postgres-username'] || !argv['postgres-password'] || !argv['postgres-port'])
     ) {
       throw new Error(
-        "--postgres-host, --postgres-username, and postgres-password are required when setting --storage-type to 'postgres'"
+        "--postgres-host, --postgres-port, --postgres-username, and postgres-password are required when setting --storage-type to 'postgres'"
       )
     }
     return true
@@ -153,7 +156,7 @@ export async function runCliServer() {
       storage: {
         type: 'postgres',
         config: {
-          host: parsed['postgres-host'] as string,
+          host: `${parsed['postgres-host'] as string}:${parsed['postgres-port'] as string}`,
         },
         credentials: {
           account: parsed['postgres-username'] as string,

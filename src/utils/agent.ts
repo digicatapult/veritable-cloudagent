@@ -1,5 +1,5 @@
 import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsModule } from '@credo-ts/anoncreds'
-import { AskarModule, AskarWalletPostgresStorageConfig } from '@credo-ts/askar'
+import { AskarModule } from '@credo-ts/askar'
 import {
   type ModulesMap,
   V2CredentialProtocol,

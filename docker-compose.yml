@@ -18,7 +18,7 @@ services:
       - '5003:5003'
       - '3000:3000'
     # or via command line arguments
-    command: --ipfs-origin http://localhost:5001 --config /config.json
+    command: --ipfs-origin http://localhost:5001 --config /config.json --postgres-host alice-agent-postgres --postgres-port 5432
     networks:
       - testnet
   postgres:
@@ -32,7 +32,6 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres-veritable-cloudagent
     networks:
       - testnet
 
