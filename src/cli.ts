@@ -117,6 +117,10 @@ const parsed = yargs(hideBin(process.argv))
     string: true,
     default: 'http://localhost:8181',
   })
+  .option('storage-type', {
+    choices: ['sqlite', 'postgres'] as const,
+    default: 'postgres',
+  })
   .option('postgres-host', {
     string: true,
   })
@@ -129,6 +133,25 @@ const parsed = yargs(hideBin(process.argv))
   .option('postgres-password', {
     string: true,
   })
+  .check((argv) => {
+    if (
+      argv['storage-type'] === 'postgres' &&
+      (!argv['postgres-host'] || !argv['postgres-port'] || !argv['postgres-username'] || !argv['postgres-password'])
+    ) {
+      throw new Error(
+        "--postgres-host,--postgres-port, --postgres-username, and postgres-password are required when setting --storage-type to 'postgres'"
+      )
+    }
+
+    return true
+  })
+  .check((argv) => {
+    if (argv['storage-type'] === 'postgres' && argv['backup-before-storage-update'] == true) {
+      throw new Error("--backup-before-storage-update needs to be set to 'false' when using postgres database")
+    }
+
+    return true
+  })
   .config()
   .env('AFJ_REST')
   .parseSync()
@@ -139,16 +162,21 @@ export async function runCliServer() {
     walletConfig: {
       id: parsed['wallet-id'],
       key: parsed['wallet-key'],
-      storage: {
-        type: 'postgres',
-        config: {
-          host: `${parsed['postgres-host'] as string}:${parsed['postgres-port'] as string}`,
-        },
-        credentials: {
-          account: parsed['postgres-username'] as string,
-          password: parsed['postgres-password'] as string,
-        },
-      } satisfies AskarWalletPostgresStorageConfig,
+      storage:
+        parsed['storage-type'] === 'sqlite'
+          ? {
+              type: 'sqlite',
+            }
+          : ({
+              type: 'postgres',
+              config: {
+                host: `${parsed['postgres-host'] as string}:${parsed['postgres-port'] as string}`,
+              },
+              credentials: {
+                account: parsed['postgres-username'] as string,
+                password: parsed['postgres-password'] as string,
+              },
+            } satisfies AskarWalletPostgresStorageConfig),
     },
     endpoints: parsed.endpoint,
     autoAcceptConnections: parsed['auto-accept-connections'],
