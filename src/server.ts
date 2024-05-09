@@ -16,6 +16,8 @@ import { connectionEvents } from './events/ConnectionEvents.js'
 import { credentialEvents } from './events/CredentialEvents.js'
 import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
+import { drpcEvents } from './events/DrpcEvents.js'
+import { DrpcService } from './drpc/DrpcService.js'
 import { RegisterRoutes } from './routes/routes.js'
 import { errorHandler } from './error.js'
 import PolicyAgent from './policyAgent/index.js'
@@ -29,6 +31,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
 
   container.registerInstance(Agent, agent as Agent)
   container.registerInstance(PolicyAgent, new PolicyAgent(config.opaOrigin || 'http://localhost:8181'))
+  container.registerInstance(DrpcService, new DrpcService(agent))
 
   const app = config.app ?? express()
   if (config.cors) app.use(cors())
@@ -39,6 +42,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
     credentialEvents(agent, config)
     proofEvents(agent, config)
     trustPingEvents(agent, config)
+    drpcEvents(agent, config)
   }
 
   // Use body parser to read sent json payloads

@@ -33,6 +33,8 @@ services:
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
+    environment:
+      - AFJ_REST_LOG_LEVEL=1
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
@@ -57,6 +59,8 @@ services:
         condition: service_healthy
     volumes:
       - ./samples/cliConfig.json:/config.json
+    environment:
+      - AFJ_REST_LOG_LEVEL=1
     ports:
       #- '5102:5002'
       #- '5103:5003'
@@ -80,6 +84,8 @@ services:
         condition: service_healthy
     volumes:
       - ./samples/cliConfig.json:/config.json
+    environment:
+      - AFJ_REST_LOG_LEVEL=1
     ports:
       #- '5202:5002'
       #- '5203:5003'
