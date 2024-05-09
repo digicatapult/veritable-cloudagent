@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -93,7 +93,7 @@
     "ngrok": "^4.3.1",
     "prettier": "^2.8.8",
     "sinon": "^15.2.0",
-    "supertest": "^6.2.3",
+    "supertest": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
     "tsimp": "^2.0.11",
     "typescript": "~5.3.3"
