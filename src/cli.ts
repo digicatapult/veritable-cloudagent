@@ -1,5 +1,5 @@
 import { runRestAgent, type InboundTransport, type Transports, type AriesRestConfig } from './cliAgent.js'
-
+import type { AskarWalletPostgresStorageConfig } from '@credo-ts/askar'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
@@ -87,6 +87,10 @@ const parsed = yargs(hideBin(process.argv))
     boolean: true,
     default: true,
   })
+  .option('backup-before-storage-update', {
+    boolean: true,
+    default: false,
+  })
   .option('connection-image-url', {
     string: true,
   })
@@ -113,7 +117,41 @@ const parsed = yargs(hideBin(process.argv))
     string: true,
     default: 'http://localhost:8181',
   })
+  .option('storage-type', {
+    choices: ['sqlite', 'postgres'] as const,
+    default: 'postgres',
+  })
+  .option('postgres-host', {
+    string: true,
+  })
+  .option('postgres-port', {
+    string: true,
+  })
+  .option('postgres-username', {
+    string: true,
+  })
+  .option('postgres-password', {
+    string: true,
+  })
+  .check((argv) => {
+    if (
+      argv['storage-type'] === 'postgres' &&
+      (!argv['postgres-host'] || !argv['postgres-port'] || !argv['postgres-username'] || !argv['postgres-password'])
+    ) {
+      throw new Error(
+        "--postgres-host,--postgres-port, --postgres-username, and postgres-password are required when setting --storage-type to 'postgres'"
+      )
+    }
 
+    return true
+  })
+  .check((argv) => {
+    if (argv['storage-type'] === 'postgres' && argv['backup-before-storage-update'] == true) {
+      throw new Error("--backup-before-storage-update needs to be set to 'false' when using postgres database")
+    }
+
+    return true
+  })
   .config()
   .env('AFJ_REST')
   .parseSync()
@@ -124,12 +162,28 @@ export async function runCliServer() {
     walletConfig: {
       id: parsed['wallet-id'],
       key: parsed['wallet-key'],
+      storage:
+        parsed['storage-type'] === 'sqlite'
+          ? {
+              type: 'sqlite',
+            }
+          : ({
+              type: 'postgres',
+              config: {
+                host: `${parsed['postgres-host'] as string}:${parsed['postgres-port'] as string}`,
+              },
+              credentials: {
+                account: parsed['postgres-username'] as string,
+                password: parsed['postgres-password'] as string,
+              },
+            } satisfies AskarWalletPostgresStorageConfig),
     },
     endpoints: parsed.endpoint,
     autoAcceptConnections: parsed['auto-accept-connections'],
     autoAcceptCredentials: parsed['auto-accept-credentials'],
     autoAcceptProofs: parsed['auto-accept-proofs'],
     autoUpdateStorageOnStartup: parsed['auto-update-storage-on-startup'],
+    backupBeforeStorageUpdate: parsed['backup-before-storage-update'],
     autoAcceptMediationRequests: parsed['auto-accept-mediation-requests'],
     useDidKeyInProtocols: parsed['use-did-key-in-protocols'],
     useDidSovPrefixWhereAllowed: parsed['use-legacy-did-sov-prefix'],
