@@ -25,7 +25,7 @@ jobs:
       org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -43,14 +43,14 @@ jobs:
     name: Run lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -68,14 +68,14 @@ jobs:
     name: Run dependency check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -93,14 +93,14 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 20.x
 
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -121,7 +121,7 @@ jobs:
     name: 'Check version'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - run: git fetch --depth=1 --tags origin
 
@@ -149,7 +149,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
@@ -191,7 +191,7 @@ jobs:
         with:
           buildkitd-flags: '--debug'
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build testnet and integration images
         uses: docker/bake-action@v4
