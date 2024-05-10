@@ -105,6 +105,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       useDidSovPrefixWhereAllowed: true,
       logger: logger,
       autoUpdateStorageOnStartup: true,
+      backupBeforeStorageUpdate: false,
     },
     dependencies: agentDependencies,
     modules,

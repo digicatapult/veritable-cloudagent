@@ -39,6 +39,7 @@ export interface AriesRestConfig {
   autoAcceptCredentials?: AutoAcceptCredential
   autoAcceptProofs?: AutoAcceptProof
   autoUpdateStorageOnStartup?: boolean
+  backupBeforeStorageUpdate?: boolean
   useDidKeyInProtocols?: boolean
   useDidSovPrefixWhereAllowed?: boolean
   logLevel?: LogLevel

@@ -2,12 +2,15 @@
   "label": "AFJ Rest Agent",
   "walletId": "walletId",
   "walletKey": "walletKey",
+  "postgresUsername": "postgres",
+  "postgresPassword": "postgres",
   "publicDidSeed": "testtesttesttesttesttesttesttest",
   "endpoint": ["http://localhost:5002", "ws://localhost:5003"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "never",
   "autoAcceptProofs": "never",
   "useLegacyDidSovPrefix": true,
+  "backupBeforeStorageUpdate": false,
   "logLevel": 5,
   "inboundTransport": [
     {
