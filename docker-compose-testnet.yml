@@ -193,7 +193,7 @@ services:
 
   opa0:
     container_name: opa0
-    image: openpolicyagent/opa:0.60.0-static
+    image: openpolicyagent/opa:0.64.1-static
     ports:
       - '8181:8181'
     volumes:
@@ -207,7 +207,7 @@ services:
 
   opa1:
     container_name: opa1
-    image: openpolicyagent/opa:0.60.0-static
+    image: openpolicyagent/opa:0.64.1-static
     ports:
       - '8182:8181'
     volumes:
@@ -221,7 +221,7 @@ services:
 
   opa2:
     container_name: opa2
-    image: openpolicyagent/opa:0.60.0-static
+    image: openpolicyagent/opa:0.64.1-static
     ports:
       - '8183:8181'
     volumes:
@@ -234,7 +234,7 @@ services:
   ##################################################################################
   alice-postgres:
     container_name: alice-postgres
-    image: postgres:16.2-alpine
+    image: postgres:16.3-alpine
     restart: on-failure
     ports:
       - 5432:5432
@@ -251,7 +251,7 @@ services:
   ##################################################################################
   bob-postgres:
     container_name: bob-postgres
-    image: postgres:16.2-alpine
+    image: postgres:16.3-alpine
     restart: on-failure
     ports:
       - 5433:5432
@@ -268,7 +268,7 @@ services:
   ##################################################################################
   charlie-postgres:
     container_name: charlie-postgres
-    image: postgres:16.2-alpine
+    image: postgres:16.3-alpine
     restart: on-failure
     ports:
       - 5434:5432
