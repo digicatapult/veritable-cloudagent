@@ -61,7 +61,7 @@ services:
 
   opa:
     container_name: opa
-    image: openpolicyagent/opa:0.60.0-static
+    image: openpolicyagent/opa:0.64.1-static
     ports:
       - '8181:8181'
     volumes:
@@ -71,7 +71,7 @@ services:
       - testnet
   postgres:
     container_name: veritable-cloudagent-postgres
-    image: postgres:16.2-alpine
+    image: postgres:16.3-alpine
     restart: on-failure
     ports:
       - 5432:5432
