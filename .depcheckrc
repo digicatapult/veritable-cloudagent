@@ -7,7 +7,6 @@
     "@src/*",
     "@schema/*",
     "tsimp",
-    "@types/node-fetch",
-    "@credo-ts/drpc"
+    "@types/node-fetch"
   ]
 }
