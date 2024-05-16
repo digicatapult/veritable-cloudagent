@@ -1,5 +1,5 @@
-import type { DrpcRequest, DrpcResponse, DrpcRequestMessage, DrpcResponseMessage } from './messages'
-import type { DrpcRecord } from './repository/DrpcRecord'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse, VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from './messages'
+import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord'
 import type { ConnectionRecord } from '@credo-ts/core'
 
 import {
@@ -11,25 +11,25 @@ import {
   ConnectionService,
 } from '@credo-ts/core'
 
-import { DrpcRequestHandler, DrpcResponseHandler } from './handlers'
-import { DrpcRole } from './models'
-import { DrpcService } from './services'
+import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers'
+import { VerifiedDrpcRole } from './models'
+import { VerifiedDrpcService } from './services'
 
 @injectable()
-export class DrpcApi {
-  private drpcMessageService: DrpcService
+export class VerifiedDrpcApi {
+  private verifiedDrpcMessageService: VerifiedDrpcService
   private messageSender: MessageSender
   private connectionService: ConnectionService
   private agentContext: AgentContext
 
   public constructor(
     messageHandlerRegistry: MessageHandlerRegistry,
-    drpcMessageService: DrpcService,
+    verifiedDrpcMessageService: VerifiedDrpcService,
     messageSender: MessageSender,
     connectionService: ConnectionService,
     agentContext: AgentContext
   ) {
-    this.drpcMessageService = drpcMessageService
+    this.verifiedDrpcMessageService = verifiedDrpcMessageService
     this.messageSender = messageSender
     this.connectionService = connectionService
     this.agentContext = agentContext
@@ -44,13 +44,13 @@ export class DrpcApi {
    */
   public async sendRequest(
     connectionId: string,
-    request: DrpcRequest
-  ): Promise<() => Promise<DrpcResponse | undefined>> {
+    request: VerifiedDrpcRequest
+  ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionService.getById(this.agentContext, connectionId)
-    const { requestMessage: drpcMessage, record: drpcMessageRecord } =
-      await this.drpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
-    const messageId = drpcMessage.id
-    await this.sendMessage(connection, drpcMessage, drpcMessageRecord)
+    const { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord } =
+      await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
+    const messageId = verifiedDrpcMessage.id
+    await this.sendMessage(connection, verifiedDrpcMessage, verifiedDrpcMessageRecord)
     return async (timeout?: number) => {
       return await this.recvResponse(messageId, timeout)
     }
@@ -62,23 +62,23 @@ export class DrpcApi {
    * @param timeoutMs the time in milliseconds to wait for a response
    * @returns the response object
    */
-  private async recvResponse(messageId: string, timeoutMs?: number): Promise<DrpcResponse | undefined> {
+  private async recvResponse(messageId: string, timeoutMs?: number): Promise<VerifiedDrpcResponse | undefined> {
     return new Promise((resolve) => {
       const listener = ({
-        drpcMessageRecord,
+        verifiedDrpcMessageRecord,
         removeListener,
       }: {
-        drpcMessageRecord: DrpcRecord
+        verifiedDrpcMessageRecord: VerifiedDrpcRecord
         removeListener: () => void
       }) => {
-        const response = drpcMessageRecord.response
-        if (drpcMessageRecord.threadId === messageId) {
+        const response = verifiedDrpcMessageRecord.response
+        if (verifiedDrpcMessageRecord.threadId === messageId) {
           removeListener()
           resolve(response)
         }
       }
 
-      const cancelListener = this.drpcMessageService.createResponseListener(listener)
+      const cancelListener = this.verifiedDrpcMessageService.createResponseListener(listener)
       if (timeoutMs) {
         const handle = setTimeout(() => {
           clearTimeout(handle)
@@ -96,27 +96,27 @@ export class DrpcApi {
    */
   public async recvRequest(timeoutMs?: number): Promise<
     | {
-        request: DrpcRequest
-        sendResponse: (response: DrpcResponse) => Promise<void>
+        request: VerifiedDrpcRequest
+        sendResponse: (response: VerifiedDrpcResponse) => Promise<void>
       }
     | undefined
   > {
     return new Promise((resolve) => {
       const listener = ({
-        drpcMessageRecord,
+        verifiedDrpcMessageRecord,
         removeListener,
       }: {
-        drpcMessageRecord: DrpcRecord
+        verifiedDrpcMessageRecord: VerifiedDrpcRecord
         removeListener: () => void
       }) => {
-        const request = drpcMessageRecord.request
-        if (request && drpcMessageRecord.role === DrpcRole.Server) {
+        const request = verifiedDrpcMessageRecord.request
+        if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server) {
           removeListener()
           resolve({
-            sendResponse: async (response: DrpcResponse) => {
+            sendResponse: async (response: VerifiedDrpcResponse) => {
               await this.sendResponse({
-                connectionId: drpcMessageRecord.connectionId,
-                threadId: drpcMessageRecord.threadId,
+                connectionId: verifiedDrpcMessageRecord.connectionId,
+                threadId: verifiedDrpcMessageRecord.threadId,
                 response,
               })
             },
@@ -125,7 +125,7 @@ export class DrpcApi {
         }
       }
 
-      const cancelListener = this.drpcMessageService.createRequestListener(listener)
+      const cancelListener = this.verifiedDrpcMessageService.createRequestListener(listener)
 
       if (timeoutMs) {
         const handle = setTimeout(() => {
@@ -138,37 +138,37 @@ export class DrpcApi {
   }
 
   /**
-   * Sends a drpc response to a connection
+   * Sends a verified drpc response to a connection
    * @param connectionId the connection id to use
    * @param threadId the thread id to respond to
-   * @param response the drpc response object to send
+   * @param response the verified drpc response object to send
    */
   private async sendResponse(options: {
     connectionId: string
     threadId: string
-    response: DrpcResponse
+    response: VerifiedDrpcResponse
   }): Promise<void> {
     const connection = await this.connectionService.getById(this.agentContext, options.connectionId)
-    const drpcMessageRecord = await this.drpcMessageService.findByThreadAndConnectionId(
+    const verifiedDrpcMessageRecord = await this.verifiedDrpcMessageService.findByThreadAndConnectionId(
       this.agentContext,
       options.connectionId,
       options.threadId
     )
-    if (!drpcMessageRecord) {
+    if (!verifiedDrpcMessageRecord) {
       throw new Error(`No request found for threadId ${options.threadId}`)
     }
-    const { responseMessage, record } = await this.drpcMessageService.createResponseMessage(
+    const { responseMessage, record } = await this.verifiedDrpcMessageService.createResponseMessage(
       this.agentContext,
       options.response,
-      drpcMessageRecord
+      verifiedDrpcMessageRecord
     )
     await this.sendMessage(connection, responseMessage, record)
   }
 
   private async sendMessage(
     connection: ConnectionRecord,
-    message: DrpcRequestMessage | DrpcResponseMessage,
-    messageRecord: DrpcRecord
+    message: VerifiedDrpcRequestMessage | VerifiedDrpcResponseMessage,
+    messageRecord: VerifiedDrpcRecord
   ): Promise<void> {
     const outboundMessageContext = new OutboundMessageContext(message, {
       agentContext: this.agentContext,
@@ -179,7 +179,7 @@ export class DrpcApi {
   }
 
   private registerMessageHandlers(messageHandlerRegistry: MessageHandlerRegistry) {
-    messageHandlerRegistry.registerMessageHandler(new DrpcRequestHandler(this.drpcMessageService))
-    messageHandlerRegistry.registerMessageHandler(new DrpcResponseHandler(this.drpcMessageService))
+    messageHandlerRegistry.registerMessageHandler(new VerifiedDrpcRequestHandler(this.verifiedDrpcMessageService))
+    messageHandlerRegistry.registerMessageHandler(new VerifiedDrpcResponseHandler(this.verifiedDrpcMessageService))
   }
 }

@@ -1,1 +1,1 @@
-export * from './DrpcService'
+export * from './VerifiedDrpcService'

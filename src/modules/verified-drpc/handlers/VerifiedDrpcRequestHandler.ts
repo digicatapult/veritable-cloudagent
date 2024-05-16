@@ -1,17 +1,17 @@
-import type { DrpcService } from '../services/DrpcService'
+import type { VerifiedDrpcService } from '../services/VerifiedDrpcService'
 import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core'
 
-import { DrpcRequestMessage } from '../messages'
+import { VerifiedDrpcRequestMessage } from '../messages'
 
-export class DrpcRequestHandler implements MessageHandler {
-  private drpcMessageService: DrpcService
-  public supportedMessages = [DrpcRequestMessage]
+export class VerifiedDrpcRequestHandler implements MessageHandler {
+  private verifiedDrpcMessageService: VerifiedDrpcService
+  public supportedMessages = [VerifiedDrpcRequestMessage]
 
-  public constructor(drpcMessageService: DrpcService) {
-    this.drpcMessageService = drpcMessageService
+  public constructor(verifiedDrpcMessageService: VerifiedDrpcService) {
+    this.verifiedDrpcMessageService = verifiedDrpcMessageService
   }
 
-  public async handle(messageContext: MessageHandlerInboundMessage<DrpcRequestHandler>) {
-    await this.drpcMessageService.receiveRequest(messageContext)
+  public async handle(messageContext: MessageHandlerInboundMessage<VerifiedDrpcRequestHandler>) {
+    await this.verifiedDrpcMessageService.receiveRequest(messageContext)
   }
 }

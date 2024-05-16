@@ -1,111 +1,111 @@
-import type { DrpcRequestStateChangedEvent } from '../DrpcRequestEvents'
-import type { DrpcResponseStateChangedEvent } from '../DrpcResponseEvents'
-import type { DrpcRequest, DrpcResponse } from '../messages'
+import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents'
+import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages'
 import type { AgentContext, InboundMessageContext, Query } from '@credo-ts/core'
 
 import { EventEmitter, injectable } from '@credo-ts/core'
 
-import { DrpcRequestEventTypes } from '../DrpcRequestEvents'
-import { DrpcResponseEventTypes } from '../DrpcResponseEvents'
-import { DrpcRequestMessage, DrpcResponseMessage } from '../messages'
-import { DrpcRole, DrpcState, isValidDrpcRequest, isValidDrpcResponse } from '../models'
-import { DrpcRecord, DrpcRepository } from '../repository'
+import { VerifiedDrpcRequestEventTypes } from '../VerifiedDrpcRequestEvents'
+import { VerifiedDrpcResponseEventTypes } from '../VerifiedDrpcResponseEvents'
+import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from '../messages'
+import { VerifiedDrpcRole, VerifiedDrpcState, isValidVerifiedDrpcRequest, isValidVerifiedDrpcResponse } from '../models'
+import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository'
 
 @injectable()
-export class DrpcService {
-  private drpcMessageRepository: DrpcRepository
+export class VerifiedDrpcService {
+  private verifiedDrpcMessageRepository: VerifiedDrpcRepository
   private eventEmitter: EventEmitter
 
-  public constructor(drpcMessageRepository: DrpcRepository, eventEmitter: EventEmitter) {
-    this.drpcMessageRepository = drpcMessageRepository
+  public constructor(verifiedDrpcMessageRepository: VerifiedDrpcRepository, eventEmitter: EventEmitter) {
+    this.verifiedDrpcMessageRepository = verifiedDrpcMessageRepository
     this.eventEmitter = eventEmitter
   }
 
-  public async createRequestMessage(agentContext: AgentContext, request: DrpcRequest, connectionId: string) {
-    const drpcMessage = new DrpcRequestMessage({ request })
+  public async createRequestMessage(agentContext: AgentContext, request: VerifiedDrpcRequest, connectionId: string) {
+    const verifiedDrpcMessage = new VerifiedDrpcRequestMessage({ request })
 
-    const drpcMessageRecord = new DrpcRecord({
+    const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
       request,
       connectionId,
-      state: DrpcState.RequestSent,
-      threadId: drpcMessage.threadId,
-      role: DrpcRole.Client,
+      state: VerifiedDrpcState.RequestSent,
+      threadId: verifiedDrpcMessage.threadId,
+      role: VerifiedDrpcRole.Client,
     })
 
-    await this.drpcMessageRepository.save(agentContext, drpcMessageRecord)
-    this.emitStateChangedEvent(agentContext, drpcMessageRecord)
+    await this.verifiedDrpcMessageRepository.save(agentContext, verifiedDrpcMessageRecord)
+    this.emitStateChangedEvent(agentContext, verifiedDrpcMessageRecord)
 
-    return { requestMessage: drpcMessage, record: drpcMessageRecord }
+    return { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord }
   }
 
-  public async createResponseMessage(agentContext: AgentContext, response: DrpcResponse, drpcRecord: DrpcRecord) {
-    const drpcMessage = new DrpcResponseMessage({ response, threadId: drpcRecord.threadId })
+  public async createResponseMessage(agentContext: AgentContext, response: VerifiedDrpcResponse, verifiedDrpcRecord: VerifiedDrpcRecord) {
+    const verifiedDrpcMessage = new VerifiedDrpcResponseMessage({ response, threadId: verifiedDrpcRecord.threadId })
 
-    drpcRecord.assertState(DrpcState.RequestReceived)
+    verifiedDrpcRecord.assertState(VerifiedDrpcState.RequestReceived)
 
-    drpcRecord.response = response
-    drpcRecord.request = undefined
+    verifiedDrpcRecord.response = response
+    verifiedDrpcRecord.request = undefined
 
-    await this.updateState(agentContext, drpcRecord, DrpcState.Completed)
+    await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.Completed)
 
-    return { responseMessage: drpcMessage, record: drpcRecord }
+    return { responseMessage: verifiedDrpcMessage, record: verifiedDrpcRecord }
   }
 
   public createRequestListener(
-    callback: (params: { drpcMessageRecord: DrpcRecord; removeListener: () => void }) => void | Promise<void>
+    callback: (params: { verifiedDrpcMessageRecord: VerifiedDrpcRecord; removeListener: () => void }) => void | Promise<void>
   ) {
-    const listener = async (event: DrpcRequestStateChangedEvent) => {
-      const { drpcMessageRecord } = event.payload
+    const listener = async (event: VerifiedDrpcRequestStateChangedEvent) => {
+      const { verifiedDrpcMessageRecord } = event.payload
       await callback({
-        drpcMessageRecord,
-        removeListener: () => this.eventEmitter.off(DrpcRequestEventTypes.DrpcRequestStateChanged, listener),
+        verifiedDrpcMessageRecord,
+        removeListener: () => this.eventEmitter.off(VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged, listener),
       })
     }
-    this.eventEmitter.on(DrpcRequestEventTypes.DrpcRequestStateChanged, listener)
+    this.eventEmitter.on(VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged, listener)
 
     return () => {
-      this.eventEmitter.off(DrpcRequestEventTypes.DrpcRequestStateChanged, listener)
+      this.eventEmitter.off(VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged, listener)
     }
   }
 
   public createResponseListener(
-    callback: (params: { drpcMessageRecord: DrpcRecord; removeListener: () => void }) => void | Promise<void>
+    callback: (params: { verifiedDrpcMessageRecord: VerifiedDrpcRecord; removeListener: () => void }) => void | Promise<void>
   ) {
-    const listener = async (event: DrpcResponseStateChangedEvent) => {
-      const { drpcMessageRecord } = event.payload
+    const listener = async (event: VerifiedDrpcResponseStateChangedEvent) => {
+      const { verifiedDrpcMessageRecord } = event.payload
       await callback({
-        drpcMessageRecord,
-        removeListener: () => this.eventEmitter.off(DrpcResponseEventTypes.DrpcResponseStateChanged, listener),
+        verifiedDrpcMessageRecord,
+        removeListener: () => this.eventEmitter.off(VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged, listener),
       })
     }
-    this.eventEmitter.on(DrpcResponseEventTypes.DrpcResponseStateChanged, listener)
+    this.eventEmitter.on(VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged, listener)
     return () => {
-      this.eventEmitter.off(DrpcResponseEventTypes.DrpcResponseStateChanged, listener)
+      this.eventEmitter.off(VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged, listener)
     }
   }
 
-  public async receiveResponse(messageContext: InboundMessageContext<DrpcResponseMessage>) {
+  public async receiveResponse(messageContext: InboundMessageContext<VerifiedDrpcResponseMessage>) {
     const connection = messageContext.assertReadyConnection()
-    const drpcMessageRecord = await this.findByThreadAndConnectionId(
+    const verifiedDrpcMessageRecord = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
       connection.id,
       messageContext.message.threadId
     )
 
-    if (!drpcMessageRecord) {
-      throw new Error('DRPC message record not found')
+    if (!verifiedDrpcMessageRecord) {
+      throw new Error('Verified DRPC message record not found')
     }
 
-    drpcMessageRecord.assertRole(DrpcRole.Client)
-    drpcMessageRecord.assertState(DrpcState.RequestSent)
-    drpcMessageRecord.response = messageContext.message.response
-    drpcMessageRecord.request = undefined
+    verifiedDrpcMessageRecord.assertRole(VerifiedDrpcRole.Client)
+    verifiedDrpcMessageRecord.assertState(VerifiedDrpcState.RequestSent)
+    verifiedDrpcMessageRecord.response = messageContext.message.response
+    verifiedDrpcMessageRecord.request = undefined
 
-    await this.updateState(messageContext.agentContext, drpcMessageRecord, DrpcState.Completed)
-    return drpcMessageRecord
+    await this.updateState(messageContext.agentContext, verifiedDrpcMessageRecord, VerifiedDrpcState.Completed)
+    return verifiedDrpcMessageRecord
   }
 
-  public async receiveRequest(messageContext: InboundMessageContext<DrpcRequestMessage>) {
+  public async receiveRequest(messageContext: InboundMessageContext<VerifiedDrpcRequestMessage>) {
     const connection = messageContext.assertReadyConnection()
     const record = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -114,75 +114,75 @@ export class DrpcService {
     )
 
     if (record) {
-      throw new Error('DRPC message record already exists')
+      throw new Error('Verified DRPC message record already exists')
     }
-    const drpcMessageRecord = new DrpcRecord({
+    const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
       request: messageContext.message.request,
       connectionId: connection.id,
-      role: DrpcRole.Server,
-      state: DrpcState.RequestReceived,
+      role: VerifiedDrpcRole.Server,
+      state: VerifiedDrpcState.RequestReceived,
       threadId: messageContext.message.id,
     })
 
-    await this.drpcMessageRepository.save(messageContext.agentContext, drpcMessageRecord)
-    this.emitStateChangedEvent(messageContext.agentContext, drpcMessageRecord)
-    return drpcMessageRecord
+    await this.verifiedDrpcMessageRepository.save(messageContext.agentContext, verifiedDrpcMessageRecord)
+    this.emitStateChangedEvent(messageContext.agentContext, verifiedDrpcMessageRecord)
+    return verifiedDrpcMessageRecord
   }
 
-  private emitStateChangedEvent(agentContext: AgentContext, drpcMessageRecord: DrpcRecord) {
+  private emitStateChangedEvent(agentContext: AgentContext, verifiedDrpcMessageRecord: VerifiedDrpcRecord) {
     if (
-      drpcMessageRecord.request &&
-      (isValidDrpcRequest(drpcMessageRecord.request) ||
-        (Array.isArray(drpcMessageRecord.request) &&
-          drpcMessageRecord.request.length > 0 &&
-          isValidDrpcRequest(drpcMessageRecord.request[0])))
+      verifiedDrpcMessageRecord.request &&
+      (isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request) ||
+        (Array.isArray(verifiedDrpcMessageRecord.request) &&
+          verifiedDrpcMessageRecord.request.length > 0 &&
+          isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request[0])))
     ) {
-      this.eventEmitter.emit<DrpcRequestStateChangedEvent>(agentContext, {
-        type: DrpcRequestEventTypes.DrpcRequestStateChanged,
-        payload: { drpcMessageRecord: drpcMessageRecord.clone() },
+      this.eventEmitter.emit<VerifiedDrpcRequestStateChangedEvent>(agentContext, {
+        type: VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged,
+        payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },
       })
     } else if (
-      drpcMessageRecord.response &&
-      (isValidDrpcResponse(drpcMessageRecord.response) ||
-        (Array.isArray(drpcMessageRecord.response) &&
-          drpcMessageRecord.response.length > 0 &&
-          isValidDrpcResponse(drpcMessageRecord.response[0])))
+      verifiedDrpcMessageRecord.response &&
+      (isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response) ||
+        (Array.isArray(verifiedDrpcMessageRecord.response) &&
+          verifiedDrpcMessageRecord.response.length > 0 &&
+          isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response[0])))
     ) {
-      this.eventEmitter.emit<DrpcResponseStateChangedEvent>(agentContext, {
-        type: DrpcResponseEventTypes.DrpcResponseStateChanged,
-        payload: { drpcMessageRecord: drpcMessageRecord.clone() },
+      this.eventEmitter.emit<VerifiedDrpcResponseStateChangedEvent>(agentContext, {
+        type: VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged,
+        payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },
       })
     }
   }
 
-  private async updateState(agentContext: AgentContext, drpcRecord: DrpcRecord, newState: DrpcState) {
-    drpcRecord.state = newState
-    await this.drpcMessageRepository.update(agentContext, drpcRecord)
+  private async updateState(agentContext: AgentContext, verifiedDrpcRecord: VerifiedDrpcRecord, newState: VerifiedDrpcState) {
+    verifiedDrpcRecord.state = newState
+    await this.verifiedDrpcMessageRepository.update(agentContext, verifiedDrpcRecord)
 
-    this.emitStateChangedEvent(agentContext, drpcRecord)
+    this.emitStateChangedEvent(agentContext, verifiedDrpcRecord)
   }
 
   public findByThreadAndConnectionId(
     agentContext: AgentContext,
     connectionId: string,
     threadId: string
-  ): Promise<DrpcRecord | null> {
-    return this.drpcMessageRepository.findSingleByQuery(agentContext, {
+  ): Promise<VerifiedDrpcRecord | null> {
+    return this.verifiedDrpcMessageRepository.findSingleByQuery(agentContext, {
       connectionId,
       threadId,
     })
   }
 
-  public async findAllByQuery(agentContext: AgentContext, query: Query<DrpcRecord>) {
-    return this.drpcMessageRepository.findByQuery(agentContext, query)
+  public async findAllByQuery(agentContext: AgentContext, query: Query<VerifiedDrpcRecord>) {
+    return this.verifiedDrpcMessageRepository.findByQuery(agentContext, query)
   }
 
-  public async getById(agentContext: AgentContext, drpcMessageRecordId: string) {
-    return this.drpcMessageRepository.getById(agentContext, drpcMessageRecordId)
+  public async getById(agentContext: AgentContext, verifiedDrpcMessageRecordId: string) {
+    return this.verifiedDrpcMessageRepository.getById(agentContext, verifiedDrpcMessageRecordId)
   }
 
-  public async deleteById(agentContext: AgentContext, drpcMessageRecordId: string) {
-    const drpcMessageRecord = await this.getById(agentContext, drpcMessageRecordId)
-    return this.drpcMessageRepository.delete(agentContext, drpcMessageRecord)
+  public async deleteById(agentContext: AgentContext, verifiedDrpcMessageRecordId: string) {
+    const verifiedDrpcMessageRecord = await this.getById(agentContext, verifiedDrpcMessageRecordId)
+    return this.verifiedDrpcMessageRepository.delete(agentContext, verifiedDrpcMessageRecord)
   }
 }

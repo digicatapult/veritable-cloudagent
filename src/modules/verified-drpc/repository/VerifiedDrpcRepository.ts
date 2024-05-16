@@ -1,13 +1,13 @@
 import { EventEmitter, InjectionSymbols, inject, injectable, Repository, StorageService } from '@credo-ts/core'
 
-import { DrpcRecord } from './DrpcRecord'
+import { VerifiedDrpcRecord } from './VerifiedDrpcRecord'
 
 @injectable()
-export class DrpcRepository extends Repository<DrpcRecord> {
+export class VerifiedDrpcRepository extends Repository<VerifiedDrpcRecord> {
   public constructor(
-    @inject(InjectionSymbols.StorageService) storageService: StorageService<DrpcRecord>,
+    @inject(InjectionSymbols.StorageService) storageService: StorageService<VerifiedDrpcRecord>,
     eventEmitter: EventEmitter
   ) {
-    super(DrpcRecord, storageService, eventEmitter)
+    super(VerifiedDrpcRecord, storageService, eventEmitter)
   }
 }

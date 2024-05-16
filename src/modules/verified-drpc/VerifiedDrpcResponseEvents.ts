@@ -1,12 +1,12 @@
-import type { DrpcRecord } from './repository'
+import type { VerifiedDrpcRecord } from './repository'
 import type { BaseEvent } from '@credo-ts/core'
 
-export enum DrpcResponseEventTypes {
-  DrpcResponseStateChanged = 'DrpcResponseStateChanged',
+export enum VerifiedDrpcResponseEventTypes {
+  VerifiedDrpcResponseStateChanged = 'VerifiedDrpcResponseStateChanged',
 }
-export interface DrpcResponseStateChangedEvent extends BaseEvent {
-  type: typeof DrpcResponseEventTypes.DrpcResponseStateChanged
+export interface VerifiedDrpcResponseStateChangedEvent extends BaseEvent {
+  type: typeof VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged
   payload: {
-    drpcMessageRecord: DrpcRecord
+    verifiedDrpcMessageRecord: VerifiedDrpcRecord
   }
 }

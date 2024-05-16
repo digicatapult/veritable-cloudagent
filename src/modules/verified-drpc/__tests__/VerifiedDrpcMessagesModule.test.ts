@@ -1,9 +1,9 @@
 import type { DependencyManager } from '../../../core/src/plugins/DependencyManager'
 
 import { FeatureRegistry } from '../../../core/src/agent/FeatureRegistry'
-import { DrpcModule } from '../DrpcModule'
-import { DrpcRepository } from '../repository'
-import { DrpcService } from '../services'
+import { VerifiedDrpcModule } from '../VerifiedDrpcModule'
+import { VerifiedDrpcRepository } from '../repository'
+import { VerifiedDrpcService } from '../services'
 
 jest.mock('../../../core/src/plugins/DependencyManager')
 
@@ -18,12 +18,12 @@ const dependencyManager = {
   resolve: jest.fn().mockReturnValue({ logger: { warn: jest.fn() } }),
 } as unknown as DependencyManager
 
-describe('DrpcModule', () => {
+describe('VerifiedDrpcModule', () => {
   test('registers dependencies on the dependency manager', () => {
-    new DrpcModule().register(dependencyManager, featureRegistry)
+    new VerifiedDrpcModule().register(dependencyManager, featureRegistry)
 
     expect(dependencyManager.registerSingleton).toHaveBeenCalledTimes(2)
-    expect(dependencyManager.registerSingleton).toHaveBeenCalledWith(DrpcService)
-    expect(dependencyManager.registerSingleton).toHaveBeenCalledWith(DrpcRepository)
+    expect(dependencyManager.registerSingleton).toHaveBeenCalledWith(VerifiedDrpcService)
+    expect(dependencyManager.registerSingleton).toHaveBeenCalledWith(VerifiedDrpcRepository)
   })
 })

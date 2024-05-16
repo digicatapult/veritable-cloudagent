@@ -2,21 +2,21 @@ import type { ValidationOptions } from 'class-validator'
 
 import { ValidateBy, ValidationError, buildMessage } from 'class-validator'
 
-export function IsValidDrpcRequest(validationOptions?: ValidationOptions): PropertyDecorator {
+export function IsValidVerifiedDrpcRequest(validationOptions?: ValidationOptions): PropertyDecorator {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (target: any, propertyKey: string | symbol) {
     ValidateBy(
       {
-        name: 'isValidDrpcRequest',
+        name: 'isValidVerifiedDrpcRequest',
         validator: {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           validate: (value: any): boolean => {
-            // Check if value is a DrpcRequestObject or an array of DrpcRequestObject
+            // Check if value is a VerifiedDrpcRequestObject or an array of VerifiedDrpcRequestObject
             let isValid = false
             if (!Array.isArray(value)) {
-              isValid = isValidDrpcRequest(value)
+              isValid = isValidVerifiedDrpcRequest(value)
             } else {
-              isValid = value.every(isValidDrpcRequest)
+              isValid = value.every(isValidVerifiedDrpcRequest)
             }
 
             if (!isValid) {
@@ -26,7 +26,7 @@ export function IsValidDrpcRequest(validationOptions?: ValidationOptions): Prope
             return isValid
           },
           defaultMessage: buildMessage(
-            (eachPrefix) => eachPrefix + '$property is not a valid DrpcRequest',
+            (eachPrefix) => eachPrefix + '$property is not a valid VerifiedDrpcRequest',
             validationOptions
           ),
         },
@@ -36,7 +36,7 @@ export function IsValidDrpcRequest(validationOptions?: ValidationOptions): Prope
   }
 }
 
-export function isValidDrpcRequest(value: any): boolean {
+export function isValidVerifiedDrpcRequest(value: any): boolean {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false
   }

@@ -1,4 +1,4 @@
-export enum DrpcErrorCode {
+export enum VerifiedDrpcErrorCode {
   METHOD_NOT_FOUND = -32601,
   PARSE_ERROR = -32700,
   INVALID_REQUEST = -32600,

@@ -1,4 +1,4 @@
-export enum DrpcRole {
+export enum VerifiedDrpcRole {
   Client = 'client',
   Server = 'server',
 }

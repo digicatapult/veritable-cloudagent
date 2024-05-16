@@ -1,29 +1,29 @@
-import type { DrpcErrorCode } from '../models'
+import type { VerifiedDrpcErrorCode } from '../models'
 
 import { IsValidMessageType, parseMessageType, AgentMessage } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
-import { IsValidDrpcResponse } from '../models'
+import { IsValidVerifiedDrpcResponse } from '../models'
 
-export type DrpcResponse = DrpcResponseObject | (DrpcResponseObject | Record<string, never>)[] | Record<string, never>
+export type VerifiedDrpcResponse = VerifiedDrpcResponseObject | (VerifiedDrpcResponseObject | Record<string, never>)[] | Record<string, never>
 
-export interface DrpcResponseError {
-  code: DrpcErrorCode
+export interface VerifiedDrpcResponseError {
+  code: VerifiedDrpcErrorCode
   message: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
 }
 
-export interface DrpcResponseObject {
+export interface VerifiedDrpcResponseObject {
   jsonrpc: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result?: any
-  error?: DrpcResponseError
+  error?: VerifiedDrpcResponseError
   id: string | number | null
 }
 
-export class DrpcResponseMessage extends AgentMessage {
-  public constructor(options: { response: DrpcResponse; threadId: string }) {
+export class VerifiedDrpcResponseMessage extends AgentMessage {
+  public constructor(options: { response: VerifiedDrpcResponse; threadId: string }) {
     super()
     if (options) {
       this.id = this.generateId()
@@ -32,11 +32,12 @@ export class DrpcResponseMessage extends AgentMessage {
     }
   }
 
-  @IsValidMessageType(DrpcResponseMessage.type)
-  public readonly type = DrpcResponseMessage.type.messageTypeUri
   public static readonly type = parseMessageType('https://didcomm.org/drpc/1.0/response')
 
+  @IsValidMessageType(VerifiedDrpcResponseMessage.type)
+  public readonly type = VerifiedDrpcResponseMessage.type.messageTypeUri
+
   @Expose({ name: 'response' })
-  @IsValidDrpcResponse()
-  public response!: DrpcResponse
+  @IsValidVerifiedDrpcResponse()
+  public response!: VerifiedDrpcResponse
 }

@@ -1,9 +1,9 @@
 import { IsValidMessageType, parseMessageType, AgentMessage } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
-import { IsValidDrpcRequest } from '../models'
+import { IsValidVerifiedDrpcRequest } from '../models'
 
-export interface DrpcRequestObject {
+export interface VerifiedDrpcRequestObject {
   jsonrpc: string
   method: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -11,10 +11,10 @@ export interface DrpcRequestObject {
   id: string | number | null
 }
 
-export type DrpcRequest = DrpcRequestObject | DrpcRequestObject[]
+export type VerifiedDrpcRequest = VerifiedDrpcRequestObject | VerifiedDrpcRequestObject[]
 
-export class DrpcRequestMessage extends AgentMessage {
-  public constructor(options: { request: DrpcRequest }) {
+export class VerifiedDrpcRequestMessage extends AgentMessage {
+  public constructor(options: { request: VerifiedDrpcRequest }) {
     super()
     if (options) {
       this.id = this.generateId()
@@ -22,11 +22,12 @@ export class DrpcRequestMessage extends AgentMessage {
     }
   }
 
-  @IsValidMessageType(DrpcRequestMessage.type)
-  public readonly type = DrpcRequestMessage.type.messageTypeUri
   public static readonly type = parseMessageType('https://didcomm.org/drpc/1.0/request')
+  
+  @IsValidMessageType(VerifiedDrpcRequestMessage.type)
+  public readonly type = VerifiedDrpcRequestMessage.type.messageTypeUri
 
   @Expose({ name: 'request' })
-  @IsValidDrpcRequest()
-  public request!: DrpcRequest
+  @IsValidVerifiedDrpcRequest()
+  public request!: VerifiedDrpcRequest
 }
