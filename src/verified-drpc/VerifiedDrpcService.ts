@@ -1,5 +1,5 @@
 import { type Agent } from '@credo-ts/core'
-import type { VerifiedDrpcRequest, VerifiedDrpcRequestObject, VerifiedDrpcResponseObject } from '../modules/verified-drpc'
+import type { VerifiedDrpcRequest, VerifiedDrpcRequestObject, VerifiedDrpcResponseObject } from '../modules/verified-drpc/index.js'
 
 export class VerifiedDrpcService {
   /*

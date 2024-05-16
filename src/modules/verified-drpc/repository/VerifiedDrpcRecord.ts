@@ -1,5 +1,5 @@
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages'
-import type { VerifiedDrpcRole, VerifiedDrpcState } from '../models'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages/index.js'
+import type { VerifiedDrpcRole, VerifiedDrpcState } from '../models/index.js'
 import type { RecordTags, TagsBase } from '@credo-ts/core'
 
 import { BaseRecord, CredoError, utils } from '@credo-ts/core'

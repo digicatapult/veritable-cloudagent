@@ -1,4 +1,4 @@
-import type { VerifiedDrpcRecord } from './repository'
+import type { VerifiedDrpcRecord } from './repository/index.js'
 import type { BaseEvent } from '@credo-ts/core'
 
 export enum VerifiedDrpcRequestEventTypes {

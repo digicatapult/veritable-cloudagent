@@ -1,6 +1,6 @@
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse, VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from './messages'
-import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord'
-import type { ConnectionRecord } from '@credo-ts/core'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse, VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from './messages/index.js'
+import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
+import type { ProofsApi, ConnectionRecord, ProofProtocol, RequestProofOptions } from '@credo-ts/core'
 
 import {
   AgentContext,
@@ -16,21 +16,24 @@ import { VerifiedDrpcRole } from './models'
 import { VerifiedDrpcService } from './services'
 
 @injectable()
-export class VerifiedDrpcApi {
+export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
   private verifiedDrpcMessageService: VerifiedDrpcService
   private messageSender: MessageSender
+  private proofsApi: ProofsApi<PPs>
   private connectionService: ConnectionService
   private agentContext: AgentContext
 
   public constructor(
     messageHandlerRegistry: MessageHandlerRegistry,
     verifiedDrpcMessageService: VerifiedDrpcService,
+    proofsApi: ProofsApi<PPs>,
     messageSender: MessageSender,
     connectionService: ConnectionService,
     agentContext: AgentContext
   ) {
     this.verifiedDrpcMessageService = verifiedDrpcMessageService
     this.messageSender = messageSender
+    this.proofsApi = proofsApi
     this.connectionService = connectionService
     this.agentContext = agentContext
     this.registerMessageHandlers(messageHandlerRegistry)
@@ -44,8 +47,10 @@ export class VerifiedDrpcApi {
    */
   public async sendRequest(
     connectionId: string,
-    request: VerifiedDrpcRequest
+    request: VerifiedDrpcRequest,
+    proofOptions: RequestProofOptions<PPs>
   ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
+    console.log({proofOptions})
     const connection = await this.connectionService.getById(this.agentContext, connectionId)
     const { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord } =
       await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)

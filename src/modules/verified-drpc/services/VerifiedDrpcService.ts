@@ -5,11 +5,11 @@ import type { AgentContext, InboundMessageContext, Query } from '@credo-ts/core'
 
 import { EventEmitter, injectable } from '@credo-ts/core'
 
-import { VerifiedDrpcRequestEventTypes } from '../VerifiedDrpcRequestEvents'
-import { VerifiedDrpcResponseEventTypes } from '../VerifiedDrpcResponseEvents'
-import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from '../messages'
-import { VerifiedDrpcRole, VerifiedDrpcState, isValidVerifiedDrpcRequest, isValidVerifiedDrpcResponse } from '../models'
-import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository'
+import { VerifiedDrpcRequestEventTypes } from '../VerifiedDrpcRequestEvents.js'
+import { VerifiedDrpcResponseEventTypes } from '../VerifiedDrpcResponseEvents.js'
+import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from '../messages/index.js'
+import { VerifiedDrpcRole, VerifiedDrpcState, isValidVerifiedDrpcRequest, isValidVerifiedDrpcResponse } from '../models/index.js'
+import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository/index.js'
 
 @injectable()
 export class VerifiedDrpcService {

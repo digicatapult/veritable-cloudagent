@@ -1,10 +1,17 @@
 import { Agent } from '@credo-ts/core'
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../modules/verified-drpc'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../modules/verified-drpc/index.js'
 import { Body, Controller, Path, Query, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { transformProofFormat } from '../../utils/proofs.js'
+import type { CreateProofRequestOptions } from '../types.js'
 import { type RecordId } from '../examples.js'
 import { NotFound, GatewayTimeout } from '../../error.js'
+
+interface VerifiedDrpcRequestOptions {
+  drpcRequest: VerifiedDrpcRequest
+  proofRequestOptions: CreateProofRequestOptions
+}
 
 @Tags('Verified DRPC')
 @Route('/verified-drpc')
@@ -29,11 +36,19 @@ export class VerifiedDrpcController extends Controller {
   @Response<GatewayTimeout>(504)
   public async sendRequest(
     @Path('connectionId') connectionId: RecordId,
-    @Body() request: VerifiedDrpcRequest,
+    @Body() requestOptions: VerifiedDrpcRequestOptions,
     @Query('async') async_ = false,
     @Query('timeout') timeout = 5000
   ) {
-    const responseListener = await this.agent.modules.verifiedDrpc.sendRequest(connectionId, request)
+    const { drpcRequest, proofRequestOptions: { proofFormats, ...rest } } = requestOptions
+    const proofOptions = {
+      proofFormats: {
+        anoncreds: transformProofFormat(proofFormats.anoncreds),
+      },
+      ...rest
+    }
+
+    const responseListener = await this.agent.modules.verifiedDrpc.sendRequest(connectionId, drpcRequest, proofOptions)
     const responsePromise = responseListener(timeout).then((response: VerifiedDrpcResponse) => {
       if (response === undefined) {
         throw new GatewayTimeout('Response from peer timed out')

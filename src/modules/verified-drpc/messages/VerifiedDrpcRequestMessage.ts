@@ -1,7 +1,7 @@
 import { IsValidMessageType, parseMessageType, AgentMessage } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
-import { IsValidVerifiedDrpcRequest } from '../models'
+import { IsValidVerifiedDrpcRequest } from '../models/index.js'
 
 export interface VerifiedDrpcRequestObject {
   jsonrpc: string

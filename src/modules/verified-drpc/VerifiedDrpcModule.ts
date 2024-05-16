@@ -2,10 +2,10 @@ import type { FeatureRegistry, DependencyManager, Module } from '@credo-ts/core'
 
 import { Protocol, AgentConfig } from '@credo-ts/core'
 
-import { VerifiedDrpcApi } from './VerifiedDrpcApi'
-import { VerifiedDrpcRole } from './models/VerifiedDrpcRole'
-import { VerifiedDrpcRepository } from './repository'
-import { VerifiedDrpcService } from './services'
+import { VerifiedDrpcApi } from './VerifiedDrpcApi.js'
+import { VerifiedDrpcRole } from './models/VerifiedDrpcRole.js'
+import { VerifiedDrpcRepository } from './repository/index.js'
+import { VerifiedDrpcService } from './services/index.js'
 
 export class VerifiedDrpcModule implements Module {
   public readonly api = VerifiedDrpcApi

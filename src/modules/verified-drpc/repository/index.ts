@@ -1,2 +1,2 @@
-export * from './VerifiedDrpcRecord'
-export * from './VerifiedDrpcRepository'
+export * from './VerifiedDrpcRecord.js'
+export * from './VerifiedDrpcRepository.js'

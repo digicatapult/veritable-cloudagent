@@ -1,4 +1,4 @@
-import type { VerifiedDrpcService } from '../services/VerifiedDrpcService'
+import type { VerifiedDrpcService } from '../services/VerifiedDrpcService.js'
 import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core'
 
 import { VerifiedDrpcResponseMessage } from '../messages'

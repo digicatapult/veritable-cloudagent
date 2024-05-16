@@ -1,1 +1,1 @@
-export * from './VerifiedDrpcService'
+export * from './VerifiedDrpcService.js'
