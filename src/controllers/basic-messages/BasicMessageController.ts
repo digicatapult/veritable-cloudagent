@@ -1,9 +1,17 @@
-import { type BasicMessageRecord, type BasicMessageStorageProps, Agent, RecordNotFoundError } from '@credo-ts/core'
+import {
+  type BasicMessageRecord,
+  type BasicMessageStorageProps,
+  Agent,
+  RecordNotFoundError,
+  ProofEventTypes,
+  ProofStateChangedEvent,
+} from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { type RecordId, BasicMessageRecordExample } from '../examples.js'
-import { HttpResponse, NotFound } from '../../error.js'
+import { BadRequest, HttpResponse, NotFound } from '../../error.js'
+import { CreateProofRequestOptions } from '../types.js'
 
 @Tags('Basic Messages')
 @Route('/basic-messages')
@@ -37,9 +45,17 @@ export class BasicMessageController extends Controller {
   @Post('/:connectionId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async sendMessage(@Path('connectionId') connectionId: RecordId, @Body() request: Record<'content', string>) {
+  public async sendMessage(
+    @Path('connectionId') connectionId: RecordId,
+    @Body() request: { content: string; requestProof: CreateProofRequestOptions; timeoutMs?: number }
+  ) {
     try {
-      this.setStatus(204)
+      const { id } = await this.agent.proofs.requestProof({
+        connectionId,
+        ...request.requestProof,
+      })
+
+      await this.waitForProof(connectionId, id, request.timeoutMs ?? 1000)
       await this.agent.basicMessages.sendMessage(connectionId, request.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -47,5 +63,25 @@ export class BasicMessageController extends Controller {
       }
       throw error
     }
+  }
+
+  async waitForProof(connectionId: string, proofId: string, timeoutMs: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new HttpResponse({ message: `Proof request to connection '${connectionId}' timed out` }))
+      }, timeoutMs)
+
+      this.agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
+        const record = event.payload.proofRecord
+        if (record.id === proofId && record.state === 'done') {
+          clearTimeout(timeout)
+          if (record.isVerified) {
+            resolve()
+          } else {
+            reject(new BadRequest(`Agent connected with connection id "${connectionId}" is not verified.`))
+          }
+        }
+      })
+    })
   }
 }

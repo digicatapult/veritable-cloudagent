@@ -50,12 +50,14 @@ Bellow you will find commands for starting up the containers in docker (see the 
 ### Rest Client Args
 
 The CLI args are defined under `src > cli.ts ` They are used to start up a service.
-| Argument added | Required | Default | Description |
-| :------------- | :------: | :------ | :------- |
-| ipfs-origin | Y | http://localhost:5001 | IPFS endpoint |
-|opa-origin |N |http://localhost:8181 |OPA endpoint |
-|persona-title | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
-|persona-color |N |"white" |Defines the background colour of swagger documentation|
+
+| Argument added | Required | Default                | Description                                            |
+| :------------- | :------: | :--------------------- | :----------------------------------------------------- |
+| ipfs-origin    |    Y     | http://localhost:5001  | IPFS endpoint                                          |
+| opa-origin     |    N     | http://localhost:8181  | OPA endpoint                                           |
+| persona-title  |    N     | "Veritable Cloudagent" | Tab name which you can see in your browser             |
+| persona-color  |    N     | "white"                | Defines the background colour of swagger documentation |
+| persona-color  |    N     | "white"                | Defines the background colour of swagger documentation |
 
 ### Using Docker (easiest)
 
@@ -241,7 +243,7 @@ The attributes are:
 
 - checkName => what kind of check this is (e.g. NASDAQ, Rev >500, Production Capacity etc)
 - companyName => name of the company that is being checked (max 200 characters)
-- companiesHouseNumber => unique identifier for companies provided by Companiess House (max 8 characters - alphanumeric)
+- companiesHouseNumber => unique identifier for companies provided by Companies House (max 8 characters - alphanumeric)
 - issueDate => date when this check was issued (dateInt e.g. 20230101 for 1st Jan 2023)
 - expiryDate => date when this check expires (dateInt e.g. 20230101 for 1st Jan 2023)
 
@@ -335,7 +337,7 @@ Create schema with Alice - POST `http://localhost:3000/schemas`
 }
 ```
 
-Use the `id` and `issuerId` returned by creating a as `schemaId` and `issuerId` to create a credential definition with Alice - POST `http://localhost:3000/credential-definitions`
+Use the `id` and `issuerId` returned by creating a schema as `schemaId` and `issuerId` to create a credential definition with Alice - POST `http://localhost:3000/credential-definitions`
 
 ```json
 {
@@ -469,7 +471,7 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 
 ### Verification
 
-Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
+Setup an out of band connection between Charlie and Bob. This can be accomplished via Implicit invitation.
 In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
 
 For our did doc above we will need to generate a key-pair. This could be doe through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc below we will be using the public portion of the key.
