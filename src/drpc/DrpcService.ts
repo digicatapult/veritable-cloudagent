@@ -2,6 +2,7 @@ import { type Agent } from '@credo-ts/core'
 import type { DrpcRequest, DrpcRequestObject, DrpcResponseObject } from '@credo-ts/drpc'
 
 export class DrpcService {
+  /*
   // Can define method handlers in the service class
   private handlers: { [key: string]: (request: DrpcRequestObject) => Promise<DrpcResponseObject["result"]> } = {
     hello: async function () {
@@ -27,10 +28,19 @@ export class DrpcService {
     }
     this.handlers[method] = handler
   }
+  */
+ 
+  constructor(private agent: Agent) {
+    this.startDrpcService()
+  }
 
-  private async startDrpcService() {
+  private async startDrpcService(timeout = 5000) {
     for (;;) {
-      const { request: drpcRequest, sendResponse } = await this.agent.modules.drpc.recvRequest()
+      const { request, sendResponse } = await this.agent.modules.drpc.recvRequest()
+      console.dir({request})
+
+
+      /*
       const drpcRequestObjects: DrpcRequestObject[] = [].concat(drpcRequest)
       for (const request of drpcRequestObjects) {
         if (!this.handlers[request.method]) {
@@ -46,6 +56,7 @@ export class DrpcService {
           })
         })(sendResponse)
       }
+      */
     }
   }
 }
