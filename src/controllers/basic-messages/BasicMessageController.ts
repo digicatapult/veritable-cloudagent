@@ -47,15 +47,17 @@ export class BasicMessageController extends Controller {
   @Response<HttpResponse>(500)
   public async sendMessage(
     @Path('connectionId') connectionId: RecordId,
-    @Body() request: { content: string; requestProof: CreateProofRequestOptions; timeoutMs?: number }
+    @Body() request: { content: string; requestProof?: CreateProofRequestOptions; timeoutMs?: number }
   ) {
     try {
-      const { id } = await this.agent.proofs.requestProof({
-        connectionId,
-        ...request.requestProof,
-      })
+      if (request.requestProof) {
+        const { id } = await this.agent.proofs.requestProof({
+          connectionId,
+          ...request.requestProof,
+        })
 
-      await this.waitForProof(connectionId, id, request.timeoutMs ?? 1000)
+        await this.waitForProof(connectionId, id, request.timeoutMs ?? 1000)
+      }
       await this.agent.basicMessages.sendMessage(connectionId, request.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
