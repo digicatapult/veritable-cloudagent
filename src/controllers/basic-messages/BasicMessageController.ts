@@ -73,17 +73,18 @@ export class BasicMessageController extends Controller {
         reject(new HttpResponse({ message: `Proof request to connection '${connectionId}' timed out` }))
       }, timeoutMs)
 
-      this.agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
-        const record = event.payload.proofRecord
-        if (record.id === proofId && record.state === 'done') {
+      const onProofStateChanged = async ({ payload: { proofRecord } }: ProofStateChangedEvent) => {
+        if (proofRecord.id === proofId && proofRecord.state === 'done') {
           clearTimeout(timeout)
-          if (record.isVerified) {
-            resolve()
-          } else {
-            reject(new BadRequest(`Agent connected with connection id "${connectionId}" is not verified.`))
-          }
+          this.agent.events.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+
+          proofRecord.isVerified
+            ? resolve()
+            : reject(new BadRequest(`Agent connected with connection id "${connectionId}" is not verified.`))
         }
-      })
+      }
+
+      this.agent.events.on(ProofEventTypes.ProofStateChanged, onProofStateChanged)
     })
   }
 }
