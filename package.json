@@ -94,7 +94,7 @@
     "mocha": "^10.4.0",
     "ngrok": "^4.3.3",
     "prettier": "^2.8.8",
-    "sinon": "^17.0.2",
+    "sinon": "^18.0.0",
     "supertest": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
     "tsimp": "^2.0.11",
