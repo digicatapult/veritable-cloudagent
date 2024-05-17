@@ -40,6 +40,14 @@ describe('BasicMessageController', () => {
   })
 
   describe('Send basic message to connection', () => {
+    test('should give 204 no content when message is sent', async () => {
+      const response = await request(server)
+        .post(`/basic-messages/${bobConnectionToAlice?.id}`)
+        .send({ content: 'Hello!' })
+
+      expect(response.statusCode).to.be.equal(204)
+    })
+
     test('should give 204 no content when message a verified agent', async () => {
       const testProof = getTestProof()
       const requestProofStub = stub(bobAgent.proofs, 'requestProof')
