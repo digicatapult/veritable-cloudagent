@@ -8,7 +8,7 @@
   "endpoint": ["http://localhost:5002", "ws://localhost:5003"],
   "autoAcceptConnections": true,
   "autoAcceptCredentials": "never",
-  "autoAcceptProofs": "never",
+  "autoAcceptProofs": "always",
   "useLegacyDidSovPrefix": true,
   "backupBeforeStorageUpdate": false,
   "logLevel": 5,

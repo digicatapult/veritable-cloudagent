@@ -70,6 +70,7 @@ export class BasicMessageController extends Controller {
   async waitForProof(connectionId: string, proofId: string, timeoutMs: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        this.agent.events.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
         reject(new HttpResponse({ message: `Proof request to connection '${connectionId}' timed out` }))
       }, timeoutMs)
 
