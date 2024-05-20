@@ -18,7 +18,6 @@ export class VerifiedDrpcModule implements Module {
    * Registers the dependencies of the verified-drpc message module on the dependency manager.
    */
   public register(dependencyManager: DependencyManager, featureRegistry: FeatureRegistry) {
-    // Warn about experimental module
     dependencyManager.resolve(AgentConfig)
 
     // Services

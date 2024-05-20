@@ -35,7 +35,7 @@ export class VerifiedDrpcService {
     const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
       request,
       connectionId,
-      state: VerifiedDrpcState.RecipientProofRequestSent,
+      state: VerifiedDrpcState.ServerProofRequestSent,
       threadId: verifiedDrpcMessage.threadId,
       role: VerifiedDrpcRole.Client,
     })
@@ -46,26 +46,41 @@ export class VerifiedDrpcService {
     return { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord }
   }
 
-  public async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+  private async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, timeoutMs: number) {
     const proofsApi = agentContext.dependencyManager.resolve(ProofsApi) as ProofsApi<ProofProtocols>
     const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const proofTimeout = setTimeout(() => {
+    await new Promise<void>((resolve, reject) => {
+      const proofTimeout = setTimeout(() => {
+        this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+        reject('Proof verification timed out')
+      }, timeoutMs)
+      const onProofStateChanged = async ({ payload: { proofRecord } }: ProofStateChangedEvent) => {
+        if (proofRecord.id === proofRecordId && proofRecord.state === 'done') {
+          clearTimeout(proofTimeout)
           this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
-          reject('Proof verification timed out')
-        }, timeoutMs)
-        const onProofStateChanged = async ({ payload: { proofRecord } }: ProofStateChangedEvent) => {
-          if (proofRecord.id === proofRecordId && proofRecord.state === 'done') {
-            clearTimeout(proofTimeout)
-            this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
-            resolve()
-          }
+          resolve()
         }
-        this.eventEmitter.on(ProofEventTypes.ProofStateChanged, onProofStateChanged)
-      })
-      verifiedDrpcRecord.assertState(VerifiedDrpcState.RecipientProofRequestSent)
+      }
+      this.eventEmitter.on(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+    })
+  }
+
+  public async verifyServer(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+    try {
+      await this.verifyConnection(agentContext, connectionId, proofOptions, timeoutMs)
+      verifiedDrpcRecord.isVerified = true
       await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.RequestSent)
+    } catch (e) {
+      await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.Abandoned)
+      throw e
+    }
+  }
+
+  public async verifyClient(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+    try {
+      await this.verifyConnection(agentContext, connectionId, proofOptions, timeoutMs)
+      verifiedDrpcRecord.isVerified = true
+      await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.ClientProofReceived)
     } catch (e) {
       await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.Abandoned)
       throw e
@@ -75,7 +90,7 @@ export class VerifiedDrpcService {
   public async createResponseMessage(agentContext: AgentContext, response: VerifiedDrpcResponse, verifiedDrpcRecord: VerifiedDrpcRecord) {
     const verifiedDrpcMessage = new VerifiedDrpcResponseMessage({ response, threadId: verifiedDrpcRecord.threadId })
 
-    verifiedDrpcRecord.assertState(VerifiedDrpcState.RequestReceived)
+    verifiedDrpcRecord.assertState(VerifiedDrpcState.ClientProofReceived)
 
     verifiedDrpcRecord.response = response
     verifiedDrpcRecord.request = undefined
@@ -150,6 +165,7 @@ export class VerifiedDrpcService {
     if (record) {
       throw new Error('Verified DRPC message record already exists')
     }
+
     const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
       request: messageContext.message.request,
       connectionId: connection.id,
@@ -157,9 +173,9 @@ export class VerifiedDrpcService {
       state: VerifiedDrpcState.RequestReceived,
       threadId: messageContext.message.id,
     })
-
     await this.verifiedDrpcMessageRepository.save(messageContext.agentContext, verifiedDrpcMessageRecord)
     this.emitStateChangedEvent(messageContext.agentContext, verifiedDrpcMessageRecord)
+    
     return verifiedDrpcMessageRecord
   }
 

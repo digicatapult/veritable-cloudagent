@@ -46,20 +46,22 @@ export class VerifiedDrpcApi {
    * sends the request object to the connection and returns a function that will resolve to the response
    * @param connectionId the connection to send the request to
    * @param request the request object
+   * @param proofOptions the proof options against which to verify the server
+   * @param proofTimeoutMs the time in milliseconds to wait for a proof
    * @returns curried function that waits for the response with an optional timeout in seconds
    */
   public async sendRequest(
     connectionId: string,
     request: VerifiedDrpcRequest,
     proofOptions: RequestProofOptions<ProofProtocols>,
-    timeoutMs: number = 5000,
+    proofTimeoutMs: number = 5000,
   ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionService.getById(this.agentContext, connectionId)
     const {
       requestMessage: verifiedDrpcMessage,
       record: verifiedDrpcMessageRecord
     } = await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
-    await this.verifiedDrpcMessageService.verifyConnection(this.agentContext, connection.id, proofOptions, verifiedDrpcMessageRecord, timeoutMs)
+    await this.verifiedDrpcMessageService.verifyServer(this.agentContext, connection.id, proofOptions, verifiedDrpcMessageRecord, proofTimeoutMs)
     const messageId = verifiedDrpcMessage.id
     await this.sendMessage(connection, verifiedDrpcMessage, verifiedDrpcMessageRecord)
     return async (timeout?: number) => {
@@ -102,10 +104,16 @@ export class VerifiedDrpcApi {
 
   /**
    * Listen for a request and returns the request object and a function to send the response
-   * @param timeoutMs the time in seconds to wait for a request
+   * @param proofOptions the proof options against which to verify the client
+   * @param proofTimeoutMs the time in milliseconds to wait for a proof
+   * @param timeoutMs the time in milliseconds to wait for a request
    * @returns the request object and a function to send the response
    */
-  public async recvRequest(timeoutMs?: number): Promise<
+  public async recvRequest(
+    proofOptions: RequestProofOptions<ProofProtocols>,
+    proofTimeoutMs?: number,
+    timeoutMs?: number,
+  ): Promise<
     | {
         request: VerifiedDrpcRequest
         sendResponse: (response: VerifiedDrpcResponse) => Promise<void>
@@ -113,7 +121,7 @@ export class VerifiedDrpcApi {
     | undefined
   > {
     return new Promise((resolve) => {
-      const listener = ({
+      const listener = async ({
         verifiedDrpcMessageRecord,
         removeListener,
       }: {
@@ -123,6 +131,7 @@ export class VerifiedDrpcApi {
         const request = verifiedDrpcMessageRecord.request
         if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server) {
           removeListener()
+          await this.verifiedDrpcMessageService.verifyClient(this.agentContext, verifiedDrpcMessageRecord.connectionId, proofOptions, verifiedDrpcMessageRecord, proofTimeoutMs)
           resolve({
             sendResponse: async (response: VerifiedDrpcResponse) => {
               await this.sendResponse({

@@ -18,7 +18,7 @@ import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
 import { drpcEvents } from './events/DrpcEvents.js'
 import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
-import { DrpcService } from './drpc/DrpcService.js'
+import { VerifiedDrpcService } from './verified-drpc/VerifiedDrpcService.js'
 import { RegisterRoutes } from './routes/routes.js'
 import { errorHandler } from './error.js'
 import PolicyAgent from './policyAgent/index.js'
@@ -32,7 +32,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
 
   container.registerInstance(Agent, agent as Agent)
   container.registerInstance(PolicyAgent, new PolicyAgent(config.opaOrigin || 'http://localhost:8181'))
-  container.registerInstance(DrpcService, new DrpcService(agent))
+  container.registerInstance(VerifiedDrpcService, new VerifiedDrpcService(agent))
 
   const app = config.app ?? express()
   if (config.cors) app.use(cors())
