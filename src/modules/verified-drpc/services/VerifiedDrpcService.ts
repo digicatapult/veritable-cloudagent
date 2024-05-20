@@ -1,9 +1,17 @@
 import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents'
 import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages'
-import type { AgentContext, InboundMessageContext, Query } from '@credo-ts/core'
+import type {
+  AgentContext,
+  InboundMessageContext,
+  Query,
+  ProofStateChangedEvent,
+  RequestProofOptions
+} from '@credo-ts/core'
 
-import { EventEmitter, injectable } from '@credo-ts/core'
+import type { ProofProtocols } from '../types.js'
+
+import { EventEmitter, injectable, ProofsApi, ProofEventTypes } from '@credo-ts/core'
 
 import { VerifiedDrpcRequestEventTypes } from '../VerifiedDrpcRequestEvents.js'
 import { VerifiedDrpcResponseEventTypes } from '../VerifiedDrpcResponseEvents.js'
@@ -27,7 +35,7 @@ export class VerifiedDrpcService {
     const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
       request,
       connectionId,
-      state: VerifiedDrpcState.RequestSent,
+      state: VerifiedDrpcState.RecipientProofRequestSent,
       threadId: verifiedDrpcMessage.threadId,
       role: VerifiedDrpcRole.Client,
     })
@@ -36,6 +44,32 @@ export class VerifiedDrpcService {
     this.emitStateChangedEvent(agentContext, verifiedDrpcMessageRecord)
 
     return { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord }
+  }
+
+  public async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+    const proofsApi = agentContext.dependencyManager.resolve(ProofsApi) as ProofsApi<ProofProtocols>
+    const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const proofTimeout = setTimeout(() => {
+          this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+          reject('Proof verification timed out')
+        }, timeoutMs)
+        const onProofStateChanged = async ({ payload: { proofRecord } }: ProofStateChangedEvent) => {
+          if (proofRecord.id === proofRecordId && proofRecord.state === 'done') {
+            clearTimeout(proofTimeout)
+            this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+            resolve()
+          }
+        }
+        this.eventEmitter.on(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+      })
+      verifiedDrpcRecord.assertState(VerifiedDrpcState.RecipientProofRequestSent)
+      await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.RequestSent)
+    } catch (e) {
+      await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.Abandoned)
+      throw e
+    }
   }
 
   public async createResponseMessage(agentContext: AgentContext, response: VerifiedDrpcResponse, verifiedDrpcRecord: VerifiedDrpcRecord) {

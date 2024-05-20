@@ -32,7 +32,7 @@ export class VerifiedDrpcResponseMessage extends AgentMessage {
     }
   }
 
-  public static readonly type = parseMessageType('https://didcomm.org/drpc/1.0/response')
+  public static readonly type = parseMessageType('https://didcomm.org/verified-drpc/1.0/response')
 
   @IsValidMessageType(VerifiedDrpcResponseMessage.type)
   public readonly type = VerifiedDrpcResponseMessage.type.messageTypeUri

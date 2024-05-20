@@ -15,7 +15,7 @@ import {
   ProofsModule,
 } from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
-import { VerifiedDrpcModule } from '../modules/verified-drpc'
+import { VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
 import { agentDependencies, HttpInboundTransport } from '@credo-ts/node'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import path from 'path'

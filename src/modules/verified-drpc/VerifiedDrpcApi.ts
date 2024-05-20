@@ -1,6 +1,12 @@
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse, VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from './messages/index.js'
 import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
-import type { ProofsApi, ConnectionRecord, ProofProtocol, RequestProofOptions } from '@credo-ts/core'
+import type {
+  ConnectionRecord,
+  RequestProofOptions,
+  ProofProtocol,
+} from '@credo-ts/core'
+
+import type { ProofProtocols } from './types.js'
 
 import {
   AgentContext,
@@ -11,29 +17,26 @@ import {
   ConnectionService,
 } from '@credo-ts/core'
 
-import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers'
-import { VerifiedDrpcRole } from './models'
-import { VerifiedDrpcService } from './services'
+import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
+import { VerifiedDrpcRole } from './models/index.js'
+import { VerifiedDrpcService } from './services/index.js'
 
 @injectable()
-export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
+export class VerifiedDrpcApi {
   private verifiedDrpcMessageService: VerifiedDrpcService
   private messageSender: MessageSender
-  private proofsApi: ProofsApi<PPs>
   private connectionService: ConnectionService
   private agentContext: AgentContext
 
   public constructor(
     messageHandlerRegistry: MessageHandlerRegistry,
     verifiedDrpcMessageService: VerifiedDrpcService,
-    proofsApi: ProofsApi<PPs>,
     messageSender: MessageSender,
     connectionService: ConnectionService,
-    agentContext: AgentContext
+    agentContext: AgentContext,
   ) {
     this.verifiedDrpcMessageService = verifiedDrpcMessageService
     this.messageSender = messageSender
-    this.proofsApi = proofsApi
     this.connectionService = connectionService
     this.agentContext = agentContext
     this.registerMessageHandlers(messageHandlerRegistry)
@@ -48,12 +51,15 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
   public async sendRequest(
     connectionId: string,
     request: VerifiedDrpcRequest,
-    proofOptions: RequestProofOptions<PPs>
+    proofOptions: RequestProofOptions<ProofProtocols>,
+    timeoutMs: number = 5000,
   ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
-    console.log({proofOptions})
     const connection = await this.connectionService.getById(this.agentContext, connectionId)
-    const { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord } =
-      await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
+    const {
+      requestMessage: verifiedDrpcMessage,
+      record: verifiedDrpcMessageRecord
+    } = await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
+    await this.verifiedDrpcMessageService.verifyConnection(this.agentContext, connection.id, proofOptions, verifiedDrpcMessageRecord, timeoutMs)
     const messageId = verifiedDrpcMessage.id
     await this.sendMessage(connection, verifiedDrpcMessage, verifiedDrpcMessageRecord)
     return async (timeout?: number) => {

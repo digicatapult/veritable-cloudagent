@@ -1,4 +1,8 @@
-import type { FeatureRegistry, DependencyManager, Module } from '@credo-ts/core'
+import type {
+  FeatureRegistry,
+  DependencyManager,
+  Module,
+} from '@credo-ts/core'
 
 import { Protocol, AgentConfig } from '@credo-ts/core'
 
@@ -15,8 +19,7 @@ export class VerifiedDrpcModule implements Module {
    */
   public register(dependencyManager: DependencyManager, featureRegistry: FeatureRegistry) {
     // Warn about experimental module
-    dependencyManager
-      .resolve(AgentConfig)
+    dependencyManager.resolve(AgentConfig)
 
     // Services
     dependencyManager.registerSingleton(VerifiedDrpcService)
@@ -27,7 +30,7 @@ export class VerifiedDrpcModule implements Module {
     // Features
     featureRegistry.register(
       new Protocol({
-        id: 'https://didcomm.org/drpc/1.0',
+        id: 'https://didcomm.org/verified-drpc/1.0',
         roles: [VerifiedDrpcRole.Client, VerifiedDrpcRole.Server],
       })
     )

@@ -21,6 +21,7 @@ export interface VerifiedDrpcStorageProps {
   response?: VerifiedDrpcResponse
   state: VerifiedDrpcState
   threadId: string
+  isVerified?: boolean
 }
 
 export class VerifiedDrpcRecord extends BaseRecord<DefaultVerifiedDrpcMessageTags, CustomVerifiedDrpcMessageTags> {
@@ -30,6 +31,7 @@ export class VerifiedDrpcRecord extends BaseRecord<DefaultVerifiedDrpcMessageTag
   public role!: VerifiedDrpcRole
   public state!: VerifiedDrpcState
   public threadId!: string
+  public isVerified: boolean = false
 
   public static readonly type = 'VerifiedDrpcRecord'
   public readonly type = VerifiedDrpcRecord.type
