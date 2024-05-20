@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { type ILogObject, Logger } from 'tslog'
+import { Logger } from 'tslog'
 import { LogLevel, BaseLogger } from '@credo-ts/core'
-import { appendFileSync } from 'fs'
-
-function logToTransport(logObject: ILogObject) {
-  appendFileSync('logs.txt', JSON.stringify(logObject) + '\n')
-}
 
 export class TsLogger extends BaseLogger {
   private logger: Logger
@@ -29,21 +24,6 @@ export class TsLogger extends BaseLogger {
       name,
       minLevel: this.logLevel == LogLevel.off ? undefined : this.tsLogLevelMap[this.logLevel],
       ignoreStackLevels: 5,
-      attachedTransports: [
-        {
-          transportLogger: {
-            silly: logToTransport,
-            debug: logToTransport,
-            trace: logToTransport,
-            info: logToTransport,
-            warn: logToTransport,
-            error: logToTransport,
-            fatal: logToTransport,
-          },
-          // always log to file
-          minLevel: 'silly',
-        },
-      ],
     })
   }
 
