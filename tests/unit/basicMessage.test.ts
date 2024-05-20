@@ -1,27 +1,31 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { spy, restore as sinonRestore } from 'sinon'
+import { spy, stub, restore as sinonRestore } from 'sinon'
 
-import type { Agent, BasicMessageRecord, ConnectionRecord } from '@credo-ts/core'
+import type { Agent, BasicMessageRecord, ConnectionRecord, ProofStateChangedEvent } from '@credo-ts/core'
 import type { Server } from 'net'
 
-import { BasicMessageEventTypes } from '@credo-ts/core'
+import { BasicMessageEventTypes, ProofEventTypes, ProofExchangeRecord, ProofRole, ProofState } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
 import { startServer } from '../../src/index.js'
-import { getTestAgent, objectToJson } from './utils/helpers.js'
+import { getRequestProof, getTestAgent, getTestProof, getTestSchema, objectToJson } from './utils/helpers.js'
 
 describe('BasicMessageController', () => {
   let server: Server
   let aliceAgent: Agent
   let bobAgent: Agent
   let bobConnectionToAlice: ConnectionRecord
+  let credDefId: string
+
+  const testSchema = getTestSchema()
 
   before(async () => {
     aliceAgent = await getTestAgent('Basic Message REST Agent Test Alice', 3002)
     bobAgent = await getTestAgent('Basic Message REST Agent Test Bob', 5034)
+
     server = await startServer(bobAgent, { port: 5033 })
 
     const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
@@ -42,6 +46,83 @@ describe('BasicMessageController', () => {
         .send({ content: 'Hello!' })
 
       expect(response.statusCode).to.be.equal(204)
+    })
+
+    test('should give 204 no content when message a verified agent', async () => {
+      const testProof = getTestProof()
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+
+      setTimeout(
+        () =>
+          bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+            type: ProofEventTypes.ProofStateChanged,
+            payload: {
+              previousState: null,
+              proofRecord: new ProofExchangeRecord({
+                id: testProof.id,
+                protocolVersion: 'v2',
+                state: ProofState.Done,
+                threadId: 'random',
+                role: ProofRole.Verifier,
+                isVerified: true,
+              }),
+            },
+          }),
+        500
+      )
+
+      const response = await request(server)
+        .post(`/basic-messages/${bobConnectionToAlice?.id}`)
+        .send({ content: 'Hello!', requestProof: getRequestProof(), timeoutMs: 1000 })
+
+      expect(response.statusCode).to.be.equal(204)
+    })
+
+    test('should give 500 when proof verification times out', async () => {
+      const testProof = getTestProof()
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+
+      // intentionally don't emit a proof event
+
+      const response = await request(server)
+        .post(`/basic-messages/${bobConnectionToAlice?.id}`)
+        .send({ content: 'Hello!', requestProof: getRequestProof(), timeoutMs: 1000 })
+
+      expect(response.statusCode).to.be.equal(500)
+      expect(response.body).to.contain('timed out')
+    })
+
+    test('should give 400 when attempt to message an unverified agent ', async () => {
+      const testProof = getTestProof()
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+
+      setTimeout(
+        () =>
+          bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+            type: ProofEventTypes.ProofStateChanged,
+            payload: {
+              previousState: null,
+              proofRecord: new ProofExchangeRecord({
+                id: testProof.id,
+                protocolVersion: 'v2',
+                state: ProofState.Done,
+                threadId: 'random',
+                role: ProofRole.Verifier,
+                isVerified: false,
+              }),
+            },
+          }),
+        500
+      )
+
+      const response = await request(server)
+        .post(`/basic-messages/${bobConnectionToAlice?.id}`)
+        .send({ content: 'Hello!', requestProof: getRequestProof(), timeoutMs: 1000 })
+
+      expect(response.statusCode).to.be.equal(400)
     })
 
     test('should give 404 not found when connection is not found', async () => {

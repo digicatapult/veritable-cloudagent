@@ -19,6 +19,7 @@ import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
 
 import { setupAgent } from '../../../src/utils/agent.js'
+import { CreateProofRequestOptions } from '../../../src/controllers/types.js'
 
 export async function getTestAgent(name: string, port: number) {
   return await setupAgent({
@@ -388,6 +389,23 @@ export function getTestProof() {
     },
   }
   return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+}
+
+export function getRequestProof(): CreateProofRequestOptions {
+  return {
+    protocolVersion: 'v2',
+    proofFormats: {
+      anoncreds: {
+        name: 'string',
+        version: '1.0',
+        requested_attributes: {
+          additionalProp1: {
+            name: 'string',
+          },
+        },
+      },
+    },
+  }
 }
 
 export function getTestTrustPingMessage({

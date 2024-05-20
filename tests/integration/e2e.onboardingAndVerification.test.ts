@@ -324,7 +324,9 @@ describe('Onboarding & Verification flow', function () {
       .expect(200)
     expect(response.body.id).to.be.equal(holderProofRequestId)
   })
-  it('should let the Holder accept proof record', async function () {
+
+  // skipping as config is set to "autoAcceptProofs": "always"
+  it.skip('should let the Holder accept proof record', async function () {
     const acceptProofBody = {
       useReturnRoute: true,
       willConfirm: true,
