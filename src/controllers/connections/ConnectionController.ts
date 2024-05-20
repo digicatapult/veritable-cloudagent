@@ -5,8 +5,9 @@ import {
   Agent,
   CredoError,
   RecordNotFoundError,
+  HandshakeProtocol,
 } from '@credo-ts/core'
-import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
+import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response, Body } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { type RecordId, ConnectionRecordExample } from '../examples.js'
@@ -168,6 +169,36 @@ export class ConnectionController extends Controller {
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
       throw error
+    }
+  }
+
+  /**
+   * @description Creates inbound out-of-band record from an implicit invitation, given as public DID the agent should be able to resolve.
+   * If any existing connections for the DID exists, delete and replace them with a single new one.
+   * @returns out-of-band record and connection record if one has been created.
+   */
+  @Post('/')
+  public async post(@Body() body: { did: string }) {
+    const { did } = body
+
+    const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
+    const connections = await connectionRepository.findByQuery(this.agent.context, {
+      invitationDid: did,
+    })
+
+    for (const { id, invitationDid } of connections) {
+      if (invitationDid === did) {
+        await this.agent.connections.deleteById(id)
+      }
+    }
+    const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation({
+      did,
+      handshakeProtocols: [HandshakeProtocol.Connections],
+    })
+
+    return {
+      outOfBandRecord: outOfBandRecord.toJSON(),
+      connectionRecord: connectionRecord?.toJSON(),
     }
   }
 }
