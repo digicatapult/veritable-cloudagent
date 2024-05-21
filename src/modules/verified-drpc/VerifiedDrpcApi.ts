@@ -7,7 +7,6 @@ import type {
 } from '@credo-ts/core'
 
 import type { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
-import type { ProofProtocols } from './types.js'
 
 import {
   AgentContext,
@@ -57,7 +56,7 @@ export class VerifiedDrpcApi {
   public async sendRequest(
     connectionId: string,
     request: VerifiedDrpcRequest,
-    proofOptions: CreateProofRequestOptions<ProofProtocols> = this.config.proofRequestOptions,
+    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
     proofTimeoutMs: number = this.config.proofTimeoutMs,
   ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionsApi.getById(connectionId)
@@ -114,7 +113,7 @@ export class VerifiedDrpcApi {
    * @returns the request object and a function to send the response
    */
   public async recvRequest(
-    proofOptions: CreateProofRequestOptions<ProofProtocols> = this.config.proofRequestOptions,
+    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
     proofTimeoutMs?: number,
     timeoutMs?: number,
   ): Promise<

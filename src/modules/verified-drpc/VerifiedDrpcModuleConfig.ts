@@ -1,5 +1,4 @@
 import type { CreateProofRequestOptions, ProofProtocol } from '@credo-ts/core'
-//import type { ProofProtocols } from './types.js'
 
 export interface VerifiedDrpcModuleConfigOptions {
   proofTimeoutMs?: number

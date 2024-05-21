@@ -102,7 +102,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
     autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests: true,
     ipfsOrigin: 'http://localhost:5001',
-    verifiedDrpcOptions: { proofRequestOptions: {} },
+    verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
 
   const agent = new Agent({

@@ -1,15 +1,15 @@
-import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents'
-import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents'
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages'
+import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents.js'
+import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents.js'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages/index.js'
 import type { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
-import type { ProofProtocols } from '../types.js'
 
 import type {
   AgentContext,
   InboundMessageContext,
   Query,
   ProofStateChangedEvent,
-  CreateProofRequestOptions
+  CreateProofRequestOptions,
+  ProofProtocol,
 } from '@credo-ts/core'
 
 import { EventEmitter, injectable, ProofsApi, ProofEventTypes } from '@credo-ts/core'
@@ -53,8 +53,8 @@ export class VerifiedDrpcService {
     return { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord }
   }
 
-  private async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocols>, timeoutMs: number) {
-    const proofsApi = agentContext.dependencyManager.resolve(ProofsApi) as ProofsApi<ProofProtocols>
+  private async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocol[]>, timeoutMs: number) {
+    const proofsApi = agentContext.dependencyManager.resolve(ProofsApi) as ProofsApi<ProofProtocol[]>
     const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
     await new Promise<void>((resolve, reject) => {
       const proofTimeout = setTimeout(() => {
@@ -72,7 +72,7 @@ export class VerifiedDrpcService {
     })
   }
 
-  public async verifyServer(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+  public async verifyServer(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocol[]>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
     try {
       await this.verifyConnection(agentContext, connectionId, proofOptions, timeoutMs)
       verifiedDrpcRecord.isVerified = true
@@ -83,7 +83,7 @@ export class VerifiedDrpcService {
     }
   }
 
-  public async verifyClient(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocol>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+  public async verifyClient(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocol[]>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
     try {
       await this.verifyConnection(agentContext, connectionId, proofOptions, timeoutMs)
       verifiedDrpcRecord.isVerified = true
