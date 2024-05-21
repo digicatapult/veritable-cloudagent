@@ -1,3 +1,5 @@
+import type { VerifiedDrpcModuleConfigOptions } from '../modules/verified-drpc/index.js'
+
 import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsModule } from '@credo-ts/anoncreds'
 import { AskarModule } from '@credo-ts/askar'
 import {
@@ -53,7 +55,8 @@ export const getAgentModules = (options: {
   autoAcceptProofs: AutoAcceptProof
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
-  ipfsOrigin: string
+  ipfsOrigin: string,
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions,
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -86,7 +89,7 @@ export const getAgentModules = (options: {
       autoAcceptMediationRequests: options.autoAcceptMediationRequests,
     }),
     drpc: new DrpcModule(),
-    verifiedDrpc: new VerifiedDrpcModule(),
+    verifiedDrpc: new VerifiedDrpcModule(options.verifiedDrpcOptions),
   }
 }
 
@@ -99,6 +102,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
     autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests: true,
     ipfsOrigin: 'http://localhost:5001',
+    verifiedDrpcOptions: { proofRequestOptions: {} },
   })
 
   const agent = new Agent({

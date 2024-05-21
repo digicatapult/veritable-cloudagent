@@ -1,15 +1,16 @@
 import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents'
 import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages'
+import type { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
+import type { ProofProtocols } from '../types.js'
+
 import type {
   AgentContext,
   InboundMessageContext,
   Query,
   ProofStateChangedEvent,
-  RequestProofOptions
+  CreateProofRequestOptions
 } from '@credo-ts/core'
-
-import type { ProofProtocols } from '../types.js'
 
 import { EventEmitter, injectable, ProofsApi, ProofEventTypes } from '@credo-ts/core'
 
@@ -23,8 +24,14 @@ import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository/index.
 export class VerifiedDrpcService {
   private verifiedDrpcMessageRepository: VerifiedDrpcRepository
   private eventEmitter: EventEmitter
+  private config: VerifiedDrpcModuleConfig
 
-  public constructor(verifiedDrpcMessageRepository: VerifiedDrpcRepository, eventEmitter: EventEmitter) {
+  public constructor(
+    verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig,
+    verifiedDrpcMessageRepository: VerifiedDrpcRepository,
+    eventEmitter: EventEmitter
+  ) {
+    this.config = verifiedDrpcModuleConfig
     this.verifiedDrpcMessageRepository = verifiedDrpcMessageRepository
     this.eventEmitter = eventEmitter
   }
@@ -46,7 +53,7 @@ export class VerifiedDrpcService {
     return { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord }
   }
 
-  private async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, timeoutMs: number) {
+  private async verifyConnection(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocols>, timeoutMs: number) {
     const proofsApi = agentContext.dependencyManager.resolve(ProofsApi) as ProofsApi<ProofProtocols>
     const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
     await new Promise<void>((resolve, reject) => {
@@ -65,7 +72,7 @@ export class VerifiedDrpcService {
     })
   }
 
-  public async verifyServer(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+  public async verifyServer(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
     try {
       await this.verifyConnection(agentContext, connectionId, proofOptions, timeoutMs)
       verifiedDrpcRecord.isVerified = true
@@ -76,7 +83,7 @@ export class VerifiedDrpcService {
     }
   }
 
-  public async verifyClient(agentContext: AgentContext, connectionId: string, proofOptions: RequestProofOptions<ProofProtocols>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
+  public async verifyClient(agentContext: AgentContext, connectionId: string, proofOptions: CreateProofRequestOptions<ProofProtocol>, verifiedDrpcRecord: VerifiedDrpcRecord, timeoutMs: number = 5000) {
     try {
       await this.verifyConnection(agentContext, connectionId, proofOptions, timeoutMs)
       verifiedDrpcRecord.isVerified = true
@@ -175,6 +182,7 @@ export class VerifiedDrpcService {
     })
     await this.verifiedDrpcMessageRepository.save(messageContext.agentContext, verifiedDrpcMessageRecord)
     this.emitStateChangedEvent(messageContext.agentContext, verifiedDrpcMessageRecord)
+    await this.verifyClient(messageContext.agentContext, connection.id, this.config.proofRequestOptions, verifiedDrpcMessageRecord, this.config.proofTimeoutMs)
     
     return verifiedDrpcMessageRecord
   }

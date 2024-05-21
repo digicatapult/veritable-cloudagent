@@ -2,6 +2,9 @@ import { runRestAgent, type InboundTransport, type Transports, type AriesRestCon
 import type { AskarWalletPostgresStorageConfig } from '@credo-ts/askar'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
+import type { CreateProofRequestOptions, ProofProtocol } from '@credo-ts/core'
+
+import { transformProofFormat } from './utils/proofs.js'
 
 const parsed = yargs(hideBin(process.argv))
   .command('start', 'Start AFJ Rest agent')
@@ -133,6 +136,26 @@ const parsed = yargs(hideBin(process.argv))
   .option('postgres-password', {
     string: true,
   })
+  .option('verified-drpc-options.proof-timeout-ms', {
+    number: true,
+    default: 5000,
+  })
+  .option('verified-drpc-options.request-timeout-ms', {
+    number: true,
+    default: 5000,
+  })
+  .option('verified-drpc-options.proof-request-options', {
+    default: 5000,
+    coerce: (input): CreateProofRequestOptions => {
+      const { proofFormats, ...rest } = typeof input === 'object' ? input : JSON.parse(input)
+      return {
+        proofFormats: {
+          anoncreds: transformProofFormat()
+        },
+        ...rest,
+      }
+    }
+  })
   .check((argv) => {
     if (
       argv['storage-type'] === 'postgres' &&
@@ -197,5 +220,6 @@ export async function runCliServer() {
     opaOrigin: parsed['opa-origin'],
     personaTitle: parsed['persona-title'],
     personaColor: parsed['persona-color'],
+    verifiedDrpcOptions: parsed['verified-drpc-options'],
   } as AriesRestConfig)
 }

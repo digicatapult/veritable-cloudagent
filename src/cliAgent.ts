@@ -1,3 +1,6 @@
+import type { RequestProofOptions } from '@credo-ts/core'
+import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
+
 import {
   type InitConfig,
   type WalletConfig,
@@ -54,6 +57,7 @@ export interface AriesRestConfig {
   opaOrigin: string
   personaTitle: string
   personaColor: string
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions
 }
 
 export async function readRestConfig(path: string) {
@@ -78,6 +82,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     opaOrigin,
     personaTitle,
     personaColor,
+    verifiedDrpcOptions,
     ...afjConfig
   } = restConfig
 
@@ -94,6 +99,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptMediationRequests,
     ipfsOrigin,
+    verifiedDrpcOptions,
   })
 
   const agent: RestAgent = new Agent({
