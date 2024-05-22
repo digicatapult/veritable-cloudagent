@@ -260,7 +260,7 @@ describe('ConnectionController', () => {
     })
   })
 
-  describe.only('Create connection', async function () {
+  describe('Create connection', async function () {
     it('Bob creates a connection with Alice', async function () {
       const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
