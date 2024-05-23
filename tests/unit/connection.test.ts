@@ -2,7 +2,7 @@ import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import { stub, restore as sinonRestore } from 'sinon'
 
-import type { Agent, ConnectionRecord } from '@credo-ts/core'
+import type { Agent, ConnectionRecord, OutOfBandRecord } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import { ConnectionEventTypes, ConnectionRepository, type TrustPingMessage } from '@credo-ts/core'
@@ -10,19 +10,27 @@ import request from 'supertest'
 import WebSocket from 'ws'
 
 import { startServer } from '../../src/index.js'
-import { getTestConnection, getTestAgent, objectToJson, getTestTrustPingMessage } from './utils/helpers.js'
+import {
+  getTestConnection,
+  getTestAgent,
+  objectToJson,
+  getTestTrustPingMessage,
+  getTestOutOfBandRecord,
+} from './utils/helpers.js'
 
 describe('ConnectionController', () => {
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
   let connection: ConnectionRecord
+  let outOfBandRecord: OutOfBandRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3012)
     bobAgent = await getTestAgent('Connection REST Agent Test Bob', 3013)
     app = await startServer(bobAgent, { port: 3009 })
     connection = getTestConnection()
+    outOfBandRecord = getTestOutOfBandRecord()
   })
 
   afterEach(() => {
@@ -239,7 +247,7 @@ describe('ConnectionController', () => {
 
       const waitForMessagePromise = new Promise((resolve) => {
         client.on('message', (data) => {
-          const event = JSON.parse(data as string)
+          const event = JSON.parse(data.toString())
 
           expect(event.type).to.be.equal(ConnectionEventTypes.ConnectionStateChanged)
           client.terminate()
@@ -249,6 +257,44 @@ describe('ConnectionController', () => {
 
       await bobAgent.oob.receiveInvitation(aliceOutOfBandRecord.outOfBandInvitation)
       await waitForMessagePromise
+    })
+  })
+
+  describe('Create connection', async function () {
+    it('Bob creates a connection with Alice', async function () {
+      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      receiveImplicitInvitationStub.resolves({
+        outOfBandRecord: outOfBandRecord,
+        connectionRecord: connection,
+      })
+      const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
+
+      const response = await request(app).post('/connections').send({ did: 'someDid' }).expect(200)
+
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
+    it('Bob replaces old connection with Alice', async function () {
+      const { invitationDid } = connection
+
+      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      receiveImplicitInvitationStub.resolves({
+        outOfBandRecord: outOfBandRecord,
+        connectionRecord: connection,
+      })
+
+      // stub a connection to be replaced
+      stub(bobAgent.connections, 'findByInvitationDid').resolves([connection])
+
+      // assert old connection is deleted
+      const deleteByIdStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).post('/connections').send({ did: invitationDid }).expect(200)
+      expect(deleteByIdStub.callCount).to.equal(1)
+    })
+
+    it('500s if invalid DID', async function () {
+      await request(app).post('/connections').send({ did: 'bla' }).expect(500)
     })
   })
 

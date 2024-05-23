@@ -404,12 +404,14 @@ export function getTestConnection({
   id = 'test',
   did = 'test-did',
   threadId = 'threadId',
+  invitationDid = 'invitation-did',
   tags = {},
   theirLabel,
   theirDid = 'their-did',
 }: Partial<ConnectionRecordProps> = {}) {
   return new ConnectionRecord({
     did,
+    invitationDid,
     threadId,
     theirDid,
     id,
