@@ -284,8 +284,7 @@ describe('ConnectionController', () => {
       })
 
       // stub a connection to be replaced
-      const connectionRepository = bobAgent.context.dependencyManager.resolve(ConnectionRepository)
-      stub(connectionRepository, 'findByQuery').resolves([connection])
+      stub(bobAgent.connections, 'findByInvitationDid').resolves([connection])
 
       // assert old connection is deleted
       const deleteByIdStub = stub(bobAgent.connections, 'deleteById')
