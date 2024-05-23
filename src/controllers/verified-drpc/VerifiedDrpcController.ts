@@ -10,7 +10,7 @@ import { NotFound, GatewayTimeout } from '../../error.js'
 
 interface VerifiedDrpcRequestOptions {
   drpcRequest: VerifiedDrpcRequest
-  proofRequestOptions: CreateProofRequestOptions
+  proofRequestOptions?: CreateProofRequestOptions
 }
 
 @Tags('Verified DRPC')
@@ -31,7 +31,7 @@ export class VerifiedDrpcController extends Controller {
    * @param request The request object
    * @param timeout The timeout for receiving a response
    */
-  @Post('/:connectionId')
+  @Post('/request/:connectionId')
   @Response<NotFound['message']>(404)
   @Response<GatewayTimeout>(504)
   public async sendRequest(
@@ -40,27 +40,48 @@ export class VerifiedDrpcController extends Controller {
     @Query('async') async_ = false,
     @Query('timeout') timeout = 5000
   ) {
-    const { drpcRequest, proofRequestOptions: { proofFormats, ...rest } } = requestOptions
-    const proofOptions = {
-      proofFormats: {
-        anoncreds: transformProofFormat(proofFormats.anoncreds),
-      },
-      ...rest
+    let proofOptions: CreateProofRequestOptions | undefined
+    if (requestOptions.proofRequestOptions) {
+      const { proofRequestOptions: { proofFormats, ...rest } } = requestOptions
+      proofOptions = {
+        proofFormats: {
+          anoncreds: transformProofFormat(proofFormats.anoncreds),
+        },
+        ...rest
+      }
     }
 
-    const responseListener = await this.agent.modules.verifiedDrpc.sendRequest(connectionId, drpcRequest, proofOptions)
-    const responsePromise = responseListener(timeout).then((response: VerifiedDrpcResponse) => {
-      if (response === undefined) {
-        throw new GatewayTimeout('Response from peer timed out')
+    const responseListener = await this.agent.modules.verifiedDrpc.sendRequest(connectionId, requestOptions.drpcRequest, proofOptions)
+    const responsePromise = responseListener(timeout)
+      .then((response: VerifiedDrpcResponse) => {
+        if (response === undefined) {
+          throw new GatewayTimeout('Response from peer timed out')
+        }
+        return response
+      })
+      let response: VerifiedDrpcResponse | undefined
+      if (async_) {
+        this.setStatus(202)
+      } else {
+        response = await responsePromise
       }
       return response
-    })
-    let response: VerifiedDrpcResponse | undefined
-    if (async_) {
-      this.setStatus(202)
-    } else {
-      response = await responsePromise
     }
-    return response
+
+  /**
+   * Sends a verified drpc response to a connection
+   * @param connectionId the connection id to use
+   * @param threadId the thread id to respond to
+   * @param response the verified drpc response object to send
+   */
+  @Post('/response/:connectionId')
+  @Response<NotFound['message']>(404)
+  @Response<GatewayTimeout>(504)
+  public async sendResponse(
+    @Path('connectionId') connectionId: RecordId,
+    @Query() threadId: string,
+    @Body() response: VerifiedDrpcResponse,
+  ) {
+    await this.agent.modules.verifiedDrpc.sendResponse({ connectionId, threadId, response })
   }
 }

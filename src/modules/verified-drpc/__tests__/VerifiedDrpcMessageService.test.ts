@@ -1,15 +1,14 @@
-import type { VerifiedDrpcRequestObject } from '../messages'
+import type { VerifiedDrpcRequestObject } from '../messages/index.js'
 
-import { DidExchangeState } from '@credo-ts/core'
+import { DidExchangeState, EventEmitter, InboundMessageContext,  } from '@credo-ts/core'
 
-import { EventEmitter } from '../../../core/src/agent/EventEmitter'
-import { InboundMessageContext } from '../../../core/src/agent/models/InboundMessageContext'
-import { getAgentContext, getMockConnection } from '../../../core/tests/helpers'
-import { VerifiedDrpcRequestMessage } from '../messages'
-import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole'
-import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord'
-import { VerifiedDrpcRepository } from '../repository/VerifiedDrpcRepository'
-import { VerifiedDrpcService } from '../services'
+import { withMockedAgentContext } from './fixtures/agentContext.js'
+
+import { VerifiedDrpcRequestMessage } from '../messages/index.js'
+import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole.js'
+import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord.js'
+import { VerifiedDrpcRepository } from '../repository/VerifiedDrpcRepository.js'
+import { VerifiedDrpcService } from '../services/index.js'
 
 jest.mock('../repository/VerifiedDrpcRepository')
 const VerifiedDrpcRepositoryMock = VerifiedDrpcRepository as jest.Mock<VerifiedDrpcRepository>
@@ -19,14 +18,40 @@ jest.mock('../../../core/src/agent/EventEmitter')
 const EventEmitterMock = EventEmitter as jest.Mock<EventEmitter>
 const eventEmitter = new EventEmitterMock()
 
-const agentContext = getAgentContext()
+const agentContext = withMockedAgentContext()
+
+export function getMockConnection({
+  state = DidExchangeState.InvitationReceived,
+  role = DidExchangeRole.Requester,
+  id = 'test',
+  did = 'test-did',
+  threadId = 'threadId',
+  tags = {},
+  theirLabel,
+  theirDid = 'their-did',
+}: Partial<ConnectionRecordProps> = {}) {
+  return new ConnectionRecord({
+    did,
+    threadId,
+    theirDid,
+    id,
+    role,
+    state,
+    tags,
+    theirLabel,
+  })
+}
 
 describe('VerifiedDrpcService', () => {
   let verifiedDrpcMessageService: VerifiedDrpcService
-  const mockConnectionRecord = getMockConnection({
-    id: 'd3849ac3-c981-455b-a1aa-a10bea6cead8',
+  const mockConnectionRecord = new ConnectionRecord({
     did: 'did:sov:C2SsBf5QUQpqSAQfhu3sd2',
+    threadId: 'threadId',
+    theirDid: 'their-did',
+    id: 'd3849ac3-c981-455b-a1aa-a10bea6cead8',
+    role: DidExchangeRole.Requester,
     state: DidExchangeState.Completed,
+    tags: {},
   })
 
   beforeEach(() => {
@@ -34,7 +59,7 @@ describe('VerifiedDrpcService', () => {
   })
 
   describe('createMessage', () => {
-    it(`creates message and record, and emits message and basic message record`, async () => {
+    it.only(`creates message and record, and emits message and basic message record`, async () => {
       const messageRequest: VerifiedDrpcRequestObject = {
         jsonrpc: '2.0',
         method: 'hello',

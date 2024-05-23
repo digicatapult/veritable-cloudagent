@@ -31,25 +31,21 @@
     "proofTimeoutMs": 5000,
     "requestTimeoutMs": 5000,
     "proofRequestOptions": {
+      "protocolVersion": "v2",
       "proofFormats": {
         "anoncreds": {
           "name": "proof-request",
           "version": "1.0",
           "requested_attributes": {
-            "companiesHouseNumber": {
+            "niceCredentialsCheck": {
               "name": "companiesHouseNumber",
-              "restrictions": [
-                {
-                  "attributeValues": {
-                    "niceRole": "oem"
-                  },
-                  "cred_def_id": "ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de"
-                }
-              ]
+              "restrictions": [{}]
             }
           }
         }
-      }
+      },
+      "willConfirm": true,
+      "autoAcceptProof": "always"
     }
   }
 }

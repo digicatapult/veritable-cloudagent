@@ -17,6 +17,7 @@ import { readFile } from 'fs/promises'
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
 import { TsLogger } from './utils/logger.js'
+import { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -128,6 +129,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       setAsDefault: true,
     })
   }
+
+  agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
 
   const app = await setupServer(agent, {
     webhookUrl,

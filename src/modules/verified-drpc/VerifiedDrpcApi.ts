@@ -6,8 +6,6 @@ import type {
   ProofProtocol,
 } from '@credo-ts/core'
 
-import type { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
-
 import {
   AgentContext,
   MessageHandlerRegistry,
@@ -17,8 +15,9 @@ import {
   ConnectionsApi,
 } from '@credo-ts/core'
 
+import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
-import { VerifiedDrpcRole } from './models/index.js'
+import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
 
 @injectable()
@@ -42,6 +41,7 @@ export class VerifiedDrpcApi {
     this.messageSender = messageSender
     this.connectionsApi = connectionsApi
     this.agentContext = agentContext
+    //this.config = this.agentContext.dependencyManager.resolve(VerifiedDrpcModuleConfig)
     this.registerMessageHandlers(messageHandlerRegistry)
   }
 
@@ -106,17 +106,45 @@ export class VerifiedDrpcApi {
   }
 
   /**
-   * Listen for a request and returns the request object and a function to send the response
+   * Register a handler to fully verified (both client and server) DRPC requests
+   * @param handler the handler function that receives a DRPC request record and returns a DRPC response
    * @param proofOptions the proof options against which to verify the client
    * @param proofTimeoutMs the time in milliseconds to wait for a proof
+   * @return a function to cancel the listener
+   */
+
+  public addRequestListener(
+    handler: (drpcRecord: VerifiedDrpcRecord, agentContext: AgentContext) => VerifiedDrpcResponse | Promise<VerifiedDrpcResponse>,
+    proofTimeoutMs?: number,
+    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
+  ): () => void {
+    const listener = async ({
+      verifiedDrpcMessageRecord,
+      removeListener,
+    }: {
+      verifiedDrpcMessageRecord: VerifiedDrpcRecord
+      removeListener: () => void
+    }) => {
+      const request = verifiedDrpcMessageRecord.request
+      if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server && verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived) {
+        const response = await handler(verifiedDrpcMessageRecord, this.agentContext)
+        this.sendResponse({
+          connectionId: verifiedDrpcMessageRecord.connectionId,
+          threadId: verifiedDrpcMessageRecord.threadId,
+          response,
+        })
+      }
+    }
+
+    return this.verifiedDrpcMessageService.createRequestListener(listener)
+  }
+
+  /**
+   * Listen for a request and returns the request object and a function to send the response
    * @param timeoutMs the time in milliseconds to wait for a request
    * @returns the request object and a function to send the response
    */
-  public async recvRequest(
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
-    proofTimeoutMs?: number,
-    timeoutMs?: number,
-  ): Promise<
+  public async recvRequest(timeoutMs?: number): Promise<
     | {
         request: VerifiedDrpcRequest
         sendResponse: (response: VerifiedDrpcResponse) => Promise<void>
@@ -132,9 +160,8 @@ export class VerifiedDrpcApi {
         removeListener: () => void
       }) => {
         const request = verifiedDrpcMessageRecord.request
-        if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server) {
+        if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server && verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived) {
           removeListener()
-          await this.verifiedDrpcMessageService.verifyClient(this.agentContext, verifiedDrpcMessageRecord.connectionId, proofOptions, verifiedDrpcMessageRecord, proofTimeoutMs)
           resolve({
             sendResponse: async (response: VerifiedDrpcResponse) => {
               await this.sendResponse({
@@ -166,7 +193,7 @@ export class VerifiedDrpcApi {
    * @param threadId the thread id to respond to
    * @param response the verified drpc response object to send
    */
-  private async sendResponse(options: {
+  public async sendResponse(options: {
     connectionId: string
     threadId: string
     response: VerifiedDrpcResponse

@@ -4,7 +4,7 @@ import type {
   Module,
 } from '@credo-ts/core'
 
-import type { VerifiedDrpcModuleConfigOptions } from './VerifiedDrpcModuleConfig.js'
+import { VerifiedDrpcModuleConfigOptions } from './VerifiedDrpcModuleConfig.js'
 
 import { Protocol, AgentConfig } from '@credo-ts/core'
 

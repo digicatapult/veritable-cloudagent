@@ -1,6 +1,6 @@
 import type { VerifiedDrpcModuleConfigOptions } from '../modules/verified-drpc/index.js'
 
-import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsModule } from '@credo-ts/anoncreds'
+import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsRequestProofFormat, AnonCredsModule } from '@credo-ts/anoncreds'
 import { AskarModule } from '@credo-ts/askar'
 import {
   type ModulesMap,
@@ -33,6 +33,7 @@ export interface RestAgentModules extends ModulesMap {
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncreds: AnonCredsModule
+  verifiedDrpc: VerifiedDrpcModule
 }
 
 export type RestAgent<
@@ -41,6 +42,7 @@ export type RestAgent<
     proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
+    verifiedDrpc: VerifiedDrpcModule
   }
 > = Agent<modules>
 
@@ -56,7 +58,7 @@ export const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string,
-  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions,
+  verifiedDrpcOptions: { credDefId?: string; } & VerifiedDrpcModuleConfigOptions,
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -89,7 +91,24 @@ export const getAgentModules = (options: {
       autoAcceptMediationRequests: options.autoAcceptMediationRequests,
     }),
     drpc: new DrpcModule(),
-    verifiedDrpc: new VerifiedDrpcModule(options.verifiedDrpcOptions),
+    verifiedDrpc: new VerifiedDrpcModule(
+      (() => {
+        const { credDefId, ...rest } = options.verifiedDrpcOptions
+        if (credDefId) {
+          const anoncredsProofFormat = (rest.proofRequestOptions.proofFormats?.['anoncreds'] as AnonCredsRequestProofFormat)
+          const niceCredentialsCheck = anoncredsProofFormat?.requested_attributes?.['niceCredentialsCheck']
+          if (niceCredentialsCheck && Array.isArray(niceCredentialsCheck.restrictions)) {
+            niceCredentialsCheck.restrictions = niceCredentialsCheck.restrictions.map((restriction) => {
+              return {
+                ...restriction,
+                cred_def_id: credDefId
+              }
+            })
+          }
+        }
+        return rest
+      })(),
+    ),
   }
 }
 

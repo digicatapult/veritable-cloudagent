@@ -2,12 +2,10 @@ import { runRestAgent, type InboundTransport, type Transports, type AriesRestCon
 import type { AskarWalletPostgresStorageConfig } from '@credo-ts/askar'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
-import type { CreateProofRequestOptions, ProofProtocol } from '@credo-ts/core'
-
-import { transformProofFormat } from './utils/proofs.js'
 
 const parsed = yargs(hideBin(process.argv))
   .command('start', 'Start AFJ Rest agent')
+  .parserConfiguration({ "parse-numbers": false})
   .option('label', {
     alias: 'l',
     string: true,
@@ -145,16 +143,10 @@ const parsed = yargs(hideBin(process.argv))
     default: 5000,
   })
   .option('verified-drpc-options.proof-request-options', {
-    default: 5000,
-    coerce: (input): CreateProofRequestOptions => {
-      const { proofFormats, ...rest } = typeof input === 'object' ? input : JSON.parse(input)
-      return {
-        proofFormats: {
-          anoncreds: transformProofFormat()
-        },
-        ...rest,
-      }
-    }
+    coerce: JSON.parse,
+  })
+  .option('verified-drpc-options.cred-def-id', {
+    string: true,
   })
   .check((argv) => {
     if (
@@ -183,43 +175,43 @@ export async function runCliServer() {
   await runRestAgent({
     label: parsed.label,
     walletConfig: {
-      id: parsed['wallet-id'],
-      key: parsed['wallet-key'],
+      id: parsed.walletId,
+      key: parsed.walletKey,
       storage:
-        parsed['storage-type'] === 'sqlite'
+        parsed.storageType === 'sqlite'
           ? {
               type: 'sqlite',
             }
           : ({
               type: 'postgres',
               config: {
-                host: `${parsed['postgres-host'] as string}:${parsed['postgres-port'] as string}`,
+                host: `${parsed.postgresHost as string}:${parsed.postgresPort as string}`,
               },
               credentials: {
-                account: parsed['postgres-username'] as string,
-                password: parsed['postgres-password'] as string,
+                account: parsed.postgresUsername as string,
+                password: parsed.postgresPassword as string,
               },
             } satisfies AskarWalletPostgresStorageConfig),
     },
     endpoints: parsed.endpoint,
-    autoAcceptConnections: parsed['auto-accept-connections'],
-    autoAcceptCredentials: parsed['auto-accept-credentials'],
-    autoAcceptProofs: parsed['auto-accept-proofs'],
-    autoUpdateStorageOnStartup: parsed['auto-update-storage-on-startup'],
-    backupBeforeStorageUpdate: parsed['backup-before-storage-update'],
-    autoAcceptMediationRequests: parsed['auto-accept-mediation-requests'],
-    useDidKeyInProtocols: parsed['use-did-key-in-protocols'],
-    useDidSovPrefixWhereAllowed: parsed['use-legacy-did-sov-prefix'],
-    logLevel: parsed['log-level'],
-    inboundTransports: parsed['inbound-transport'],
-    outboundTransports: parsed['outbound-transport'],
-    connectionImageUrl: parsed['connection-image-url'],
-    webhookUrl: parsed['webhook-url'],
-    adminPort: parsed['admin-port'],
-    ipfsOrigin: parsed['ipfs-origin'],
-    opaOrigin: parsed['opa-origin'],
-    personaTitle: parsed['persona-title'],
-    personaColor: parsed['persona-color'],
-    verifiedDrpcOptions: parsed['verified-drpc-options'],
+    autoAcceptConnections: parsed.autoAcceptConnections,
+    autoAcceptCredentials: parsed.autoAcceptCredentials,
+    autoAcceptProofs: parsed.autoAcceptProofs,
+    autoUpdateStorageOnStartup: parsed.autoUpdateStorageOnStartup,
+    backupBeforeStorageUpdate: parsed.backupBeforeStorageUpdate,
+    autoAcceptMediationRequests: parsed.autoAcceptMediationRequests,
+    useDidKeyInProtocols: parsed.useDidKeyInProtocols,
+    useDidSovPrefixWhereAllowed: parsed.useLegacyDidSovPrefix,
+    logLevel: parsed.logLevel,
+    inboundTransports: parsed.inboundTransport,
+    outboundTransports: parsed.outboundTransport,
+    connectionImageUrl: parsed.connectionImageUrl,
+    webhookUrl: parsed.webhookUrl,
+    adminPort: parsed.adminPort,
+    ipfsOrigin: parsed.ipfsOrigin,
+    opaOrigin: parsed.opaOrigin,
+    personaTitle: parsed.personaTitle,
+    personaColor: parsed.personaColor,
+    verifiedDrpcOptions:parsed.verifiedDrpcOptions,
   } as AriesRestConfig)
 }

@@ -1,7 +1,7 @@
 import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents.js'
 import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents.js'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages/index.js'
-import type { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
+import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
 import type {
   AgentContext,
