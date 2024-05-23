@@ -6,7 +6,6 @@ import {
   CredoError,
   RecordNotFoundError,
   HandshakeProtocol,
-  ConnectionsApi,
 } from '@credo-ts/core'
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response, Body } from 'tsoa'
 import { injectable } from 'tsyringe'
