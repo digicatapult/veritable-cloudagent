@@ -6,6 +6,7 @@ import {
   CredoError,
   RecordNotFoundError,
   HandshakeProtocol,
+  ConnectionsApi,
 } from '@credo-ts/core'
 import { Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response, Body } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -181,10 +182,7 @@ export class ConnectionController extends Controller {
   public async post(@Body() body: { did: string }) {
     const { did } = body
 
-    const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
-    const connections = await connectionRepository.findByQuery(this.agent.context, {
-      invitationDid: did,
-    })
+    const connections = await this.agent.connections.findByInvitationDid(did)
 
     for (const { id, invitationDid } of connections) {
       if (invitationDid === did) {
