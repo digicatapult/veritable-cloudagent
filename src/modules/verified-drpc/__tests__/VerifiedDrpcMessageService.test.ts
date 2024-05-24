@@ -1,22 +1,28 @@
+import { describe, it } from 'mocha'
+import { expect } from 'chai'
+import * as sinon from 'sinon'
+import type { SinonStubbedInstance, SinonStub } from 'sinon'
+
 import type { VerifiedDrpcRequestObject } from '../messages/index.js'
 
-import { DidExchangeState, EventEmitter, InboundMessageContext,  } from '@credo-ts/core'
+import { ProofState, ProofStateChangedEvent, ProofEventTypes, DidExchangeState, DidExchangeRole, EventEmitter, InboundMessageContext, ConnectionRecord, ConnectionRecordProps, ProofsApi } from '@credo-ts/core'
+import type { DependencyManager, V2ProofProtocol } from '@credo-ts/core'
+import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
 
 import { withMockedAgentContext } from './fixtures/agentContext.js'
+import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'
 
 import { VerifiedDrpcRequestMessage } from '../messages/index.js'
 import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole.js'
 import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord.js'
 import { VerifiedDrpcRepository } from '../repository/VerifiedDrpcRepository.js'
 import { VerifiedDrpcService } from '../services/index.js'
+import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
-jest.mock('../repository/VerifiedDrpcRepository')
-const VerifiedDrpcRepositoryMock = VerifiedDrpcRepository as jest.Mock<VerifiedDrpcRepository>
-const verifiedDrpcMessageRepository = new VerifiedDrpcRepositoryMock()
 
-jest.mock('../../../core/src/agent/EventEmitter')
-const EventEmitterMock = EventEmitter as jest.Mock<EventEmitter>
-const eventEmitter = new EventEmitterMock()
+const mockVerifiedDrpcRepository: SinonStubbedInstance<VerifiedDrpcRepository> = sinon.createStubInstance(VerifiedDrpcRepository)
+const mockEventEmitter: SinonStubbedInstance<EventEmitter> = sinon.createStubInstance(EventEmitter)
+const mockVerifiedDrpcModuleConfig = new VerifiedDrpcModuleConfig({ proofRequestOptions: { protocolVersion: '2.0', proofFormats: {} } })
 
 const agentContext = withMockedAgentContext()
 
@@ -55,11 +61,11 @@ describe('VerifiedDrpcService', () => {
   })
 
   beforeEach(() => {
-    verifiedDrpcMessageService = new VerifiedDrpcService(verifiedDrpcMessageRepository, eventEmitter)
+    verifiedDrpcMessageService = new VerifiedDrpcService(mockVerifiedDrpcModuleConfig, mockVerifiedDrpcRepository, mockEventEmitter)
   })
 
   describe('createMessage', () => {
-    it.only(`creates message and record, and emits message and basic message record`, async () => {
+    it(`creates message and record, and emits message and basic message record`, async () => {
       const messageRequest: VerifiedDrpcRequestObject = {
         jsonrpc: '2.0',
         method: 'hello',
@@ -71,14 +77,14 @@ describe('VerifiedDrpcService', () => {
         mockConnectionRecord.id
       )
 
-      expect(requestMessage).toBeInstanceOf(VerifiedDrpcRequestMessage)
-      expect((requestMessage.request as VerifiedDrpcRequestObject).method).toBe('hello')
+      expect(requestMessage).to.be.an.instanceof(VerifiedDrpcRequestMessage)
+      expect((requestMessage.request as VerifiedDrpcRequestObject).method).to.equal('hello')
 
-      expect(verifiedDrpcMessageRepository.save).toHaveBeenCalledWith(agentContext, expect.any(VerifiedDrpcRecord))
-      expect(eventEmitter.emit).toHaveBeenCalledWith(agentContext, {
+      sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
+      sinon.assert.calledWithMatch<any>(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
         payload: {
-          verifiedDrpcMessageRecord: expect.objectContaining({
+          verifiedDrpcMessageRecord: sinon.match({
             connectionId: mockConnectionRecord.id,
             request: {
               id: 1,
@@ -94,25 +100,44 @@ describe('VerifiedDrpcService', () => {
 
   describe('recieve request', () => {
     it(`stores record and emits message and basic message record`, async () => {
+      const testProofId = 'test-proof-id'
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Done,
+      })
+      const mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> = sinon.createStubInstance(ProofsApi)
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        }
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
       const verifiedDrpcMessage = new VerifiedDrpcRequestMessage({ request: { jsonrpc: '2.0', method: 'hello', id: 1 } })
-
       const messageContext = new InboundMessageContext(verifiedDrpcMessage, { agentContext, connection: mockConnectionRecord })
+      
+      const requestPromise = verifiedDrpcMessageService.receiveRequest(messageContext)
 
-      await verifiedDrpcMessageService.receiveRequest(messageContext)
-
-      expect(verifiedDrpcMessageRepository.save).toHaveBeenCalledWith(agentContext, expect.any(VerifiedDrpcRecord))
-      expect(eventEmitter.emit).toHaveBeenCalledWith(agentContext, {
+      sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
+      sinon.assert.calledWithMatch<any>(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
         payload: {
-          verifiedDrpcMessageRecord: expect.objectContaining({
+          verifiedDrpcMessageRecord: {
             connectionId: mockConnectionRecord.id,
             request: {
               id: 1,
               jsonrpc: '2.0',
               method: 'hello',
             },
-            role: VerifiedDrpcRole.Server,
-          }),
+            role: VerifiedDrpcRole.Client,
+          },
         },
       })
     })

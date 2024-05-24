@@ -22,9 +22,9 @@ import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository/index.
 
 @injectable()
 export class VerifiedDrpcService {
+  private config: VerifiedDrpcModuleConfig
   private verifiedDrpcMessageRepository: VerifiedDrpcRepository
   private eventEmitter: EventEmitter
-  private config: VerifiedDrpcModuleConfig
 
   public constructor(
     verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig,
