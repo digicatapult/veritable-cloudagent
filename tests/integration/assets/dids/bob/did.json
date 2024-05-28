@@ -1,0 +1,32 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob",
+  "verificationMethod": [
+    {
+      "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob#owner",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob",
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "IwT5GR9pCaV_C3fjDvxFgcXGi3MqcG4zRUiXasPmdtk"
+      }
+    }
+  ],
+  "authentication": ["did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob#owner"],
+  "assertionMethod": ["did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob#owner"],
+  "service": [{
+    "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob#did-communication",
+    "type": "did-communication",
+    "priority" : 0,
+    "recipientKeys" : [ "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:bob#owner" ],
+    "routingKeys" : [],
+    "accept": [
+      "didcomm/aip1"
+    ],
+    "serviceEndpoint": "http://bob:5002"
+  }]
+}
