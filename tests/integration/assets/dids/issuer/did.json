@@ -3,12 +3,12 @@
     "https://www.w3.org/ns/did/v1",
     "https://w3id.org/security/suites/jws-2020/v1"
   ],
-  "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer",
+  "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer",
   "verificationMethod": [
     {
-      "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer#owner",
+      "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer#owner",
       "type": "JsonWebKey2020",
-      "controller": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer",
+      "controller": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer",
       "publicKeyJwk": {
         "kty": "OKP",
         "crv": "Ed25519",
@@ -16,13 +16,13 @@
       }
     }
   ],
-  "authentication": ["did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer#owner"],
-  "assertionMethod": ["did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer#owner"],
+  "authentication": ["did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer#owner"],
+  "assertionMethod": ["did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer#owner"],
   "service": [{
-    "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer#did-communication",
+    "id": "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer#did-communication",
     "type": "did-communication",
     "priority" : 0,
-    "recipientKeys" : [ "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:add-testing-web-dids:tests:integration:assets:dids:issuer#owner" ],
+    "recipientKeys" : [ "did:web:raw.githubusercontent.com:digicatapult:veritable-cloudagent:main:tests:integration:assets:dids:issuer#owner" ],
     "routingKeys" : [],
     "accept": [
       "didcomm/aip1"
