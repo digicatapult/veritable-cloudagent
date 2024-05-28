@@ -28,12 +28,14 @@ services:
     depends_on:
       ipfs0:
         condition: service_healthy
+      alice-postgres:
+        condition: service_healthy
     volumes:
       # also possible to set values using json
       - ./samples/cliConfig.json:/config.json
     environment:
       - AFJ_REST_LOG_LEVEL=1
-      - AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
+      #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
@@ -56,11 +58,13 @@ services:
     depends_on:
       ipfs1:
         condition: service_healthy
+      bob-postgres:
+        condition: service_healthy
     volumes:
       - ./samples/cliConfig.json:/config.json
     environment:
       - AFJ_REST_LOG_LEVEL=1
-      - AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
+      #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
     ports:
       #- '5102:5002'
       #- '5103:5003'
@@ -82,11 +86,13 @@ services:
     depends_on:
       ipfs2:
         condition: service_healthy
+      charlie-postgres:
+        condition: service_healthy
     volumes:
       - ./samples/cliConfig.json:/config.json
     environment:
       - AFJ_REST_LOG_LEVEL=1
-      - AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
+      #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
     ports:
       #- '5202:5002'
       #- '5203:5003'
@@ -110,31 +116,31 @@ services:
     networks:
       - testnet
 
-  #cluster0:
-  #  container_name: cluster0
-  #  image: ipfs/ipfs-cluster:stable
-  #  depends_on:
-  #    ipfs0:
-  #      condition: service_started
-  #  environment:
-  #    CLUSTER_PEERNAME: cluster0
-  #    CLUSTER_SECRET: b61cc34d619656a7cac49c8d031b20f7c87d81d27354c6001816bddca0355a29
-  #    CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs0/tcp/5001
-  #    CLUSTER_CRDT_TRUSTEDPEERS: '*' # Trust all peers in Cluster
-  #    CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose API
-  #    CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
-  #  #ports:
-  #  # Open API port (allows ipfs-cluster-ctl usage on host)
-  #  # - "9094:9094"
-  #  # The cluster swarm port would need to be exposed if this container
-  #  # was to connect to cluster peers on other hosts.
-  #  # But this is just a testing cluster.
-  #  # - "9095:9095" # Cluster IPFS Proxy endpoint
-  #  # - "9096:9096" # Cluster swarm endpoint
-  #  volumes:
-  #    - cluster0:/data/ipfs-cluster
-  #  networks:
-  #    - testnet
+  cluster0:
+    container_name: cluster0
+    image: ipfs/ipfs-cluster:stable
+    depends_on:
+      ipfs0:
+        condition: service_started
+    environment:
+      CLUSTER_PEERNAME: cluster0
+      CLUSTER_SECRET: b61cc34d619656a7cac49c8d031b20f7c87d81d27354c6001816bddca0355a29
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs0/tcp/5001
+      CLUSTER_CRDT_TRUSTEDPEERS: '*' # Trust all peers in Cluster
+      CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094 # Expose API
+      CLUSTER_MONITORPINGINTERVAL: 2s # Speed up peer discovery
+    #ports:
+    # Open API port (allows ipfs-cluster-ctl usage on host)
+    # - "9094:9094"
+    # The cluster swarm port would need to be exposed if this container
+    # was to connect to cluster peers on other hosts.
+    # But this is just a testing cluster.
+    # - "9095:9095" # Cluster IPFS Proxy endpoint
+    # - "9096:9096" # Cluster swarm endpoint
+    volumes:
+      - cluster0:/data/ipfs-cluster
+    networks:
+      - testnet
 
   ##################################################################################
   ## Cluster PEER 1 ################################################################
@@ -148,22 +154,22 @@ services:
     networks:
       - testnet
 
-  # cluster1:
-  #   container_name: cluster1
-  #   image: ipfs/ipfs-cluster:stable
-  #   depends_on:
-  #     ipfs1:
-  #       condition: service_started
-  #   environment:
-  #     CLUSTER_PEERNAME: cluster1
-  #     CLUSTER_SECRET: b61cc34d619656a7cac49c8d031b20f7c87d81d27354c6001816bddca0355a29
-  #     CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs1/tcp/5001
-  #     CLUSTER_CRDT_TRUSTEDPEERS: '*'
-  #     CLUSTER_MONITORPINGINTERVAL: 2s
-  #   volumes:
-  #     - cluster1:/data/ipfs-cluster
-  #   networks:
-  #     - testnet
+  cluster1:
+    container_name: cluster1
+    image: ipfs/ipfs-cluster:stable
+    depends_on:
+      ipfs1:
+        condition: service_started
+    environment:
+      CLUSTER_PEERNAME: cluster1
+      CLUSTER_SECRET: b61cc34d619656a7cac49c8d031b20f7c87d81d27354c6001816bddca0355a29
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs1/tcp/5001
+      CLUSTER_CRDT_TRUSTEDPEERS: '*'
+      CLUSTER_MONITORPINGINTERVAL: 2s
+    volumes:
+      - cluster1:/data/ipfs-cluster
+    networks:
+      - testnet
 
   ##################################################################################
   ## Cluster PEER 2 ################################################################
@@ -177,22 +183,22 @@ services:
     networks:
       - testnet
 
-  # cluster2:
-  #   container_name: cluster2
-  #   image: ipfs/ipfs-cluster:stable
-  #   depends_on:
-  #     ipfs2:
-  #       condition: service_started
-  #   environment:
-  #     CLUSTER_PEERNAME: cluster2
-  #     CLUSTER_SECRET: b61cc34d619656a7cac49c8d031b20f7c87d81d27354c6001816bddca0355a29
-  #     CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs2/tcp/5001
-  #     CLUSTER_CRDT_TRUSTEDPEERS: '*'
-  #     CLUSTER_MONITORPINGINTERVAL: 2s
-  #   volumes:
-  #     - cluster2:/data/ipfs-cluster
-  #   networks:
-  #     - testnet
+  cluster2:
+    container_name: cluster2
+    image: ipfs/ipfs-cluster:stable
+    depends_on:
+      ipfs2:
+        condition: service_started
+    environment:
+      CLUSTER_PEERNAME: cluster2
+      CLUSTER_SECRET: b61cc34d619656a7cac49c8d031b20f7c87d81d27354c6001816bddca0355a29
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs2/tcp/5001
+      CLUSTER_CRDT_TRUSTEDPEERS: '*'
+      CLUSTER_MONITORPINGINTERVAL: 2s
+    volumes:
+      - cluster2:/data/ipfs-cluster
+    networks:
+      - testnet
 
   ##################################################################################
   ## OPA 0 #########################################################################
@@ -250,6 +256,13 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 0s
     networks:
       - testnet
 
@@ -267,6 +280,13 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 0s
     networks:
       - testnet
 
@@ -284,6 +304,13 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+    healthcheck:
+      test:
+        ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 0s
     networks:
       - testnet
 volumes:

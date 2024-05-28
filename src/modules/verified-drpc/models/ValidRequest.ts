@@ -36,6 +36,7 @@ export function IsValidVerifiedDrpcRequest(validationOptions?: ValidationOptions
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isValidVerifiedDrpcRequest(value: any): boolean {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false

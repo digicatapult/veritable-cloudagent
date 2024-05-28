@@ -6,7 +6,7 @@ export enum VerifiedDrpcState {
   // Server states
   RequestReceived = 'request-received',
   ClientProofReceived = 'client-proof-received',
-  
+
   // Common states
   Abandoned = 'abandoned',
   Completed = 'completed',

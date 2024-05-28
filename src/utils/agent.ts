@@ -1,6 +1,11 @@
 import type { VerifiedDrpcModuleConfigOptions } from '../modules/verified-drpc/index.js'
 
-import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsRequestProofFormat, AnonCredsModule } from '@credo-ts/anoncreds'
+import {
+  AnonCredsCredentialFormatService,
+  AnonCredsProofFormatService,
+  AnonCredsRequestProofFormat,
+  AnonCredsModule,
+} from '@credo-ts/anoncreds'
 import { AskarModule } from '@credo-ts/askar'
 import {
   type ModulesMap,
@@ -57,8 +62,8 @@ export const getAgentModules = (options: {
   autoAcceptProofs: AutoAcceptProof
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
-  ipfsOrigin: string,
-  verifiedDrpcOptions: { credDefId?: string; } & VerifiedDrpcModuleConfigOptions,
+  ipfsOrigin: string
+  verifiedDrpcOptions: { credDefId?: string; issuerDid?: string } & VerifiedDrpcModuleConfigOptions
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -93,21 +98,28 @@ export const getAgentModules = (options: {
     drpc: new DrpcModule(),
     verifiedDrpc: new VerifiedDrpcModule(
       (() => {
-        const { credDefId, ...rest } = options.verifiedDrpcOptions
-        if (credDefId) {
-          const anoncredsProofFormat = (rest.proofRequestOptions.proofFormats?.['anoncreds'] as AnonCredsRequestProofFormat)
-          const niceCredentialsCheck = anoncredsProofFormat?.requested_attributes?.['niceCredentialsCheck']
-          if (niceCredentialsCheck && Array.isArray(niceCredentialsCheck.restrictions)) {
-            niceCredentialsCheck.restrictions = niceCredentialsCheck.restrictions.map((restriction) => {
-              return {
-                ...restriction,
-                cred_def_id: credDefId
+        const { credDefId, issuerDid, ...rest } = options.verifiedDrpcOptions
+        if (credDefId || issuerDid) {
+          const anoncredsProofFormat = rest.proofRequestOptions.proofFormats?.[
+            'anoncreds'
+          ] as AnonCredsRequestProofFormat
+          if (anoncredsProofFormat.requested_attributes) {
+            for (const [name, attribute] of Object.entries(anoncredsProofFormat.requested_attributes)) {
+              if (!attribute.restrictions) {
+                attribute.restrictions = [{}]
               }
-            })
+              attribute.restrictions = attribute.restrictions.map((restriction) => {
+                return {
+                  ...restriction,
+                  ...(credDefId ? { cred_def_id: credDefId } : {}),
+                  ...(issuerDid ? { issuer_did: issuerDid } : {}),
+                }
+              })
+            }
           }
         }
         return rest
-      })(),
+      })()
     ),
   }
 }

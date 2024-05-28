@@ -1,10 +1,11 @@
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse, VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from './messages/index.js'
-import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
 import type {
-  ConnectionRecord,
-  CreateProofRequestOptions,
-  ProofProtocol,
-} from '@credo-ts/core'
+  VerifiedDrpcRequest,
+  VerifiedDrpcResponse,
+  VerifiedDrpcRequestMessage,
+  VerifiedDrpcResponseMessage,
+} from './messages/index.js'
+import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
+import type { ConnectionRecord, CreateProofRequestOptions, ProofProtocol } from '@credo-ts/core'
 
 import {
   AgentContext,
@@ -34,7 +35,7 @@ export class VerifiedDrpcApi {
     verifiedDrpcMessageService: VerifiedDrpcService,
     messageSender: MessageSender,
     connectionsApi: ConnectionsApi,
-    agentContext: AgentContext,
+    agentContext: AgentContext
   ) {
     this.config = verifiedDrpcModuleConfig
     this.verifiedDrpcMessageService = verifiedDrpcMessageService
@@ -57,14 +58,18 @@ export class VerifiedDrpcApi {
     connectionId: string,
     request: VerifiedDrpcRequest,
     proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
-    proofTimeoutMs: number = this.config.proofTimeoutMs,
+    proofTimeoutMs: number = this.config.proofTimeoutMs
   ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionsApi.getById(connectionId)
-    const {
-      requestMessage: verifiedDrpcMessage,
-      record: verifiedDrpcMessageRecord
-    } = await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
-    await this.verifiedDrpcMessageService.verifyServer(this.agentContext, connection.id, proofOptions, verifiedDrpcMessageRecord, proofTimeoutMs)
+    const { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord } =
+      await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
+    await this.verifiedDrpcMessageService.verifyServer(
+      this.agentContext,
+      connection.id,
+      proofOptions,
+      verifiedDrpcMessageRecord,
+      proofTimeoutMs
+    )
     const messageId = verifiedDrpcMessage.id
     await this.sendMessage(connection, verifiedDrpcMessage, verifiedDrpcMessageRecord)
     return async (timeout?: number) => {
@@ -114,9 +119,11 @@ export class VerifiedDrpcApi {
    */
 
   public addRequestListener(
-    handler: (drpcRecord: VerifiedDrpcRecord, agentContext: AgentContext) => VerifiedDrpcResponse | Promise<VerifiedDrpcResponse>,
-    proofTimeoutMs?: number,
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
+    handler: (
+      drpcRecord: VerifiedDrpcRecord,
+      agentContext: AgentContext
+    ) => VerifiedDrpcResponse | Promise<VerifiedDrpcResponse>,
+    proofTimeoutMs?: number
   ): () => void {
     const listener = async ({
       verifiedDrpcMessageRecord,
@@ -126,7 +133,11 @@ export class VerifiedDrpcApi {
       removeListener: () => void
     }) => {
       const request = verifiedDrpcMessageRecord.request
-      if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server && verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived) {
+      if (
+        request &&
+        verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server &&
+        verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived
+      ) {
         const response = await handler(verifiedDrpcMessageRecord, this.agentContext)
         this.sendResponse({
           connectionId: verifiedDrpcMessageRecord.connectionId,
@@ -160,7 +171,11 @@ export class VerifiedDrpcApi {
         removeListener: () => void
       }) => {
         const request = verifiedDrpcMessageRecord.request
-        if (request && verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server && verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived) {
+        if (
+          request &&
+          verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server &&
+          verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived
+        ) {
           removeListener()
           resolve({
             sendResponse: async (response: VerifiedDrpcResponse) => {

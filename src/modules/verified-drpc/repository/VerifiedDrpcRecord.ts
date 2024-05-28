@@ -72,7 +72,9 @@ export class VerifiedDrpcRecord extends BaseRecord<DefaultVerifiedDrpcMessageTag
 
     if (!expectedStates.includes(this.state)) {
       throw new CredoError(
-        `Verified DRPC response record is in invalid state ${this.state}. Valid states are: ${expectedStates.join(', ')}.`
+        `Verified DRPC response record is in invalid state ${this.state}. Valid states are: ${expectedStates.join(
+          ', '
+        )}.`
       )
     }
   }

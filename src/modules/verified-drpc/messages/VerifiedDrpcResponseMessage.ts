@@ -5,7 +5,10 @@ import { Expose } from 'class-transformer'
 
 import { IsValidVerifiedDrpcResponse } from '../models/index.js'
 
-export type VerifiedDrpcResponse = VerifiedDrpcResponseObject | (VerifiedDrpcResponseObject | Record<string, never>)[] | Record<string, never>
+export type VerifiedDrpcResponse =
+  | VerifiedDrpcResponseObject
+  | (VerifiedDrpcResponseObject | Record<string, never>)[]
+  | Record<string, never>
 
 export interface VerifiedDrpcResponseError {
   code: VerifiedDrpcErrorCode

@@ -5,7 +5,7 @@ import { hideBin } from 'yargs/helpers'
 
 const parsed = yargs(hideBin(process.argv))
   .command('start', 'Start AFJ Rest agent')
-  .parserConfiguration({ "parse-numbers": false})
+  .parserConfiguration({ 'parse-numbers': false })
   .option('label', {
     alias: 'l',
     string: true,
@@ -212,6 +212,6 @@ export async function runCliServer() {
     opaOrigin: parsed.opaOrigin,
     personaTitle: parsed.personaTitle,
     personaColor: parsed.personaColor,
-    verifiedDrpcOptions:parsed.verifiedDrpcOptions,
+    verifiedDrpcOptions: parsed.verifiedDrpcOptions,
   } as AriesRestConfig)
 }

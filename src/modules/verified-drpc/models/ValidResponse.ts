@@ -36,6 +36,7 @@ export function IsValidVerifiedDrpcResponse(validationOptions?: ValidationOption
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isValidVerifiedDrpcResponse(value: any): boolean {
   // Check if value is an object
   if (typeof value !== 'object' || value === null) {
@@ -62,6 +63,7 @@ export function isValidVerifiedDrpcResponse(value: any): boolean {
   return false
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function isValidVerifiedDrpcResponseError(error: any): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && 'message' in error
 }

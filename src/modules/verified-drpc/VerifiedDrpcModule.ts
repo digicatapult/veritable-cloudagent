@@ -1,14 +1,8 @@
-import type {
-  FeatureRegistry,
-  DependencyManager,
-  Module,
-} from '@credo-ts/core'
-
-import { VerifiedDrpcModuleConfigOptions } from './VerifiedDrpcModuleConfig.js'
+import type { FeatureRegistry, DependencyManager, Module } from '@credo-ts/core'
 
 import { Protocol, AgentConfig } from '@credo-ts/core'
 
-import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
+import { VerifiedDrpcModuleConfig, VerifiedDrpcModuleConfigOptions } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcApi } from './VerifiedDrpcApi.js'
 import { VerifiedDrpcRole } from './models/VerifiedDrpcRole.js'
 import { VerifiedDrpcRepository } from './repository/index.js'

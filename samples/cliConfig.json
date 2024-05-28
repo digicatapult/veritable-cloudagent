@@ -7,7 +7,7 @@
   "publicDidSeed": "testtesttesttesttesttesttesttest",
   "endpoint": ["http://localhost:5002", "ws://localhost:5003"],
   "autoAcceptConnections": true,
-  "autoAcceptCredentials": "never",
+  "autoAcceptCredentials": "always",
   "autoAcceptProofs": "always",
   "useLegacyDidSovPrefix": true,
   "backupBeforeStorageUpdate": false,
@@ -30,22 +30,20 @@
   "verifiedDrpcOptions": {
     "proofTimeoutMs": 5000,
     "requestTimeoutMs": 5000,
+    "credDefId": "some-cred-def-id",
     "proofRequestOptions": {
       "protocolVersion": "v2",
       "proofFormats": {
         "anoncreds": {
-          "name": "proof-request",
+          "name": "drpc-proof-request",
           "version": "1.0",
           "requested_attributes": {
-            "niceCredentialsCheck": {
-              "name": "companiesHouseNumber",
-              "restrictions": [{}]
+            "companiesHouseNumberExists": {
+              "name": "companiesHouseNumber"
             }
           }
         }
-      },
-      "willConfirm": true,
-      "autoAcceptProof": "always"
+      }
     }
   }
 }

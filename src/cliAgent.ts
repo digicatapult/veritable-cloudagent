@@ -1,4 +1,3 @@
-import type { RequestProofOptions } from '@credo-ts/core'
 import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
 
 import {
