@@ -8,6 +8,6 @@ export const withMockedAgentContext = () => {
     config: {
       logger: sinon.createStubInstance(ConsoleLogger),
     },
-    dependencyManager: sinon.createStubInstance(DependencyManager) as SinonStubbedInstance<DependencyManager>
+    dependencyManager: sinon.createStubInstance(DependencyManager) as SinonStubbedInstance<DependencyManager>,
   } as unknown as AgentContext
 }

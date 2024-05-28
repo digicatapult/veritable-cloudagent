@@ -11,9 +11,11 @@ import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
 
 import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'
+import { withMockVerifiedDrpcRecord } from './fixtures/mockVerifiedDrpcRecord.js'
 
 import { VerifiedDrpcRequestMessage } from '../messages/index.js'
 import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole.js'
+import { VerifiedDrpcState } from '../models/VerifiedDrpcState.js'
 import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord.js'
 import { VerifiedDrpcRepository } from '../repository/VerifiedDrpcRepository.js'
 import { VerifiedDrpcService } from '../services/index.js'
@@ -99,7 +101,7 @@ describe('VerifiedDrpcService', () => {
   })
 
   describe('recieve request', () => {
-    it(`stores record and emits message and basic message record`, async () => {
+    it(`stores a record and emits message and basic message record`, async () => {
       const testProofId = 'test-proof-id'
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
@@ -123,7 +125,7 @@ describe('VerifiedDrpcService', () => {
       const verifiedDrpcMessage = new VerifiedDrpcRequestMessage({ request: { jsonrpc: '2.0', method: 'hello', id: 1 } })
       const messageContext = new InboundMessageContext(verifiedDrpcMessage, { agentContext, connection: mockConnectionRecord })
       
-      const requestPromise = verifiedDrpcMessageService.receiveRequest(messageContext)
+      await verifiedDrpcMessageService.receiveRequest(messageContext)
 
       sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
       sinon.assert.calledWithMatch<any>(mockEventEmitter.emit, agentContext, {
@@ -140,6 +142,204 @@ describe('VerifiedDrpcService', () => {
           },
         },
       })
+    })
+  })
+
+  describe('verifyServer', async () => {
+    const testProofId = 'test-proof-id'
+    const mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> = sinon.createStubInstance(ProofsApi)
+    let mockVerifiedDrpcRecord: VerifiedDrpcRecord
+
+    beforeEach(async () => {
+      mockVerifiedDrpcRecord = withMockVerifiedDrpcRecord({
+        connectionId: mockConnectionRecord.id,
+        role: VerifiedDrpcRole.Client,
+        state: VerifiedDrpcState.ServerProofRequestSent,
+      })
+    })
+
+    it('should send a proof request to the server peer', async () => {
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Done,
+      })
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        }
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
+
+      await verifiedDrpcMessageService.verifyServer(agentContext, mockConnectionRecord.id, mockVerifiedDrpcModuleConfig.proofRequestOptions, mockVerifiedDrpcRecord)
+
+      sinon.assert.calledWithMatch<any>(mockProofsApi.requestProof, { ...mockVerifiedDrpcModuleConfig.proofRequestOptions, connectionId: mockConnectionRecord.id })
+      expect(mockVerifiedDrpcRecord.state).to.equal(VerifiedDrpcState.RequestSent)
+      expect(mockVerifiedDrpcRecord.isVerified).to.equal(true)
+    })
+
+    it('should fail if the proof request fails', async () => {
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Abandoned,
+      })
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        }
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
+
+      await verifiedDrpcMessageService.verifyServer(agentContext, mockConnectionRecord.id, mockVerifiedDrpcModuleConfig.proofRequestOptions, mockVerifiedDrpcRecord)
+
+      expect(mockVerifiedDrpcRecord.state).to.equal(VerifiedDrpcState.Abandoned)
+      expect(mockVerifiedDrpcRecord.isVerified).to.equal(false)
+    })
+
+    it('should fail if the proof request times out', async () => {
+      const testTimeout = 500
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Done,
+      })
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        },
+        metadata: {
+          contextCorrelationId: agentContext.contextCorrelationId,
+        },
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsFake((event, callback) => {
+          setTimeout(() => callback(proofEvent), testTimeout + 100)
+        })
+
+      await verifiedDrpcMessageService.verifyServer(agentContext, mockConnectionRecord.id, mockVerifiedDrpcModuleConfig.proofRequestOptions, mockVerifiedDrpcRecord, testTimeout)
+
+      expect(mockVerifiedDrpcRecord.state).to.equal(VerifiedDrpcState.Abandoned)
+      expect(mockVerifiedDrpcRecord.isVerified).to.equal(false)
+    })
+  })
+
+  describe('verifyClient', async () => {
+    const testProofId = 'test-proof-id'
+    const mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> = sinon.createStubInstance(ProofsApi)
+    let mockVerifiedDrpcRecord: VerifiedDrpcRecord
+
+    beforeEach(async () => {
+      mockVerifiedDrpcRecord = withMockVerifiedDrpcRecord({
+        connectionId: mockConnectionRecord.id,
+        role: VerifiedDrpcRole.Server,
+        state: VerifiedDrpcState.RequestReceived,
+      })
+    })
+
+    it('should send a proof request to the client peer', async () => {
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Done,
+      })
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        }
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
+
+      await verifiedDrpcMessageService.verifyClient(agentContext, mockConnectionRecord.id, mockVerifiedDrpcModuleConfig.proofRequestOptions, mockVerifiedDrpcRecord)
+
+      sinon.assert.calledWithMatch<any>(mockProofsApi.requestProof, { ...mockVerifiedDrpcModuleConfig.proofRequestOptions, connectionId: mockConnectionRecord.id })
+      expect(mockVerifiedDrpcRecord.state).to.equal(VerifiedDrpcState.ClientProofReceived)
+      expect(mockVerifiedDrpcRecord.isVerified).to.equal(true)
+    })
+
+    it('should fail if the proof request fails', async () => {
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Abandoned,
+      })
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        }
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
+
+      await verifiedDrpcMessageService.verifyClient(agentContext, mockConnectionRecord.id, mockVerifiedDrpcModuleConfig.proofRequestOptions, mockVerifiedDrpcRecord)
+
+      expect(mockVerifiedDrpcRecord.state).to.equal(VerifiedDrpcState.Abandoned)
+      expect(mockVerifiedDrpcRecord.isVerified).to.equal(false)
+    })
+
+    it('should fail if the proof request times out', async () => {
+      const testTimeout = 500
+      const testProofRecord = withMockProofExchangeRecord({
+        id: testProofId,
+        state: ProofState.Done,
+      })
+      mockProofsApi.requestProof.resolves(testProofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub()
+        .withArgs(ProofsApi)
+        .returns(mockProofsApi)
+      const proofEvent = {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          proofRecord: testProofRecord,
+          previousState: null,
+        },
+        metadata: {
+          contextCorrelationId: agentContext.contextCorrelationId,
+        },
+      }
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsFake((event, callback) => {
+          setTimeout(() => callback(proofEvent), testTimeout + 100)
+        })
+
+      await verifiedDrpcMessageService.verifyClient(agentContext, mockConnectionRecord.id, mockVerifiedDrpcModuleConfig.proofRequestOptions, mockVerifiedDrpcRecord, testTimeout)
+
+      expect(mockVerifiedDrpcRecord.state).to.equal(VerifiedDrpcState.Abandoned)
+      expect(mockVerifiedDrpcRecord.isVerified).to.equal(false)
     })
   })
 })
