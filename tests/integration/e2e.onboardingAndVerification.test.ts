@@ -3,9 +3,9 @@ import { describe, it, beforeEach, afterEach } from 'mocha'
 import { expect } from 'chai'
 import { ProofExchangeRecord, ProofExchangeRecordProps } from '@credo-ts/core'
 
-const ISSUER_BASE_URL = process.env.ALICE_BASE_URL
-const HOLDER_BASE_URL = process.env.BOB_BASE_URL
-const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL
+const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? ''
+const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
+const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? ''
 
 describe('Onboarding & Verification flow', function () {
   this.retries(25)

@@ -2,7 +2,7 @@ import request from 'supertest'
 import { describe, it } from 'mocha'
 import { expect } from 'chai'
 
-const HOLDER_BASE_URL = process.env.BOB_BASE_URL
+const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
 
 describe('Access checks', function () {
   const holderClient = request(HOLDER_BASE_URL)
