@@ -6,7 +6,7 @@ import type { SinonStubbedInstance, SinonStub } from 'sinon'
 import type { VerifiedDrpcRequestObject } from '../messages/index.js'
 
 import { ProofState, ProofStateChangedEvent, ProofEventTypes, DidExchangeState, DidExchangeRole, EventEmitter, InboundMessageContext, ConnectionRecord, ConnectionRecordProps, ProofsApi } from '@credo-ts/core'
-import type { DependencyManager, V2ProofProtocol } from '@credo-ts/core'
+import type { DependencyManager, V2ProofProtocol, AgentContext } from '@credo-ts/core'
 import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
 
 import { withMockedAgentContext } from './fixtures/agentContext.js'
@@ -21,12 +21,6 @@ import { VerifiedDrpcRepository } from '../repository/VerifiedDrpcRepository.js'
 import { VerifiedDrpcService } from '../services/index.js'
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
-
-const mockVerifiedDrpcRepository: SinonStubbedInstance<VerifiedDrpcRepository> = sinon.createStubInstance(VerifiedDrpcRepository)
-const mockEventEmitter: SinonStubbedInstance<EventEmitter> = sinon.createStubInstance(EventEmitter)
-const mockVerifiedDrpcModuleConfig = new VerifiedDrpcModuleConfig({ proofRequestOptions: { protocolVersion: '2.0', proofFormats: {} } })
-
-const agentContext = withMockedAgentContext()
 
 export function getMockConnection({
   state = DidExchangeState.InvitationReceived,
@@ -61,8 +55,16 @@ describe('VerifiedDrpcService', () => {
     state: DidExchangeState.Completed,
     tags: {},
   })
+  let mockVerifiedDrpcRepository: SinonStubbedInstance<VerifiedDrpcRepository>
+  let mockEventEmitter: SinonStubbedInstance<EventEmitter>
+  let mockVerifiedDrpcModuleConfig: VerifiedDrpcModuleConfig
+  let agentContext: AgentContext
 
   beforeEach(() => {
+    mockVerifiedDrpcRepository = sinon.createStubInstance(VerifiedDrpcRepository)
+    mockEventEmitter = sinon.createStubInstance(EventEmitter)
+    mockVerifiedDrpcModuleConfig = new VerifiedDrpcModuleConfig({ proofRequestOptions: { protocolVersion: '2.0', proofFormats: {} } })
+    agentContext = withMockedAgentContext()
     verifiedDrpcMessageService = new VerifiedDrpcService(mockVerifiedDrpcModuleConfig, mockVerifiedDrpcRepository, mockEventEmitter)
   })
 
@@ -100,7 +102,7 @@ describe('VerifiedDrpcService', () => {
     })
   })
 
-  describe('recieve request', () => {
+  describe('receive request', () => {
     it(`stores a record and emits message and basic message record`, async () => {
       const testProofId = 'test-proof-id'
       const testProofRecord = withMockProofExchangeRecord({
@@ -138,7 +140,7 @@ describe('VerifiedDrpcService', () => {
               jsonrpc: '2.0',
               method: 'hello',
             },
-            role: VerifiedDrpcRole.Client,
+            role: VerifiedDrpcRole.Server,
           },
         },
       })
@@ -147,10 +149,11 @@ describe('VerifiedDrpcService', () => {
 
   describe('verifyServer', async () => {
     const testProofId = 'test-proof-id'
-    const mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> = sinon.createStubInstance(ProofsApi)
+    let mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> = sinon.createStubInstance(ProofsApi)
     let mockVerifiedDrpcRecord: VerifiedDrpcRecord
 
     beforeEach(async () => {
+      mockProofsApi = sinon.createStubInstance(ProofsApi)
       mockVerifiedDrpcRecord = withMockVerifiedDrpcRecord({
         connectionId: mockConnectionRecord.id,
         role: VerifiedDrpcRole.Client,
@@ -246,10 +249,11 @@ describe('VerifiedDrpcService', () => {
 
   describe('verifyClient', async () => {
     const testProofId = 'test-proof-id'
-    const mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> = sinon.createStubInstance(ProofsApi)
+    let mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>>
     let mockVerifiedDrpcRecord: VerifiedDrpcRecord
 
     beforeEach(async () => {
+      mockProofsApi = sinon.createStubInstance(ProofsApi)
       mockVerifiedDrpcRecord = withMockVerifiedDrpcRecord({
         connectionId: mockConnectionRecord.id,
         role: VerifiedDrpcRole.Server,
