@@ -12,12 +12,12 @@ import { VerifiedDrpcRepository } from '../repository/index.js'
 import { VerifiedDrpcService } from '../services/index.js'
 
 
-const mockFeatureRegistryMock: SinonStubbedInstance<FeatureRegistry> = sinon.createStubInstance(FeatureRegistry)
-const mockDependencyManager: SinonStubbedInstance<DependencyManager> = sinon.createStubInstance(DependencyManager)
-
 describe('VerifiedDrpcModule', () => {
   it('registers dependencies on the dependency manager', () => {
-    new VerifiedDrpcModule(withVerifiedDrpcModuleConfig()).register(mockDependencyManager, mockFeatureRegistryMock)
+    const mockFeatureRegistry: SinonStubbedInstance<FeatureRegistry> = sinon.createStubInstance(FeatureRegistry)
+    const mockDependencyManager: SinonStubbedInstance<DependencyManager> = sinon.createStubInstance(DependencyManager)
+
+    new VerifiedDrpcModule(withVerifiedDrpcModuleConfig()).register(mockDependencyManager, mockFeatureRegistry)
 
     sinon.assert.calledTwice(mockDependencyManager.registerSingleton)
     sinon.assert.calledWith(mockDependencyManager.registerSingleton, VerifiedDrpcService)
