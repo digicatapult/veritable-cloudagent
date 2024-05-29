@@ -200,9 +200,9 @@ The currently supported events are:
 - `DRPC`
 - `Verified DRPC`
 
-When using the CLI, a webhook url can be specified using the `--webhook-url` config option.
+When using the CLI, one or more webhook urls can be specified using the `--webhook-url` config option.
 
-When using the REST server as an library, the WebSocket server and webhook url can be configured in the `startServer` and `setupServer` methods.
+When using the REST server as an library, the WebSocket server and webhook urls can be configured in the `startServer` and `setupServer` methods.
 
 ```ts
 // You can either call startServer() or setupServer() and pass the ServerConfig interface with a webhookUrl and/or a WebSocket server
@@ -210,7 +210,7 @@ When using the REST server as an library, the WebSocket server and webhook url c
 const run = async (agent: Agent) => {
   const config = {
     port: 3000,
-    webhookUrl: 'http://test.com',
+    webhookUrl: ['http://test.com'],
     socketServer: new Server({ port: 8080 }),
   }
   await startServer(agent, config)
@@ -222,7 +222,7 @@ The `startServer` method will create and start a WebSocket server on the default
 
 However, the `setupServer` method does not automatically create a socketServer, if one is not provided in the config options.
 
-In case of an event, we will send the event to the webhookUrl with the topic of the event added to the url (http://test.com/{topic}).
+In case of an event, we will send the event to the webhookUrls with the topic of the event added to the url (http://test.com/{topic}).
 
 So in this case when a connection event is triggered, it will be sent to: http://test.com/connections
 
