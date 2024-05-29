@@ -25,10 +25,7 @@
   "outboundTransport": ["http", "ws"],
   "autoAcceptMediationRequests": false,
   "connectionImageUrl": "https://image.com/image.png",
-  "webhookUrl": [
-    "http://host.docker.internal:9001",
-    "http://host.docker.internal:9002"
-  ],
+  "webhookUrl": "https://my-webhook-server",
   "adminPort": 3000,
   "verifiedDrpcOptions": {
     "proofTimeoutMs": 5000,
