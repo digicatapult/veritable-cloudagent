@@ -122,16 +122,9 @@ export class VerifiedDrpcApi {
     handler: (
       drpcRecord: VerifiedDrpcRecord,
       agentContext: AgentContext
-    ) => VerifiedDrpcResponse | Promise<VerifiedDrpcResponse>,
-    proofTimeoutMs?: number
+    ) => VerifiedDrpcResponse | Promise<VerifiedDrpcResponse>
   ): () => void {
-    const listener = async ({
-      verifiedDrpcMessageRecord,
-      removeListener,
-    }: {
-      verifiedDrpcMessageRecord: VerifiedDrpcRecord
-      removeListener: () => void
-    }) => {
+    const listener = async ({ verifiedDrpcMessageRecord }: { verifiedDrpcMessageRecord: VerifiedDrpcRecord }) => {
       const request = verifiedDrpcMessageRecord.request
       if (
         request &&

@@ -104,7 +104,7 @@ export const getAgentModules = (options: {
             'anoncreds'
           ] as AnonCredsRequestProofFormat
           if (anoncredsProofFormat.requested_attributes) {
-            for (const [name, attribute] of Object.entries(anoncredsProofFormat.requested_attributes)) {
+            for (const attribute of Object.values(anoncredsProofFormat.requested_attributes)) {
               if (!attribute.restrictions) {
                 attribute.restrictions = [{}]
               }
