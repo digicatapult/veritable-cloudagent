@@ -11,7 +11,9 @@ export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
-      await sendWebhookEvent(config.webhookUrl + '/credentials', body, agent.config.logger)
+      for (const webhookUrl of config.webhookUrl) {
+        await sendWebhookEvent(webhookUrl + '/credentials', body, agent.config.logger)
+      }
     }
 
     if (config.socketServer) {

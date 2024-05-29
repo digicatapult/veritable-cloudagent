@@ -51,7 +51,7 @@ export interface AriesRestConfig {
   autoAcceptMediationRequests?: boolean
   connectionImageUrl?: string
 
-  webhookUrl?: string
+  webhookUrl?: string[]
   adminPort: number
   ipfsOrigin: string
   opaOrigin: string
