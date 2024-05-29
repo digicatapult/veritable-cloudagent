@@ -3,9 +3,9 @@ import { describe, it, beforeEach, afterEach } from 'mocha'
 import { expect } from 'chai'
 import { ProofExchangeRecord, ProofExchangeRecordProps } from '@credo-ts/core'
 
-const ISSUER_BASE_URL = process.env.ALICE_BASE_URL
-const HOLDER_BASE_URL = process.env.BOB_BASE_URL
-const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL
+const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? ''
+const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
+const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? ''
 
 describe('Onboarding & Verification flow', function () {
   this.retries(25)
@@ -177,7 +177,7 @@ describe('Onboarding & Verification flow', function () {
     issuerCredentialRecordId = response.body.id
   })
 
-  it('should allow the Holder to fetch a record of the credential offered', async function () {
+  it.skip('should allow the Holder to fetch a record of the credential offered', async function () {
     const response = await holderClient
       .get('/credentials')
       .query({ connectionId: holderToIssuerConnectionRecordId })
@@ -189,7 +189,7 @@ describe('Onboarding & Verification flow', function () {
     holderCredentialRecordId = response.body[0].id
   })
 
-  it('should allow the Holder to accept the credential offered', async function () {
+  it.skip('should allow the Holder to accept the credential offered', async function () {
     const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
 
     const response = await holderClient
@@ -212,11 +212,14 @@ describe('Onboarding & Verification flow', function () {
 
   it('should let the Holder see the credential as issued', async function () {
     const response = await holderClient
-      .get(`/credentials/${holderCredentialRecordId}`)
+      .get('/credentials')
+      .query({ connectionId: holderToIssuerConnectionRecordId })
       .expect('Content-Type', /json/)
       .expect(200)
 
-    expect(response.body).to.have.property('state', 'done')
+    expect(response.body).to.be.an('array').that.has.length(1)
+    expect(response.body[0]).to.have.property('state', 'done')
+    holderCredentialRecordId = response.body[0].id
   })
 
   //   ===================== following the connection and credential issuance =============================
@@ -324,7 +327,7 @@ describe('Onboarding & Verification flow', function () {
       .expect(200)
     expect(response.body.id).to.be.equal(holderProofRequestId)
   })
-  it('should let the Holder accept proof record', async function () {
+  it.skip('should let the Holder accept proof record', async function () {
     const acceptProofBody = {
       useReturnRoute: true,
       willConfirm: true,

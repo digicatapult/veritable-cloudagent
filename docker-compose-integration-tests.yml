@@ -33,11 +33,29 @@ services:
       charlie:
         condition: service_healthy
     environment:
-      NODE_ENV: test
-      ALICE_BASE_URL: http://alice:3000
-      BOB_BASE_URL: http://bob:3000
-      CHARLIE_BASE_URL: http://charlie:3000
-      AFJ_REST_LOG_LEVEL: 1
+      - NODE_ENV=test
+      - ALICE_BASE_URL=http://alice:3000
+      - ALICE_DID
+      - ALICE_PRIV_KEY
+      - BOB_BASE_URL=http://bob:3000
+      - BOB_DID
+      - BOB_PRIV_KEY
+      - CHARLIE_BASE_URL=http://charlie:3000
+      - CHARLIE_DID
+      - CHARLIE_PRIV_KEY
+      - AFJ_REST_LOG_LEVEL=1
     command: ['npm', 'run', 'test:integration']
     networks:
       - testnet
+
+  alice:
+    environment:
+      - AFJ_REST_STORAGE_TYPE=sqlite
+
+  bob:
+    environment:
+      - AFJ_REST_STORAGE_TYPE=sqlite
+
+  charlie:
+    environment:
+      - AFJ_REST_STORAGE_TYPE=sqlite

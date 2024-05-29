@@ -1,3 +1,5 @@
+import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
+
 import {
   type InitConfig,
   type WalletConfig,
@@ -14,6 +16,7 @@ import { readFile } from 'fs/promises'
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
 import { TsLogger } from './utils/logger.js'
+import { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -54,6 +57,7 @@ export interface AriesRestConfig {
   opaOrigin: string
   personaTitle: string
   personaColor: string
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions
 }
 
 export async function readRestConfig(path: string) {
@@ -78,6 +82,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     opaOrigin,
     personaTitle,
     personaColor,
+    verifiedDrpcOptions,
     ...afjConfig
   } = restConfig
 
@@ -94,6 +99,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptMediationRequests,
     ipfsOrigin,
+    verifiedDrpcOptions,
   })
 
   const agent: RestAgent = new Agent({
@@ -122,6 +128,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
       setAsDefault: true,
     })
   }
+
+  agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
 
   const app = await setupServer(agent, {
     webhookUrl,

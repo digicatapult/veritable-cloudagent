@@ -28,6 +28,12 @@ export class BadRequest extends HttpResponse {
   }
 }
 
+export class GatewayTimeout extends HttpResponse {
+  constructor(message = 'gateway timeout') {
+    super({ code: 504, message })
+  }
+}
+
 export const errorHandler =
   (logger: Logger) =>
   (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void => {

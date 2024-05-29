@@ -1,4 +1,11 @@
-import { AnonCredsCredentialFormatService, AnonCredsProofFormatService, AnonCredsModule } from '@credo-ts/anoncreds'
+import type { VerifiedDrpcModuleConfigOptions } from '../modules/verified-drpc/index.js'
+
+import {
+  AnonCredsCredentialFormatService,
+  AnonCredsProofFormatService,
+  AnonCredsRequestProofFormat,
+  AnonCredsModule,
+} from '@credo-ts/anoncreds'
 import { AskarModule } from '@credo-ts/askar'
 import {
   type ModulesMap,
@@ -14,6 +21,8 @@ import {
   MediatorModule,
   ProofsModule,
 } from '@credo-ts/core'
+import { DrpcModule } from '@credo-ts/drpc'
+import { VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
 import { agentDependencies, HttpInboundTransport } from '@credo-ts/node'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import path from 'path'
@@ -29,6 +38,7 @@ export interface RestAgentModules extends ModulesMap {
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncreds: AnonCredsModule
+  verifiedDrpc: VerifiedDrpcModule
 }
 
 export type RestAgent<
@@ -37,6 +47,7 @@ export type RestAgent<
     proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
+    verifiedDrpc: VerifiedDrpcModule
   }
 > = Agent<modules>
 
@@ -52,6 +63,7 @@ export const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
+  verifiedDrpcOptions: { credDefId?: string; issuerDid?: string } & VerifiedDrpcModuleConfigOptions
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -83,6 +95,32 @@ export const getAgentModules = (options: {
     mediator: new MediatorModule({
       autoAcceptMediationRequests: options.autoAcceptMediationRequests,
     }),
+    drpc: new DrpcModule(),
+    verifiedDrpc: new VerifiedDrpcModule(
+      (() => {
+        const { credDefId, issuerDid, ...rest } = options.verifiedDrpcOptions
+        if (credDefId || issuerDid) {
+          const anoncredsProofFormat = rest.proofRequestOptions.proofFormats?.[
+            'anoncreds'
+          ] as AnonCredsRequestProofFormat
+          if (anoncredsProofFormat.requested_attributes) {
+            for (const attribute of Object.values(anoncredsProofFormat.requested_attributes)) {
+              if (!attribute.restrictions) {
+                attribute.restrictions = [{}]
+              }
+              attribute.restrictions = attribute.restrictions.map((restriction) => {
+                return {
+                  ...restriction,
+                  ...(credDefId ? { cred_def_id: credDefId } : {}),
+                  ...(issuerDid ? { issuer_did: issuerDid } : {}),
+                }
+              })
+            }
+          }
+        }
+        return rest
+      })()
+    ),
   }
 }
 
@@ -95,6 +133,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
     autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests: true,
     ipfsOrigin: 'http://localhost:5001',
+    verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
 
   const agent = new Agent({

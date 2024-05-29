@@ -16,6 +16,9 @@ import { connectionEvents } from './events/ConnectionEvents.js'
 import { credentialEvents } from './events/CredentialEvents.js'
 import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
+import { drpcEvents } from './events/DrpcEvents.js'
+import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
+//import { VerifiedDrpcService } from './verified-drpc/VerifiedDrpcService.js'
 import { RegisterRoutes } from './routes/routes.js'
 import { errorHandler } from './error.js'
 import PolicyAgent from './policyAgent/index.js'
@@ -39,6 +42,8 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
     credentialEvents(agent, config)
     proofEvents(agent, config)
     trustPingEvents(agent, config)
+    drpcEvents(agent, config)
+    verifiedDrpcEvents(agent, config)
   }
 
   // Use body parser to read sent json payloads

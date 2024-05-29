@@ -26,5 +26,6 @@ knexfile.js
 *.pid
 *.seed
 *.pid.lock
+id_ed25519
 
 id_ed25519
