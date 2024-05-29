@@ -49,25 +49,13 @@ services:
       - testnet
 
   alice:
-    depends_on:
-      alice-postgres: !reset []
     environment:
       - AFJ_REST_STORAGE_TYPE=sqlite
-
-  alice-postgres: !reset null
 
   bob:
-    depends_on:
-      bob-postgres: !reset []
     environment:
       - AFJ_REST_STORAGE_TYPE=sqlite
-
-  bob-postgres: !reset [null]
 
   charlie:
-    depends_on:
-      charlie-postgres: !reset []
     environment:
       - AFJ_REST_STORAGE_TYPE=sqlite
-
-  charlie-postgres: !reset null

@@ -208,7 +208,6 @@ jobs:
 
       - name: Run integration tests
         run: |
-          docker compose version
           docker compose \
             -f docker-compose-testnet.yml \
             -f docker-compose-integration-tests.yml \
