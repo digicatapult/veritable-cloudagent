@@ -20,7 +20,7 @@ export const verifiedDrpcEvents = async (agent: Agent, config: ServerConfig) => 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       for (const webhookUrl of config.webhookUrl) {
-        await sendWebhookEvent(webhookUrl + '/verified-drpc', body, agent.config.logger)
+        sendWebhookEvent(webhookUrl + '/verified-drpc', body, agent.config.logger)
       }
     }
 

@@ -17,7 +17,7 @@ export const trustPingEvents = async (agent: Agent, config: ServerConfig) => {
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       for (const webhookUrl of config.webhookUrl) {
-        await sendWebhookEvent(webhookUrl + '/trust-ping', body, agent.config.logger)
+        sendWebhookEvent(webhookUrl + '/trust-ping', body, agent.config.logger)
       }
     }
 
