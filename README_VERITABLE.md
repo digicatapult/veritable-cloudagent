@@ -193,9 +193,12 @@ You can hook into the events listener using webhooks, or connect a WebSocket cli
 The currently supported events are:
 
 - `Basic messages`
+- `TrustPing`
 - `Connections`
 - `Credentials`
 - `Proofs`
+- `DRPC`
+- `Verified DRPC`
 
 When using the CLI, a webhook url can be specified using the `--webhook-url` config option.
 
@@ -226,6 +229,35 @@ So in this case when a connection event is triggered, it will be sent to: http:/
 The payload of the webhook contains the serialized record related to the topic of the event. For the `connections` topic this will be a `ConnectionRecord`, for the `credentials` topic it will be a `CredentialRecord`, and so on.
 
 For the WebSocket clients, the events are sent as JSON stringified objects
+
+## Verified DRPC (DIDComm RPC)
+
+The Verified DRPC module is built on a clone of the credo-ts [DRPC package](https://github.com/openwallet-foundation/credo-ts/tree/main/packages/drpc), which supports request-response style messaging according to the [json-rpc spec](https://www.jsonrpc.org/specification).
+
+In addition to RPC messaging, Verified DRPC adds a proof verification step on both the client (requester) and server (responder) peers. This is implemented by executing a proof request before sending an outbound DRPC request and before processing an inbound request. This is represented by the following states:
+
+![Verified DRPC state flow](./docs/images/Verified_DRPC_State_Flow.png)
+
+Verified DRPC request and responses are exposed through the `/verified-drpc/` REST endpoints, `verified-drpc` webhooks and `VerifiedDrpc` internal events.
+
+### Config
+
+The RPC client can be configured through CLI and JSON file config settings, and follows the following format:
+```
+{
+  ...,
+  "verifiedDrpcOptions": {
+    "proofTimeoutMs": <int> (timeout on proof requests, default: 5000),
+    "requestTimeoutMs": <int> (timeout on DRPC requests, default: 5000),
+    "credDefId": <string>, (credential definition ID to add to restrictions, can be easily set through "verified-drpc-options.cred-def-id" CLI param)
+    "proofRequestOptions": (proof options) <CreateProofRequestOptions<ProofProtocol[]>>
+    }
+  },
+  ...
+}
+```
+
+Note that the proof options must be set through config due to the fact that a DRPC request handler is configured during initialisation.
 
 ## Schema Definition
 
