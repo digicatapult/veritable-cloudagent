@@ -208,7 +208,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          docker-compose \
+          docker compose \
             -f docker-compose-testnet.yml \
             -f docker-compose-integration-tests.yml \
             up --exit-code-from integration-tests
