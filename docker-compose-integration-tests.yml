@@ -50,7 +50,7 @@ services:
 
   alice:
     depends_on:
-      alice-postgres: !reset null
+      alice-postgres: !reset []
     environment:
       - AFJ_REST_STORAGE_TYPE=sqlite
 
@@ -58,15 +58,15 @@ services:
 
   bob:
     depends_on:
-      bob-postgres: !reset null
+      bob-postgres: !reset []
     environment:
       - AFJ_REST_STORAGE_TYPE=sqlite
 
-  bob-postgres: !reset null
+  bob-postgres: !reset [null]
 
   charlie:
     depends_on:
-      charlie-postgres: !reset null
+      charlie-postgres: !reset []
     environment:
       - AFJ_REST_STORAGE_TYPE=sqlite
 
