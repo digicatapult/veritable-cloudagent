@@ -36,7 +36,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   const app = config.app ?? express()
   if (config.cors) app.use(cors())
 
-  if (config.socketServer || config.webhookUrl) {
+  if (config.socketServer || (config.webhookUrl && config.webhookUrl.length > 0)) {
     basicMessageEvents(agent, config)
     connectionEvents(agent, config)
     credentialEvents(agent, config)

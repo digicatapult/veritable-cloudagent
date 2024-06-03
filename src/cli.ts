@@ -97,6 +97,10 @@ const parsed = yargs(hideBin(process.argv))
   })
   .option('webhook-url', {
     string: true,
+    array: true,
+    coerce: (input: string[]) => {
+      return input.map((url) => url.split(' ')).flat()
+    },
   })
   .option('admin-port', {
     number: true,

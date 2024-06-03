@@ -5,7 +5,7 @@ export interface ServerConfig {
   port: number
   cors?: boolean
   app?: Express
-  webhookUrl?: string
+  webhookUrl?: string[]
   /* Socket server is used for sending events over websocket to clients */
   socketServer?: Server
   personaTitle?: string
