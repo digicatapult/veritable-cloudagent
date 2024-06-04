@@ -3,6 +3,8 @@ import type { AskarWalletPostgresStorageConfig } from '@credo-ts/askar'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
+const splitFlat = (i: string[]) => i.map((i) => i.split(' ')).flat()
+
 const parsed = yargs(hideBin(process.argv))
   .command('start', 'Start AFJ Rest agent')
   .parserConfiguration({ 'parse-numbers': false })
@@ -21,6 +23,7 @@ const parsed = yargs(hideBin(process.argv))
   })
   .option('endpoint', {
     array: true,
+    coerce: splitFlat,
   })
   .option('log-level', {
     number: true,
@@ -38,13 +41,16 @@ const parsed = yargs(hideBin(process.argv))
     default: [],
     choices: ['http', 'ws'],
     array: true,
+    coerce: splitFlat,
   })
   .option('inbound-transport', {
     array: true,
     default: [],
-    coerce: (input: string[]) => {
+    coerce: (inputRaw: string[]) => {
       // Configured using config object
-      if (typeof input[0] === 'object') return input
+      if (typeof inputRaw[0] === 'object') return inputRaw
+
+      const input = splitFlat(inputRaw)
       if (input.length % 2 !== 0) {
         throw new Error(
           'Inbound transport should be specified as transport port pairs (e.g. --inbound-transport http 5002 ws 5003)'
@@ -98,9 +104,7 @@ const parsed = yargs(hideBin(process.argv))
   .option('webhook-url', {
     string: true,
     array: true,
-    coerce: (input: string[]) => {
-      return input.map((url) => url.split(' ')).flat()
-    },
+    coerce: splitFlat,
   })
   .option('admin-port', {
     number: true,
