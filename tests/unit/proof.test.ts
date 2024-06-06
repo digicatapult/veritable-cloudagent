@@ -370,7 +370,7 @@ describe('ProofController', () => {
       const waitForEvent = new Promise((resolve) =>
         client.on('message', (data) => {
           client.terminate()
-          resolve(JSON.parse(data as string))
+          resolve(JSON.parse(data.toString()))
         })
       )
 
