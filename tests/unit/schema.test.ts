@@ -44,7 +44,7 @@ describe('SchemaController', () => {
         ...testSchema,
       })
 
-      const response = await request(app).get(`/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
+      const response = await request(app).get(`/v1/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -61,7 +61,7 @@ describe('SchemaController', () => {
         schemaMetadata: {},
       })
 
-      const response = await request(app).get(`/schemas/x`)
+      const response = await request(app).get(`/v1/schemas/x`)
 
       expect(response.statusCode).to.be.equal(400)
     })
@@ -76,7 +76,7 @@ describe('SchemaController', () => {
         schemaMetadata: {},
       })
 
-      const response = await request(app).get(`/schemas/x`)
+      const response = await request(app).get(`/v1/schemas/x`)
 
       expect(response.statusCode).to.be.equal(400)
     })
@@ -91,7 +91,7 @@ describe('SchemaController', () => {
         schemaMetadata: {},
       })
 
-      const response = await request(app).get(`/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
+      const response = await request(app).get(`/v1/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -112,7 +112,7 @@ describe('SchemaController', () => {
         ...schema,
       })
 
-      const response = await request(app).get(`/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
+      const response = await request(app).get(`/v1/schemas/WgWxqztrNooG92RXvxSTWv:2:test:1.0`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -137,7 +137,7 @@ describe('SchemaController', () => {
         ...testSchema,
       })
 
-      const response = await request(app).post(`/schemas/`).send(testSchema)
+      const response = await request(app).post(`/v1/schemas/`).send(testSchema)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(await getResult())
@@ -149,7 +149,7 @@ describe('SchemaController', () => {
         version: testSchema.version,
         attrNames: testSchema.attrNames,
       }
-      const response = await request(app).post(`/schemas`).send(omitted)
+      const response = await request(app).post(`/v1/schemas`).send(omitted)
 
       expect(response.statusCode).to.be.equal(422)
     })
@@ -173,7 +173,7 @@ describe('SchemaController', () => {
         ...schema,
       })
 
-      const response = await request(app).post(`/schemas/`).send(schema)
+      const response = await request(app).post(`/v1/schemas/`).send(schema)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(getResult())

@@ -46,7 +46,7 @@ describe('CredentialDefinitionController', () => {
         ...testCredDef,
       })
 
-      const response = await request(app).get(`/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
+      const response = await request(app).get(`/v1/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -66,7 +66,7 @@ describe('CredentialDefinitionController', () => {
         },
       })
 
-      const response = await request(app).get(`/credential-definitions/x`)
+      const response = await request(app).get(`/v1/credential-definitions/x`)
       expect(response.statusCode).to.be.equal(400)
     })
 
@@ -80,7 +80,7 @@ describe('CredentialDefinitionController', () => {
         },
       })
 
-      const response = await request(app).get(`/credential-definitions/x`)
+      const response = await request(app).get(`/v1/credential-definitions/x`)
       expect(response.statusCode).to.be.equal(400)
     })
 
@@ -95,7 +95,7 @@ describe('CredentialDefinitionController', () => {
       })
 
       const id = encodeURIComponent('ipfs://QmbWqxBEKC3P8tqsKc98xmWNzrzDtRLMiMPL8wBuTGsMnR')
-      const response = await request(app).get(`/credential-definitions/${id}`)
+      const response = await request(app).get(`/v1/credential-definitions/${id}`)
       expect(response.statusCode).to.be.equal(404)
     })
   })
@@ -115,7 +115,7 @@ describe('CredentialDefinitionController', () => {
         ...testCredDef,
       })
 
-      const response = await request(app).get(`/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
+      const response = await request(app).get(`/v1/credential-definitions/WgWxqztrNooG92RXvxSTWv:3:CL:20:tag`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -152,7 +152,7 @@ describe('CredentialDefinitionController', () => {
         ...testCredDef,
       })
 
-      const response = await request(app).post(`/credential-definitions`).send({
+      const response = await request(app).post(`/v1/credential-definitions`).send({
         issuerId: testCredDef.issuerId,
         schemaId: testCredDef.schemaId,
         tag: testCredDef.tag,
@@ -170,7 +170,7 @@ describe('CredentialDefinitionController', () => {
     // TODO: improve coverage
 
     test('should throw error when props missing ', async () => {
-      const response = await request(app).post(`/credential-definitions`).send({
+      const response = await request(app).post(`/v1/credential-definitions`).send({
         schemaId: testCredDef.schemaId,
         tag: 'latest',
       })
@@ -207,7 +207,7 @@ describe('CredentialDefinitionController', () => {
         ...testCredDef,
       })
 
-      const responseCredentialDeff = await request(app).post(`/credential-definitions/`).send({
+      const responseCredentialDeff = await request(app).post(`/v1/credential-definitions/`).send({
         issuerId: testCredDef.issuerId,
         schemaId: testCredDef.schemaId,
         tag: testCredDef.tag,

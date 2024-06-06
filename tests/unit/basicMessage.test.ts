@@ -38,7 +38,7 @@ describe('BasicMessageController', () => {
   describe('Send basic message to connection', () => {
     test('should give 204 no content when message is sent', async () => {
       const response = await request(server)
-        .post(`/basic-messages/${bobConnectionToAlice?.id}`)
+        .post(`/v1/basic-messages/${bobConnectionToAlice?.id}`)
         .send({ content: 'Hello!' })
 
       expect(response.statusCode).to.be.equal(204)
@@ -46,7 +46,7 @@ describe('BasicMessageController', () => {
 
     test('should give 404 not found when connection is not found', async () => {
       const response = await request(server)
-        .post(`/basic-messages/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+        .post(`/v1/basic-messages/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
         .send({ content: 'Hello!' })
 
       expect(response.statusCode).to.be.equal(404)
@@ -69,7 +69,7 @@ describe('BasicMessageController', () => {
         })
       })
 
-      await request(server).post(`/basic-messages/${bobConnectionToAlice?.id}`).send({ content: 'Hello!' })
+      await request(server).post(`/v1/basic-messages/${bobConnectionToAlice?.id}`).send({ content: 'Hello!' })
 
       await waitForMessagePromise
     })
@@ -80,7 +80,7 @@ describe('BasicMessageController', () => {
       const findAllByQuerySpy = spy(bobAgent.basicMessages, 'findAllByQuery')
       const getResult = (): Promise<BasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
 
-      const response = await request(server).get(`/basic-messages/${bobConnectionToAlice.id}`)
+      const response = await request(server).get(`/v1/basic-messages/${bobConnectionToAlice.id}`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)

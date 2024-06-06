@@ -34,14 +34,14 @@ describe('DidController', () => {
   describe('Get did resolution result by did', () => {
     test('should give 200 when did resolution record is found', async () => {
       const did = 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL'
-      const response = await request(app).get(`/dids/${did}`)
+      const response = await request(app).get(`/v1/dids/${did}`)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body.didDocument).to.deep.equal(testDidDocument)
     })
 
     test('should give 500 when did document record is not found', async () => {
-      const response = await request(app).get(`/dids/did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/dids/did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)
       expect(response.statusCode).to.be.equal(500)
     })
   })
@@ -49,7 +49,7 @@ describe('DidController', () => {
   describe('Import Did', () => {
     test('should return did document after importing Did', async () => {
       const importRequest: ImportDidOptions = { did: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL' }
-      const response = await request(app).post(`/dids/import`).send(importRequest)
+      const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
       expect(response.statusCode).to.equal(200)
       expect(response.body.didDocument).to.deep.equal(testDidDocument)
@@ -57,7 +57,7 @@ describe('DidController', () => {
 
     test('should give 400 for an invalid Did', async () => {
       const importRequest: ImportDidOptions = { did: 'did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }
-      const response = await request(app).post(`/dids/import`).send(importRequest)
+      const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
       expect(response.statusCode).to.equal(400)
     })
@@ -75,7 +75,7 @@ describe('DidController', () => {
       const createStub = stub(aliceAgent.dids, 'create').resolves(testDidCreate)
       const getResult = (): Promise<DidCreateResult> => createStub.firstCall.returnValue
 
-      const response = await request(app).post(`/dids/create`).send(createRequest)
+      const response = await request(app).post(`/v1/dids/create`).send(createRequest)
 
       expect(createStub.calledWithMatch(createRequest)).equals(true)
 
@@ -92,7 +92,7 @@ describe('DidController', () => {
           keyType: KeyType.Ed25519,
         },
       }
-      const response = await request(app).post(`/dids/create`).send(createRequest)
+      const response = await request(app).post(`/v1/dids/create`).send(createRequest)
       expect(response.statusCode).to.equal(500)
     })
   })

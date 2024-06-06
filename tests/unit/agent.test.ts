@@ -20,7 +20,7 @@ describe('AgentController', () => {
 
   describe('Get agent info', () => {
     test('should return agent information', async () => {
-      const response = await request(app).get('/agent')
+      const response = await request(app).get('/v1/agent')
 
       expect(response.body).to.have.property('label')
       expect(response.body).to.have.property('endpoints')
@@ -28,7 +28,7 @@ describe('AgentController', () => {
     })
 
     test('should response with a 200 status code', async () => {
-      const response = await request(app).get('/agent')
+      const response = await request(app).get('/v1/agent')
 
       expect(response.statusCode).to.equal(200)
     })

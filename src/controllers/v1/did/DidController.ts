@@ -2,12 +2,12 @@ import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../types.js'
-import { type Did, DidRecordExample, DidStateExample } from '../examples.js'
-import { HttpResponse, BadRequest } from '../../error.js'
+import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
+import { type Did, DidRecordExample, DidStateExample } from '../../examples.js'
+import { HttpResponse, BadRequest } from '../../../error.js'
 
 @Tags('Dids')
-@Route('/dids')
+@Route('/v1/dids')
 @injectable()
 export class DidController extends Controller {
   private agent: Agent

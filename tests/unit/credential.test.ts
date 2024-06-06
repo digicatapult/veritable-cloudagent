@@ -64,7 +64,7 @@ describe('CredentialController', () => {
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
-      const response = await request(app).get('/credentials')
+      const response = await request(app).get('/v1/credentials')
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.be.deep.equal([testCredential].map(objectToJson))
@@ -77,7 +77,7 @@ describe('CredentialController', () => {
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
-      const response = await request(app).get('/credentials').query({ state: testCredential.state })
+      const response = await request(app).get('/v1/credentials').query({ state: testCredential.state })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -96,7 +96,7 @@ describe('CredentialController', () => {
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
-      const response = await request(app).get('/credentials').query({ threadId: testCredential.threadId })
+      const response = await request(app).get('/v1/credentials').query({ threadId: testCredential.threadId })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -115,7 +115,7 @@ describe('CredentialController', () => {
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
-      const response = await request(app).get('/credentials').query({ connectionId: testCredential.connectionId })
+      const response = await request(app).get('/v1/credentials').query({ connectionId: testCredential.connectionId })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -137,7 +137,7 @@ describe('CredentialController', () => {
         return getByIdStub.firstCall.returnValue
       }
 
-      const response = await request(app).get(`/credentials/${testCredential.id}`)
+      const response = await request(app).get(`/v1/credentials/${testCredential.id}`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -146,7 +146,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).get(`/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -154,7 +154,7 @@ describe('CredentialController', () => {
 
   describe('Delete credential by id', () => {
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).delete('/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+      const response = await request(app).delete('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -187,7 +187,7 @@ describe('CredentialController', () => {
         },
       }
 
-      const response = await request(app).post(`/credentials/propose-credential`).send(proposalRequest)
+      const response = await request(app).post(`/v1/credentials/propose-credential`).send(proposalRequest)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -195,7 +195,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-offer')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-offer')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -223,7 +223,7 @@ describe('CredentialController', () => {
       }
 
       const response = await request(app)
-        .post(`/credentials/${testCredential.id}/accept-proposal`)
+        .post(`/v1/credentials/${testCredential.id}/accept-proposal`)
         .send(proposalRequest)
 
       const result = await getResult()
@@ -246,7 +246,7 @@ describe('CredentialController', () => {
       }
 
       const response = await request(app)
-        .post(`/credentials/${testCredential.id}/accept-proposal`)
+        .post(`/v1/credentials/${testCredential.id}/accept-proposal`)
         .send(proposalRequest) //added proposal request
 
       const result = await getResult()
@@ -261,7 +261,7 @@ describe('CredentialController', () => {
         credentialFormats: {},
       }
       const response = await request(app)
-        .post(`/credentials/000000aa-aa00-00a0-aa00-000a0aa00000/accept-proposal`)
+        .post(`/v1/credentials/000000aa-aa00-00a0-aa00-000a0aa00000/accept-proposal`)
         .send(proposalRequest) //added proposal request
 
       expect(response.statusCode).to.be.equal(404)
@@ -385,7 +385,7 @@ describe('CredentialController', () => {
         },
       }
 
-      const response = await request(app).post(`/credentials/create-offer`).send(createOfferRequest)
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(createOfferRequest)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -415,7 +415,7 @@ describe('CredentialController', () => {
         },
       }
 
-      const response = await request(app).post(`/credentials/create-offer`).send(createOfferRequest)
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(createOfferRequest)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -438,7 +438,7 @@ describe('CredentialController', () => {
         autoAcceptConnection: true,
       }
 
-      const response = await request(app).post('/oob/create-invitation').send(params)
+      const response = await request(app).post('/v1/oob/create-invitation').send(params)
       expect(response.statusCode).to.be.equal(200)
       expect(createInvitationStub.lastCall.args[0]).to.be.deep.include(params)
     })
@@ -466,7 +466,7 @@ describe('CredentialController', () => {
         },
       }
 
-      const response = await request(app).post(`/credentials/create-offer`).send(createOfferRequest)
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(createOfferRequest)
 
       const result = await getResult()
 
@@ -499,7 +499,7 @@ describe('CredentialController', () => {
         outOfBandRecord,
       })
 
-      const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
+      const response = await request(app).post('/v1/oob/create-legacy-connectionless-invitation').send(inputParams)
 
       expect(response.statusCode).to.be.equal(200)
       expect(
@@ -536,7 +536,7 @@ describe('CredentialController', () => {
 
       const getResult = (): Promise<CredentialExchangeRecord> => offerCredentialStub.firstCall.returnValue
 
-      const response = await request(app).post(`/credentials/offer-credential`).send(offerRequest)
+      const response = await request(app).post(`/v1/credentials/offer-credential`).send(offerRequest)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -547,7 +547,7 @@ describe('CredentialController', () => {
       const findByIdStub = stub(bobAgent.connections, 'findById')
       findByIdStub.resolves(connection) //connection is present - fails on missing credential definition
       const response = await request(app)
-        .post('/credentials/accept-offer')
+        .post('/v1/credentials/accept-offer')
         .send({ credentialRecordId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
@@ -555,7 +555,7 @@ describe('CredentialController', () => {
     test('should give 404 not found when connection is not found', async () => {
       //fails on missing connection
       const response = await request(app)
-        .post('/credentials/accept-offer')
+        .post('/v1/credentials/accept-offer')
         .send({ credentialRecordId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
@@ -568,7 +568,7 @@ describe('CredentialController', () => {
       acceptOfferStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptOfferStub.firstCall.returnValue
 
-      const response = await request(app).post(`/credentials/${testCredential.id}/accept-offer`)
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-offer`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -577,7 +577,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-offer')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-offer')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -589,7 +589,7 @@ describe('CredentialController', () => {
       acceptRequestStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptRequestStub.firstCall.returnValue
 
-      const response = await request(app).post(`/credentials/${testCredential.id}/accept-request`)
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-request`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -598,7 +598,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -610,7 +610,7 @@ describe('CredentialController', () => {
       acceptCredentialStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptCredentialStub.firstCall.returnValue
 
-      const response = await request(app).post(`/credentials/${testCredential.id}/accept-credential`)
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-credential`)
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -619,7 +619,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-credential')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-credential')
 
       expect(response.statusCode).to.be.equal(404)
     })

@@ -19,17 +19,17 @@ import {
   ConnectionRecordExample,
   outOfBandInvitationExample,
   outOfBandRecordExample,
-} from '../examples.js'
+} from '../../examples.js'
 import type {
   AgentMessageType,
   ReceiveInvitationProps,
   ReceiveInvitationByUrlProps,
   AcceptInvitationConfig,
-} from '../types.js'
-import { HttpResponse, NotFound } from '../../error.js'
+} from '../../types.js'
+import { HttpResponse, NotFound } from '../../../error.js'
 
 @Tags('Out Of Band')
-@Route('/oob')
+@Route('/v1/oob')
 @injectable()
 export class OutOfBandController extends Controller {
   private agent: Agent

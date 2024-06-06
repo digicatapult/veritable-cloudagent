@@ -54,7 +54,7 @@ describe('Onboarding & Verification flow', function () {
     }
 
     const response = await issuerClient
-      .post('/schemas')
+      .post('/v1/schemas')
       .send(createSchemaPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -71,7 +71,7 @@ describe('Onboarding & Verification flow', function () {
     }
 
     const response = await issuerClient
-      .post('/credential-definitions')
+      .post('/v1/credential-definitions')
       .send(createCredDefPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -88,7 +88,7 @@ describe('Onboarding & Verification flow', function () {
     }
 
     const response = await issuerClient
-      .post('/oob/create-invitation')
+      .post('/v1/oob/create-invitation')
       .send(createInvitationPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -103,7 +103,7 @@ describe('Onboarding & Verification flow', function () {
     const acceptInvitationPayload = { invitationUrl: issuerToHolderInvitationUrl }
 
     const response = await holderClient
-      .post('/oob/receive-invitation-url')
+      .post('/v1/oob/receive-invitation-url')
       .send(acceptInvitationPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -114,7 +114,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should create a connection record on the Holder', async function () {
     const response = await holderClient
-      .get(`/connections/${holderToIssuerConnectionRecordId}`)
+      .get(`/v1/connections/${holderToIssuerConnectionRecordId}`)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -123,7 +123,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should create a connection record on the Issuer', async function () {
     const response = await issuerClient
-      .get('/connections')
+      .get('/v1/connections')
       .query({ outOfBandId: issuerToHolderOobRecordId })
       .expect('Content-Type', /json/)
       .expect(200)
@@ -167,7 +167,7 @@ describe('Onboarding & Verification flow', function () {
     }
 
     const response = await issuerClient
-      .post('/credentials/offer-credential')
+      .post('/v1/credentials/offer-credential')
       .send(credentialOfferPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -179,7 +179,7 @@ describe('Onboarding & Verification flow', function () {
 
   it.skip('should allow the Holder to fetch a record of the credential offered', async function () {
     const response = await holderClient
-      .get('/credentials')
+      .get('/v1/credentials')
       .query({ connectionId: holderToIssuerConnectionRecordId })
       .expect('Content-Type', /json/)
       .expect(200)
@@ -193,7 +193,7 @@ describe('Onboarding & Verification flow', function () {
     const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
 
     const response = await holderClient
-      .post(`/credentials/${holderCredentialRecordId}/accept-offer`)
+      .post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`)
       .send(acceptCredentialOfferPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -203,7 +203,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should let the Issuer see the credential as issued', async function () {
     const response = await issuerClient
-      .get(`/credentials/${issuerCredentialRecordId}`)
+      .get(`/v1/credentials/${issuerCredentialRecordId}`)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -212,7 +212,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should let the Holder see the credential as issued', async function () {
     const response = await holderClient
-      .get('/credentials')
+      .get('/v1/credentials')
       .query({ connectionId: holderToIssuerConnectionRecordId })
       .expect('Content-Type', /json/)
       .expect(200)
@@ -231,7 +231,7 @@ describe('Onboarding & Verification flow', function () {
     }
 
     const response = await verifierClient
-      .post('/oob/create-invitation')
+      .post('/v1/oob/create-invitation')
       .send(createInvitationPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -246,7 +246,7 @@ describe('Onboarding & Verification flow', function () {
     const acceptInvitationPayload = { invitationUrl: verifierToHolderInvitationUrl }
 
     const response = await holderClient
-      .post('/oob/receive-invitation-url')
+      .post('/v1/oob/receive-invitation-url')
       .send(acceptInvitationPayload)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -257,7 +257,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should create a connection record on the Holder', async function () {
     const response = await holderClient
-      .get(`/connections/${holderToVerifierConnectionRecordId}`)
+      .get(`/v1/connections/${holderToVerifierConnectionRecordId}`)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -266,7 +266,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should create a connection record on the Verifier', async function () {
     const response = await verifierClient
-      .get('/connections')
+      .get('/v1/connections')
       .query({ outOfBandId: verifierToHolderOobRecordId })
       .expect('Content-Type', /json/)
       .expect(200)
@@ -300,7 +300,7 @@ describe('Onboarding & Verification flow', function () {
       connectionId: verifierToHolderConnectionRecordId,
     }
     const response = await verifierClient
-      .post('/proofs/request-proof')
+      .post('/v1/proofs/request-proof')
       .send(requestProofBody)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -309,7 +309,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should let the Holder see all proof requests they received', async function () {
-    const response = await holderClient.get(`/proofs`).expect('Content-Type', /json/).expect(200)
+    const response = await holderClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
     expect(response.body.length).to.be.above(0)
 
     let result: ProofExchangeRecordProps = response.body.find(
@@ -322,7 +322,7 @@ describe('Onboarding & Verification flow', function () {
 
   it('should let the Holder see specific proof reques', async function () {
     const response = await holderClient
-      .get(`/proofs/${holderProofRequestId}`)
+      .get(`/v1/proofs/${holderProofRequestId}`)
       .expect('Content-Type', /json/)
       .expect(200)
     expect(response.body.id).to.be.equal(holderProofRequestId)
@@ -334,7 +334,7 @@ describe('Onboarding & Verification flow', function () {
       autoAcceptProof: 'always',
     }
     const response = await holderClient
-      .post(`/proofs/${holderProofRequestId}/accept-request`)
+      .post(`/v1/proofs/${holderProofRequestId}/accept-request`)
       .send(acceptProofBody)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -342,7 +342,7 @@ describe('Onboarding & Verification flow', function () {
     expect(response.body.state).to.be.equal('presentation-sent')
   })
   it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
-    const response = await verifierClient.get(`/proofs`).expect('Content-Type', /json/).expect(200)
+    const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
 
     let result: ProofExchangeRecordProps = response.body.find(
       ({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier

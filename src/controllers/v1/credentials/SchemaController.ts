@@ -2,13 +2,13 @@ import { Agent } from '@credo-ts/core'
 import { Body, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import type { RestAgent } from '../../utils/agent.js'
-import { type Did, type Version, type SchemaId, SchemaExample } from '../examples.js'
-import type { AnonCredsSchemaResponse } from '../types.js'
-import { HttpResponse, NotFound, BadRequest } from '../../error.js'
+import type { RestAgent } from '../../../utils/agent.js'
+import { type Did, type Version, type SchemaId, SchemaExample } from '../../examples.js'
+import type { AnonCredsSchemaResponse } from '../../types.js'
+import { HttpResponse, NotFound, BadRequest } from '../../../error.js'
 
 @Tags('Schemas')
-@Route('/schemas')
+@Route('/v1/schemas')
 @injectable()
 export class SchemaController {
   private agent: RestAgent

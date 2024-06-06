@@ -54,7 +54,7 @@ describe('OutOfBandController', () => {
       const getAllSpy = spy(bobAgent.oob, 'getAll')
       const getResult = (): Promise<OutOfBandRecord[]> => getAllSpy.firstCall.returnValue
 
-      const response = await request(app).get('/oob')
+      const response = await request(app).get('/v1/oob')
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -63,7 +63,7 @@ describe('OutOfBandController', () => {
     test('should return filtered out of band records if query is passed', async () => {
       const getAllStub = stub(bobAgent.oob, 'getAll')
       getAllStub.resolves([outOfBandRecord])
-      const response = await request(app).get('/oob?invitationId=test')
+      const response = await request(app).get('/v1/oob?invitationId=test')
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([])
@@ -76,14 +76,14 @@ describe('OutOfBandController', () => {
       findByIdStub.resolves(outOfBandRecord)
       const getResult = (): Promise<OutOfBandRecord | null> => findByIdStub.firstCall.returnValue
 
-      const response = await request(app).get(`/oob/${outOfBandRecord.id}`)
+      const response = await request(app).get(`/v1/oob/${outOfBandRecord.id}`)
 
       expect(response.statusCode).to.be.equal(200)
       expect(findByIdStub.calledWithMatch(outOfBandRecord.id)).equals(true)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
     test('should return 404 if out of band record is not found', async () => {
-      const response = await request(app).get(`/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -94,7 +94,7 @@ describe('OutOfBandController', () => {
       const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
       createInvitationStub.resolves(outOfBandRecord)
 
-      const response = await request(app).post('/oob/create-invitation')
+      const response = await request(app).post('/v1/oob/create-invitation')
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.include(
@@ -126,7 +126,7 @@ describe('OutOfBandController', () => {
         multiUseInvitation: true,
         autoAcceptConnection: true,
       }
-      const response = await request(app).post('/oob/create-invitation').send(params)
+      const response = await request(app).post('/v1/oob/create-invitation').send(params)
 
       expect(response.statusCode).to.be.equal(200)
       expect(createInvitationStub.lastCall.args[0]).to.be.deep.include(params)
@@ -141,7 +141,7 @@ describe('OutOfBandController', () => {
         invitation: outOfBandLegacyInvitation,
       })
 
-      const response = await request(app).post('/oob/create-legacy-invitation')
+      const response = await request(app).post('/v1/oob/create-legacy-invitation')
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.include(
@@ -174,7 +174,7 @@ describe('OutOfBandController', () => {
         multiUseInvitation: true,
         autoAcceptConnection: true,
       }
-      const response = await request(app).post('/oob/create-legacy-invitation').send(params)
+      const response = await request(app).post('/v1/oob/create-legacy-invitation').send(params)
 
       expect(response.statusCode).to.be.equal(200)
       expect(createLegacyInvitationStub.lastCall.args[0]).to.be.deep.include(params)
@@ -209,7 +209,7 @@ describe('OutOfBandController', () => {
 
       const getResult = () => createLegacyConnectionlessInvitationStub.firstCall.returnValue
 
-      const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
+      const response = await request(app).post('/v1/oob/create-legacy-connectionless-invitation').send(inputParams)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
@@ -222,7 +222,7 @@ describe('OutOfBandController', () => {
         outOfBandRecord,
       })
 
-      const response = await request(app).post('/oob/create-legacy-connectionless-invitation').send(inputParams)
+      const response = await request(app).post('/v1/oob/create-legacy-connectionless-invitation').send(inputParams)
 
       expect(response.statusCode).to.be.equal(200)
       expect(createLegacyConnectionlessInvitationStub.lastCall.args[0]).to.be.deep.include({
@@ -242,7 +242,7 @@ describe('OutOfBandController', () => {
       const getResult = () => receiveInvitationStub.firstCall.returnValue
 
       const response = await request(app)
-        .post('/oob/receive-invitation')
+        .post('/v1/oob/receive-invitation')
         .send({ invitation: outOfBandRecord.outOfBandInvitation })
 
       expect(response.statusCode).to.be.equal(200)
@@ -266,7 +266,7 @@ describe('OutOfBandController', () => {
       }
 
       const response = await request(app)
-        .post('/oob/receive-invitation')
+        .post('/v1/oob/receive-invitation')
         .send({
           invitation: outOfBandInvitation,
           ...params,
@@ -300,7 +300,7 @@ describe('OutOfBandController', () => {
       })
       const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
 
-      const response = await request(app).post('/oob/receive-implicit-invitation').send(config) //use barebones config
+      const response = await request(app).post('/v1/oob/receive-implicit-invitation').send(config) //use barebones config
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
@@ -322,7 +322,7 @@ describe('OutOfBandController', () => {
       }
 
       const response = await request(app)
-        .post('/oob/receive-implicit-invitation')
+        .post('/v1/oob/receive-implicit-invitation')
         .send({
           ...config, //send config only containing did
           ...params,
@@ -353,7 +353,7 @@ describe('OutOfBandController', () => {
       const getResult = () => receiveInvitationFromUrlStub.firstCall.returnValue
 
       const response = await request(app)
-        .post('/oob/receive-invitation-url')
+        .post('/v1/oob/receive-invitation-url')
         .send({ invitationUrl: 'https://example.com/test' })
 
       expect(response.statusCode).to.be.equal(200)
@@ -377,7 +377,7 @@ describe('OutOfBandController', () => {
       }
 
       const response = await request(app)
-        .post('/oob/receive-invitation-url')
+        .post('/v1/oob/receive-invitation-url')
         .send({ invitationUrl: 'https://example.com/test', ...params })
 
       expect(response.statusCode).to.be.equal(200)
@@ -417,7 +417,7 @@ describe('OutOfBandController', () => {
       }
 
       const response = await request(app)
-        .post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
+        .post('/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
         .send(params)
 
       expect(response.statusCode).to.be.equal(200)
@@ -441,14 +441,14 @@ describe('OutOfBandController', () => {
       }
 
       const response = await request(app)
-        .post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
+        .post('/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
         .send(params)
 
       expect(response.statusCode).to.be.equal(200)
       expect(acceptInvitationStub.calledWithMatch('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', params)).equals(true)
     })
     test('should throw 404 if out of band record is not found', async () => {
-      const response = await request(app).post('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
+      const response = await request(app).post('/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -459,7 +459,7 @@ describe('OutOfBandController', () => {
       const deleteByIdStub = stub(bobAgent.oob, 'deleteById')
       deleteByIdStub.resolves()
 
-      const response = await request(app).delete('/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+      const response = await request(app).delete('/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
       expect(response.statusCode).to.be.equal(204)
     })
