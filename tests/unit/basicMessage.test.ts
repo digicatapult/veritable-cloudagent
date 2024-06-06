@@ -59,7 +59,7 @@ describe('BasicMessageController', () => {
 
       const waitForMessagePromise = new Promise((resolve) => {
         client.on('message', (data) => {
-          const event = JSON.parse(data as string)
+          const event = JSON.parse(data.toString())
 
           if (event.type === BasicMessageEventTypes.BasicMessageStateChanged) {
             expect(event.payload.basicMessageRecord.connectionId).to.be.equal(bobConnectionToAlice.id)

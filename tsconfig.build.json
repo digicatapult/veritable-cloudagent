@@ -1,5 +1,4 @@
 {
-
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext", 
@@ -7,8 +6,6 @@
     "sourceMap": true,
     "strict": true,
     "noEmitOnError": true,
-    // "lib": [],  //commenting this out fixes fetch error in src/ipfs/index.ts
-    "types": [],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
@@ -16,19 +13,12 @@
     "emitDecoratorMetadata": true,
     "outDir": "./build",
     "moduleResolution": "node"
-
   },
-  "include": ["src/**/*", "src/routes", "src/routes/swagger.json"],
+  "include": ["src", "src/routes/swagger.json"],
   "exclude": [
     "node_modules",
     "build",
-    "**/*.spec.ts",
-    "**/__tests__/*.ts",
-    "**/__mocks__/*.ts",
-    "__tests__/*.ts",
-    "__mocks__/*.ts",
-    "build/**",
-    "scripts"
+    "**/__tests__",
+    "tests"
   ]
-
 }
