@@ -11,7 +11,6 @@ import { VerifiedDrpcModule } from '../VerifiedDrpcModule.js'
 import { VerifiedDrpcRepository } from '../repository/index.js'
 import { VerifiedDrpcService } from '../services/index.js'
 
-
 describe('VerifiedDrpcModule', () => {
   it('registers dependencies on the dependency manager', () => {
     const mockFeatureRegistry: SinonStubbedInstance<FeatureRegistry> = sinon.createStubInstance(FeatureRegistry)
