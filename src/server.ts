@@ -54,7 +54,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
   )
   app.use(bodyParser.json())
 
-  app.use('/docs', serve, async (_req: ExRequest, res: ExResponse) => {
+  app.use('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
     return res.send(
       generateHTML(swaggerJson, {
         ...(config.personaColor && {
@@ -72,12 +72,13 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
       })
     )
   })
+  app.get('/api-docs', (_req, res) => res.json(swaggerJson))
 
   RegisterRoutes(app)
 
   app.use((req, res, next) => {
     if (req.url == '/') {
-      res.redirect('/docs')
+      res.redirect('/swagger')
       return
     }
     next()
