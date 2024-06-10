@@ -44,7 +44,7 @@ describe('ConnectionController', () => {
       sendPingStub.resolves(message)
       const getResult = (): Promise<TrustPingMessage> => sendPingStub.firstCall.returnValue
 
-      const response = await request(app).post(`/connections/${connection.id}/send-ping`)
+      const response = await request(app).post(`/v1/connections/${connection.id}/send-ping`)
 
       expect(response.statusCode)
       expect(sendPingStub.calledWithMatch(connection.id)).equals(true)
@@ -58,7 +58,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections')
+      const response = await request(app).get('/v1/connections')
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([connection].map(objectToJson))
@@ -71,7 +71,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections').query({ state: connection.state })
+      const response = await request(app).get('/v1/connections').query({ state: connection.state })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -90,7 +90,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections').query({ outOfBandId: connection.outOfBandId })
+      const response = await request(app).get('/v1/connections').query({ outOfBandId: connection.outOfBandId })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -109,7 +109,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections').query({ alias: connection.alias })
+      const response = await request(app).get('/v1/connections').query({ alias: connection.alias })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -128,7 +128,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections').query({ myDid: connection.did })
+      const response = await request(app).get('/v1/connections').query({ myDid: connection.did })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -147,7 +147,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections').query({ theirDid: connection.theirDid })
+      const response = await request(app).get('/v1/connections').query({ theirDid: connection.theirDid })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -166,7 +166,7 @@ describe('ConnectionController', () => {
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
-      const response = await request(app).get('/connections').query({ theirLabel: connection.theirLabel })
+      const response = await request(app).get('/v1/connections').query({ theirLabel: connection.theirLabel })
 
       expect(
         findByQueryStub.calledWithMatch(bobAgent.context, {
@@ -185,7 +185,7 @@ describe('ConnectionController', () => {
       findByIdStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord | null> => findByIdStub.firstCall.returnValue
 
-      const response = await request(app).get(`/connections/${connection.id}`)
+      const response = await request(app).get(`/v1/connections/${connection.id}`)
 
       expect(response.statusCode).to.be.equal(200)
       expect(findByIdStub.calledWithMatch(connection.id)).equals(true)
@@ -193,7 +193,7 @@ describe('ConnectionController', () => {
     })
 
     test('should give 404 not found when connection is not found', async () => {
-      const response = await request(app).get(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -205,7 +205,7 @@ describe('ConnectionController', () => {
       acceptRequestStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord> => acceptRequestStub.firstCall.returnValue
 
-      const response = await request(app).post(`/connections/${connection.id}/accept-request`)
+      const response = await request(app).post(`/v1/connections/${connection.id}/accept-request`)
 
       expect(response.statusCode)
       expect(acceptRequestStub.calledWithMatch(connection.id)).equals(true)
@@ -213,7 +213,7 @@ describe('ConnectionController', () => {
     })
 
     test('should throw error when connection id is not found', async () => {
-      const response = await request(app).post(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request`)
+      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -225,7 +225,7 @@ describe('ConnectionController', () => {
       acceptResponseStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord | null> => acceptResponseStub.firstCall.returnValue
 
-      const response = await request(app).post(`/connections/${connection.id}/accept-response`)
+      const response = await request(app).post(`/v1/connections/${connection.id}/accept-response`)
 
       expect(response.statusCode)
       expect(acceptResponseStub.calledWithMatch(connection.id)).equals(true)
@@ -233,7 +233,7 @@ describe('ConnectionController', () => {
     })
 
     test('should throw error when connectionId is not found', async () => {
-      const response = await request(app).post(`/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-response`)
+      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-response`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -269,7 +269,7 @@ describe('ConnectionController', () => {
       })
       const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
 
-      const response = await request(app).post('/connections').send({ did: 'someDid' }).expect(200)
+      const response = await request(app).post('/v1/connections').send({ did: 'someDid' }).expect(200)
 
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
@@ -289,12 +289,12 @@ describe('ConnectionController', () => {
       // assert old connection is deleted
       const deleteByIdStub = stub(bobAgent.connections, 'deleteById')
 
-      await request(app).post('/connections').send({ did: invitationDid }).expect(200)
+      await request(app).post('/v1/connections').send({ did: invitationDid }).expect(200)
       expect(deleteByIdStub.callCount).to.equal(1)
     })
 
     it('500s if invalid DID', async function () {
-      await request(app).post('/connections').send({ did: 'bla' }).expect(500)
+      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(500)
     })
   })
 

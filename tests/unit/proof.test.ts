@@ -47,7 +47,7 @@ describe('ProofController', () => {
       getAllStub.resolves([testProof])
       const getResult = (): Promise<ProofExchangeRecord[]> => getAllStub.firstCall.returnValue
 
-      const response = await request(app).get('/proofs')
+      const response = await request(app).get('/v1/proofs')
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -59,7 +59,7 @@ describe('ProofController', () => {
       getAllStub.resolves([testProof])
       const getResult = (): Promise<ProofExchangeRecord[]> => getAllStub.firstCall.returnValue
 
-      const response = await request(app).get('/proofs').query({ threadId: testProof.threadId })
+      const response = await request(app).get('/v1/proofs').query({ threadId: testProof.threadId })
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
@@ -70,7 +70,7 @@ describe('ProofController', () => {
       const getAllStub = stub(bobAgent.proofs, 'getAll')
       getAllStub.resolves([testProof])
 
-      const response = await request(app).get('/proofs').query({ threadId: 'string' })
+      const response = await request(app).get('/v1/proofs').query({ threadId: 'string' })
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([])
@@ -83,7 +83,7 @@ describe('ProofController', () => {
       getByIdStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
 
-      const response = await request(app).get(`/proofs/${testProof.id}`)
+      const response = await request(app).get(`/v1/proofs/${testProof.id}`)
 
       expect(response.statusCode).to.be.equal(200)
       expect(getByIdStub.calledWithMatch(testProof.id)).equals(true)
@@ -91,7 +91,7 @@ describe('ProofController', () => {
     })
 
     test('should return 404 not found when proof record not found', async () => {
-      const response = await request(app).get(`/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -99,7 +99,7 @@ describe('ProofController', () => {
 
   describe('Delete proof by id', () => {
     test('should give 404 not found when proof is not found', async () => {
-      const response = await request(app).delete('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+      const response = await request(app).delete('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -127,7 +127,7 @@ describe('ProofController', () => {
       proposeProofStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => proposeProofStub.firstCall.returnValue
 
-      const response = await request(app).post('/proofs/propose-proof').send(proposalRequest)
+      const response = await request(app).post('/v1/proofs/propose-proof').send(proposalRequest)
 
       expect(proposeProofStub.calledWithMatch(proposalRequest)).equals(true)
       expect(response.statusCode).to.be.equal(200)
@@ -135,7 +135,7 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when connection is not found', async () => {
-      const response = await request(app).post('/proofs/propose-proof').send(proposalRequest)
+      const response = await request(app).post('/v1/proofs/propose-proof').send(proposalRequest)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -157,7 +157,7 @@ describe('ProofController', () => {
       acceptProposalStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => acceptProposalStub.firstCall.returnValue
 
-      const response = await request(app).post(`/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
 
       expect(
         acceptProposalStub.calledWithMatch({
@@ -170,7 +170,7 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when proof is not found', async () => {
-      const response = await request(app).post(`/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -198,7 +198,7 @@ describe('ProofController', () => {
       createRequestStub.resolves(mockValue)
       const getResult = (): Promise<typeof mockValue> => createRequestStub.firstCall.returnValue
 
-      const response = await request(app).post(`/proofs/create-request`).send(proofRequest)
+      const response = await request(app).post(`/v1/proofs/create-request`).send(proofRequest)
 
       expect(response.statusCode).to.equal(200)
 
@@ -251,7 +251,7 @@ describe('ProofController', () => {
       requestProofStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => requestProofStub.firstCall.returnValue
 
-      const response = await request(app).post(`/proofs/request-proof`).send(requestProofRequest)
+      const response = await request(app).post(`/v1/proofs/request-proof`).send(requestProofRequest)
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
@@ -261,7 +261,7 @@ describe('ProofController', () => {
       const requestProofStub = stub(bobAgent.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
 
-      const response = await request(app).post(`/proofs/request-proof`).send(requestProofRequestWithAttr)
+      const response = await request(app).post(`/v1/proofs/request-proof`).send(requestProofRequestWithAttr)
 
       expect(response.statusCode).to.be.equal(200)
       expect(
@@ -292,7 +292,7 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when connection is not found', async () => {
-      const response = await request(app).post(`/proofs/request-proof`).send(requestProofRequest)
+      const response = await request(app).post(`/v1/proofs/request-proof`).send(requestProofRequest)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -307,7 +307,7 @@ describe('ProofController', () => {
       acceptProofStub.resolves(testProofResponse)
       const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
 
-      const response = await request(app).post(`/proofs/${testProofResponse.id}/accept-request`)
+      const response = await request(app).post(`/v1/proofs/${testProofResponse.id}/accept-request`)
 
       expect(
         acceptProofStub.calledWithMatch({
@@ -321,7 +321,7 @@ describe('ProofController', () => {
     test('should give 404 not found when proof request is not found', async () => {
       const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
       selectCredentialForRequestStub.resolves({ proofFormats: {} })
-      const response = await request(app).post('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -331,7 +331,7 @@ describe('ProofController', () => {
       const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
       acceptPresentationStub.resolves(testProof)
       const getResult = (): Promise<ProofExchangeRecord> => acceptPresentationStub.firstCall.returnValue
-      const response = await request(app).post(`/proofs/${testProof.id}/accept-presentation`)
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-presentation`)
 
       expect(
         acceptPresentationStub.calledWithMatch({
@@ -343,7 +343,7 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when proof is not found', async () => {
-      const response = await request(app).post('/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-presentation')
+      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-presentation')
 
       expect(response.statusCode).to.be.equal(404)
     })

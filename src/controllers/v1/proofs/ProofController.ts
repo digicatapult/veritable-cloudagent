@@ -2,20 +2,20 @@ import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@cred
 import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { type RecordId, ProofRecordExample } from '../examples.js'
-import { HttpResponse, NotFound } from '../../error.js'
-import type { RestAgent } from '../../utils/agent.js'
-import { transformProofFormat } from '../../utils/proofs.js'
+import { type RecordId, ProofRecordExample } from '../../examples.js'
+import { HttpResponse, NotFound } from '../../../error.js'
+import type { RestAgent } from '../../../utils/agent.js'
+import { transformProofFormat } from '../../../utils/proofs.js'
 import type {
   AcceptProofRequestOptions,
   RequestProofOptions,
   CreateProofRequestOptions,
   ProposeProofOptions,
   AcceptProofProposalOptions,
-} from '../types.js'
+} from '../../types.js'
 
 @Tags('Proofs')
-@Route('/proofs')
+@Route('/v1/proofs')
 @injectable()
 export class ProofController extends Controller {
   private agent: RestAgent

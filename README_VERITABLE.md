@@ -41,7 +41,7 @@ The project aims to enable supply chains to share insights and data across multi
 
 ## Quick start
 
-The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI that is provided with the server. The docs can be viewed on the `/docs` endpoint (e.g. http://localhost:3000/docs).
+The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
 
 Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section) or via cli (see [Via Cli](#via-cli)).
 
@@ -69,7 +69,7 @@ To get a minimal version of the agent running the following command is sufficien
 docker-compose up --build -d
 ```
 
-The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`.
+The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`. The API docs are available at `http://localhost:3000/api-docs`.
 
 **Single Agent + IPFS Node**
 
@@ -180,7 +180,7 @@ const run = async () => {
   await startServer(agent, { port: 3000 })
 }
 
-// A Swagger (OpenAPI) definition is exposed on http://localhost:3000/docs
+// A Swagger (OpenAPI) definition is exposed on http://localhost:3000/swagger
 run()
 ```
 
@@ -243,6 +243,7 @@ Verified DRPC request and responses are exposed through the `/verified-drpc/` RE
 ### Config
 
 The RPC client can be configured through CLI and JSON file config settings, and follows the following format:
+
 ```
 {
   ...,

@@ -19,7 +19,7 @@ describe('Access checks', function () {
     }
 
     const response = await holderClient
-      .post(`/access/data/${packageId}/eval`)
+      .post(`/v1/access/data/${packageId}/eval`)
       .send(query)
       .expect('Content-Type', /json/)
       .expect(200)
@@ -38,7 +38,7 @@ describe('Access checks', function () {
     }
 
     const response = await holderClient
-      .post(`/access/data/${packageId}/eval`)
+      .post(`/v1/access/data/${packageId}/eval`)
       .send(query)
       .expect('Content-Type', /json/)
       .expect(200)

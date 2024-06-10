@@ -2,11 +2,11 @@ import { type BasicMessageRecord, type BasicMessageStorageProps, Agent, RecordNo
 import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { type RecordId, BasicMessageRecordExample } from '../examples.js'
-import { HttpResponse, NotFound } from '../../error.js'
+import { type RecordId, BasicMessageRecordExample } from '../../examples.js'
+import { HttpResponse, NotFound } from '../../../error.js'
 
 @Tags('Basic Messages')
-@Route('/basic-messages')
+@Route('/v1/basic-messages')
 @injectable()
 export class BasicMessageController extends Controller {
   private agent: Agent

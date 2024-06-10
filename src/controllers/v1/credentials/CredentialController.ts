@@ -1,4 +1,4 @@
-import type { RestAgent } from '../../utils/agent.js'
+import type { RestAgent } from '../../../utils/agent.js'
 import {
   type CredentialExchangeRecordProps,
   CredentialRepository,
@@ -16,12 +16,12 @@ import type {
   AcceptCredentialRequestOptions,
   AcceptCredentialOfferOptions,
   OfferCredentialOptions,
-} from '../types.js'
-import { type RecordId, CredentialExchangeRecordExample } from '../examples.js'
-import { HttpResponse, NotFound } from '../../error.js'
+} from '../../types.js'
+import { type RecordId, CredentialExchangeRecordExample } from '../../examples.js'
+import { HttpResponse, NotFound } from '../../../error.js'
 
 @Tags('Credentials')
-@Route('/credentials')
+@Route('/v1/credentials')
 @injectable()
 export class CredentialController extends Controller {
   private agent: RestAgent
