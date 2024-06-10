@@ -41,7 +41,7 @@ The project aims to enable supply chains to share insights and data across multi
 
 ## Quick start
 
-The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI that is provided with the server. The docs can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
+The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
 
 Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section) or via cli (see [Via Cli](#via-cli)).
 
