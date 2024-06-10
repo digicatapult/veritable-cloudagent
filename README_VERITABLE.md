@@ -69,7 +69,7 @@ To get a minimal version of the agent running the following command is sufficien
 docker-compose up --build -d
 ```
 
-The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`. (The API docs are available at `http://localhost:3000/api-docs`.)
+The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`. The API docs are available at `http://localhost:3000/api-docs`.
 
 **Single Agent + IPFS Node**
 
