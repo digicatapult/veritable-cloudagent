@@ -7,7 +7,7 @@ export interface ILogger extends Logger {
 
 const logger: ILogger = pino(
   {
-    name: 'sqnc-matchmaker-api',
+    name: 'veritable-cloudagent',
     timestamp: true,
     level: 'debug',
   },
