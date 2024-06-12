@@ -5,9 +5,11 @@ import type {
   VerifiedDrpcResponseMessage,
 } from './messages/index.js'
 import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
-import type { ConnectionRecord, CreateProofRequestOptions, ProofProtocol } from '@credo-ts/core'
 
 import {
+  type ConnectionRecord,
+  type CreateProofRequestOptions,
+  type ProofProtocol,
   AgentContext,
   MessageHandlerRegistry,
   MessageSender,

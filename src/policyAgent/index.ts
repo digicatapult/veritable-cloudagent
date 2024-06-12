@@ -1,5 +1,4 @@
 import { singleton } from 'tsyringe'
-import { LogLevel } from '@credo-ts/core'
 
 import Logger from '../utils/logger.js'
 import { HttpResponse, NotFound } from '../error.js'

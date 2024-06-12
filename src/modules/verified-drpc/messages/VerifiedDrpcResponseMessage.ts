@@ -1,9 +1,7 @@
-import type { VerifiedDrpcErrorCode } from '../models/index.js'
-
 import { IsValidMessageType, parseMessageType, AgentMessage } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
-import { IsValidVerifiedDrpcResponse } from '../models/index.js'
+import { type VerifiedDrpcErrorCode, IsValidVerifiedDrpcResponse } from '../models/index.js'
 
 export type VerifiedDrpcResponse =
   | VerifiedDrpcResponseObject

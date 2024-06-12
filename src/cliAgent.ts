@@ -15,7 +15,7 @@ import { readFile } from 'fs/promises'
 
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
-import Logger  from './utils/logger.js'
+import PinogLogger from './utils/logger.js'
 import { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 
 export type Transports = 'ws' | 'http'
@@ -85,10 +85,11 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     verifiedDrpcOptions,
     ...afjConfig
   } = restConfig
-  
-  const logger = Logger.child({ module: 'cloudagent' })
 
-  const agentConfig: any = {
+  const logger = PinogLogger.child({ module: 'cloudagent' })
+
+  // due to InitConfig interface being tightly coupled to credo-ts type
+  const agentConfig: unknown = {
     ...afjConfig,
     logger,
   }
@@ -103,7 +104,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   })
 
   const agent: RestAgent = new Agent({
-    config: agentConfig,
+    config: agentConfig as InitConfig,
     dependencies: agentDependencies,
     modules,
   })
