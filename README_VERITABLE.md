@@ -48,32 +48,6 @@ Bellow you will find commands for starting up the containers in docker (see the 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
 > In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by ruuning -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
-```sh
-npm error   status: 6,
-npm error   signal: null,
-npm error   output: [
-npm error     null,
-npm error     Buffer(0) [Uint8Array] [],
-npm error     Buffer(1258) [Uint8Array] [
-npm error       ... 1158 more items
-npm error     ]
-npm error   ],
-npm error   pid: 33080,
-npm error   stdout: Buffer(0) [Uint8Array] [],
-npm error   stderr: Buffer(1258) [Uint8Array] [
-npm error     ... 1158 more items
-npm error   ]
-npm error }
-npm error
-npm error Node.js v22.1.0
-
-npm error node-pre-gyp ERR! Completion callback never invoked! 
-npm error node-pre-gyp ERR! System Darwin 23.4.0
-npm error node-pre-gyp ERR! command "/Users/pmichelevicius/.nvm/versions/node/v22.1.0/bin/node" "/Users/pmichelevicius/workspace/veritable-cloudagent/node_modules/.bin/node-pre-gyp" "install" "--target_arch=universal" "--target_platform=darwin"
-npm error node-pre-gyp ERR! cwd /Users/pmichelevicius/workspace/veritable-cloudagent/node_modules/@hyperledger/anoncreds-nodejs
-npm error node-pre-gyp ERR! node -v v22.1.0
-npm error node-pre-gyp ERR! node-pre-gy
-```
 
 ### Rest Client Args
 
