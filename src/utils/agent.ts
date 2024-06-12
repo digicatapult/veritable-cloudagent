@@ -17,9 +17,9 @@ import {
   ConnectionsModule,
   CredentialsModule,
   HttpOutboundTransport,
-  LogLevel,
   MediatorModule,
   ProofsModule,
+  Logger,
 } from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
 import { VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
@@ -29,7 +29,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
-import { TsLogger } from './logger.js'
+import PinoLogger from './logger.js'
 import VeritableAnonCredsRegistry from '../anoncreds/index.js'
 import Ipfs from '../ipfs/index.js'
 
@@ -125,7 +125,7 @@ export const getAgentModules = (options: {
 }
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
-  const logger = new TsLogger(LogLevel.debug)
+  const logger = PinoLogger
 
   const modules = getAgentModules({
     autoAcceptConnections: true,
@@ -142,7 +142,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       endpoints,
       walletConfig: { id: name, key: name },
       useDidSovPrefixWhereAllowed: true,
-      logger: logger,
+      logger: logger as Logger,
       autoUpdateStorageOnStartup: true,
       backupBeforeStorageUpdate: false,
     },

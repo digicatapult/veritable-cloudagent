@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe'
 import { LogLevel } from '@credo-ts/core'
 
-import { TsLogger } from '../utils/logger.js'
+import Logger from '../utils/logger.js'
 import { HttpResponse, NotFound } from '../error.js'
 
 type Policy = {
@@ -16,10 +16,10 @@ type Policy = {
 }
 @singleton()
 export default class PolicyAgent {
-  private logger: TsLogger
+  private logger: typeof Logger
 
   constructor(private origin: string) {
-    this.logger = new TsLogger(LogLevel.debug)
+    this.logger = Logger.child({ module: 'policy-agent' })
     try {
       new URL(origin)
     } catch (err) {

@@ -15,7 +15,7 @@ import { readFile } from 'fs/promises'
 
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
-import { TsLogger } from './utils/logger.js'
+import Logger  from './utils/logger.js'
 import { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 
 export type Transports = 'ws' | 'http'
@@ -85,10 +85,10 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     verifiedDrpcOptions,
     ...afjConfig
   } = restConfig
+  
+  const logger = Logger.child({ module: 'cloudagent' })
 
-  const logger = new TsLogger(logLevel ?? LogLevel.error)
-
-  const agentConfig: InitConfig = {
+  const agentConfig: any = {
     ...afjConfig,
     logger,
   }
