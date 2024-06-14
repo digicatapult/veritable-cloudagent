@@ -1,22 +1,33 @@
-import type { VerifiedDrpcRequestStateChangedEvent } from '../VerifiedDrpcRequestEvents.js'
-import type { VerifiedDrpcResponseStateChangedEvent } from '../VerifiedDrpcResponseEvents.js'
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages/index.js'
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
-import type {
-  AgentContext,
-  InboundMessageContext,
-  Query,
-  ProofStateChangedEvent,
-  CreateProofRequestOptions,
+import {
+  type AgentContext,
+  type InboundMessageContext,
+  type Query,
+  type ProofStateChangedEvent,
+  type CreateProofRequestOptions,
   ProofProtocol,
+  EventEmitter,
+  injectable,
+  ProofsApi,
+  ProofEventTypes,
+  ProofState,
 } from '@credo-ts/core'
 
-import { EventEmitter, injectable, ProofsApi, ProofEventTypes, ProofState } from '@credo-ts/core'
-
-import { VerifiedDrpcRequestEventTypes } from '../VerifiedDrpcRequestEvents.js'
-import { VerifiedDrpcResponseEventTypes } from '../VerifiedDrpcResponseEvents.js'
-import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from '../messages/index.js'
+import {
+  VerifiedDrpcRequestEventTypes,
+  type VerifiedDrpcRequestStateChangedEvent,
+} from '../VerifiedDrpcRequestEvents.js'
+import {
+  VerifiedDrpcResponseEventTypes,
+  type VerifiedDrpcResponseStateChangedEvent,
+} from '../VerifiedDrpcResponseEvents.js'
+import {
+  type VerifiedDrpcRequest,
+  type VerifiedDrpcResponse,
+  VerifiedDrpcRequestMessage,
+  VerifiedDrpcResponseMessage,
+} from '../messages/index.js'
 import {
   VerifiedDrpcRole,
   VerifiedDrpcState,

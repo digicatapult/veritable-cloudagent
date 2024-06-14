@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { Logger } from 'tslog'
+import { pino, Logger } from 'pino'
 import { LogLevel, BaseLogger } from '@credo-ts/core'
 
-export class TsLogger extends BaseLogger {
+export default class PinoLogger extends BaseLogger {
   private logger: Logger
 
   // Map our log levels to tslog levels
   private tsLogLevelMap = {
-    [LogLevel.test]: 'silly',
+    [LogLevel.test]: 'silent', // pino does not have 'silly' so used silent for .test() method
     [LogLevel.trace]: 'trace',
     [LogLevel.debug]: 'debug',
     [LogLevel.info]: 'info',
@@ -17,24 +16,23 @@ export class TsLogger extends BaseLogger {
     [LogLevel.fatal]: 'fatal',
   } as const
 
-  public constructor(logLevel: LogLevel, name?: string) {
+  public constructor(logLevel: LogLevel) {
     super(logLevel)
 
-    this.logger = new Logger({
-      name,
-      minLevel: this.logLevel == LogLevel.off ? undefined : this.tsLogLevelMap[this.logLevel],
-      ignoreStackLevels: 5,
-    })
+    this.logger = pino(
+      {
+        name: 'veritable-cloudagent',
+        timestamp: true,
+        level: 'debug',
+      },
+      process.stdout
+    )
   }
 
   private log(level: Exclude<LogLevel, LogLevel.off>, message: string, data?: Record<string, any>): void {
     const tsLogLevel = this.tsLogLevelMap[level]
-
-    if (data) {
-      this.logger[tsLogLevel](message, data)
-    } else {
-      this.logger[tsLogLevel](message)
-    }
+    if (data) return this.logger[tsLogLevel]('%s %o', message, data)
+    this.logger[tsLogLevel](message)
   }
 
   public test(message: string, data?: Record<string, any>): void {

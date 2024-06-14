@@ -15,7 +15,7 @@ import { readFile } from 'fs/promises'
 
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
-import { TsLogger } from './utils/logger.js'
+import PinoLogger from './utils/logger.js'
 import { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 
 export type Transports = 'ws' | 'http'
@@ -86,13 +86,12 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ...afjConfig
   } = restConfig
 
-  const logger = new TsLogger(logLevel ?? LogLevel.error)
+  const logger = new PinoLogger(logLevel ?? LogLevel.error)
 
   const agentConfig: InitConfig = {
     ...afjConfig,
     logger,
   }
-
   const modules = getAgentModules({
     autoAcceptConnections,
     autoAcceptProofs,
@@ -103,7 +102,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   })
 
   const agent: RestAgent = new Agent({
-    config: agentConfig,
+    config: agentConfig as InitConfig,
     dependencies: agentDependencies,
     modules,
   })

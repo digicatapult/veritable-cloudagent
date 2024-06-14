@@ -1,7 +1,5 @@
 import { AgentContext, ConsoleLogger, DependencyManager } from '@credo-ts/core'
-import type { SinonStubbedInstance } from 'sinon'
-
-import sinon from 'sinon'
+import sinon, { type SinonStubbedInstance } from 'sinon'
 
 export const withMockedAgentContext = () => {
   return {

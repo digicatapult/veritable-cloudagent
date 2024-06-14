@@ -1,5 +1,3 @@
-import type { VerifiedDrpcModuleConfigOptions } from '../modules/verified-drpc/index.js'
-
 import {
   AnonCredsCredentialFormatService,
   AnonCredsProofFormatService,
@@ -14,24 +12,24 @@ import {
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
+  LogLevel,
   ConnectionsModule,
   CredentialsModule,
   HttpOutboundTransport,
-  LogLevel,
   MediatorModule,
   ProofsModule,
 } from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
-import { VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
+import { type VerifiedDrpcModuleConfigOptions, VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
 import { agentDependencies, HttpInboundTransport } from '@credo-ts/node'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
-import { TsLogger } from './logger.js'
 import VeritableAnonCredsRegistry from '../anoncreds/index.js'
 import Ipfs from '../ipfs/index.js'
+import PinoLogger from './logger.js'
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
@@ -125,7 +123,7 @@ export const getAgentModules = (options: {
 }
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
-  const logger = new TsLogger(LogLevel.debug)
+  const logger = new PinoLogger(LogLevel.debug)
 
   const modules = getAgentModules({
     autoAcceptConnections: true,
@@ -142,7 +140,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       endpoints,
       walletConfig: { id: name, key: name },
       useDidSovPrefixWhereAllowed: true,
-      logger: logger,
+      logger,
       autoUpdateStorageOnStartup: true,
       backupBeforeStorageUpdate: false,
     },

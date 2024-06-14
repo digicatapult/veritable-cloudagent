@@ -1,7 +1,6 @@
 import { Response as ExResponse, Request as ExRequest, NextFunction } from 'express'
 import { ValidateError } from 'tsoa'
 import { isHttpError } from 'http-errors'
-
 import { Logger } from '@credo-ts/core'
 
 export class HttpResponse extends Error {

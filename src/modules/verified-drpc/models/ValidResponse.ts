@@ -1,6 +1,4 @@
-import type { ValidationOptions } from 'class-validator'
-
-import { ValidateBy, ValidationError, buildMessage } from 'class-validator'
+import { type ValidationOptions, ValidateBy, ValidationError, buildMessage } from 'class-validator'
 
 export function IsValidVerifiedDrpcResponse(validationOptions?: ValidationOptions): PropertyDecorator {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
