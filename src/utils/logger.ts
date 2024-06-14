@@ -7,7 +7,7 @@ export default class PinoLogger extends BaseLogger {
 
   // Map our log levels to tslog levels
   private tsLogLevelMap = {
-    [LogLevel.test]: 'silent', // pino does not have 'silly' so used info for .test() method
+    [LogLevel.test]: 'silent', // pino does not have 'silly' so used silent for .test() method
     [LogLevel.trace]: 'trace',
     [LogLevel.debug]: 'debug',
     [LogLevel.info]: 'info',
@@ -31,7 +31,8 @@ export default class PinoLogger extends BaseLogger {
 
   private log(level: Exclude<LogLevel, LogLevel.off>, message: string, data?: Record<string, any>): void {
     const tsLogLevel = this.tsLogLevelMap[level]
-    this.logger[tsLogLevel](message, data || {})
+    if (data) return this.logger[tsLogLevel]('%s %o', message, data)
+    this.logger[tsLogLevel](message)
   }
 
   public test(message: string, data?: Record<string, any>): void {

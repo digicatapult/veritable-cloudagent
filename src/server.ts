@@ -85,7 +85,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
     next()
   })
 
-  app.use(errorHandler(agent.config.logger as PinoLogger))
+  app.use(errorHandler(agent.config.logger))
 
   return app
 }
