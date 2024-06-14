@@ -22,7 +22,7 @@ import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
 import { RegisterRoutes } from './routes/routes.js'
 import { errorHandler } from './error.js'
 import PolicyAgent from './policyAgent/index.js'
-import { ILogger } from './utils/logger.js'
+import PinoLogger from './utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -85,7 +85,7 @@ export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
     next()
   })
 
-  app.use(errorHandler(agent.config.logger as ILogger))
+  app.use(errorHandler(agent.config.logger as PinoLogger))
 
   return app
 }

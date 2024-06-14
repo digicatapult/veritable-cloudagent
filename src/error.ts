@@ -2,7 +2,7 @@ import { Response as ExResponse, Request as ExRequest, NextFunction } from 'expr
 import { ValidateError } from 'tsoa'
 import { isHttpError } from 'http-errors'
 
-import { Logger } from 'pino'
+import PinoLogger from './utils/logger.js'
 
 export class HttpResponse extends Error {
   public code: number
@@ -35,7 +35,7 @@ export class GatewayTimeout extends HttpResponse {
 }
 
 export const errorHandler =
-  (logger: Logger) =>
+  (logger: PinoLogger) =>
   (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void => {
     if (err instanceof ValidateError) {
       logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)

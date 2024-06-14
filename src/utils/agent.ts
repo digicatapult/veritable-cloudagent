@@ -12,12 +12,12 @@ import {
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
+  LogLevel,
   ConnectionsModule,
   CredentialsModule,
   HttpOutboundTransport,
   MediatorModule,
   ProofsModule,
-  Logger,
 } from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
 import { type VerifiedDrpcModuleConfigOptions, VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
@@ -27,9 +27,9 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
-import PinoLogger from './logger.js'
 import VeritableAnonCredsRegistry from '../anoncreds/index.js'
 import Ipfs from '../ipfs/index.js'
+import PinoLogger from './logger.js'
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
@@ -123,7 +123,7 @@ export const getAgentModules = (options: {
 }
 
 export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
-  const logger = PinoLogger
+  const logger = new PinoLogger(LogLevel.debug)
 
   const modules = getAgentModules({
     autoAcceptConnections: true,
@@ -140,7 +140,7 @@ export const setupAgent = async ({ name, endpoints, port }: { name: string; endp
       endpoints,
       walletConfig: { id: name, key: name },
       useDidSovPrefixWhereAllowed: true,
-      logger: logger as Logger,
+      logger,
       autoUpdateStorageOnStartup: true,
       backupBeforeStorageUpdate: false,
     },

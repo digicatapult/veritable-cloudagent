@@ -86,14 +86,12 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ...afjConfig
   } = restConfig
 
-  const logger = PinoLogger.child({ module: 'cloudagent' })
+  const logger = new PinoLogger(logLevel ?? LogLevel.error)
 
-  // due to InitConfig interface being tightly coupled to credo-ts type
-  const agentConfig: unknown = {
+  const agentConfig: InitConfig = {
     ...afjConfig,
     logger,
   }
-
   const modules = getAgentModules({
     autoAcceptConnections,
     autoAcceptProofs,

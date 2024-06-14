@@ -1,6 +1,5 @@
 import { singleton } from 'tsyringe'
 
-import Logger from '../utils/logger.js'
 import { HttpResponse, NotFound } from '../error.js'
 
 type Policy = {
@@ -15,10 +14,7 @@ type Policy = {
 }
 @singleton()
 export default class PolicyAgent {
-  private logger: typeof Logger
-
   constructor(private origin: string) {
-    this.logger = Logger.child({ module: 'policy-agent' })
     try {
       new URL(origin)
     } catch (err) {
