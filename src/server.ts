@@ -22,7 +22,6 @@ import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
 import { RegisterRoutes } from './routes/routes.js'
 import { errorHandler } from './error.js'
 import PolicyAgent from './policyAgent/index.js'
-import PinoLogger from './utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
