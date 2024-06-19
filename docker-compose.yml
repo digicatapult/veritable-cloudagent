@@ -10,15 +10,14 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
-    volumes:
-      # also possible to set values using json
-      - ./samples/cliConfig.json:/config.json
     ports:
       - '5002:5002' #5000 is used for AirPlay in MacOS
       - '5003:5003'
       - '3000:3000'
-    # or via command line arguments
-    command: --ipfs-origin http://localhost:5001 --config /config.json --postgres-host alice-agent-postgres --postgres-port 5432
+    environment: 
+      - IPFS_ORIGIN=http://ipfs0:5001
+      - POSTGRES_HOST=alice-agent-postgres
+      - POSTGRES_PORT=5432
     networks:
       - testnet
   postgres:
