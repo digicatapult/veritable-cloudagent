@@ -1,5 +1,3 @@
-import type { ServerConfig } from '../src/utils/ServerConfig'
-
 import { connect } from 'ngrok'
 
 import { startServer } from '../src/index'
@@ -14,7 +12,7 @@ const run = async () => {
     name: 'Aries Test Agent',
   })
 
-  const conf: ServerConfig = {
+  const conf = {
     port: 3000,
     cors: true,
   }
