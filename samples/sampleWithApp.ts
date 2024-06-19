@@ -1,5 +1,3 @@
-import type { ServerConfig } from '../src/utils/ServerConfig'
-
 import bodyParser from 'body-parser'
 import express from 'express'
 import { connect } from 'ngrok'
@@ -25,7 +23,7 @@ const run = async () => {
     res.send(`Hello, ${config.label}!`)
   })
 
-  const conf: ServerConfig = {
+  const conf = {
     port: 3000,
     webhookUrl: ['http://localhost:5002/agent-events'],
     app: app,
