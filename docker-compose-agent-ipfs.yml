@@ -35,9 +35,9 @@ services:
       - '5003:5003'
       - '3000:3000'
     # or via command line arguments
-    # command: --endpoint "http://alice:5002", "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --opa-origin http://opa:8181 --config /config.json --postgres-host postgres --postgres-port 5432
+    # command: --endpoint "http://alice:5002" "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --opa-origin http://opa:8181 --config /config.json --postgres-host postgres --postgres-port 5432
     environment:
-      - ENDPOINT=["http://alice:5002", "ws://alice:5003"]
+      - ENDPOINT='http://alice:5002, ws://alice:5003'
       - IPFS_ORIGIN=http://ipfs0:5001
       - OPA_ORIGIN=http://opa:8181
       - POSTGRES_HOST=veritable-cloudagent-postgres

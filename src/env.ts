@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import * as envalid from 'envalid'
+import { makeValidator } from 'envalid'
 import { singleton } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
@@ -22,33 +23,32 @@ const proofRequestOptions = `{
     }
   }`
 
-const splitFlat = (i: string[]) => i.map((i) => i.split(' ')).flat()
-const nonEmptyArrayValidator = envalid.makeValidator((input) => {
-  const arr = input
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => !!s)
-
-  const first = arr.shift()
-  if (first === undefined) {
-    throw new Error('must provide at least one value in an array')
+const stringArray = makeValidator((input: string | string[]) => {
+  if (Array.isArray(input)) {
+    return input
   }
-  const res: [string, ...string[]] = [first, ...arr]
-  return res
+  if (typeof input !== 'string') {
+    throw new Error('Invalid input type, expected a string')
+  }
+  try {
+    return input.split(',').map((s) => s.trim())
+  } catch (err) {
+    throw new Error('Invalid input for string array')
+  }
 })
 
 const envConfig = {
   LABEL: envalid.str({ default: 'AFJ Rest', devDefault: 'AFJ Rest Agent' }),
   WALLET_ID: envalid.str({ default: 'walletId', devDefault: 'walletId' }),
   WALLET_KEY: envalid.str({ default: 'walletKey', devDefault: 'walletKey' }),
-  ENDPOINT: nonEmptyArrayValidator({
+  ENDPOINT: stringArray({
     default: ['http://localhost:5002', 'ws://localhost:5003'],
     devDefault: ['http://localhost:5002', 'ws://localhost:5003'],
   }),
   LOG_LEVEL: envalid.num({ default: 3, devDefault: 3 }),
   USE_DID_SOV_PREFIX_WHERE_ALLOWED: envalid.bool({ default: false, devDefault: true }),
   USE_DID_KEY_IN_PROTOCOLS: envalid.bool({ default: true, devDefault: true }),
-  OUTBOUND_TRANSPORT: nonEmptyArrayValidator({ default: ['http', 'ws'], devDefault: ['http', 'ws'] }),
+  OUTBOUND_TRANSPORT: stringArray({ default: ['http', 'ws'], devDefault: ['http', 'ws'] }),
   INBOUND_TRANSPORT: envalid.json({
     default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
     devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
@@ -71,7 +71,7 @@ const envConfig = {
     default: 'https://image.com/image.png',
     devDefault: 'https://image.com/image.png',
   }),
-  WEBHOOK_URL: nonEmptyArrayValidator({
+  WEBHOOK_URL: stringArray({
     default: ['https://my-webhook-server'],
     devDefault: ['https://my-webhook-server'],
   }),
@@ -90,7 +90,7 @@ const envConfig = {
   VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS: envalid.json({
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
-  }), //should be parsing?
+  }),
   VERIFIED_DRPC_OPTIONS_CRED_DEF_ID: envalid.str({ default: 'some-cred-def-id', devDefault: 'some-cred-def-id' }), //finish up
 }
 

@@ -38,7 +38,7 @@ services:
       #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=TA
       - PERSONA_COLOR=#eddedf
-      - ENDPOINT=["http://alice:5002" "ws://alice:5003"]
+      - ENDPOINT=http://alice:5002, ws://alice:5003
       - IPFS_ORIGIN=http://ipfs0:5001
       - OPA_ORIGIN=http://opa0:8181
       - POSTGRES_HOST=alice-postgres
@@ -74,7 +74,7 @@ services:
       #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=OEM
       - PERSONA_COLOR=#dfedde
-      - ENDPOINT=['http://localhost:5002', 'ws://localhost:5003']
+      - ENDPOINT=http://bob:5002, ws://bob:5003
       - IPFS_ORIGIN=http://ipfs1:5001
       - OPA_ORIGIN=http://opa1:8181
       - POSTGRES_HOST=bob-postgres
@@ -109,7 +109,7 @@ services:
       #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=Supplier
       - PERSONA_COLOR=#dedfed
-      - ENDPOINT=["http://charlie:5002" "ws://charlie:5003"]
+      - ENDPOINT=http://charlie:5002,ws://charlie:5003
       - IPFS_ORIGIN=http://ipfs2:5001
       - OPA_ORIGIN=http://opa2:8181
       - POSTGRES_HOST=charlie-postgres
