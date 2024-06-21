@@ -36,7 +36,7 @@ export class AccessController extends Controller {
    */
   @Post('data/:packageId/eval')
   @Response<NotFound['message']>(404)
-  public async evaluate(@Path('packageId') packageId: string, @Body() requestBody: object) {
+  public async evaluate(@Path('packageId') packageId: string, @Body() requestBody: Record<string, unknown>) {
     return this.policyAgent.evaluate(packageId, requestBody)
   }
 }

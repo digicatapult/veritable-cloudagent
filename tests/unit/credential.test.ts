@@ -3,7 +3,13 @@ import { describe, before, after, afterEach, test } from 'mocha'
 import { expect, use as chaiUse, Assertion as assertion } from 'chai'
 import { stub, restore as sinonRestore } from 'sinon'
 
-import type { Agent, ConnectionRecord, CredentialStateChangedEvent, OutOfBandRecord } from '@credo-ts/core'
+import type {
+  Agent,
+  ConnectionRecord,
+  CredentialStateChangedEvent,
+  GetCredentialFormatDataReturn,
+  OutOfBandRecord,
+} from '@credo-ts/core'
 import type { Server } from 'net'
 
 import {
@@ -29,13 +35,16 @@ import {
   getTestOffer,
   getTestOutOfBandRecord,
   getTestConnection,
+  getCredentialFormatData,
 } from './utils/helpers.js'
+import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 
 describe('CredentialController', () => {
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
   let testCredential: CredentialExchangeRecord
+  let testFormatData: GetCredentialFormatDataReturn<[AnonCredsCredentialFormat]>
   let testOffer: {
     message: AgentMessage
     credentialRecord: CredentialExchangeRecord
@@ -49,6 +58,7 @@ describe('CredentialController', () => {
     app = await startServer(bobAgent, { port: 3024 })
 
     testCredential = getTestCredential() as CredentialExchangeRecord
+    testFormatData = getCredentialFormatData()
     testOffer = getTestOffer()
     outOfBandRecord = getTestOutOfBandRecord()
     connection = getTestConnection()
@@ -147,6 +157,30 @@ describe('CredentialController', () => {
 
     test('should give 404 not found when credential is not found', async () => {
       const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
+  describe('Get credential format-data by id', () => {
+    test('should return format data for a single credential', async () => {
+      const getFormatDataStub = stub(bobAgent.credentials, 'getFormatData')
+      getFormatDataStub.resolves(testFormatData)
+
+      const getResult = (): Promise<typeof testFormatData> => {
+        return getFormatDataStub.firstCall.returnValue
+      }
+
+      const response = await request(app).get(`/v1/credentials/${testCredential.id}/format-data`)
+      const result = await getResult()
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getFormatDataStub.calledWithMatch(testCredential.id)).equals(true)
+      expect(response.body).to.deep.equal(objectToJson(result))
+    })
+
+    test('should give 404 not found when credential is not found', async () => {
+      const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/format-data`)
 
       expect(response.statusCode).to.be.equal(404)
     })

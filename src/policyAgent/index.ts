@@ -9,7 +9,7 @@ type Policy = {
     package: {
       path: { type: string; value: string }[]
     }
-    rules: object[]
+    rules: Record<string, unknown>[]
   }
 }
 @singleton()
@@ -48,7 +48,7 @@ export default class PolicyAgent {
     throw new HttpResponse({ message: `Error calling Policy Agent` })
   }
 
-  public async evaluate(packageId: string, requestBody: object) {
+  public async evaluate(packageId: string, requestBody: Record<string, unknown>) {
     const opaEndpoint = `${this.origin}/v1/data/${packageId}`
 
     const response = await fetch(opaEndpoint, {
@@ -60,7 +60,7 @@ export default class PolicyAgent {
     })
 
     if (response.ok) {
-      const { result } = (await response.json()) as { result: object }
+      const { result } = (await response.json()) as { result: Record<string, unknown> }
       return result
     }
 
