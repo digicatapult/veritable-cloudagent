@@ -5,6 +5,7 @@ import {
   CredentialState,
   Agent,
   RecordNotFoundError,
+  GetCredentialFormatDataReturn,
 } from '@credo-ts/core'
 import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -17,8 +18,9 @@ import type {
   AcceptCredentialOfferOptions,
   OfferCredentialOptions,
 } from '../../types.js'
-import { type RecordId, CredentialExchangeRecordExample } from '../../examples.js'
+import { type RecordId, CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 import { HttpResponse, NotFound } from '../../../error.js'
+import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 
 @Tags('Credentials')
 @Route('/v1/credentials')
@@ -68,6 +70,28 @@ export class CredentialController extends Controller {
     try {
       const credential = await this.agent.credentials.getById(credentialRecordId)
       return credential.toJSON()
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Retrieve format-data for a credential by credential record id
+   *
+   * @param credentialRecordId
+   * @returns GetCredentialFormatDataReturn
+   */
+  @Example<Awaited<ReturnType<RestAgent['credentials']['getFormatData']>>>(CredentialFormatDataExample)
+  @Get('/:credentialRecordId/format-data')
+  @Response<NotFound['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getCredentialFormatDataById(@Path('credentialRecordId') credentialRecordId: RecordId) {
+    try {
+      const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
+      return formatData
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
