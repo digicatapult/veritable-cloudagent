@@ -42,7 +42,6 @@ services:
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
-
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
