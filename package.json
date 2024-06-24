@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.9.13",
+  "version": "0.9.14",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -34,7 +34,7 @@
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "test -d node_modules/husky && husky install || echo \"husky is not installed\"",
     "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && tsc && ./bin/afj-rest.js start --ipfs-origin http://localhost:5001 --opa-origin http://localhost:8181 --config samples/cliConfig.json",
+    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && tsc && ./bin/afj-rest.js start ",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
@@ -59,6 +59,8 @@
     "class-validator": "^0.14.1",
     "cors": "^2.8.5",
     "did-resolver": "^4.1.0",
+    "dotenv": "^16.4.5",
+    "envalid": "^8.0.0",
     "express": "^4.19.2",
     "http-errors": "^2.0.0",
     "pino": "^9.2.0",
@@ -67,9 +69,8 @@
     "swagger-ui-express": "^5.0.1",
     "tsoa": "^6.3.1",
     "tsyringe": "^4.8.0",
-    "undici": "^6.19.2",
-    "ws": "^8.17.1",
-    "yargs": "^17.7.2",
+    "undici": "^6.18.2",
+    "ws": "^8.17.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
