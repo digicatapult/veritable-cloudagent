@@ -1,10 +1,11 @@
-import dotenv from 'dotenv'
+import { LogLevel } from '@credo-ts/core'
+import * as dotenv from 'dotenv'
 import * as envalid from 'envalid'
 import { makeValidator } from 'envalid'
 import { singleton } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
-  dotenv.config({ path: 'tests/test.env' }) //different configs for unit and integration??
+  dotenv.config({ path: 'tests/test.env.ts' })
 } else {
   dotenv.config()
 }
@@ -45,7 +46,7 @@ const envConfig = {
     default: ['http://localhost:5002', 'ws://localhost:5003'],
     devDefault: ['http://localhost:5002', 'ws://localhost:5003'],
   }),
-  LOG_LEVEL: envalid.num({ default: 3, devDefault: 3 }),
+  LOG_LEVEL: envalid.num({ default: LogLevel.info, devDefault: LogLevel.info }),
   USE_DID_SOV_PREFIX_WHERE_ALLOWED: envalid.bool({ default: false, devDefault: true }),
   USE_DID_KEY_IN_PROTOCOLS: envalid.bool({ default: true, devDefault: true }),
   OUTBOUND_TRANSPORT: stringArray({ default: ['http', 'ws'], devDefault: ['http', 'ws'] }),
