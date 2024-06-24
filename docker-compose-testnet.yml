@@ -31,8 +31,8 @@ services:
       alice-postgres:
         condition: service_healthy
     environment:
-      - AFJ_REST_LOG_LEVEL=1
-      #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
+      - LOG_LEVEL=1
+      #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=TA
       - PERSONA_COLOR=#eddedf
       - ENDPOINT=http://alice:5002, ws://alice:5003
@@ -65,7 +65,8 @@ services:
       bob-postgres:
         condition: service_healthy
     environment:
-      - AFJ_REST_LOG_LEVEL=1
+      - LOG_LEVEL=1
+      #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=OEM
       - PERSONA_COLOR=#dfedde
       - ENDPOINT=http://bob:5002, ws://bob:5003
@@ -98,8 +99,8 @@ services:
       charlie-postgres:
         condition: service_healthy
     environment:
-      - AFJ_REST_LOG_LEVEL=1
-      #- AFJ_REST_VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
+      - LOG_LEVEL=1
+      #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=Supplier
       - PERSONA_COLOR=#dedfed
       - ENDPOINT=http://charlie:5002,ws://charlie:5003
