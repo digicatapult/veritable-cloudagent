@@ -43,6 +43,8 @@ services:
       - OPA_ORIGIN=http://opa0:8181
       - POSTGRES_HOST=alice-postgres
       - POSTGRES_PORT=5432
+      - AUTO_ACCEPT_CREDENTIALS=always
+
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
@@ -79,6 +81,8 @@ services:
       - OPA_ORIGIN=http://opa1:8181
       - POSTGRES_HOST=bob-postgres
       - POSTGRES_PORT=5432
+      - AUTO_ACCEPT_CREDENTIALS=always
+
     ports:
       #- '5102:5002'
       #- '5103:5003'
@@ -114,6 +118,7 @@ services:
       - OPA_ORIGIN=http://opa2:8181
       - POSTGRES_HOST=charlie-postgres
       - POSTGRES_PORT=5432
+      - AUTO_ACCEPT_CREDENTIALS=always
     ports:
       #- '5202:5002'
       #- '5203:5003'

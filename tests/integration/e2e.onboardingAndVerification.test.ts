@@ -100,7 +100,6 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it("should allow a Holder to accept an Issuer's invitation", async function () {
-    console.log('=======================BEFORE============================')
     const acceptInvitationPayload = { invitationUrl: issuerToHolderInvitationUrl }
 
     const response = await holderClient
@@ -108,7 +107,6 @@ describe('Onboarding & Verification flow', function () {
       .send(acceptInvitationPayload)
       .expect('Content-Type', /json/)
       .expect(200)
-    console.log('=======================AFTER============================')
 
     expect(response.body).to.have.nested.property('connectionRecord.id')
     holderToIssuerConnectionRecordId = response.body.connectionRecord.id
