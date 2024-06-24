@@ -27,15 +27,10 @@ services:
     depends_on:
       ipfs0:
         condition: service_healthy
-    # volumes:
-    # also possible to set values using json
-    # - ./samples/cliConfig.json:/config.json
     ports:
       - '5002:5002' #5000 is used for AirPlay in MacOS
       - '5003:5003'
       - '3000:3000'
-    # or via command line arguments
-    # command: --endpoint "http://alice:5002" "ws://alice:5003" --ipfs-origin http://ipfs0:5001 --opa-origin http://opa:8181 --config /config.json --postgres-host postgres --postgres-port 5432
     environment:
       - ENDPOINT='http://alice:5002, ws://alice:5003'
       - IPFS_ORIGIN=http://ipfs0:5001
