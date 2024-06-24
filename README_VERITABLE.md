@@ -51,13 +51,53 @@ Bellow you will find commands for starting up the containers in docker (see the 
 
 ### Rest Client Envs
 
-The Envs are defined under `src > env.ts ` They are used to start up a container.
+The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 | Argument added | Required | Default | Description |
 | :------------- | :------: | :------ | :------- |
-| IPFS_ORIGIN | Y | http://localhost:5001 | IPFS endpoint |
-|OPA_ORIGIN |N |http://localhost:8181 |OPA endpoint |
+| LABEL| Y|"AFJ Rest"|Label for the agent|
+|WALLET_ID| Y| "walletId"| An id of the Agent's wallet|
+|WALLET_KEY| Y|"walletKey"| A key for the Agent's wallet|
+|ENDPOINT|Y|['http://localhost:5002', 'ws://localhost:5003']| An array of endpoint for the agent app|
+|LOG_LEVEL|Y| info| Log level for the app |
+|USE_DID_SOV_PREFIX_WHERE_ALLOWED|N|false|Allows the usage of 'sov' prefix in DIDs where possible|
+|USE_DID_KEY_IN_PROTOCOLS|N|true| Allows the use of DID keys in protocols|
+|OUTBOUND_TRANSPORT|Y|['http', 'ws']|Specifies the type of outbound transport|
+|INBOUND_TRANSPORT|Y|"[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]"|Specifies the inbound transport, needs to be provided as a JSON parseable string|
+|AUTO_ACCEPT_CONNECTIONS|N|false| Allows for connection requests to be automatically acceptedupon being received|
+|AUTO_ACCEPT_CREDENTIALS|N|"never"|Allows for credentials to be automatically accepted upon being received|
+|AUTO_ACCEPT_MEDIATION_REQUESTS|N|false|Allows for mediatioons requests to be automatically accepted|
+|AUTO_ACCEPT_PROOFS|N|"never"|Allows for proofs to be automatically accepted upon being received|
+|AUTO_UPDATE_STORAGE_ON_STARTUP|N|true| Updates storage on startup|
+|BACKUP_BEFORE_STORAGE_UPDATE|N|false|Creates a backup before the storage update|
+|CONNECTION_IMAGE_URL| N| "https://image.com/image.png"|Url for connection image|
+|WEBHOOK_URL|Y|['https://my-webhook-server']| An array of webhook urls|
+|ADMIN_PORT|Y|3000| The port for the app|
+|IPFS_ORIGIN| Y|"http://ipfs0:5001"|The IPFS url endpoint |
 |PERSONA_TITLE | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
-|PERSONA_COLOR |N |"white" |Defines the background colour of swagger documentation|
+|PERSONA_COLOR |N |"white" |Defines the background colour of swagger documentation |
+|OPA_ORIGIN |N |http://localhost:8181 |OPA endpoint |
+|STORAGE_TYPE|Y|"postgres"| The type of storage to be used by the app|
+|POSTGRES_HOST|N|"postgres"|If type of storage is set to "postgres" a host for the database needs to be provided|
+|POSTGRES_PORT|N|"postgres"|If type of storage is set to "postgres" a port for the database needs to be provided|
+|POSTGRES_USERNAME|N|"postgres"|If type of storage is set to "postgres" a username for the database needs to be provided|
+|POSTGRES_PASSWORD|N|"postgres"|If type of storage is set to "postgres" a password for the database needs to be provided|
+|VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS|N|5000|Timeout in ms for proof|
+|VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS|N|5000| Timeout in ms for request|
+|VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS|Y|`{
+    "protocolVersion": "v2",
+    "proofFormats": {
+      "anoncreds": {
+        "name": "drpc-proof-request",
+        "version": "1.0",
+        "requested_attributes": {
+          "companiesHouseNumberExists": {
+            "name": "companiesHouseNumber"
+          }
+        }
+      }
+    }
+  }`|Options for proof request|
+|VERIFIED_DRPC_OPTIONS_CRED_DEF_ID|N|"some-cred-def-id"|Credential definition id for verified DRPC|
 
 ### Using Docker (easiest)
 
