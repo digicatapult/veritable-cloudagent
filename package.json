@@ -59,6 +59,7 @@
     "class-validator": "^0.14.1",
     "cors": "^2.8.5",
     "did-resolver": "^4.1.0",
+    "dotenv": "^16.4.5",
     "envalid": "^8.0.0",
     "express": "^4.19.2",
     "http-errors": "^2.0.0",

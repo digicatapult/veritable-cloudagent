@@ -99,6 +99,8 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
   }`|Options for proof request|
 |VERIFIED_DRPC_OPTIONS_CRED_DEF_ID|N|"some-cred-def-id"|Credential definition id for verified DRPC|
 
+#### Logging
+
 The LOG_LEVEL options can be changed by importing the LogLevel eenum from credo-ts: `import { LogLevel } from '@credo-ts/core'` and using it: `LogLevel.info`.
 the options for LOG_LEVEL are:
 | :------: |
