@@ -81,8 +81,8 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 |POSTGRES_PORT|N|"postgres"|If type of storage is set to "postgres" a port for the database needs to be provided|
 |POSTGRES_USERNAME|N|"postgres"|If type of storage is set to "postgres" a username for the database needs to be provided|
 |POSTGRES_PASSWORD|N|"postgres"|If type of storage is set to "postgres" a password for the database needs to be provided|
-|VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS|N|5000|Timeout in ms for proof|
-|VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS|N|5000| Timeout in ms for request|
+|VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS|N|5000|Timeout in ms on proof requests|
+|VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS|N|5000| Timeout in ms for DRCP requests|
 |VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS|Y|```{
     "protocolVersion": "v2",
     "proofFormats": {
@@ -253,7 +253,7 @@ Verified DRPC request and responses are exposed through the `/verified-drpc/` RE
 
 ### Config
 
-The RPC client can be configured through CLI and JSON file config settings, and follows the following format:
+The RPC client can be configured through Envs, and follows the following format:
 
 ```
 {
@@ -261,7 +261,7 @@ The RPC client can be configured through CLI and JSON file config settings, and 
   "verifiedDrpcOptions": {
     "proofTimeoutMs": <int> (timeout on proof requests, default: 5000),
     "requestTimeoutMs": <int> (timeout on DRPC requests, default: 5000),
-    "credDefId": <string>, (credential definition ID to add to restrictions, can be easily set through "verified-drpc-options.cred-def-id" CLI param)
+    "credDefId": <string>, (credential definition ID to add to restrictions, can be easily set through "VERIFIED_DRPC_OPTIONS_CRED_DEF_ID" env)
     "proofRequestOptions": (proof options) <CreateProofRequestOptions<ProofProtocol[]>>
     }
   },
@@ -269,7 +269,7 @@ The RPC client can be configured through CLI and JSON file config settings, and 
 }
 ```
 
-Note that the proof options must be set through config due to the fact that a DRPC request handler is configured during initialisation.
+Note that the proof options must be set through envs due to the fact that a DRPC request handler is configured during initialisation.
 
 ## Schema Definition
 
