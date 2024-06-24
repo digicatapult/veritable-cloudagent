@@ -43,21 +43,21 @@ The project aims to enable supply chains to share insights and data across multi
 
 The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
 
-Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section) or via cli (see [Via Cli](#via-cli)).
+Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section).
 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
 > In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by ruuning -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
 
-### Rest Client Args
+### Rest Client Envs
 
-The CLI args are defined under `src > cli.ts ` They are used to start up a service.
+The Envs are defined under `src > env.ts ` They are used to start up a container.
 | Argument added | Required | Default | Description |
 | :------------- | :------: | :------ | :------- |
-| ipfs-origin | Y | http://localhost:5001 | IPFS endpoint |
-|opa-origin |N |http://localhost:8181 |OPA endpoint |
-|persona-title | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
-|persona-color |N |"white" |Defines the background colour of swagger documentation|
+| IPFS_ORIGIN | Y | http://localhost:5001 | IPFS endpoint |
+|OPA_ORIGIN |N |http://localhost:8181 |OPA endpoint |
+|PERSONA_TITLE | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
+|PERSONA_COLOR |N |"white" |Defines the background colour of swagger documentation|
 
 ### Using Docker (easiest)
 
@@ -103,65 +103,20 @@ This private testnet has the following ports available to the user for testing:
 
 Network name: `testnet`
 
-### Via CLI
-
-<a id="via-cli"></a>
-
-To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.
-
-Once you have installed IPFS, you can start the REST server using the following command:
-
-```sh
-npx -p @credo-ts/rest afj-rest start \
-  --label "AFJ Rest" \
-  --ipfs-origin http://localhost:5001 \
-  --opa-origin http://localhost:8181 \
-  --wallet-id "walletId" \
-  --wallet-key "walletKey" \
-  --endpoint http://localhost:5002 \
-  --admin-port 3000 \
-  --outbound-transport http \
-  --inbound-transport http 5002
-```
-
-If you want to allow cli to communicate with ipfs use the '--ipfs-origin' argument. There is a --help command for more info.
-
 **Configuration**
-
-To find out all available configuration options from the CLI, you can run the CLI command with `--help`. This will print a full list of all available options.
-
-```sh
-# With docker
-docker run ghcr.io/hyperledger/afj-rest --help
-
-# Directly on computer
-npx -p @credo-ts/rest afj-rest start --help
-```
-
-It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/openwallet-foundation/credo-ts-ext/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
-
-```json
-{
-  "label": "AFJ Rest Agent",
-  "walletId": "walletId",
-  "walletKey": "walletKey"
-  // ... other config options ... //
-}
-```
-
-As a final option it is possible to configure the agent using environment variables. All properties are prefixed by `AFJ_REST` transformed to UPPER_SNAKE_CASE.
+It is possible to configure the agent using environment variables. All properties are named in UPPER_SNAKE_CASE.
 
 ```sh
 # With docker
-docker run -e AFJ_REST_WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
+docker run -e WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
 
 # Directly on computer
-AFJ_REST_WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
+WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
 ```
 
 ### Starting Own Server
 
-Starting your own server is more involved than using the CLI, but allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
+Starting your own server allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
 
 You can create an agent instance and import the `startServer` method from the `rest` package. That's all you have to do.
 
@@ -202,7 +157,7 @@ The currently supported events are:
 - `DRPC`
 - `Verified DRPC`
 
-When using the CLI, one or more webhook urls can be specified using the `--webhook-url` config option.
+Webhook urls can be specified using the `WEBHOOK_URL` env.
 
 When using the REST server as an library, the WebSocket server and webhook urls can be configured in the `startServer` and `setupServer` methods.
 
