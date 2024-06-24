@@ -83,20 +83,7 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 |POSTGRES_PASSWORD|N|"postgres"|If type of storage is set to "postgres" a password for the database needs to be provided|
 |VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS|N|5000|Timeout in ms on proof requests|
 |VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS|N|5000| Timeout in ms for DRCP requests|
-|VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS|Y|```{
-    "protocolVersion": "v2",
-    "proofFormats": {
-      "anoncreds": {
-        "name": "drpc-proof-request",
-        "version": "1.0",
-        "requested_attributes": {
-          "companiesHouseNumberExists": {
-            "name": "companiesHouseNumber"
-          }
-        }
-      }
-    }
-  }```|Options for proof request|
+|VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS|Y|`{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` |Options for proof request|
 |VERIFIED_DRPC_OPTIONS_CRED_DEF_ID|N|"some-cred-def-id"|Credential definition id for verified DRPC|
 
 #### Logging
