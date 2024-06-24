@@ -1,5 +1,5 @@
 import { Agent } from '@credo-ts/core'
-import { Body, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
+import { Body, Example, Get, Path, Post, Route, Tags, Response, Query } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import type { RestAgent } from '../../../utils/agent.js'
@@ -15,6 +15,35 @@ export class SchemaController {
 
   public constructor(agent: Agent) {
     this.agent = agent
+  }
+
+  /**
+   * Retrieve schema
+   *
+   * @returns AnonCredsSchemaResponse[]
+   */
+  @Example<AnonCredsSchemaResponse[]>([SchemaExample])
+  @Get('/')
+  @Response<BadRequest['message']>(400)
+  @Response<HttpResponse>(500)
+  public async getCredentials(
+    @Query('createdLocally') createdLocally: boolean,
+    @Query('issuerId') issuerId?: string
+  ): Promise<AnonCredsSchemaResponse[]> {
+    if (!createdLocally) {
+      throw new BadRequest('Can only list schema created locally')
+    }
+
+    const schemaResult = await this.agent.modules.anoncreds.getCreatedSchemas({
+      issuerId,
+    })
+
+    return schemaResult.map((schema) => {
+      return {
+        id: schema.schemaId,
+        ...schema.schema,
+      }
+    })
   }
 
   /**

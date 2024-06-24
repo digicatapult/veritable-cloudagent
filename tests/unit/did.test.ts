@@ -1,4 +1,4 @@
-import type { Agent, DidCreateResult } from '@credo-ts/core'
+import type { Agent, DidCreateResult, DidRecord } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import { describe, before, after, afterEach, test } from 'mocha'
@@ -29,6 +29,24 @@ describe('DidController', () => {
 
   afterEach(() => {
     sinonRestore()
+  })
+
+  describe('list dids', () => {
+    test('should return local dids when createdLocally = true', async () => {
+      const did = 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL'
+      const getDidsStub = stub(aliceAgent.dids, 'getCreatedDids')
+      getDidsStub.resolves([{ did } as DidRecord])
+      const response = await request(app).get(`/v1/dids?createdLocally=true`)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body.length).to.equal(1)
+      expect(response.body[0].didDocument).to.deep.equal(testDidDocument)
+    })
+
+    test('should give 400 when createdLocally = false', async () => {
+      const response = await request(app).get(`/v1/dids?createdLocally=false`)
+      expect(response.statusCode).to.be.equal(500)
+    })
   })
 
   describe('Get did resolution result by did', () => {

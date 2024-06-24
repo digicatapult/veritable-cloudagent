@@ -1,5 +1,5 @@
 import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response, Query } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
@@ -15,6 +15,30 @@ export class DidController extends Controller {
   public constructor(agent: Agent) {
     super()
     this.agent = agent
+  }
+
+  /**
+   * Retrieve schema
+   *
+   * @returns DidResolutionResultProps[]
+   */
+  @Example<DidResolutionResultProps[]>([DidRecordExample])
+  @Get('/')
+  @Response<BadRequest['message']>(400)
+  @Response<HttpResponse>(500)
+  public async getCredentials(
+    @Query('createdLocally') createdLocally: boolean,
+    @Query('method') method?: string
+  ): Promise<DidResolutionResultProps[]> {
+    if (!createdLocally) {
+      throw new BadRequest('Can only list DIDs created locally')
+    }
+
+    const didResult = await this.agent.dids.getCreatedDids({
+      method,
+    })
+
+    return await Promise.all(didResult.map(({ did }) => this.agent.dids.resolve(did)))
   }
 
   /**

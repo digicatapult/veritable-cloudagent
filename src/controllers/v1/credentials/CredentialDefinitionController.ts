@@ -1,5 +1,5 @@
 import { Agent } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response, Query } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import type { RestAgent } from '../../../utils/agent.js'
@@ -16,6 +16,37 @@ export class CredentialDefinitionController extends Controller {
   public constructor(agent: Agent) {
     super()
     this.agent = agent
+  }
+
+  /**
+   * Retrieve credential definitions
+   *
+   * @returns AnonCredsCredentialDefinitionResponse[]
+   */
+  @Example<AnonCredsCredentialDefinitionResponse[]>([CredentialDefinitionExample])
+  @Get('/')
+  @Response<BadRequest['message']>(400)
+  @Response<HttpResponse>(500)
+  public async getCredentials(
+    @Query('createdLocally') createdLocally: boolean,
+    @Query('issuerId') issuerId?: string,
+    @Query('schemaId') schemaId?: string
+  ): Promise<AnonCredsCredentialDefinitionResponse[]> {
+    if (!createdLocally) {
+      throw new BadRequest('Can only list credential definitions created locally')
+    }
+
+    const credentialDefinitionResult = await this.agent.modules.anoncreds.getCreatedCredentialDefinitions({
+      issuerId,
+      schemaId,
+    })
+
+    return credentialDefinitionResult.map((cd) => {
+      return {
+        id: cd.id,
+        ...cd.credentialDefinition,
+      }
+    })
   }
 
   /**
