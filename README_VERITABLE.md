@@ -54,7 +54,7 @@ Bellow you will find commands for starting up the containers in docker (see the 
 The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 | Argument added | Required | Default | Description |
 | :------------- | :------: | :------ | :------- |
-| LABEL| Y|"AFJ Rest"|Label for the agent|
+|LABEL| Y|"AFJ Rest"|A label that is used to identify the owner of the wallet|
 |WALLET_ID| Y| "walletId"| An id of the Agent's wallet|
 |WALLET_KEY| Y|"walletKey"| A key for the Agent's wallet|
 |ENDPOINT|Y|['http://localhost:5002', 'ws://localhost:5003']| An array of endpoint for the agent app, if passing as an `environment` variable in docker, please pass as a comma delimited string|
