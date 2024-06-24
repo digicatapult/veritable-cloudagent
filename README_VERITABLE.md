@@ -57,7 +57,7 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | LABEL| Y|"AFJ Rest"|Label for the agent|
 |WALLET_ID| Y| "walletId"| An id of the Agent's wallet|
 |WALLET_KEY| Y|"walletKey"| A key for the Agent's wallet|
-|ENDPOINT|Y|['http://localhost:5002', 'ws://localhost:5003']| An array of endpoint for the agent app|
+|ENDPOINT|Y|['http://localhost:5002', 'ws://localhost:5003']| An array of endpoint for the agent app, if passing as an `environment` variable in docker, please pass as a comma delimited string|
 |LOG_LEVEL|Y| info| Log level for the app |
 |USE_DID_SOV_PREFIX_WHERE_ALLOWED|N|false|Allows the usage of 'sov' prefix in DIDs where possible|
 |USE_DID_KEY_IN_PROTOCOLS|N|true| Allows the use of DID keys in protocols|
