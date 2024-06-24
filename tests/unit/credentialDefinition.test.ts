@@ -72,15 +72,8 @@ describe('CredentialDefinitionController', () => {
           credentialDefinition: testCredDef,
         } as AnonCredsCredentialDefinitionRecord,
       ])
-      const getResult = () => [
-        {
-          id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
-          ...testCredDef,
-        },
-      ]
 
       const response = await request(app).get(`/v1/credential-definitions?createdLocally=false`)
-      const result = await getResult()
 
       expect(response.statusCode).to.be.equal(400)
     })

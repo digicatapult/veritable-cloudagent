@@ -45,7 +45,7 @@ describe('DidController', () => {
 
     test('should give 400 when createdLocally = false', async () => {
       const response = await request(app).get(`/v1/dids?createdLocally=false`)
-      expect(response.statusCode).to.be.equal(500)
+      expect(response.statusCode).to.be.equal(400)
     })
   })
 
