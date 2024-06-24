@@ -99,6 +99,18 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
   }`|Options for proof request|
 |VERIFIED_DRPC_OPTIONS_CRED_DEF_ID|N|"some-cred-def-id"|Credential definition id for verified DRPC|
 
+The LOG_LEVEL options can be changed by importing the LogLevel eenum from credo-ts: `import { LogLevel } from '@credo-ts/core'` and using it: `LogLevel.info`.
+the options for LOG_LEVEL are:
+| :------: |
+|test = 0|
+|trace = 1|
+|debug = 2|
+|info = 3|
+|warn = 4|
+|error = 5|
+|fatal = 6|
+|off = 7|
+
 ### Using Docker (easiest)
 
 [Docker](https://docs.docker.com/get-docker/) is the easiest way to get started with the REST API.
