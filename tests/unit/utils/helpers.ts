@@ -205,6 +205,63 @@ export function getTestCredential() {
   return JsonTransformer.fromJSON(json, CredentialExchangeRecord)
 }
 
+export function getCredentialFormatData() {
+  return {
+    proposalAttributes: [
+      {
+        'mime-type': 'text/plain',
+        name: 'attr1',
+        value: 'value',
+      },
+    ],
+    offerAttributes: [
+      {
+        'mime-type': 'text/plain',
+        name: 'attr1',
+        value: 'value',
+      },
+    ],
+    proposal: {
+      anoncreds: {
+        schema_id: '351936',
+        cred_def_id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+      },
+    },
+    offer: {
+      anoncreds: {
+        schema_id: '351936',
+        cred_def_id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+        key_correctness_proof: {},
+        nonce: '333868740182662939520186',
+      },
+    },
+    request: {
+      anoncreds: {
+        cred_def_id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+        blinded_ms: {},
+        blinded_ms_correctness_proof: {},
+        nonce: '86778542088265913483731',
+      },
+    },
+    credential: {
+      anoncreds: {
+        schema_id: '351936',
+        cred_def_id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+        values: {
+          val: {
+            raw: 'value',
+            encoded: '19970150736239713706088444570146546354146685096673408908105596072151101138862',
+          },
+        },
+        signature: {
+          p_credential: {},
+        },
+        signature_correctness_proof: {},
+      },
+    },
+  }
+}
+
 export function getTestOffer() {
   const json = {
     message: {

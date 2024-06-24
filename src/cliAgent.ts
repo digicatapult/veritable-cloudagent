@@ -1,4 +1,5 @@
-import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
+import type { Socket } from 'node:net'
+import { readFile } from 'fs/promises'
 
 import {
   type InitConfig,
@@ -11,8 +12,9 @@ import {
   AutoAcceptProof,
 } from '@credo-ts/core'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
-import { readFile } from 'fs/promises'
+import WebSocket from 'ws'
 
+import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
 import PinoLogger from './utils/logger.js'
@@ -130,15 +132,23 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
 
+  const socketServer = new WebSocket.Server({ noServer: true })
   const app = await setupServer(agent, {
     webhookUrl,
     port: adminPort,
     personaTitle,
     personaColor,
     opaOrigin,
+    socketServer,
   })
 
-  app.listen(adminPort, () => {
+  const server = app.listen(adminPort, () => {
     logger.info(`Successfully started server on port ${adminPort}`)
+  })
+  server.on('upgrade', (request, socket, head) => {
+    socketServer.handleUpgrade(request, socket as Socket, head, () => {
+      // incoming messages aren't expected so ignore
+      return
+    })
   })
 }

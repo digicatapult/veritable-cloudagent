@@ -147,7 +147,7 @@ export class ProofController extends Controller {
    * @returns ProofRequestMessageResponse
    */
   @Post('/create-request')
-  @Example<{ message: object; proofRecord: ProofExchangeRecordProps }>({
+  @Example<{ message: Record<string, unknown>; proofRecord: ProofExchangeRecordProps }>({
     message: {},
     proofRecord: ProofRecordExample,
   })

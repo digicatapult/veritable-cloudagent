@@ -7,6 +7,7 @@ import { transformProofFormat } from '../../../utils/proofs.js'
 import type { CreateProofRequestOptions } from '../../types.js'
 import { type RecordId } from '../../examples.js'
 import { NotFound, GatewayTimeout } from '../../../error.js'
+import { RestAgent } from '../../../utils/agent.js'
 
 interface VerifiedDrpcRequestOptions {
   drpcRequest: VerifiedDrpcRequest
@@ -17,7 +18,7 @@ interface VerifiedDrpcRequestOptions {
 @Route('/v1/verified-drpc')
 @injectable()
 export class VerifiedDrpcController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()
@@ -58,7 +59,7 @@ export class VerifiedDrpcController extends Controller {
       requestOptions.drpcRequest,
       proofOptions
     )
-    const responsePromise = responseListener(timeout).then((response: VerifiedDrpcResponse) => {
+    const responsePromise = responseListener(timeout).then((response?: VerifiedDrpcResponse) => {
       if (response === undefined) {
         throw new GatewayTimeout('Response from peer timed out')
       }

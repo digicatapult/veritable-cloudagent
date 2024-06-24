@@ -7,7 +7,7 @@ export interface VerifiedDrpcRequestObject {
   jsonrpc: string
   method: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: any[] | object
+  params?: any[] | Record<string, unknown>
   id: string | number | null
 }
 

@@ -61,7 +61,7 @@ export class VerifiedDrpcApi {
     request: VerifiedDrpcRequest,
     proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
     proofTimeoutMs: number = this.config.proofTimeoutMs
-  ): Promise<() => Promise<VerifiedDrpcResponse | undefined>> {
+  ): Promise<(timeout?: number) => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionsApi.getById(connectionId)
     const { requestMessage: verifiedDrpcMessage, record: verifiedDrpcMessageRecord } =
       await this.verifiedDrpcMessageService.createRequestMessage(this.agentContext, request, connection.id)
