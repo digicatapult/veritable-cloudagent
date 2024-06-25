@@ -41,7 +41,7 @@ describe('CredentialDefinitionController', () => {
       const spy = stub(agent.modules.anoncreds, 'getCreatedCredentialDefinitions')
       spy.resolves([
         {
-          id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+          credentialDefinitionId: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
           credentialDefinition: testCredDef,
         } as AnonCredsCredentialDefinitionRecord,
       ])

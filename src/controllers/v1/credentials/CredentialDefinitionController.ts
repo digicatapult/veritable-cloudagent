@@ -43,7 +43,7 @@ export class CredentialDefinitionController extends Controller {
 
     return credentialDefinitionResult.map((cd) => {
       return {
-        id: cd.id,
+        id: cd.credentialDefinitionId,
         ...cd.credentialDefinition,
       }
     })
