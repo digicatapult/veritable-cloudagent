@@ -43,21 +43,62 @@ The project aims to enable supply chains to share insights and data across multi
 
 The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
 
-Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section) or via cli (see [Via Cli](#via-cli)).
+Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section).
 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
 > In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by ruuning -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
 
-### Rest Client Args
+### Rest Client Envs
 
-The CLI args are defined under `src > cli.ts ` They are used to start up a service.
+The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 | Argument added | Required | Default | Description |
 | :------------- | :------: | :------ | :------- |
-| ipfs-origin | Y | http://localhost:5001 | IPFS endpoint |
-|opa-origin |N |http://localhost:8181 |OPA endpoint |
-|persona-title | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
-|persona-color |N |"white" |Defines the background colour of swagger documentation|
+|LABEL| Y|"AFJ Rest"|A label that is used to identify the owner of the wallet|
+|WALLET_ID| Y| "walletId"| An id of the Agent's wallet|
+|WALLET_KEY| Y|"walletKey"| A key for the Agent's wallet|
+|ENDPOINT|Y|['http://localhost:5002', 'ws://localhost:5003']| An array of endpoint for the agent app, if passing as an `environment` variable in docker, please pass as a comma delimited string|
+|LOG_LEVEL|Y| info| Log level for the app |
+|USE_DID_SOV_PREFIX_WHERE_ALLOWED|N|false|Allows the usage of 'sov' prefix in DIDs where possible|
+|USE_DID_KEY_IN_PROTOCOLS|N|true| Allows the use of DID keys in protocols|
+|OUTBOUND_TRANSPORT|Y|['http', 'ws']|Specifies the type of outbound transport|
+|INBOUND_TRANSPORT|Y|"[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]"|Specifies the inbound transport, needs to be provided as a JSON parseable string|
+|AUTO_ACCEPT_CONNECTIONS|N|false| Allows for connection requests to be automatically acceptedupon being received|
+|AUTO_ACCEPT_CREDENTIALS|N|"never"|Allows for credentials to be automatically accepted upon being received|
+|AUTO_ACCEPT_MEDIATION_REQUESTS|N|false|Allows for mediatioons requests to be automatically accepted|
+|AUTO_ACCEPT_PROOFS|N|"never"|Allows for proofs to be automatically accepted upon being received|
+|AUTO_UPDATE_STORAGE_ON_STARTUP|N|true| Updates storage on startup|
+|BACKUP_BEFORE_STORAGE_UPDATE|N|false|Creates a backup before the storage update|
+|CONNECTION_IMAGE_URL| N| "https://image.com/image.png"|Url for connection image|
+|WEBHOOK_URL|Y|['https://my-webhook-server']| An array of webhook urls|
+|ADMIN_PORT|Y|3000| The port for the app|
+|IPFS_ORIGIN| Y|"http://ipfs0:5001"|The IPFS url endpoint |
+|PERSONA_TITLE | N |"Veritable Cloudagent"|Tab name which you can see in your browser |
+|PERSONA_COLOR |N |"white" |Defines the background colour of swagger documentation |
+|OPA_ORIGIN |N |http://localhost:8181 |OPA endpoint |
+|STORAGE_TYPE|Y|"postgres"| The type of storage to be used by the app|
+|POSTGRES_HOST|N|"postgres"|If type of storage is set to "postgres" a host for the database needs to be provided|
+|POSTGRES_PORT|N|"postgres"|If type of storage is set to "postgres" a port for the database needs to be provided|
+|POSTGRES_USERNAME|N|"postgres"|If type of storage is set to "postgres" a username for the database needs to be provided|
+|POSTGRES_PASSWORD|N|"postgres"|If type of storage is set to "postgres" a password for the database needs to be provided|
+|VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS|N|5000|Timeout in ms on proof requests|
+|VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS|N|5000| Timeout in ms for DRCP requests|
+|VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS|Y|`{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` |Options for proof request|
+|VERIFIED_DRPC_OPTIONS_CRED_DEF_ID|N|"some-cred-def-id"|Credential definition id for verified DRPC|
+
+#### Logging
+
+The LOG_LEVEL options can be changed by importing the LogLevel eenum from credo-ts: `import { LogLevel } from '@credo-ts/core'` and using it: `LogLevel.info`.
+the options for LOG_LEVEL are:
+| :------: |
+|test = 0|
+|trace = 1|
+|debug = 2|
+|info = 3|
+|warn = 4|
+|error = 5|
+|fatal = 6|
+|off = 7|
 
 ### Using Docker (easiest)
 
@@ -103,65 +144,20 @@ This private testnet has the following ports available to the user for testing:
 
 Network name: `testnet`
 
-### Via CLI
-
-<a id="via-cli"></a>
-
-To run AFJ REST API directly on your computer you need to have the ipfs client installed. Follow the IPFS [installation steps](https://docs.ipfs.tech/install/command-line/#system-requirements) for your platform and verify IPFS is installed.
-
-Once you have installed IPFS, you can start the REST server using the following command:
-
-```sh
-npx -p @credo-ts/rest afj-rest start \
-  --label "AFJ Rest" \
-  --ipfs-origin http://localhost:5001 \
-  --opa-origin http://localhost:8181 \
-  --wallet-id "walletId" \
-  --wallet-key "walletKey" \
-  --endpoint http://localhost:5002 \
-  --admin-port 3000 \
-  --outbound-transport http \
-  --inbound-transport http 5002
-```
-
-If you want to allow cli to communicate with ipfs use the '--ipfs-origin' argument. There is a --help command for more info.
-
 **Configuration**
-
-To find out all available configuration options from the CLI, you can run the CLI command with `--help`. This will print a full list of all available options.
-
-```sh
-# With docker
-docker run ghcr.io/hyperledger/afj-rest --help
-
-# Directly on computer
-npx -p @credo-ts/rest afj-rest start --help
-```
-
-It is also possible to configure the REST API using a json config. When providing a lot of configuration options, this is definitely the easiest way to use configure the agent. All properties should use camelCase for the key names. See the example [CLI Config](https://github.com/openwallet-foundation/credo-ts-ext/tree/main/packages/rest/samples/cliConfig.json) for an detailed example.
-
-```json
-{
-  "label": "AFJ Rest Agent",
-  "walletId": "walletId",
-  "walletKey": "walletKey"
-  // ... other config options ... //
-}
-```
-
-As a final option it is possible to configure the agent using environment variables. All properties are prefixed by `AFJ_REST` transformed to UPPER_SNAKE_CASE.
+It is possible to configure the agent using environment variables. All properties are named in UPPER_SNAKE_CASE.
 
 ```sh
 # With docker
-docker run -e AFJ_REST_WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
+docker run -e WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
 
 # Directly on computer
-AFJ_REST_WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
+WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
 ```
 
 ### Starting Own Server
 
-Starting your own server is more involved than using the CLI, but allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
+Starting your own server allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
 
 You can create an agent instance and import the `startServer` method from the `rest` package. That's all you have to do.
 
@@ -202,7 +198,7 @@ The currently supported events are:
 - `DRPC`
 - `Verified DRPC`
 
-When using the CLI, one or more webhook urls can be specified using the `--webhook-url` config option.
+Webhook urls can be specified using the `WEBHOOK_URL` env.
 
 When using the REST server as an library, the WebSocket server and webhook urls can be configured in the `startServer` and `setupServer` methods.
 
@@ -244,7 +240,7 @@ Verified DRPC request and responses are exposed through the `/verified-drpc/` RE
 
 ### Config
 
-The RPC client can be configured through CLI and JSON file config settings, and follows the following format:
+The RPC client can be configured through Envs, and follows the following format:
 
 ```
 {
@@ -252,7 +248,7 @@ The RPC client can be configured through CLI and JSON file config settings, and 
   "verifiedDrpcOptions": {
     "proofTimeoutMs": <int> (timeout on proof requests, default: 5000),
     "requestTimeoutMs": <int> (timeout on DRPC requests, default: 5000),
-    "credDefId": <string>, (credential definition ID to add to restrictions, can be easily set through "verified-drpc-options.cred-def-id" CLI param)
+    "credDefId": <string>, (credential definition ID to add to restrictions, can be easily set through "VERIFIED_DRPC_OPTIONS_CRED_DEF_ID" env)
     "proofRequestOptions": (proof options) <CreateProofRequestOptions<ProofProtocol[]>>
     }
   },
@@ -260,7 +256,7 @@ The RPC client can be configured through CLI and JSON file config settings, and 
 }
 ```
 
-Note that the proof options must be set through config due to the fact that a DRPC request handler is configured during initialisation.
+Note that the proof options must be set through envs due to the fact that a DRPC request handler is configured during initialisation.
 
 ## Schema Definition
 
