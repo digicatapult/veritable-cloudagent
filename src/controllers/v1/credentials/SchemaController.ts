@@ -28,7 +28,9 @@ export class SchemaController {
   @Response<HttpResponse>(500)
   public async getCredentials(
     @Query('createdLocally') createdLocally: boolean,
-    @Query('issuerId') issuerId?: string
+    @Query('issuerId') issuerId?: string,
+    @Query('schemaName') schemaName?: string,
+    @Query('schemaVersion') schemaVersion?: string
   ): Promise<AnonCredsSchemaResponse[]> {
     if (!createdLocally) {
       throw new BadRequest('Can only list schema created locally')
@@ -36,6 +38,8 @@ export class SchemaController {
 
     const schemaResult = await this.agent.modules.anoncreds.getCreatedSchemas({
       issuerId,
+      schemaName,
+      schemaVersion,
     })
 
     return schemaResult.map((schema) => {
