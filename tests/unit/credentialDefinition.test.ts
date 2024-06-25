@@ -1,5 +1,9 @@
 import type { RestAgent } from '../../src/utils/agent.js'
-import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
+import type {
+  AnonCredsCredentialDefinition,
+  AnonCredsCredentialDefinitionRecord,
+  AnonCredsSchema,
+} from '@credo-ts/anoncreds'
 import type { Express } from 'express'
 
 import { describe, before, after, afterEach, test } from 'mocha'
@@ -30,6 +34,49 @@ describe('CredentialDefinitionController', () => {
 
   afterEach(() => {
     sinonRestore()
+  })
+
+  describe('list credential definitions', () => {
+    test('should return list of credential definitions with createdLocally = true', async () => {
+      const spy = stub(agent.modules.anoncreds, 'getCreatedCredentialDefinitions')
+      spy.resolves([
+        {
+          credentialDefinitionId: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+          credentialDefinition: testCredDef,
+        } as AnonCredsCredentialDefinitionRecord,
+      ])
+      const getResult = () => [
+        {
+          id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+          ...testCredDef,
+        },
+      ]
+
+      const response = await request(app).get(`/v1/credential-definitions?createdLocally=true`)
+      const result = await getResult()
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body.length).to.deep.equal(result.length)
+      const body = response.body[0]
+      expect(body.id).to.deep.equal(result[0].id)
+      expect(body.schemaId).to.deep.equal(result[0].schemaId)
+      expect(body.tag).to.deep.equal(result[0].tag)
+      expect(body.type).to.deep.equal(result[0].type)
+    })
+
+    test('should error 400 createdLocally = false', async () => {
+      const spy = stub(agent.modules.anoncreds, 'getCreatedCredentialDefinitions')
+      spy.resolves([
+        {
+          id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
+          credentialDefinition: testCredDef,
+        } as AnonCredsCredentialDefinitionRecord,
+      ])
+
+      const response = await request(app).get(`/v1/credential-definitions?createdLocally=false`)
+
+      expect(response.statusCode).to.be.equal(400)
+    })
   })
 
   describe('get credential definition by id', () => {

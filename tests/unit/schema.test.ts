@@ -1,5 +1,5 @@
 import type { RestAgent } from '../../src/utils/agent.js'
-import type { AnonCredsSchema } from '@credo-ts/anoncreds'
+import type { AnonCredsSchema, AnonCredsSchemaRecord } from '@credo-ts/anoncreds'
 import type { Express } from 'express'
 
 import { describe, before, after, afterEach, test } from 'mocha'
@@ -27,6 +27,45 @@ describe('SchemaController', () => {
 
   afterEach(() => {
     sinonRestore()
+  })
+
+  describe('list schema', () => {
+    test('should return schema with createdLocally = true', async () => {
+      const getSchemaStub = stub(agent.modules.anoncreds, 'getCreatedSchemas')
+      getSchemaStub.resolves([
+        {
+          schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+          schema: testSchema,
+        } as AnonCredsSchemaRecord,
+      ])
+
+      const getResult = () => [
+        {
+          id: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+          ...testSchema,
+        },
+      ]
+
+      const response = await request(app).get(`/v1/schemas?createdLocally=true`)
+      const result = await getResult()
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(result)
+    })
+
+    test('should error 400 createdLocally = false', async () => {
+      const getSchemaStub = stub(agent.modules.anoncreds, 'getCreatedSchemas')
+      getSchemaStub.resolves([
+        {
+          schemaId: 'WgWxqztrNooG92RXvxSTWv:2:test:1.0',
+          schema: testSchema,
+        } as AnonCredsSchemaRecord,
+      ])
+
+      const response = await request(app).get(`/v1/schemas?createdLocally=false`)
+
+      expect(response.statusCode).to.be.equal(400)
+    })
   })
 
   describe('get schema by id', () => {
