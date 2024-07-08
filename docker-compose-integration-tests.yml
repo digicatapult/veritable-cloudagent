@@ -43,7 +43,7 @@ services:
       - CHARLIE_BASE_URL=http://charlie:3000
       - CHARLIE_DID
       - CHARLIE_PRIV_KEY
-      - LOG_LEVEL=1
+      - LOG_LEVEL=debug
     command: ['npm', 'run', 'test:integration']
     networks:
       - testnet

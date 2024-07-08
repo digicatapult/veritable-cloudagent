@@ -12,7 +12,6 @@ import {
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
-  LogLevel,
   ConnectionsModule,
   CredentialsModule,
   HttpOutboundTransport,
@@ -29,7 +28,7 @@ import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
 import VeritableAnonCredsRegistry from '../anoncreds/index.js'
 import Ipfs from '../ipfs/index.js'
-import PinoLogger from './logger.js'
+import PinoLogger, { type LogLevel } from './logger.js'
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
@@ -122,8 +121,18 @@ export const getAgentModules = (options: {
   }
 }
 
-export const setupAgent = async ({ name, endpoints, port }: { name: string; endpoints: string[]; port: number }) => {
-  const logger = new PinoLogger(LogLevel.debug)
+export const setupAgent = async ({
+  name,
+  endpoints,
+  port,
+  logLevel,
+}: {
+  name: string
+  endpoints: string[]
+  port: number
+  logLevel: LogLevel
+}) => {
+  const logger = new PinoLogger(logLevel)
 
   const modules = getAgentModules({
     autoAcceptConnections: true,

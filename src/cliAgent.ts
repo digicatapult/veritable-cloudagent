@@ -6,13 +6,13 @@ import {
   type WalletConfig,
   HttpOutboundTransport,
   WsOutboundTransport,
-  LogLevel,
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
 } from '@credo-ts/core'
 import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
 import WebSocket from 'ws'
+import { LevelWithSilent } from 'pino'
 
 import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
 import { setupServer } from './server.js'
@@ -47,7 +47,7 @@ export interface AriesRestConfig {
   backupBeforeStorageUpdate?: boolean
   useDidKeyInProtocols?: boolean
   useDidSovPrefixWhereAllowed?: boolean
-  logLevel?: LogLevel
+  logLevel: LevelWithSilent
   inboundTransports?: InboundTransport[]
   outboundTransports?: Transports[]
   autoAcceptMediationRequests?: boolean
@@ -88,7 +88,7 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
     ...afjConfig
   } = restConfig
 
-  const logger = new PinoLogger(logLevel ?? LogLevel.error)
+  const logger = new PinoLogger(logLevel)
 
   const agentConfig: InitConfig = {
     ...afjConfig,
