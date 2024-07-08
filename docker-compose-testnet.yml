@@ -31,7 +31,7 @@ services:
       alice-postgres:
         condition: service_healthy
     environment:
-      - LOG_LEVEL=1
+      - LOG_LEVEL=debug
       #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=TA
       - PERSONA_COLOR=#eddedf
@@ -65,7 +65,7 @@ services:
       bob-postgres:
         condition: service_healthy
     environment:
-      - LOG_LEVEL=1
+      - LOG_LEVEL=debug
       #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=OEM
       - PERSONA_COLOR=#dfedde
@@ -99,7 +99,7 @@ services:
       charlie-postgres:
         condition: service_healthy
     environment:
-      - LOG_LEVEL=1
+      - LOG_LEVEL=debug
       #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=Supplier
       - PERSONA_COLOR=#dedfed

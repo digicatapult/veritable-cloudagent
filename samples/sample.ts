@@ -10,6 +10,7 @@ const run = async () => {
     port: 3001,
     endpoints: [endpoint],
     name: 'Aries Test Agent',
+    logLevel: 'debug',
   })
 
   const conf = {

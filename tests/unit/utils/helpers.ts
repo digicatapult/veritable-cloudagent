@@ -26,6 +26,7 @@ export async function getTestAgent(name: string, port: number) {
     endpoints: [`http://localhost:${port}`],
     // add some randomness to ensure test isolation
     name: `${name} (${randomUUID()})`,
+    logLevel: 'silent',
   })
 }
 

@@ -1,4 +1,3 @@
-import { LogLevel } from '@credo-ts/core'
 import * as dotenv from 'dotenv'
 import * as envalid from 'envalid'
 import { makeValidator } from 'envalid'
@@ -46,7 +45,11 @@ const envConfig = {
     default: ['http://localhost:5002', 'ws://localhost:5003'],
     devDefault: ['http://localhost:5002', 'ws://localhost:5003'],
   }),
-  LOG_LEVEL: envalid.num({ default: LogLevel.info, devDefault: LogLevel.info }),
+  LOG_LEVEL: envalid.str({
+    default: 'info',
+    devDefault: 'debug',
+    choices: ['trace', 'debug', 'info', 'warn', 'error', 'silent'],
+  }),
   USE_DID_SOV_PREFIX_WHERE_ALLOWED: envalid.bool({ default: false, devDefault: true }),
   USE_DID_KEY_IN_PROTOCOLS: envalid.bool({ default: true, devDefault: true }),
   OUTBOUND_TRANSPORT: stringArray({ default: ['http', 'ws'], devDefault: ['http', 'ws'] }),

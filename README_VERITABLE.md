@@ -58,7 +58,7 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 |WALLET_ID| Y| "walletId"| An id of the Agent's wallet|
 |WALLET_KEY| Y|"walletKey"| A key for the Agent's wallet|
 |ENDPOINT|Y|['http://localhost:5002', 'ws://localhost:5003']| An array of endpoint for the agent app, if passing as an `environment` variable in docker, please pass as a comma delimited string|
-|LOG_LEVEL|Y| info| Log level for the app |
+|LOG_LEVEL|Y| info| Log level for the app. Choices are trace, debug, info, warn, error or silent |
 |USE_DID_SOV_PREFIX_WHERE_ALLOWED|N|false|Allows the usage of 'sov' prefix in DIDs where possible|
 |USE_DID_KEY_IN_PROTOCOLS|N|true| Allows the use of DID keys in protocols|
 |OUTBOUND_TRANSPORT|Y|['http', 'ws']|Specifies the type of outbound transport|
@@ -85,20 +85,6 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 |VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS|N|5000| Timeout in ms for DRCP requests|
 |VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS|Y|`{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` |Options for proof request|
 |VERIFIED_DRPC_OPTIONS_CRED_DEF_ID|N|"some-cred-def-id"|Credential definition id for verified DRPC|
-
-#### Logging
-
-The LOG_LEVEL options can be changed by importing the LogLevel eenum from credo-ts: `import { LogLevel } from '@credo-ts/core'` and using it: `LogLevel.info`.
-the options for LOG_LEVEL are:
-| :------: |
-|test = 0|
-|trace = 1|
-|debug = 2|
-|info = 3|
-|warn = 4|
-|error = 5|
-|fatal = 6|
-|off = 7|
 
 ### Using Docker (easiest)
 

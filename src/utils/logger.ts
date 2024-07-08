@@ -1,65 +1,79 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { pino, Logger } from 'pino'
-import { LogLevel, BaseLogger } from '@credo-ts/core'
+import { pino, Logger, LevelWithSilent } from 'pino'
+import { LogLevel as CredoLogLevel, BaseLogger } from '@credo-ts/core'
+
+const tsLogLevelMap = {
+  silent: CredoLogLevel.off,
+  trace: CredoLogLevel.trace,
+  debug: CredoLogLevel.debug,
+  info: CredoLogLevel.info,
+  warn: CredoLogLevel.warn,
+  error: CredoLogLevel.error,
+  fatal: CredoLogLevel.fatal,
+} as const
+
+const invTsLogLevelMap = {
+  [CredoLogLevel.off]: 'silent' as const,
+  [CredoLogLevel.test]: 'trace' as const,
+  [CredoLogLevel.trace]: 'trace' as const,
+  [CredoLogLevel.debug]: 'debug' as const,
+  [CredoLogLevel.info]: 'info' as const,
+  [CredoLogLevel.warn]: 'warn' as const,
+  [CredoLogLevel.error]: 'error' as const,
+  [CredoLogLevel.fatal]: 'fatal' as const,
+} as const
+
+export type LogLevel = LevelWithSilent
 
 export default class PinoLogger extends BaseLogger {
   private logger: Logger
 
   // Map our log levels to tslog levels
-  private tsLogLevelMap = {
-    [LogLevel.test]: 'silent', // pino does not have 'silly' so used silent for .test() method
-    [LogLevel.trace]: 'trace',
-    [LogLevel.debug]: 'debug',
-    [LogLevel.info]: 'info',
-    [LogLevel.warn]: 'warn',
-    [LogLevel.error]: 'error',
-    [LogLevel.fatal]: 'fatal',
-  } as const
 
-  public constructor(logLevel: LogLevel) {
-    super(logLevel)
+  public constructor(logLevel: LevelWithSilent) {
+    super(tsLogLevelMap[logLevel])
 
     this.logger = pino(
       {
         name: 'veritable-cloudagent',
         timestamp: true,
-        level: 'debug',
+        level: logLevel,
       },
       process.stdout
     )
   }
 
-  private log(level: Exclude<LogLevel, LogLevel.off>, message: string, data?: Record<string, any>): void {
-    const tsLogLevel = this.tsLogLevelMap[level]
+  private log(level: Exclude<CredoLogLevel, CredoLogLevel.off>, message: string, data?: Record<string, any>): void {
+    const tsLogLevel = invTsLogLevelMap[level]
     if (data) return this.logger[tsLogLevel]('%s %o', message, data)
     this.logger[tsLogLevel](message)
   }
 
   public test(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.test, message, data)
+    this.log(CredoLogLevel.test, message, data)
   }
 
   public trace(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.trace, message, data)
+    this.log(CredoLogLevel.trace, message, data)
   }
 
   public debug(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.debug, message, data)
+    this.log(CredoLogLevel.debug, message, data)
   }
 
   public info(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.info, message, data)
+    this.log(CredoLogLevel.info, message, data)
   }
 
   public warn(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.warn, message, data)
+    this.log(CredoLogLevel.warn, message, data)
   }
 
   public error(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.error, message, data)
+    this.log(CredoLogLevel.error, message, data)
   }
 
   public fatal(message: string, data?: Record<string, any>): void {
-    this.log(LogLevel.fatal, message, data)
+    this.log(CredoLogLevel.fatal, message, data)
   }
 }
