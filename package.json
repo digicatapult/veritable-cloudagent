@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.9.24",
+  "version": "0.9.25",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -70,7 +70,7 @@
     "tsoa": "^6.3.1",
     "tsyringe": "^4.8.0",
     "undici": "^6.19.2",
-    "ws": "^8.17.1",
+    "ws": "^8.18.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
