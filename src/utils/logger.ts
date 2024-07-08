@@ -37,7 +37,7 @@ export default class PinoLogger extends BaseLogger {
       {
         name: 'veritable-cloudagent',
         timestamp: true,
-        level: 'debug',
+        level: logLevel,
       },
       process.stdout
     )
