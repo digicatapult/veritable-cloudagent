@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.9.29",
+  "version": "0.9.30",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -97,7 +97,7 @@
     "husky": "^9.0.11",
     "mocha": "^10.6.0",
     "ngrok": "^4.3.3",
-    "prettier": "^3.3.2",
+    "prettier": "^3.3.3",
     "sinon": "^18.0.0",
     "supertest": "^7.0.0",
     "tsconfig-paths": "^4.2.0",
