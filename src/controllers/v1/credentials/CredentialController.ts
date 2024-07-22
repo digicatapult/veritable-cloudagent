@@ -315,10 +315,18 @@ export class CredentialController extends Controller {
    * @returns CredentialExchangeRecord
    */
   @Example<SendCredentialProblemReportOptions>(SendCredentialProblemReportOptionsExample)
-  @Post('/send-problem-report')
+  @Post('/:credentialRecordId/send-problem-report')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async sendProblemReport(@Body() options: SendCredentialProblemReportOptions) {
+  public async sendProblemReport(
+    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Body() description: string
+  ) {
+    const options: SendCredentialProblemReportOptions = {
+      credentialRecordId: credentialRecordId,
+      description: description,
+    }
+
     try {
       const problemReport = await this.agent.credentials.sendProblemReport(options)
       return problemReport.toJSON()

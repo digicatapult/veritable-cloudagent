@@ -662,10 +662,10 @@ describe('CredentialController', () => {
     test('should send a problem report', async () => {
       const problemRecordStub = stub(bobAgent.credentials, 'sendProblemReport')
       problemRecordStub.resolves(testCredential)
+
       const getResult = (): Promise<CredentialExchangeRecord> => problemRecordStub.firstCall.returnValue
 
-      const response = await request(app).post(`/v1/credentials/send-problem-report`).send({
-        credentialRecordId: testCredential.id,
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/send-problem-report`).send({
         description: 'some Error report',
       })
       const result = await getResult()
