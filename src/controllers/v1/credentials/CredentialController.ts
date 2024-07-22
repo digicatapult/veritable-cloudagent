@@ -5,6 +5,7 @@ import {
   CredentialState,
   Agent,
   RecordNotFoundError,
+  type SendCredentialProblemReportOptions,
 } from '@credo-ts/core'
 import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
@@ -296,6 +297,37 @@ export class CredentialController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Send problem report regarding a credential
+   * to the connection associated with the credential exchange record.
+   *
+   * @param options
+   * @returns CredentialExchangeRecord
+   */
+  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Post('/:credentialRecordId/send-problem-report')
+  @Response<NotFound['message']>(404)
+  @Response<HttpResponse>(500)
+  public async sendProblemReport(
+    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Body() body: { description: string }
+  ) {
+    const options: SendCredentialProblemReportOptions = {
+      credentialRecordId: credentialRecordId,
+      description: body.description,
+    }
+
+    try {
+      const problemReport = await this.agent.credentials.sendProblemReport(options)
+      return problemReport.toJSON()
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFound(`credential with credential record id "${options.credentialRecordId}" not found.`)
       }
       throw error
     }
