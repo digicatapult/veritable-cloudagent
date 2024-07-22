@@ -658,7 +658,22 @@ describe('CredentialController', () => {
       expect(response.statusCode).to.be.equal(404)
     })
   })
+  describe.only('Send problem report about a credential', () => {
+    test('should send a problem report', async () => {
+      const problemRecordStub = stub(bobAgent.credentials, 'sendProblemReport')
+      problemRecordStub.resolves(testCredential)
+      const getResult = (): Promise<CredentialExchangeRecord> => problemRecordStub.firstCall.returnValue
 
+      const response = await request(app).post(`/v1/credentials/send-problem-report`).send({
+        credentialRecordId: testCredential.id,
+        description: 'some Error report',
+      })
+      const result = await getResult()
+
+      expect(response.body).to.deep.equal(objectToJson(result))
+      expect(response.statusCode).to.be.equal(200)
+    })
+  })
   after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
