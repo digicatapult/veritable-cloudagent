@@ -18,12 +18,7 @@ import type {
   AcceptCredentialOfferOptions,
   OfferCredentialOptions,
 } from '../../types.js'
-import {
-  type RecordId,
-  CredentialExchangeRecordExample,
-  CredentialFormatDataExample,
-  SendCredentialProblemReportOptionsExample,
-} from '../../examples.js'
+import { type RecordId, CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 import { HttpResponse, NotFound } from '../../../error.js'
 
 @Tags('Credentials')
@@ -314,7 +309,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<SendCredentialProblemReportOptions>(SendCredentialProblemReportOptionsExample)
+  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/send-problem-report')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)

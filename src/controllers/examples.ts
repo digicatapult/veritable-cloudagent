@@ -14,7 +14,6 @@ import {
   type CredentialExchangeRecordProps,
   CredentialRole,
   ProofRole,
-  SendCredentialProblemReportOptions,
 } from '@credo-ts/core'
 
 /**
@@ -224,11 +223,6 @@ export const CredentialExchangeRecordExample: CredentialExchangeRecordProps = {
   threadId: '82701488-b43c-4d7b-9244-4bb204a7ae26',
   credentialAttributes: [],
   protocolVersion: 'v1',
-}
-
-export const SendCredentialProblemReportOptionsExample: SendCredentialProblemReportOptions = {
-  credentialRecordId: '821f9b26-ad04-4f56-89b6-e2ef9c72b36e',
-  description: 'some Error report',
 }
 
 export const CredentialFormatDataExample = {
