@@ -658,7 +658,7 @@ describe('CredentialController', () => {
       expect(response.statusCode).to.be.equal(404)
     })
   })
-  describe.only('Send problem report about a credential', () => {
+  describe('Send problem report about a credential', () => {
     test('should send a problem report', async () => {
       const problemRecordStub = stub(bobAgent.credentials, 'sendProblemReport')
       problemRecordStub.resolves(testCredential)
@@ -672,6 +672,11 @@ describe('CredentialController', () => {
 
       expect(response.body).to.deep.equal(objectToJson(result))
       expect(response.statusCode).to.be.equal(200)
+      expect(problemRecordStub.calledOnce).to.be.true
+      expect(problemRecordStub.firstCall.args[0]).to.deep.equal({
+        credentialRecordId: testCredential.id,
+        description: 'some Error report',
+      })
     })
   })
   after(async () => {

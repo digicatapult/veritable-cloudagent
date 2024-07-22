@@ -320,7 +320,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async sendProblemReport(
     @Path('credentialRecordId') credentialRecordId: RecordId,
-    @Body() description: string
+    @Body() { description }: { description: string }
   ) {
     const options: SendCredentialProblemReportOptions = {
       credentialRecordId: credentialRecordId,
