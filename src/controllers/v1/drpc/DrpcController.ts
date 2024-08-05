@@ -84,8 +84,7 @@ export class DrpcController extends Controller {
 
   /**
    * Sends a response to a drpc request
-   * @param connectionId the connection id to use
-   * @param threadId the thread id to respond to
+   * @param requestId the connection id to use
    * @param response the verified drpc response object to send
    */
   @Post('/:requestId/response')
