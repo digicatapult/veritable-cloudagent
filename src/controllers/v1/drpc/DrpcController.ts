@@ -1,10 +1,8 @@
 import { Agent, utils } from '@credo-ts/core'
 import { Body, Controller, Path, Query, Post, Route, Tags, Response } from 'tsoa'
 import { injectable } from 'tsyringe'
-import type { DrpcRequest, DrpcRequestObject, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
+import type { DrpcRequestObject, DrpcResponseObject } from '@credo-ts/drpc'
 
-import { transformProofFormat } from '../../../utils/proofs.js'
-import type { CreateProofRequestOptions } from '../../types.js'
 import { type RecordId } from '../../examples.js'
 import { NotFound, GatewayTimeout, BadGatewayError, InternalError } from '../../../error.js'
 import { RestAgent } from '../../../utils/agent.js'
