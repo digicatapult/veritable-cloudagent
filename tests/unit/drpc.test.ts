@@ -12,6 +12,7 @@ import { ConnectionRecord } from '@credo-ts/core'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import { NotFound } from '../../src/error.js'
+import PinoLogger from '../../src/utils/logger.js'
 
 describe('DrpcController', () => {
   let app: Express

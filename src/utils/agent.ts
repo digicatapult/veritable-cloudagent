@@ -29,6 +29,7 @@ import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import VeritableAnonCredsRegistry from '../anoncreds/index.js'
 import Ipfs from '../ipfs/index.js'
 import PinoLogger, { type LogLevel } from './logger.js'
+import { container } from 'tsyringe'
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
@@ -135,6 +136,7 @@ export const setupAgent = async ({
   logLevel: LogLevel
 }) => {
   const logger = new PinoLogger(logLevel)
+  container.register(PinoLogger, { useValue: logger })
 
   const modules = getAgentModules({
     autoAcceptConnections: true,
