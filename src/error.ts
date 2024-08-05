@@ -33,6 +33,18 @@ export class GatewayTimeout extends HttpResponse {
   }
 }
 
+export class BadGatewayError extends HttpResponse {
+  constructor(message = 'bad gateway error') {
+    super({ code: 502, message })
+  }
+}
+
+export class InternalError extends HttpResponse {
+  constructor(message = 'internal error') {
+    super({ code: 500, message })
+  }
+}
+
 export const errorHandler =
   (logger: Logger) =>
   (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void => {

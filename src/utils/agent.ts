@@ -35,6 +35,7 @@ export interface RestAgentModules extends ModulesMap {
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncreds: AnonCredsModule
+  drpc: DrpcModule
   verifiedDrpc: VerifiedDrpcModule
 }
 
@@ -44,6 +45,7 @@ export type RestAgent<
     proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
+    drpc: DrpcModule
     verifiedDrpc: VerifiedDrpcModule
   },
 > = Agent<modules>
