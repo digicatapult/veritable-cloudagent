@@ -19,9 +19,7 @@ Thanks for all the hard work to everybody who contributed to the [project](https
 
 
 ## Setup
-The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
-
-In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by ruuning -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
+In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by runing -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
 
 #### DRPC Config
 The RPC client can be configured through Envs, and follows the following format:
@@ -54,8 +52,6 @@ The REST API provides an OpenAPI schema that can easily be viewed using the Swag
 Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section).
 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
-
-> In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by ruuning -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
 
 ## Development mode
 It is possible to configure the agent using environment variables. All properties are named in UPPER_SNAKE_CASE.
@@ -522,7 +518,7 @@ Example key-pair will look like this:
 
 #### Implicit Invitation
 
-In order to send an invite from bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
+In order to send an invite from Bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
 We need to import our did with the private key on Alice using endpoint `dids/import`:
 
 ```json
@@ -550,7 +546,7 @@ This creates a connection record for Bob and Alice - for both this record is in 
 
 To move the connection to a completed state - on Alice we take the connection id and use `connections/{connectionId}/accept-request` endpoint.
 
-As the Verifier, request proof from Bob (Holder) with Charlie - POST `http://localhost:3002/proofs/request-proof`. Use the `connectionId` to Bob and the `cred_def_id` either from the credential definition created earlier by Alice or the credential owned by Bob (the credential definition ID is consistent across all agents because it's an IPFS CID).
+As the Charlie (Verifier), request proof from Bob (Holder) with Charlie - POST `http://localhost:3002/proofs/request-proof`. Use the `connectionId` to Bob and the `cred_def_id` either from the credential definition created earlier by Alice or the credential owned by Bob (the credential definition ID is consistent across all agents because it's an IPFS CID).
 
 ```json
 {
