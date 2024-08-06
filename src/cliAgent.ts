@@ -18,7 +18,8 @@ import type { VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/in
 import { setupServer } from './server.js'
 import { getAgentModules, RestAgent } from './utils/agent.js'
 import PinoLogger from './utils/logger.js'
-import { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
+import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
+import { container } from 'tsyringe'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -89,6 +90,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   } = restConfig
 
   const logger = new PinoLogger(logLevel)
+  container.register(PinoLogger, {
+    useValue: logger,
+  })
 
   const agentConfig: InitConfig = {
     ...afjConfig,
@@ -123,6 +127,8 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
+  container.register(Agent, { useValue: agent as Agent })
+
   const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
   if (existingSecrets.length === 0) {
     await agent.modules.anoncreds.createLinkSecret({
@@ -131,6 +137,9 @@ export async function runRestAgent(restConfig: AriesRestConfig) {
   }
 
   agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
+
+  const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
+  await drpcReceiveHandler.start()
 
   const socketServer = new WebSocket.Server({ noServer: true })
   const app = await setupServer(agent, {

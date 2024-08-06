@@ -1,5 +1,5 @@
 #Build stage
-FROM node:lts as build
+FROM node:lts AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
@@ -16,7 +16,7 @@ RUN npm run build
 
 
 # Test stage
-FROM build as test
+FROM build AS test
 
 WORKDIR /app
 
@@ -26,11 +26,11 @@ ENV NODE_ENV=${NODE_ENV}
 COPY .mocharc.json .eslint* ./
 COPY tests ./tests
 
-CMD npm run test
+CMD ["npm", "run", "test"]
 
 
 # Production stage
-FROM node:lts-slim as production
+FROM node:lts-slim AS production
 # NB Debian bookworm-slim doesn't include OpenSSL
 
 # Need curl for healthcheck
