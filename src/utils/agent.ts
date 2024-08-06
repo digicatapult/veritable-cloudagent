@@ -45,7 +45,7 @@ export type RestAgent<
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
     verifiedDrpc: VerifiedDrpcModule
-  },
+  }
 > = Agent<modules>
 
 const __filename = fileURLToPath(import.meta.url)
