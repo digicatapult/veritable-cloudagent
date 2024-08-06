@@ -222,7 +222,7 @@ services:
 
   opa0:
     container_name: opa0
-    image: openpolicyagent/opa:0.67.0-static
+    image: openpolicyagent/opa:0.67.1-static
     ports:
       - '8181:8181'
     volumes:
@@ -236,7 +236,7 @@ services:
 
   opa1:
     container_name: opa1
-    image: openpolicyagent/opa:0.67.0-static
+    image: openpolicyagent/opa:0.67.1-static
     ports:
       - '8182:8181'
     volumes:
@@ -250,7 +250,7 @@ services:
 
   opa2:
     container_name: opa2
-    image: openpolicyagent/opa:0.67.0-static
+    image: openpolicyagent/opa:0.67.1-static
     ports:
       - '8183:8181'
     volumes:
