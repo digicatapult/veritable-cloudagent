@@ -12,6 +12,7 @@ The project aims to enable supply chains to share insights and data across multi
 - [WebSocket and webhooks](#webSocket-and-webhooks)
 - [Verified DRPC](#verified-drpc)
 - [Schema Definition](#schema-definition)
+- [Demoing credential issuance and verification](#demoing-credential-issuance-and-verification)
 
 ## Attribution
 Thanks for all the hard work to everybody who contributed to the [project](https://github.com/openwallet-foundation/credo-ts-ext/tree/main)
