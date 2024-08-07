@@ -464,7 +464,7 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
 In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
 
-For our did doc above we will need to generate a key-pair. This could be doe through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc below we will be using the public portion of the key.
+For our did doc above we will need to generate a key-pair. This could be done through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc below we will be using the public portion of the key.
 
 Example key-pair will look like this:
 
