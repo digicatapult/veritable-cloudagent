@@ -1,15 +1,14 @@
-import type { Agent, DidCreateResult, DidRecord } from '@credo-ts/core'
 import type { Server } from 'node:net'
 
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
+import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
-import { KeyType } from '@credo-ts/core'
+import { KeyType, type Agent, type DidCreateResult, type DidRecord } from '@credo-ts/core'
 
-import { getTestAgent, getTestDidCreate, getTestDidDocument, getTestServer, objectToJson } from './utils/helpers.js'
 import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types.js'
+import { getTestAgent, getTestDidCreate, getTestDidDocument, getTestServer, objectToJson } from './utils/helpers.js'
 
 describe('DidController', () => {
   let app: Server

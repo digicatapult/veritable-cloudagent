@@ -1,21 +1,26 @@
+import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
 } from '../../src/controllers/types.js'
-import type { Agent, ProofStateChangedEvent } from '@credo-ts/core'
-import type { AddressInfo, Server } from 'node:net'
 
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 
-import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofRole, ProofState } from '@credo-ts/core'
+import {
+  AgentMessage,
+  ProofEventTypes,
+  ProofExchangeRecord,
+  ProofRole,
+  ProofState,
+  type Agent,
+  type ProofStateChangedEvent,
+} from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
-
-import { setupServer } from '../../src/server.js'
 
 import { getTestAgent, getTestProof, getTestProofResponse, getTestServer, objectToJson } from './utils/helpers.js'
 

@@ -1,26 +1,26 @@
-import 'reflect-metadata'
-import express, { type Response as ExResponse, type Request as ExRequest } from 'express'
 import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import { serve, generateHTML } from 'swagger-ui-express'
-import { container } from 'tsyringe'
+import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
+import 'reflect-metadata'
+import { generateHTML, serve } from 'swagger-ui-express'
+import { container } from 'tsyringe'
 import { fileURLToPath } from 'url'
 
 import type { ServerConfig } from './utils/ServerConfig.js'
 
+import { RestAgent } from './agent.js'
+import { errorHandler } from './error.js'
 import { basicMessageEvents } from './events/BasicMessageEvents.js'
 import { connectionEvents } from './events/ConnectionEvents.js'
 import { credentialEvents } from './events/CredentialEvents.js'
+import { drpcEvents } from './events/DrpcEvents.js'
 import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
-import { drpcEvents } from './events/DrpcEvents.js'
 import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
 import { RegisterRoutes } from './routes/routes.js'
-import { errorHandler } from './error.js'
-import { RestAgent } from './agent.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

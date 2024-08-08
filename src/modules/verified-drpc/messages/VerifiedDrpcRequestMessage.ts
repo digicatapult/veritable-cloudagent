@@ -1,4 +1,4 @@
-import { IsValidMessageType, parseMessageType, AgentMessage } from '@credo-ts/core'
+import { AgentMessage, IsValidMessageType, parseMessageType } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
 import { IsValidVerifiedDrpcRequest } from '../models/index.js'

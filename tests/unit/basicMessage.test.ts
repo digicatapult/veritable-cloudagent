@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { spy, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, spy } from 'sinon'
 
-import type { Agent, BasicMessageRecord, ConnectionRecord } from '@credo-ts/core'
-
+import { BasicMessageEventTypes, type Agent, type BasicMessageRecord, type ConnectionRecord } from '@credo-ts/core'
 import { AddressInfo, Server } from 'node:net'
-import { BasicMessageEventTypes } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 

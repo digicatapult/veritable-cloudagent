@@ -1,10 +1,10 @@
 import { type BasicMessageRecord, type BasicMessageStorageProps, Agent, RecordNotFoundError } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { type RecordId, BasicMessageRecordExample } from '../../examples.js'
-import { HttpResponse, NotFound } from '../../../error.js'
 import { RestAgent } from '../../../agent.js'
+import { HttpResponse, NotFound } from '../../../error.js'
+import { type RecordId, BasicMessageRecordExample } from '../../examples.js'
 
 @Tags('Basic Messages')
 @Route('/v1/basic-messages')

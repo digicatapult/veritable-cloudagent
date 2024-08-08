@@ -105,18 +105,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - run: git fetch --depth=1 --tags origin
-      - name: Install yq
-        run: sudo snap install yq
-      - name: Check Build Version
+      - name: Check version
         id: get_version
-        run: ./scripts/check-version.sh
-        shell: bash
-      - name: Skipping release as version has not increased
-        if: steps.get_version.outputs.IS_NEW_VERSION != 'true'
-        shell: bash
-        run: |
-          echo "Skipping release as current version has already been published"
+        uses: digicatapult/check-version@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     name: 'Publish package'

@@ -1,19 +1,19 @@
-import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
 import {
   type AutoAcceptProof,
   type BasicMessageRole,
+  type CredentialExchangeRecordProps,
+  CredentialRole,
   type CredentialState,
   type DidExchangeRole,
   type DidExchangeState,
   type OutOfBandInvitationOptions,
   type OutOfBandRecordProps,
-  type ProofState,
   type OutOfBandRole,
   type OutOfBandState,
   type ProofExchangeRecordProps,
-  type CredentialExchangeRecordProps,
-  CredentialRole,
   ProofRole,
+  type ProofState,
 } from '@credo-ts/core'
 
 /**

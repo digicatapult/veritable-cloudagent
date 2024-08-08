@@ -2,16 +2,16 @@ import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
 import {
   type AgentContext,
-  type InboundMessageContext,
-  type Query,
-  type ProofStateChangedEvent,
   type CreateProofRequestOptions,
-  ProofProtocol,
   EventEmitter,
+  type InboundMessageContext,
   injectable,
-  ProofsApi,
   ProofEventTypes,
+  ProofProtocol,
+  ProofsApi,
   ProofState,
+  type ProofStateChangedEvent,
+  type Query,
 } from '@credo-ts/core'
 
 import {
@@ -24,26 +24,26 @@ import {
 } from '../VerifiedDrpcResponseEvents.js'
 import {
   type VerifiedDrpcRequest,
-  type VerifiedDrpcResponse,
   VerifiedDrpcRequestMessage,
+  type VerifiedDrpcResponse,
   VerifiedDrpcResponseMessage,
 } from '../messages/index.js'
 import {
-  VerifiedDrpcRole,
-  VerifiedDrpcState,
   isValidVerifiedDrpcRequest,
   isValidVerifiedDrpcResponse,
+  VerifiedDrpcRole,
+  VerifiedDrpcState,
 } from '../models/index.js'
 import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository/index.js'
 
 @injectable()
-export class VerifiedDrpcService {
-  private config: VerifiedDrpcModuleConfig
+export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
+  private config: VerifiedDrpcModuleConfig<PPs>
   private verifiedDrpcMessageRepository: VerifiedDrpcRepository
   private eventEmitter: EventEmitter
 
   public constructor(
-    verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig,
+    verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<PPs>,
     verifiedDrpcMessageRepository: VerifiedDrpcRepository,
     eventEmitter: EventEmitter
   ) {

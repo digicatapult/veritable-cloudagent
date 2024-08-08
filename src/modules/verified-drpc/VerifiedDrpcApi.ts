@@ -1,7 +1,7 @@
 import type {
   VerifiedDrpcRequest,
-  VerifiedDrpcResponse,
   VerifiedDrpcRequestMessage,
+  VerifiedDrpcResponse,
   VerifiedDrpcResponseMessage,
 } from './messages/index.js'
 import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
@@ -11,11 +11,11 @@ import {
   type CreateProofRequestOptions,
   type ProofProtocol,
   AgentContext,
+  ConnectionsApi,
   MessageHandlerRegistry,
   MessageSender,
   OutboundMessageContext,
   injectable,
-  ConnectionsApi,
 } from '@credo-ts/core'
 
 import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
@@ -24,17 +24,17 @@ import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
 
 @injectable()
-export class VerifiedDrpcApi {
-  private config: VerifiedDrpcModuleConfig
-  private verifiedDrpcMessageService: VerifiedDrpcService
+export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
+  private config: VerifiedDrpcModuleConfig<PPs>
+  private verifiedDrpcMessageService: VerifiedDrpcService<PPs>
   private messageSender: MessageSender
   private connectionsApi: ConnectionsApi
   private agentContext: AgentContext
 
   public constructor(
-    verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig,
+    verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<PPs>,
     messageHandlerRegistry: MessageHandlerRegistry,
-    verifiedDrpcMessageService: VerifiedDrpcService,
+    verifiedDrpcMessageService: VerifiedDrpcService<PPs>,
     messageSender: MessageSender,
     connectionsApi: ConnectionsApi,
     agentContext: AgentContext

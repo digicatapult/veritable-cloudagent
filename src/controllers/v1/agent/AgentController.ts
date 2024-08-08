@@ -2,8 +2,8 @@ import { Agent } from '@credo-ts/core'
 import { Controller, Get, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import type { AgentInfo } from '../../types.js'
 import { RestAgent } from '../../../agent.js'
+import type { AgentInfo } from '../../types.js'
 @Tags('Agent')
 @Route('/v1/agent')
 @injectable()

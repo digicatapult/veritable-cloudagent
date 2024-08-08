@@ -1,18 +1,18 @@
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, spy, match, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { match, restore as sinonRestore, spy, stub } from 'sinon'
 
-import type {
-  Agent,
-  OutOfBandRecord,
-  ConnectionRecord,
-  OutOfBandInvitation,
-  ConnectionInvitationMessage,
-  ReceiveOutOfBandImplicitInvitationConfig,
+import {
+  AgentMessage,
+  JsonTransformer,
+  type Agent,
+  type ConnectionInvitationMessage,
+  type ConnectionRecord,
+  type OutOfBandInvitation,
+  type OutOfBandRecord,
+  type ReceiveOutOfBandImplicitInvitationConfig,
 } from '@credo-ts/core'
 import type { Server } from 'node:net'
-
-import { JsonTransformer, AgentMessage } from '@credo-ts/core'
 import request from 'supertest'
 
 import {

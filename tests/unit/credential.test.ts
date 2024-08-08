@@ -1,44 +1,40 @@
+import { expect } from 'chai'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types.js'
-import { describe, before, after, afterEach, test } from 'mocha'
-import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
 
-import type {
-  Agent,
-  ConnectionRecord,
-  CredentialStateChangedEvent,
-  GetCredentialFormatDataReturn,
-  OutOfBandRecord,
-} from '@credo-ts/core'
 import type { AddressInfo, Server } from 'node:net'
 
 import {
+  type Agent,
+  type ConnectionRecord,
+  type CredentialStateChangedEvent,
+  type GetCredentialFormatDataReturn,
+  type OutOfBandRecord,
+  AgentMessage,
   AutoAcceptCredential,
+  CredentialEventTypes,
   CredentialExchangeRecord,
   CredentialPreviewAttribute,
-  CredentialState,
-  CredentialEventTypes,
-  AgentMessage,
-  JsonTransformer,
   CredentialRepository,
   CredentialRole,
+  CredentialState,
+  JsonTransformer,
 } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { setupServer } from '../../src/server.js'
-
+import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 import {
-  objectToJson,
-  getTestCredential,
+  getCredentialFormatData,
   getTestAgent,
+  getTestConnection,
+  getTestCredential,
   getTestOffer,
   getTestOutOfBandRecord,
-  getTestConnection,
-  getCredentialFormatData,
   getTestServer,
+  objectToJson,
 } from './utils/helpers.js'
-import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 
 describe('CredentialController', () => {
   let port: number

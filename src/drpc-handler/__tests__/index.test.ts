@@ -1,11 +1,11 @@
+import { expect } from 'chai'
 import { describe, test } from 'mocha'
 import sinon from 'sinon'
-import { expect } from 'chai'
 
 import { RestAgent } from '../../agent.js'
+import { NotFound } from '../../error.js'
 import PinoLogger from '../../utils/logger.js'
 import DrpcReceiveHandler from '../index.js'
-import { NotFound } from '../../error.js'
 
 async function* requestsGen<T>(items: Array<T>) {
   for (let i = 0; i < items.length; i++) {
@@ -79,7 +79,7 @@ describe('DrpcReceiveHandler', function () {
   })
 
   test('duplicate response should throw', async function () {
-    const { requests, args } = withMocks()
+    const { args } = withMocks()
     const handler = new DrpcReceiveHandler(...args)
     handler.start()
     await new Promise((resolve) => setTimeout(resolve, 10)) // wait for a short period just to make sure the loop has run to end
@@ -96,7 +96,7 @@ describe('DrpcReceiveHandler', function () {
   })
 
   test('response to invalid id should throw', async function () {
-    const { requests, args } = withMocks()
+    const { args } = withMocks()
     const handler = new DrpcReceiveHandler(...args)
     handler.start()
     await new Promise((resolve) => setTimeout(resolve, 10)) // wait for a short period just to make sure the loop has run to end

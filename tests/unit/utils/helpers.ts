@@ -1,20 +1,20 @@
-import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
 import type { Socket } from 'node:net'
 
 import {
   type ConnectionRecordProps,
   type DidCreateResult,
   AgentMessage,
-  OutOfBandRecord,
+  ConnectionInvitationMessage,
   ConnectionRecord,
   CredentialExchangeRecord,
+  DidDocument,
   DidExchangeRole,
   DidExchangeState,
   JsonTransformer,
-  ProofExchangeRecord,
   OutOfBandInvitation,
-  ConnectionInvitationMessage,
-  DidDocument,
+  OutOfBandRecord,
+  ProofExchangeRecord,
   TrustPingMessage,
 } from '@credo-ts/core'
 import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
@@ -23,8 +23,8 @@ import { container } from 'tsyringe'
 import { WebSocket } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
-import PinoLogger from '../../../src/utils/logger.js'
 import { setupServer } from '../../../src/server.js'
+import PinoLogger from '../../../src/utils/logger.js'
 
 export async function getTestAgent(name: string, port: number) {
   const logger = new PinoLogger('silent')

@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe'
 
-import { HttpResponse, NotFound } from '../error.js'
 import { Env } from '../env.js'
+import { HttpResponse, NotFound } from '../error.js'
 
 type Policy = {
   id: string

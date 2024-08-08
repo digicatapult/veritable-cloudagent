@@ -1,6 +1,6 @@
-import request from 'supertest'
-import { describe, it } from 'mocha'
 import { expect } from 'chai'
+import { describe, it } from 'mocha'
+import request from 'supertest'
 
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
 

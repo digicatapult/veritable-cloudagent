@@ -1,18 +1,18 @@
 import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { type RecordId, ProofRecordExample } from '../../examples.js'
+import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFound } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
+import { type RecordId, ProofRecordExample } from '../../examples.js'
 import type {
+  AcceptProofProposalOptions,
   AcceptProofRequestOptions,
-  RequestProofOptions,
   CreateProofRequestOptions,
   ProposeProofOptions,
-  AcceptProofProposalOptions,
+  RequestProofOptions,
 } from '../../types.js'
-import { RestAgent } from '../../../agent.js'
 
 @Tags('Proofs')
 @Route('/v1/proofs')

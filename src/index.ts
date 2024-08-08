@@ -3,12 +3,12 @@ import type { Socket } from 'node:net'
 
 import WebSocket from 'ws'
 
-import { setupServer } from './server.js'
-import { Env } from './env.js'
-import { container } from 'tsyringe'
-import PinoLogger from './utils/logger.js'
-import { setupAgent } from './agent.js'
 import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
+import { container } from 'tsyringe'
+import { setupAgent } from './agent.js'
+import { Env } from './env.js'
+import { setupServer } from './server.js'
+import PinoLogger from './utils/logger.js'
 
 const env = container.resolve(Env)
 const logger = new PinoLogger(env.get('LOG_LEVEL'))

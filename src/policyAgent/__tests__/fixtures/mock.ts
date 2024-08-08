@@ -1,5 +1,5 @@
-import { before, after } from 'mocha'
-import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
+import { after, before } from 'mocha'
+import { Dispatcher, getGlobalDispatcher, MockAgent, setGlobalDispatcher } from 'undici'
 
 import { Env } from '../../../env.js'
 

@@ -1,11 +1,11 @@
 import { Agent } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response, Query } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import { type Did, type SchemaId, type CredentialDefinitionId, CredentialDefinitionExample } from '../../examples.js'
-import type { AnonCredsCredentialDefinitionResponse } from '../../types.js'
-import { HttpResponse, NotFound, BadRequest } from '../../../error.js'
 import { RestAgent } from '../../../agent.js'
+import { BadRequest, HttpResponse, NotFound } from '../../../error.js'
+import { type CredentialDefinitionId, type Did, type SchemaId, CredentialDefinitionExample } from '../../examples.js'
+import type { AnonCredsCredentialDefinitionResponse } from '../../types.js'
 
 @Tags('Credential Definitions')
 @Route('/v1/credential-definitions')

@@ -1,35 +1,35 @@
 import {
-  type InitConfig,
-  HttpOutboundTransport,
-  WsOutboundTransport,
-  Agent,
-  AutoAcceptCredential,
-  AutoAcceptProof,
-  ModulesMap,
-  ConnectionsModule,
-  ProofsModule,
-  V2ProofProtocol,
-  CredentialsModule,
-  V2CredentialProtocol,
-  MediatorModule,
-} from '@credo-ts/core'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
-import { container } from 'tsyringe'
-import {
   AnonCredsCredentialFormatService,
   AnonCredsModule,
   AnonCredsProofFormatService,
   AnonCredsRequestProofFormat,
 } from '@credo-ts/anoncreds'
+import {
+  type InitConfig,
+  Agent,
+  AutoAcceptCredential,
+  AutoAcceptProof,
+  ConnectionsModule,
+  CredentialsModule,
+  HttpOutboundTransport,
+  MediatorModule,
+  ModulesMap,
+  ProofsModule,
+  V2CredentialProtocol,
+  V2ProofProtocol,
+  WsOutboundTransport,
+} from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+import { container } from 'tsyringe'
 
-import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
-import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
-import VeritableAnonCredsRegistry from './anoncreds/index.js'
-import Ipfs from './ipfs/index.js'
 import { AskarModule } from '@credo-ts/askar'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import VeritableAnonCredsRegistry from './anoncreds/index.js'
+import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
+import Ipfs from './ipfs/index.js'
+import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
 import PinoLogger from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
@@ -60,7 +60,7 @@ export type AriesRestConfig = {
   autoAcceptProofs?: AutoAcceptProof
   ipfsOrigin: string
 
-  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
 
   logger: PinoLogger
 }
@@ -71,7 +71,7 @@ export interface RestAgentModules extends ModulesMap {
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncreds: AnonCredsModule
   drpc: DrpcModule
-  verifiedDrpc: VerifiedDrpcModule
+  verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
 }
 
 export type RestAgent<
@@ -81,7 +81,7 @@ export type RestAgent<
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
     drpc: DrpcModule
-    verifiedDrpc: VerifiedDrpcModule
+    verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   },
 > = Agent<modules>
 
@@ -91,7 +91,9 @@ const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
-  verifiedDrpcOptions: { credDefId?: string; issuerDid?: string } & VerifiedDrpcModuleConfigOptions
+  verifiedDrpcOptions: { credDefId?: string; issuerDid?: string } & VerifiedDrpcModuleConfigOptions<
+    [V2ProofProtocol<[AnonCredsProofFormatService]>]
+  >
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({

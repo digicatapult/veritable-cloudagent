@@ -1,24 +1,21 @@
-import type { RestAgent } from '../../src/agent.js'
 import type {
   AnonCredsCredentialDefinition,
   AnonCredsCredentialDefinitionRecord,
   AnonCredsSchema,
 } from '@credo-ts/anoncreds'
-import type { AddressInfo, Server } from 'node:net'
+import type { Server } from 'node:net'
+import type { RestAgent } from '../../src/agent.js'
 
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 
 import request from 'supertest'
 
-import { setupServer } from '../../src/server.js'
-
-import { getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
 import { schema } from './utils/fixtures.js'
+import { getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('CredentialDefinitionController', () => {
-  let port: number
   let app: Server
   let agent: RestAgent
   let testCredDef: AnonCredsCredentialDefinition
@@ -27,7 +24,6 @@ describe('CredentialDefinitionController', () => {
   before(async () => {
     agent = await getTestAgent('CredentialDefinition REST Agent Test', 3011)
     app = await getTestServer(agent)
-    port = (app.address() as AddressInfo).port
 
     testCredDef = getTestCredDef()
     testSchema = getTestSchema()

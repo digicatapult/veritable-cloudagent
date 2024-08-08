@@ -1,20 +1,26 @@
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
 import type { Server } from 'node:net'
-import type { Agent, ConnectionRecord, OutOfBandRecord } from '@credo-ts/core'
+import { restore as sinonRestore, stub } from 'sinon'
 
-import { ConnectionEventTypes, ConnectionRepository, type TrustPingMessage } from '@credo-ts/core'
+import {
+  ConnectionEventTypes,
+  ConnectionRepository,
+  type Agent,
+  type ConnectionRecord,
+  type OutOfBandRecord,
+  type TrustPingMessage,
+} from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
 import {
-  getTestConnection,
   getTestAgent,
-  objectToJson,
-  getTestTrustPingMessage,
+  getTestConnection,
   getTestOutOfBandRecord,
   getTestServer,
+  getTestTrustPingMessage,
+  objectToJson,
 } from './utils/helpers.js'
 
 describe('ConnectionController', () => {

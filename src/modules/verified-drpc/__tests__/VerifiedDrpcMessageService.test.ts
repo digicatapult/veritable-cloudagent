@@ -1,30 +1,28 @@
-import { describe, it } from 'mocha'
 import { expect } from 'chai'
+import { describe, it } from 'mocha'
+import type { SinonStubbedInstance } from 'sinon'
 import * as sinon from 'sinon'
-import type { SinonStubbedInstance, SinonStub } from 'sinon'
 
-import type { VerifiedDrpcRequestObject } from '../messages/index.js'
-
+import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
 import {
-  ProofState,
-  ProofStateChangedEvent,
-  ProofEventTypes,
-  DidExchangeState,
-  DidExchangeRole,
-  EventEmitter,
-  InboundMessageContext,
   ConnectionRecord,
   ConnectionRecordProps,
+  DidExchangeRole,
+  DidExchangeState,
+  EventEmitter,
+  InboundMessageContext,
+  ProofEventTypes,
   ProofsApi,
+  ProofState,
+  type AgentContext,
+  type V2ProofProtocol,
 } from '@credo-ts/core'
-import type { DependencyManager, V2ProofProtocol, AgentContext } from '@credo-ts/core'
-import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
 
 import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'
 import { withMockVerifiedDrpcRecord } from './fixtures/mockVerifiedDrpcRecord.js'
 
-import { VerifiedDrpcRequestMessage } from '../messages/index.js'
+import { VerifiedDrpcRequestMessage, type VerifiedDrpcRequestObject } from '../messages/index.js'
 import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole.js'
 import { VerifiedDrpcState } from '../models/VerifiedDrpcState.js'
 import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord.js'
@@ -55,7 +53,7 @@ export function getMockConnection({
 }
 
 describe('VerifiedDrpcService', () => {
-  let verifiedDrpcMessageService: VerifiedDrpcService
+  let verifiedDrpcMessageService: VerifiedDrpcService<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   const mockConnectionRecord = new ConnectionRecord({
     did: 'did:sov:C2SsBf5QUQpqSAQfhu3sd2',
     threadId: 'threadId',
@@ -67,14 +65,14 @@ describe('VerifiedDrpcService', () => {
   })
   let mockVerifiedDrpcRepository: SinonStubbedInstance<VerifiedDrpcRepository>
   let mockEventEmitter: SinonStubbedInstance<EventEmitter>
-  let mockVerifiedDrpcModuleConfig: VerifiedDrpcModuleConfig
+  let mockVerifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   let agentContext: AgentContext
 
   beforeEach(() => {
     mockVerifiedDrpcRepository = sinon.createStubInstance(VerifiedDrpcRepository)
     mockEventEmitter = sinon.createStubInstance(EventEmitter)
     mockVerifiedDrpcModuleConfig = new VerifiedDrpcModuleConfig({
-      proofRequestOptions: { protocolVersion: '2.0', proofFormats: {} },
+      proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} },
     })
     agentContext = withMockedAgentContext()
     verifiedDrpcMessageService = new VerifiedDrpcService(
@@ -101,7 +99,7 @@ describe('VerifiedDrpcService', () => {
       expect((requestMessage.request as VerifiedDrpcRequestObject).method).to.equal('hello')
 
       sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
-      sinon.assert.calledWithMatch<any>(mockEventEmitter.emit, agentContext, {
+      sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
         payload: {
           verifiedDrpcMessageRecord: sinon.match({
@@ -148,7 +146,7 @@ describe('VerifiedDrpcService', () => {
       await verifiedDrpcMessageService.receiveRequest(messageContext)
 
       sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
-      sinon.assert.calledWithMatch<any>(mockEventEmitter.emit, agentContext, {
+      sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
         payload: {
           verifiedDrpcMessageRecord: {
@@ -203,7 +201,7 @@ describe('VerifiedDrpcService', () => {
         mockVerifiedDrpcRecord
       )
 
-      sinon.assert.calledWithMatch<any>(mockProofsApi.requestProof, {
+      sinon.assert.calledWithMatch(mockProofsApi.requestProof, {
         ...mockVerifiedDrpcModuleConfig.proofRequestOptions,
         connectionId: mockConnectionRecord.id,
       })
@@ -310,7 +308,7 @@ describe('VerifiedDrpcService', () => {
         mockVerifiedDrpcRecord
       )
 
-      sinon.assert.calledWithMatch<any>(mockProofsApi.requestProof, {
+      sinon.assert.calledWithMatch(mockProofsApi.requestProof, {
         ...mockVerifiedDrpcModuleConfig.proofRequestOptions,
         connectionId: mockConnectionRecord.id,
       })

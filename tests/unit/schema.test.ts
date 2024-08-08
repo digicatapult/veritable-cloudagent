@@ -1,17 +1,15 @@
-import type { RestAgent } from '../../src/agent.js'
 import type { AnonCredsSchema, AnonCredsSchemaRecord } from '@credo-ts/anoncreds'
 import type { Server } from 'node:net'
+import type { RestAgent } from '../../src/agent.js'
 
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 
 import request from 'supertest'
 
-import { setupServer } from '../../src/server.js'
-
-import { getTestAgent, getTestSchema, getTestServer } from './utils/helpers.js'
 import { schema } from './utils/fixtures.js'
+import { getTestAgent, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('SchemaController', () => {
   let app: Server

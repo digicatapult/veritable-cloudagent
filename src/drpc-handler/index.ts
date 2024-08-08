@@ -1,12 +1,12 @@
-import { injectable, singleton } from 'tsyringe'
 import { Agent } from '@credo-ts/core'
+import { injectable, singleton } from 'tsyringe'
 
 import type { VerifiedDrpcRecord, VerifiedDrpcResponse } from '../modules/verified-drpc/index.js'
 
 import { DrpcRequestObject, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
+import { RestAgent } from '../agent.js'
 import { NotFound } from '../error.js'
 import PinoLogger from '../utils/logger.js'
-import { RestAgent } from '../agent.js'
 
 export const verifiedDrpcRequestHandler = async (request: VerifiedDrpcRecord): Promise<VerifiedDrpcResponse> => {
   return { jsonrpc: '2.0', result: { a: 123, b: 456 }, id: request.id }

@@ -1,8 +1,8 @@
-import { Controller, Route, Tags, Get, Response, Path, Post, Body } from 'tsoa'
+import { Body, Controller, Get, Path, Post, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import PolicyAgent from '../../../policyAgent/index.js'
 import { NotFound } from '../../../error.js'
+import PolicyAgent from '../../../policyAgent/index.js'
 
 @Tags('Access')
 @Route('/v1/access')

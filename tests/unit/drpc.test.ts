@@ -1,17 +1,16 @@
-import type { RestAgent } from '../../src/agent.js'
 import type { Server } from 'node:net'
+import type { RestAgent } from '../../src/agent.js'
 
-import { describe, before, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore, useFakeTimers, type SinonFakeTimers } from 'sinon'
+import { afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub, useFakeTimers, type SinonFakeTimers } from 'sinon'
 import request from 'supertest'
 
-import { setupServer } from '../../src/server.js'
-import { getTestAgent, getTestConnection, getTestServer } from './utils/helpers.js'
 import { ConnectionRecord } from '@credo-ts/core'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import { NotFound } from '../../src/error.js'
+import { getTestAgent, getTestConnection, getTestServer } from './utils/helpers.js'
 
 describe('DrpcController', () => {
   let app: Server
@@ -89,7 +88,7 @@ describe('DrpcController', () => {
 
       const spy = stub(agent.modules.drpc, 'sendRequest')
 
-      let waitResolve: Function
+      let waitResolve: (value: void | PromiseLike<void>) => void
       const waitForResponseListener = new Promise<void>((resolve) => {
         waitResolve = resolve
       })
