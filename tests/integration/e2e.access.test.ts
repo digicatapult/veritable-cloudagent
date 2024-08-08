@@ -7,7 +7,7 @@ const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
 describe('Access checks', function () {
   const holderClient = request(HOLDER_BASE_URL)
   const verifierDid = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
-  const packageId = 'suppliers' // from samples/suppliers.rego
+  const packageId = 'suppliers' // from docker/opa/suppliers.rego
 
   it("should return true if a supplier is one of OEM's suppliers", async function () {
     const query = {

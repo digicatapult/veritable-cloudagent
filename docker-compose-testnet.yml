@@ -223,7 +223,7 @@ services:
     ports:
       - '8181:8181'
     volumes:
-      - ./samples/suppliers.rego:/suppliers.rego
+      - ./docker/opa/suppliers.rego:/suppliers.rego
     command: run --server --log-level debug suppliers.rego
     networks: ['alice']
 
@@ -237,7 +237,7 @@ services:
     ports:
       - '8182:8181'
     volumes:
-      - ./samples/suppliers.rego:/suppliers.rego
+      - ./docker/opa/suppliers.rego:/suppliers.rego
     command: run --server --log-level debug suppliers.rego
     networks: ['bob']
 
@@ -251,7 +251,7 @@ services:
     ports:
       - '8183:8181'
     volumes:
-      - ./samples/suppliers.rego:/suppliers.rego
+      - ./docker/opa/suppliers.rego:/suppliers.rego
     command: run --server --log-level debug suppliers.rego
     networks: ['charlie']
 
