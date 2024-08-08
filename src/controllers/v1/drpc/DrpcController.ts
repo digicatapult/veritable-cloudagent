@@ -1,5 +1,5 @@
 import { Agent, utils } from '@credo-ts/core'
-import type { DrpcRequestObject, DrpcResponseObject } from '@credo-ts/drpc'
+import type { DrpcResponseObject } from '@credo-ts/drpc'
 import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
@@ -10,7 +10,11 @@ import { z } from 'zod'
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
 
-type DrpcRequestOptions = Omit<DrpcRequestObject, 'id'>
+type DrpcRequestOptions = {
+  jsonrpc: string
+  method: string
+  params?: unknown[] | Record<string, unknown>
+}
 type DrpcResponseOptions = Omit<DrpcResponseObject, 'id'>
 
 const rpcResponseParser = z.object({
