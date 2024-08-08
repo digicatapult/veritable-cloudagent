@@ -4,7 +4,6 @@ import { injectable } from 'tsyringe'
 
 import { type RecordId, ProofRecordExample } from '../../examples.js'
 import { HttpResponse, NotFound } from '../../../error.js'
-import type { RestAgent } from '../../../utils/agent.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
 import type {
   AcceptProofRequestOptions,
@@ -13,6 +12,7 @@ import type {
   ProposeProofOptions,
   AcceptProofProposalOptions,
 } from '../../types.js'
+import { RestAgent } from '../../../agent.js'
 
 @Tags('Proofs')
 @Route('/v1/proofs')

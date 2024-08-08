@@ -5,9 +5,10 @@ import type { DrpcRequestObject, DrpcResponseObject } from '@credo-ts/drpc'
 
 import { type RecordId } from '../../examples.js'
 import { NotFound, GatewayTimeout, BadGatewayError, InternalError } from '../../../error.js'
-import { RestAgent } from '../../../utils/agent.js'
+
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
 import { z } from 'zod'
+import { RestAgent } from '../../../agent.js'
 
 type DrpcRequestOptions = Omit<DrpcRequestObject, 'id'>
 type DrpcResponseOptions = Omit<DrpcResponseObject, 'id'>

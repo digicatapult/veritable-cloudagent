@@ -1,21 +1,20 @@
-import type { RestAgent } from '../../src/utils/agent.js'
+import type { RestAgent } from '../../src/agent.js'
+import type { Server } from 'node:net'
 
-import type { Express } from 'express'
 import { describe, before, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore, useFakeTimers, type SinonFakeTimers, type SinonSpy } from 'sinon'
+import { stub, restore as sinonRestore, useFakeTimers, type SinonFakeTimers } from 'sinon'
 import request from 'supertest'
 
 import { setupServer } from '../../src/server.js'
-import { getTestAgent, getTestConnection } from './utils/helpers.js'
+import { getTestAgent, getTestConnection, getTestServer } from './utils/helpers.js'
 import { ConnectionRecord } from '@credo-ts/core'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import { NotFound } from '../../src/error.js'
-import PinoLogger from '../../src/utils/logger.js'
 
 describe('DrpcController', () => {
-  let app: Express
+  let app: Server
   let agent: RestAgent
   let connection: ConnectionRecord
   let clock: SinonFakeTimers
@@ -23,7 +22,7 @@ describe('DrpcController', () => {
 
   before(async () => {
     agent = await getTestAgent('DRPC REST Agent Test', 3011)
-    app = await setupServer(agent, { port: 3000 })
+    app = await getTestServer(agent)
     connection = getTestConnection()
     receiveHandler = container.resolve(DrpcReceiveHandler)
   })
@@ -160,5 +159,9 @@ describe('DrpcController', () => {
       })
       expect(response.statusCode).to.be.equal(500)
     })
+  })
+
+  after(async function () {
+    app.close()
   })
 })

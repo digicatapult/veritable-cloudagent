@@ -2,7 +2,7 @@ import { describe, test } from 'mocha'
 import sinon from 'sinon'
 import { expect } from 'chai'
 
-import { RestAgent } from '../../utils/agent.js'
+import { RestAgent } from '../../agent.js'
 import PinoLogger from '../../utils/logger.js'
 import DrpcReceiveHandler from '../index.js'
 import { NotFound } from '../../error.js'

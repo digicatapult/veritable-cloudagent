@@ -5,12 +5,13 @@ import { injectable } from 'tsyringe'
 import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
 import { type Did, DidRecordExample, DidStateExample } from '../../examples.js'
 import { HttpResponse, BadRequest } from '../../../error.js'
+import { RestAgent } from '../../../agent.js'
 
 @Tags('Dids')
 @Route('/v1/dids')
 @injectable()
 export class DidController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()

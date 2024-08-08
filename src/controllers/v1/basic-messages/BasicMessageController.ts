@@ -4,12 +4,13 @@ import { injectable } from 'tsyringe'
 
 import { type RecordId, BasicMessageRecordExample } from '../../examples.js'
 import { HttpResponse, NotFound } from '../../../error.js'
+import { RestAgent } from '../../../agent.js'
 
 @Tags('Basic Messages')
 @Route('/v1/basic-messages')
 @injectable()
 export class BasicMessageController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()

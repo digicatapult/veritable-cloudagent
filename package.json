@@ -20,7 +20,7 @@
     "url": "git+https://github.com/digicatapult/veritable-cloudagent.git"
   },
   "bin": {
-    "afj-rest": "bin/afj-rest.js"
+    "veritable-cloudagent": "build/index.js"
   },
   "scripts": {
     "check-types": "npm run check-types:build && npm run check-types:tests",

@@ -27,12 +27,13 @@ import type {
   AcceptInvitationConfig,
 } from '../../types.js'
 import { HttpResponse, NotFound } from '../../../error.js'
+import { RestAgent } from '../../../agent.js'
 
 @Tags('Out Of Band')
 @Route('/v1/oob')
 @injectable()
 export class OutOfBandController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()

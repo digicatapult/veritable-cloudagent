@@ -1,5 +1,5 @@
 import type { Agent, DidCreateResult, DidRecord } from '@credo-ts/core'
-import type { Server } from 'net'
+import type { Server } from 'node:net'
 
 import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
@@ -8,9 +8,7 @@ import request from 'supertest'
 
 import { KeyType } from '@credo-ts/core'
 
-import { startServer } from '../../src/index.js'
-
-import { getTestAgent, getTestDidCreate, getTestDidDocument, objectToJson } from './utils/helpers.js'
+import { getTestAgent, getTestDidCreate, getTestDidDocument, getTestServer, objectToJson } from './utils/helpers.js'
 import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types.js'
 
 describe('DidController', () => {
@@ -21,7 +19,7 @@ describe('DidController', () => {
 
   before(async () => {
     aliceAgent = await getTestAgent('Did REST Agent Test Alice', 3999)
-    app = await startServer(aliceAgent, { port: 3000 })
+    app = await getTestServer(aliceAgent)
 
     testDidDocument = getTestDidDocument()
     testDidCreate = getTestDidCreate()

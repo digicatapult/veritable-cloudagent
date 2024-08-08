@@ -10,12 +10,10 @@ import type {
   ConnectionInvitationMessage,
   ReceiveOutOfBandImplicitInvitationConfig,
 } from '@credo-ts/core'
-import type { Express } from 'express'
+import type { Server } from 'node:net'
 
 import { JsonTransformer, AgentMessage } from '@credo-ts/core'
 import request from 'supertest'
-
-import { setupServer } from '../../src/server.js'
 
 import {
   getTestAgent,
@@ -23,11 +21,12 @@ import {
   getTestOutOfBandInvitation,
   getTestOutOfBandLegacyInvitation,
   getTestOutOfBandRecord,
+  getTestServer,
   objectToJson,
 } from './utils/helpers.js'
 
 describe('OutOfBandController', () => {
-  let app: Express
+  let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
   let outOfBandRecord: OutOfBandRecord
@@ -38,7 +37,7 @@ describe('OutOfBandController', () => {
   before(async () => {
     aliceAgent = await getTestAgent('OutOfBand REST Agent Test Alice', 3014)
     bobAgent = await getTestAgent('OutOfBand REST Agent Test Bob', 3015)
-    app = await setupServer(bobAgent, { port: 3000 })
+    app = await getTestServer(bobAgent)
     outOfBandRecord = getTestOutOfBandRecord()
     outOfBandInvitation = getTestOutOfBandInvitation()
     outOfBandLegacyInvitation = getTestOutOfBandLegacyInvitation()
@@ -470,5 +469,6 @@ describe('OutOfBandController', () => {
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()
     await bobAgent.wallet.delete()
+    app.close()
   })
 })

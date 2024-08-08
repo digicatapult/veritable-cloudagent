@@ -23,19 +23,38 @@ const proofRequestOptions = `{
     }
   }`
 
-const stringArray = makeValidator((input: string | string[]) => {
-  if (Array.isArray(input)) {
-    return input
-  }
-  if (typeof input !== 'string') {
-    throw new Error('Invalid input type, expected a string')
-  }
-  try {
-    return input.split(',').map((s) => s.trim())
-  } catch (err) {
-    throw new Error('Invalid input for string array')
-  }
-})
+const stringArray = <T extends string = string>(
+  spec: Parameters<envalid.BaseValidator<T[]>>['0'],
+  options: {
+    allowedValues?: Set<T>
+  } = {}
+) => {
+  const validator = makeValidator((input: string | string[]) => {
+    let values: string[]
+    if (Array.isArray(input)) {
+      values = input
+    } else {
+      if (typeof input !== 'string') {
+        throw new Error('Invalid input type, expected a string')
+      }
+      try {
+        values = input.split(',').map((s) => s.trim())
+      } catch (err) {
+        throw new Error('Invalid input for string array')
+      }
+    }
+    const { allowedValues } = options
+    if (allowedValues) {
+      if (values.every((v) => allowedValues.has(v as T))) {
+        {
+          throw new Error('Invalid value for string array')
+        }
+      }
+    }
+    return values as T[]
+  })
+  return validator(spec)
+}
 
 const envConfig = {
   LABEL: envalid.str({ default: 'AFJ Rest', devDefault: 'AFJ Rest Agent' }),
@@ -52,7 +71,10 @@ const envConfig = {
   }),
   USE_DID_SOV_PREFIX_WHERE_ALLOWED: envalid.bool({ default: false, devDefault: true }),
   USE_DID_KEY_IN_PROTOCOLS: envalid.bool({ default: true, devDefault: true }),
-  OUTBOUND_TRANSPORT: stringArray({ default: ['http', 'ws'], devDefault: ['http', 'ws'] }),
+  OUTBOUND_TRANSPORT: stringArray(
+    { default: ['http', 'ws'], devDefault: ['http', 'ws'] },
+    { allowedValues: new Set(['http', 'ws']) }
+  ),
   INBOUND_TRANSPORT: envalid.json({
     default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
     devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
@@ -95,7 +117,6 @@ const envConfig = {
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
   }),
-  VERIFIED_DRPC_OPTIONS_CRED_DEF_ID: envalid.str({ default: 'some-cred-def-id', devDefault: 'some-cred-def-id' }), //finish up
 }
 
 export type ENV_CONFIG = typeof envConfig

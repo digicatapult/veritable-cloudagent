@@ -4,6 +4,7 @@ import { expect } from 'chai'
 
 import type { WebhookData } from '../../src/utils/webhook.js'
 import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@credo-ts/core'
+import type { Express } from 'express'
 import type { Server } from 'net'
 
 import {
@@ -26,13 +27,14 @@ describe('WebhookTests', () => {
   let aliceAgent: Agent
   let bobAgent: Agent
   let server: Server
+  let app: Express
   const webhooks: WebhookData[] = []
 
   before(async () => {
     aliceAgent = await getTestAgent('Webhook REST Agent Test Alice', 3042)
     bobAgent = await getTestAgent('Webhook REST Agent Test Bob', 3043)
     server = await webhookListener(3044, webhooks)
-    await setupServer(bobAgent, { webhookUrl: ['http://localhost:3044'], port: 6045 })
+    app = await setupServer(bobAgent, { webhookUrl: ['http://localhost:3044'] })
   })
 
   test('should return a webhook event when basic message state changed', async () => {

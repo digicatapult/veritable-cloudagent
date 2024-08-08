@@ -1,4 +1,3 @@
-import type { RestAgent } from '../../../utils/agent.js'
 import {
   type CredentialExchangeRecordProps,
   CredentialRepository,
@@ -20,6 +19,7 @@ import type {
 } from '../../types.js'
 import { type RecordId, CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 import { HttpResponse, NotFound } from '../../../error.js'
+import { RestAgent } from '../../../agent.js'
 
 @Tags('Credentials')
 @Route('/v1/credentials')

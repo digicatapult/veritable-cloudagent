@@ -12,12 +12,13 @@ import { injectable } from 'tsyringe'
 
 import { type RecordId, ConnectionRecordExample } from '../../examples.js'
 import { HttpResponse, NotFound } from '../../../error.js'
+import { RestAgent } from '../../../agent.js'
 
 @Tags('Connections')
 @Route('/v1/connections')
 @injectable()
 export class ConnectionController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()

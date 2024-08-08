@@ -1,35 +1,71 @@
+import { readFile } from 'fs/promises'
+
 import {
-  AnonCredsCredentialFormatService,
-  AnonCredsProofFormatService,
-  AnonCredsRequestProofFormat,
-  AnonCredsModule,
-} from '@credo-ts/anoncreds'
-import { AskarModule } from '@credo-ts/askar'
-import {
-  type ModulesMap,
-  V2CredentialProtocol,
-  V2ProofProtocol,
+  type InitConfig,
+  HttpOutboundTransport,
+  WsOutboundTransport,
   Agent,
   AutoAcceptCredential,
   AutoAcceptProof,
+  ModulesMap,
   ConnectionsModule,
-  CredentialsModule,
-  HttpOutboundTransport,
-  MediatorModule,
   ProofsModule,
+  V2ProofProtocol,
+  CredentialsModule,
+  V2CredentialProtocol,
+  MediatorModule,
 } from '@credo-ts/core'
+import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
+import { container } from 'tsyringe'
+import {
+  AnonCredsCredentialFormatService,
+  AnonCredsModule,
+  AnonCredsProofFormatService,
+  AnonCredsRequestProofFormat,
+} from '@credo-ts/anoncreds'
 import { DrpcModule } from '@credo-ts/drpc'
-import { type VerifiedDrpcModuleConfigOptions, VerifiedDrpcModule } from '../modules/verified-drpc/index.js'
-import { agentDependencies, HttpInboundTransport } from '@credo-ts/node'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
-import path from 'path'
-import { fileURLToPath } from 'url'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 
-import VeritableAnonCredsRegistry from '../anoncreds/index.js'
-import Ipfs from '../ipfs/index.js'
-import PinoLogger, { type LogLevel } from './logger.js'
-import { container } from 'tsyringe'
+import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
+import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
+import VeritableAnonCredsRegistry from './anoncreds/index.js'
+import Ipfs from './ipfs/index.js'
+import { AskarModule } from '@credo-ts/askar'
+import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import PinoLogger from './utils/logger.js'
+
+export type Transports = 'ws' | 'http'
+export type InboundTransport = {
+  transport: Transports
+  port: number
+}
+
+const inboundTransportMapping = {
+  http: HttpInboundTransport,
+  ws: WsInboundTransport,
+} as const
+
+const outboundTransportMapping = {
+  http: HttpOutboundTransport,
+  ws: WsOutboundTransport,
+} as const
+
+export type AriesRestConfig = {
+  agentConfig: InitConfig
+
+  inboundTransports?: InboundTransport[]
+  outboundTransports?: Transports[]
+
+  autoAcceptConnections?: boolean
+  autoAcceptCredentials?: AutoAcceptCredential
+  autoAcceptMediationRequests?: boolean
+  autoAcceptProofs?: AutoAcceptProof
+  ipfsOrigin: string
+
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions
+
+  logger: PinoLogger
+}
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
@@ -51,13 +87,7 @@ export type RestAgent<
   },
 > = Agent<modules>
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-export const genesisPath = process.env.GENESIS_TXN_PATH
-  ? path.resolve(process.env.GENESIS_TXN_PATH)
-  : path.join(__dirname, '../../../../network/genesis/local-genesis.txn')
-
-export const getAgentModules = (options: {
+const getAgentModules = (options: {
   autoAcceptConnections: boolean
   autoAcceptProofs: AutoAcceptProof
   autoAcceptCredentials: AutoAcceptCredential
@@ -124,51 +154,63 @@ export const getAgentModules = (options: {
   }
 }
 
-export const setupAgent = async ({
-  name,
-  endpoints,
-  port,
-  logLevel,
-}: {
-  name: string
-  endpoints: string[]
-  port: number
-  logLevel: LogLevel
-}) => {
-  const logger = new PinoLogger(logLevel)
-  container.register(PinoLogger, { useValue: logger })
+export async function setupAgent(restConfig: AriesRestConfig) {
+  const {
+    inboundTransports = [],
+    outboundTransports = [],
+
+    autoAcceptConnections = true,
+    autoAcceptCredentials = AutoAcceptCredential.ContentApproved,
+    autoAcceptMediationRequests = true,
+    autoAcceptProofs = AutoAcceptProof.ContentApproved,
+    ipfsOrigin,
+    verifiedDrpcOptions,
+
+    agentConfig,
+  } = restConfig
 
   const modules = getAgentModules({
-    autoAcceptConnections: true,
-    autoAcceptProofs: AutoAcceptProof.ContentApproved,
-    autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
-    autoAcceptMediationRequests: true,
-    ipfsOrigin: 'http://localhost:5001',
-    verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
+    autoAcceptConnections,
+    autoAcceptProofs,
+    autoAcceptCredentials,
+    autoAcceptMediationRequests,
+    ipfsOrigin,
+    verifiedDrpcOptions,
   })
 
-  const agent = new Agent({
-    config: {
-      label: name,
-      endpoints,
-      walletConfig: { id: name, key: name },
-      useDidSovPrefixWhereAllowed: true,
-      logger,
-      autoUpdateStorageOnStartup: true,
-      backupBeforeStorageUpdate: false,
-    },
+  const agent: RestAgent = new Agent({
+    config: agentConfig,
     dependencies: agentDependencies,
     modules,
   })
 
-  const httpInbound = new HttpInboundTransport({
-    port: port,
-  })
+  // Register outbound transports
+  for (const outboundTransport of outboundTransports) {
+    const OutboundTransport = outboundTransportMapping[outboundTransport]
+    agent.registerOutboundTransport(new OutboundTransport())
+  }
 
-  agent.registerInboundTransport(httpInbound)
-  agent.registerOutboundTransport(new HttpOutboundTransport())
+  // Register inbound transports
+  for (const inboundTransport of inboundTransports) {
+    const InboundTransport = inboundTransportMapping[inboundTransport.transport]
+    agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
+  }
 
   await agent.initialize()
+
+  container.register(Agent, { useValue: agent as Agent })
+
+  const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
+  if (existingSecrets.length === 0) {
+    await agent.modules.anoncreds.createLinkSecret({
+      setAsDefault: true,
+    })
+  }
+
+  agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
+
+  const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
+  await drpcReceiveHandler.start()
 
   return agent
 }
