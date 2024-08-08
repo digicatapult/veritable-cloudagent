@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import 'reflect-metadata'
+
 import type { Socket } from 'node:net'
 
 import WebSocket from 'ws'
