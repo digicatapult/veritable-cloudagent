@@ -45,9 +45,9 @@ const stringArray = <T extends string = string>(
     }
     const { allowedValues } = options
     if (allowedValues) {
-      if (values.every((v) => allowedValues.has(v as T))) {
+      if (!values.every((v) => allowedValues.has(v as T))) {
         {
-          throw new Error('Invalid value for string array')
+          throw new Error(`Invalid value for string array ${input}`)
         }
       }
     }

@@ -48,4 +48,4 @@ EXPOSE 3000 5002 5003
 HEALTHCHECK --interval=5s --timeout=3s \
 	CMD curl -f http://localhost:3000/ || exit 1
 
-ENTRYPOINT [ "./build/index.js" ]
+ENTRYPOINT [ "node", "./build/index.js" ]

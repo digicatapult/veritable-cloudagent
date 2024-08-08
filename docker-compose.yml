@@ -1,9 +1,7 @@
 #docker-compose up --build -d
 
-version: '3.8'
-
 services:
-  afj-node01:
+  alice:
     hostname: alice-agent
     container_name: alice-agent
     build:

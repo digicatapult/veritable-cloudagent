@@ -34,7 +34,7 @@
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "prepare": "test -d node_modules/husky && husky install || echo \"husky is not installed\"",
     "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && tsc && ./bin/afj-rest.js start ",
+    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=tsimp/import --watch src/index.ts",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",

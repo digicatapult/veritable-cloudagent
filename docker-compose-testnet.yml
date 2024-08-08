@@ -20,7 +20,6 @@ services:
 
   alice:
     container_name: alice
-    image: afj-rest
     build:
       context: .
       dockerfile: Dockerfile
@@ -54,7 +53,6 @@ services:
 
   bob:
     container_name: bob
-    image: afj-rest
     build:
       context: .
       dockerfile: Dockerfile
@@ -88,7 +86,6 @@ services:
 
   charlie:
     container_name: charlie
-    image: afj-rest
     build:
       context: .
       dockerfile: Dockerfile
