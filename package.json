@@ -23,11 +23,9 @@
     "veritable-cloudagent": "build/index.js"
   },
   "scripts": {
-    "check-types": "npm run check-types:build && npm run check-types:tests",
-    "check-types:tests": "tsc -p tsconfig.test.json --noEmit",
-    "check-types:build": "tsc --noEmit -p tsconfig.build.json",
+    "check-types": "tsc --noEmit",
     "depcheck": "depcheck",
-    "prettier": "prettier './(src|tests|bin|samples)/**/*.+(js|json|ts|md|yml|yaml)'",
+    "prettier": "prettier './(src|tests)/**/*.+(js|json|ts|md|yml|yaml)'",
     "format": "npm run prettier -- --write",
     "check-format": "npm run prettier -- --list-different",
     "lint": "eslint .",
@@ -36,7 +34,7 @@
     "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=tsimp/import --watch src/index.ts",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
-    "compile": "tsoa spec-and-routes && tsc -p tsconfig.build.json",
+    "compile": "tsoa spec-and-routes && tsc",
     "prepublishOnly": "npm run build",
     "test": "mocha --config .mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "mocha --config .mocharc.json tests/integration/**/*.test.ts",

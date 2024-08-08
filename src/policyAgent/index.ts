@@ -17,7 +17,7 @@ type Policy = {
 export default class PolicyAgent {
   private origin: string
 
-  constructor(private env: Env) {
+  constructor(env: Env) {
     this.origin = env.get('OPA_ORIGIN')
     try {
       new URL(this.origin)
