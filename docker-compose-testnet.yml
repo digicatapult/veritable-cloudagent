@@ -20,7 +20,6 @@ services:
 
   alice:
     container_name: alice
-    image: afj-rest
     build:
       context: .
       dockerfile: Dockerfile
@@ -54,7 +53,6 @@ services:
 
   bob:
     container_name: bob
-    image: afj-rest
     build:
       context: .
       dockerfile: Dockerfile
@@ -88,7 +86,6 @@ services:
 
   charlie:
     container_name: charlie
-    image: afj-rest
     build:
       context: .
       dockerfile: Dockerfile
@@ -226,7 +223,7 @@ services:
     ports:
       - '8181:8181'
     volumes:
-      - ./samples/suppliers.rego:/suppliers.rego
+      - ./docker/opa/suppliers.rego:/suppliers.rego
     command: run --server --log-level debug suppliers.rego
     networks: ['alice']
 
@@ -240,7 +237,7 @@ services:
     ports:
       - '8182:8181'
     volumes:
-      - ./samples/suppliers.rego:/suppliers.rego
+      - ./docker/opa/suppliers.rego:/suppliers.rego
     command: run --server --log-level debug suppliers.rego
     networks: ['bob']
 
@@ -254,7 +251,7 @@ services:
     ports:
       - '8183:8181'
     volumes:
-      - ./samples/suppliers.rego:/suppliers.rego
+      - ./docker/opa/suppliers.rego:/suppliers.rego
     command: run --server --log-level debug suppliers.rego
     networks: ['charlie']
 

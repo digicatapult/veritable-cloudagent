@@ -1,45 +1,43 @@
+import { expect } from 'chai'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types.js'
-import { describe, before, after, afterEach, test } from 'mocha'
-import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
 
-import type {
-  Agent,
-  ConnectionRecord,
-  CredentialStateChangedEvent,
-  GetCredentialFormatDataReturn,
-  OutOfBandRecord,
-} from '@credo-ts/core'
-import type { Server } from 'net'
+import type { AddressInfo, Server } from 'node:net'
 
 import {
+  type Agent,
+  type ConnectionRecord,
+  type CredentialStateChangedEvent,
+  type GetCredentialFormatDataReturn,
+  type OutOfBandRecord,
+  AgentMessage,
   AutoAcceptCredential,
+  CredentialEventTypes,
   CredentialExchangeRecord,
   CredentialPreviewAttribute,
-  CredentialState,
-  CredentialEventTypes,
-  AgentMessage,
-  JsonTransformer,
   CredentialRepository,
   CredentialRole,
+  CredentialState,
+  JsonTransformer,
 } from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '../../src/index.js'
-
+import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 import {
-  objectToJson,
-  getTestCredential,
+  getCredentialFormatData,
   getTestAgent,
+  getTestConnection,
+  getTestCredential,
   getTestOffer,
   getTestOutOfBandRecord,
-  getTestConnection,
-  getCredentialFormatData,
+  getTestServer,
+  objectToJson,
 } from './utils/helpers.js'
-import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 
 describe('CredentialController', () => {
+  let port: number
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
@@ -55,7 +53,8 @@ describe('CredentialController', () => {
   before(async () => {
     aliceAgent = await getTestAgent('Credential REST Agent Test Alice', 3022)
     bobAgent = await getTestAgent('Credential REST Agent Test Bob', 3023)
-    app = await startServer(bobAgent, { port: 3024 })
+    app = await getTestServer(bobAgent)
+    port = (app.address() as AddressInfo).port
 
     testCredential = getTestCredential() as CredentialExchangeRecord
     testFormatData = getCredentialFormatData()
@@ -307,7 +306,7 @@ describe('CredentialController', () => {
       const now = new Date()
 
       // Start client and wait for it to be opened
-      const client = new WebSocket('ws://localhost:3024')
+      const client = new WebSocket(`ws://localhost:${port}`)
       await new Promise((resolve) => client.once('open', resolve))
 
       // Start promise to listen for message

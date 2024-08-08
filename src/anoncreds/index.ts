@@ -1,18 +1,18 @@
 import type {
-  AnonCredsRegistry,
-  GetCredentialDefinitionReturn,
-  GetRevocationStatusListReturn,
-  GetRevocationRegistryDefinitionReturn,
-  GetSchemaReturn,
-  RegisterCredentialDefinitionReturn,
-  RegisterSchemaReturn,
-  AnonCredsSchema,
-  RegisterSchemaOptions,
-  AnonCredsResolutionMetadata,
   AnonCredsCredentialDefinition,
+  AnonCredsRegistry,
+  AnonCredsResolutionMetadata,
+  AnonCredsSchema,
+  GetCredentialDefinitionReturn,
+  GetRevocationRegistryDefinitionReturn,
+  GetRevocationStatusListReturn,
+  GetSchemaReturn,
   RegisterCredentialDefinitionOptions,
+  RegisterCredentialDefinitionReturn,
   RegisterRevocationRegistryDefinitionReturn,
   RegisterRevocationStatusListReturn,
+  RegisterSchemaOptions,
+  RegisterSchemaReturn,
 } from '@credo-ts/anoncreds'
 import type { AgentContext } from '@credo-ts/core'
 

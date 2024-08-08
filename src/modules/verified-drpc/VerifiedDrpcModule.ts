@@ -1,16 +1,23 @@
-import { type FeatureRegistry, type DependencyManager, type Module, Protocol, AgentConfig } from '@credo-ts/core'
+import {
+  AgentConfig,
+  type DependencyManager,
+  type FeatureRegistry,
+  type Module,
+  ProofProtocol,
+  Protocol,
+} from '@credo-ts/core'
 
-import { VerifiedDrpcModuleConfig, VerifiedDrpcModuleConfigOptions } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcApi } from './VerifiedDrpcApi.js'
+import { VerifiedDrpcModuleConfig, VerifiedDrpcModuleConfigOptions } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRole } from './models/VerifiedDrpcRole.js'
 import { VerifiedDrpcRepository } from './repository/index.js'
 import { VerifiedDrpcService } from './services/index.js'
 
-export class VerifiedDrpcModule implements Module {
+export class VerifiedDrpcModule<PPs extends ProofProtocol[]> implements Module {
   public readonly api = VerifiedDrpcApi
-  public readonly config: VerifiedDrpcModuleConfig
+  public readonly config: VerifiedDrpcModuleConfig<PPs>
 
-  public constructor(config: VerifiedDrpcModuleConfigOptions) {
+  public constructor(config: VerifiedDrpcModuleConfigOptions<PPs>) {
     this.config = new VerifiedDrpcModuleConfig(config)
   }
 

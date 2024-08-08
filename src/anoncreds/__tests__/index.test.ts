@@ -1,9 +1,9 @@
-import { describe, it } from 'mocha'
 import { expect } from 'chai'
+import { describe, it } from 'mocha'
 
-import { withHappyIpfs, withIpfsErrors, exampleCid, exampleContent } from './fixtures/ipfs.js'
-import { withMockedAgentContext } from './fixtures/agentContext.js'
 import VeritableAnonCredsRegistry from '../index.js'
+import { withMockedAgentContext } from './fixtures/agentContext.js'
+import { exampleCid, exampleContent, withHappyIpfs, withIpfsErrors } from './fixtures/ipfs.js'
 
 describe('VeritableAnonCredsRegistry', function () {
   describe('methodName', function () {

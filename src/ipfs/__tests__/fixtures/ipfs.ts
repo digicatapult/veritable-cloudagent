@@ -1,5 +1,5 @@
-import { before, after } from 'mocha'
-import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
+import { after, before } from 'mocha'
+import { Dispatcher, getGlobalDispatcher, MockAgent, setGlobalDispatcher } from 'undici'
 
 export const withIpfsCatResponse = (responses: { cid: string; code: number; body: string | object | Buffer }[]) => {
   const ipfsOrigin = `http://ipfs`

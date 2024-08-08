@@ -1,33 +1,30 @@
-import type { RestAgent } from '../../src/utils/agent.js'
 import type {
   AnonCredsCredentialDefinition,
   AnonCredsCredentialDefinitionRecord,
   AnonCredsSchema,
 } from '@credo-ts/anoncreds'
-import type { Express } from 'express'
+import type { Server } from 'node:net'
+import type { RestAgent } from '../../src/agent.js'
 
-import { describe, before, after, afterEach, test } from 'mocha'
 import { expect } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 
 import request from 'supertest'
 
-import { setupServer } from '../../src/server.js'
-
-import { getTestAgent, getTestCredDef, getTestSchema } from './utils/helpers.js'
-
-import _schema from '../../schema/schemaAttributes.json'
-const schema = _schema as AnonCredsSchema
+import { schema } from './utils/fixtures.js'
+import { getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('CredentialDefinitionController', () => {
-  let app: Express
+  let app: Server
   let agent: RestAgent
   let testCredDef: AnonCredsCredentialDefinition
   let testSchema: AnonCredsSchema
 
   before(async () => {
     agent = await getTestAgent('CredentialDefinition REST Agent Test', 3011)
-    app = await setupServer(agent, { port: 3000 })
+    app = await getTestServer(agent)
+
     testCredDef = getTestCredDef()
     testSchema = getTestSchema()
   })
@@ -227,14 +224,14 @@ describe('CredentialDefinitionController', () => {
 
   describe('create credential definition using new json schema ', () => {
     test('should return created credential definitionusing new json ', async () => {
-      const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
+      stub(agent.modules.anoncreds, 'registerSchema')
       const registerCredentialDefinitionStub = stub(agent.modules.anoncreds, 'registerCredentialDefinition')
       // mock out getSchema from CredentialDefinitionController
-      const getSchemaStub = stub(agent.modules.anoncreds, 'getSchema').resolves({
+      stub(agent.modules.anoncreds, 'getSchema').resolves({
         resolutionMetadata: {},
         schemaMetadata: {},
         schemaId: 'ipfs://bafkreihiz6z2hcostlo73fycbflmhsayoyuqkicwinpqc7knxwmhhwahqq',
-        schema: schema,
+        schema,
       })
 
       testCredDef.schemaId = 'ipfs://bafkreihiz6z2hcostlo73fycbflmhsayoyuqkicwinpqc7knxwmhhwahqq'
@@ -268,5 +265,6 @@ describe('CredentialDefinitionController', () => {
   after(async () => {
     await agent.shutdown()
     await agent.wallet.delete()
+    app.close()
   })
 })

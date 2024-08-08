@@ -1,7 +1,7 @@
-import request from 'supertest'
-import { describe, it, beforeEach, afterEach } from 'mocha'
+import { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
-import { ProofExchangeRecord, ProofExchangeRecordProps } from '@credo-ts/core'
+import { afterEach, beforeEach, describe, it } from 'mocha'
+import request from 'supertest'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? ''
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
@@ -28,7 +28,6 @@ describe('Onboarding & Verification flow', function () {
   let holderCredentialRecordId: string
   let holderProofRequestId: string
   let threadIdOnVerifier: string
-  let threadIdOnHolder: string
   let failed = false
 
   beforeEach(function (done) {
@@ -312,7 +311,7 @@ describe('Onboarding & Verification flow', function () {
     const response = await holderClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
     expect(response.body.length).to.be.above(0)
 
-    let result: ProofExchangeRecordProps = response.body.find(
+    const result: ProofExchangeRecordProps = response.body.find(
       ({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier
     )
     if (result.id) {
@@ -344,7 +343,7 @@ describe('Onboarding & Verification flow', function () {
   it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
     const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
 
-    let result: ProofExchangeRecordProps = response.body.find(
+    const result: ProofExchangeRecordProps = response.body.find(
       ({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier
     )
     expect(result.state).to.be.equal('done')

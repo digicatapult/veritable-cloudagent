@@ -1,17 +1,17 @@
+import type { MessageHandler, MessageHandlerInboundMessage, ProofProtocol } from '@credo-ts/core'
 import type { VerifiedDrpcService } from '../services/VerifiedDrpcService.js'
-import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core'
 
 import { VerifiedDrpcRequestMessage } from '../messages/index.js'
 
-export class VerifiedDrpcRequestHandler implements MessageHandler {
-  private verifiedDrpcMessageService: VerifiedDrpcService
+export class VerifiedDrpcRequestHandler<PPs extends ProofProtocol[]> implements MessageHandler {
+  private verifiedDrpcMessageService: VerifiedDrpcService<PPs>
   public supportedMessages = [VerifiedDrpcRequestMessage]
 
-  public constructor(verifiedDrpcMessageService: VerifiedDrpcService) {
+  public constructor(verifiedDrpcMessageService: VerifiedDrpcService<PPs>) {
     this.verifiedDrpcMessageService = verifiedDrpcMessageService
   }
 
-  public async handle(messageContext: MessageHandlerInboundMessage<VerifiedDrpcRequestHandler>) {
+  public async handle(messageContext: MessageHandlerInboundMessage<VerifiedDrpcRequestHandler<PPs>>) {
     await this.verifiedDrpcMessageService.receiveRequest(messageContext)
   }
 }

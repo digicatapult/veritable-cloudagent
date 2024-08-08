@@ -1,2 +1,2 @@
-export * from './VerifiedDrpcResponseHandler.js'
 export * from './VerifiedDrpcRequestHandler.js'
+export * from './VerifiedDrpcResponseHandler.js'

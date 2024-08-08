@@ -1,5 +1,5 @@
-import { VerifiedDrpcRecord } from '../../repository/VerifiedDrpcRecord.js'
 import { VerifiedDrpcRole, VerifiedDrpcState } from '../../models/index.js'
+import { VerifiedDrpcRecord } from '../../repository/VerifiedDrpcRecord.js'
 
 export const withMockVerifiedDrpcRecord = (props: Partial<VerifiedDrpcRecord>) => {
   return new VerifiedDrpcRecord({

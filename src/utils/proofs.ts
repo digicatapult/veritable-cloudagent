@@ -1,10 +1,10 @@
 import type { AnonCredsProofRequestRestriction, AnonCredsRequestProofFormat } from '@credo-ts/anoncreds'
 
-import { maybeMapValues } from './helpers.js'
 import type {
-  AnonCredsRequestProofFormatOptions,
   AnonCredsProofRequestRestrictionOptions,
+  AnonCredsRequestProofFormatOptions,
 } from '../controllers/types.js'
+import { maybeMapValues } from './helpers.js'
 
 export const transformAttributeMarkers = (attributes?: { [key: string]: boolean }) => {
   if (!attributes) {

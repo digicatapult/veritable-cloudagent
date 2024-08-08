@@ -1,8 +1,9 @@
 # veritable-cloudagent
+
 The project aims to enable supply chains to share insights and data across multiple data platforms, enhancing the efficiency of the supply chain network. Specifically it facilitates the onboarding of new actors into a network, facilitating connections between those and allows for interaction between the actors. Interactions include issuance of credentials, acceptance of issued credentials, requesting proofs of credentials from other actors and those being able to verify those requests.
 
-
 ## Table of Contents
+
 - [Attribution](#attribution)
 - [Setup](#setup)
 - [Getting Started](#getting-started)
@@ -15,13 +16,15 @@ The project aims to enable supply chains to share insights and data across multi
 - [Demoing credential issuance and verification](#demoing-credential-issuance-and-verification)
 
 ## Attribution
+
 Thanks for all the hard work to everybody who contributed to the [project](https://github.com/openwallet-foundation/credo-ts-ext/tree/main). That project is under `Apache-2.0 license`
 
-
 ## Setup
+
 In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by runing -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
 
 #### DRPC Config
+
 The RPC client can be configured through Envs, and follows the following format:
 
 ```
@@ -41,12 +44,14 @@ The RPC client can be configured through Envs, and follows the following format:
 Note that the proof options must be set through envs due to the fact that a DRPC request handler is configured during initialisation.
 
 ### Prerequisites
+
 - postgres:16.3+
 - xcode utilities (node-gyp)
 - npm 10.0.0+
 - node 20.0.0+
 
 ## Getting started
+
 The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
 
 Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section).
@@ -54,39 +59,23 @@ Bellow you will find commands for starting up the containers in docker (see the 
 > The OpenAPI spec is generated from the model classes used by Aries Framework JavaScript. Due to limitations in the inspection of these classes, the generated schema does not always exactly match the expected format. Keep this in mind when using this package. If you encounter any issues, feel free to open an issue.
 
 ## Development mode
-It is possible to configure the agent using environment variables. All properties are named in UPPER_SNAKE_CASE.
-
-```sh
-# With docker
-docker run -e WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
-
-# Directly on computer
-WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
-```
-
-#### Single Agent
-To get a minimal version of the agent running the following command is sufficient (uses `docker-compose.yml`):
-
-```sh
-docker-compose up --build -d
-```
-
-The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`. The API docs are available at `http://localhost:3000/api-docs`.
 
 #### Single Agent + IPFS Node
-The following command will spin up a single `afj` agent (named `Alice`), an IPFS node and a OpenPolicyAgent instance for testing purposes:
+
+The following command will spin up a single `veritable-cloudagent` agent (named `Alice`), an IPFS node and a OpenPolicyAgent instance for testing purposes:
 
 ```sh
-docker-compose -f docker-compose-agent-ipfs.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 ```
 
 This agent is also accessible via a `Swagger` (OpenAPI) interface on port `3000`.
 
 #### Private 3-Agent Testnet
+
 The following command will create a containerised private network consisting of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
 
 ```sh
-docker-compose -f docker-compose-testnet.yml up --build -d
+docker compose -f docker-compose-testnet.yml up --build -d
 ```
 
 This private testnet has the following ports available to the user for testing:
@@ -102,38 +91,14 @@ This private testnet has the following ports available to the user for testing:
 Network name: `testnet`
 
 #### Starting Own Server
-Starting your own server allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
-
-You can create an agent instance and import the `startServer` method from the `rest` package. That's all you have to do.
-
-```ts
-import { startServer } from '@credo-ts/rest'
-import { Agent } from '@credo-ts/core'
-import { agentDependencies } from '@credo-ts/node'
-
-// The startServer function requires an initialized agent and a port.
-// An example of how to setup an agent is located in the `samples` directory.
-const run = async () => {
-  const agent = new Agent(
-    {
-      // ... AFJ Config ... //
-    },
-    agentDependencies
-  )
-  await startServer(agent, { port: 3000 })
-}
-
-// A Swagger (OpenAPI) definition is exposed on http://localhost:3000/swagger
-run()
-```
 
 ## Environment variables
-The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 
+The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 
 | variable                                    | required | default                                                                                                                                                                                                | description                                                                                                                        |
 | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| LABEL                                       | Y        | "AFJ Rest"                                                                                                                                                                                             | A label that is used to identify the owner of the wallet                                                                           |
+| LABEL                                       | Y        | "Veritable Cloudagent"                                                                                                                                                                                 | A label that is used to identify the owner of the wallet                                                                           |
 | WALLET_ID                                   | Y        | "walletId"                                                                                                                                                                                             | An id of the Agent's wallet                                                                                                        |
 | WALLET_KEY                                  | Y        | "walletKey"                                                                                                                                                                                            | A key for the Agent's wallet                                                                                                       |
 | ENDPOINT                                    | Y        | ['http://localhost:5002', 'ws://localhost:5003']                                                                                                                                                       | An array of endpoint for the agent app, if passing as an `environment` variable in docker, please pass as a comma delimited string |
@@ -163,41 +128,46 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS    | N        | 5000                                                                                                                                                                                                   | Timeout in ms for DRCP requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS | Y        | `{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` | Options for proof request                                                                                                          |
-| VERIFIED_DRPC_OPTIONS_CRED_DEF_ID           | N        | "some-cred-def-id"                                                                                                                                                                                     | Credential definition id for verified DRPC                                                                                         |
+
 ## Testing
+
 Unit tests and integration tests are defined in the top-level `tests` directory.
 
 #### Unit
+
 Unit test can be run with `npm run test`.
 
 #### Integration
+
 Integration tests, however, require the testnet orchestration to be deployed.
 
-**If the testnet is already running locally:** (through the command `docker-compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
+**If the testnet is already running locally:** (through the command `docker compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
 
 ```
-docker build --target test -t afj-rest-integration-tests . && \
+docker build --target test -t veritable-cloudagent-integration-tests . && \
 docker run -it \
   --network=testnet \
   -e ALICE_BASE_URL=http://alice:3000 \
   -e BOB_BASE_URL=http://bob:3000 \
   -e CHARLIE_BASE_URL=http://charlie:3000 \
-  afj-rest-integration-tests
+  veritable-cloudagent-integration-tests
 ```
 
 **If the testnet is not already running:** The entire stack can be run with integration tests using the following command:
 
 ```
-docker-compose \
+docker compose \
   -f docker-compose-testnet.yml \
   -f docker-compose-integration-tests.yml \
   up --build --exit-code-from integration-tests
 ```
 
 ## Database
+
 Database is managed by the third party library `credo-ts` and more specifically `askar`.
 
 ## WebSocket and webhooks
+
 The REST API provides the option to connect as a client and receive events emitted from your agent using WebSocket and webhooks.
 
 You can hook into the events listener using webhooks, or connect a WebSocket client directly to the default server.
@@ -243,6 +213,7 @@ The payload of the webhook contains the serialized record related to the topic o
 For the WebSocket clients, the events are sent as JSON stringified objects
 
 ## Verified DRPC
+
 The Verified DRPC module is built on a clone of the credo-ts [DRPC package](https://github.com/openwallet-foundation/credo-ts/tree/main/packages/drpc), which supports request-response style messaging according to the [json-rpc spec](https://www.jsonrpc.org/specification).
 
 In addition to RPC messaging, Verified DRPC adds a proof verification step on both the client (requester) and server (responder) peers. This is implemented by executing a proof request before sending an outbound DRPC request and before processing an inbound request. This is represented by the following states:
@@ -251,8 +222,8 @@ In addition to RPC messaging, Verified DRPC adds a proof verification step on bo
 
 Verified DRPC request and responses are exposed through the `/verified-drpc/` REST endpoints, `verified-drpc` webhooks and `VerifiedDrpc` internal events.
 
-
 ## Schema Definition
+
 The repo contains 'schema' folder with a schema body json which can be imported into ts files like so:
 
 ```
@@ -285,10 +256,11 @@ A credential definition can then be used to issue a credential which contains bo
 (Note: Because the schema and definition is saved on ipfs. One must have an instance of ipfs running or be connected to global ipfs when registering a schema and definition.)
 
 ## Demoing credential issuance and verification
+
 This demo uses the containerised private network of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
 
 ```sh
-docker-compose -f docker-compose-testnet.yml up --build -d
+docker compose -f docker-compose-testnet.yml up --build -d
 ```
 
 | Name    | Role         | API                                     |
@@ -298,6 +270,7 @@ docker-compose -f docker-compose-testnet.yml up --build -d
 | Charlie | **Verifier** | [localhost:3002](http://localhost:3002) |
 
 #### OOB connection
+
 Before any communication between two agents, an out of band connection must be established. First establish a connection between Alice and Bob by POSTing with Alice to `http://localhost:3000/oob/create-invitation`.
 
 ```json
@@ -461,6 +434,7 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 </details>
 
 #### Verification
+
 Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
 In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
 
@@ -478,6 +452,7 @@ Example key-pair will look like this:
 ```
 
 #### Publishing a web:did
+
 1.  create public repo called `YOUR_USERNAME.github.io`
 2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
 3.  body to include in your did.json:

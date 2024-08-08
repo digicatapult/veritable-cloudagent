@@ -1,7 +1,6 @@
 import { describe, it } from 'mocha'
-import { expect } from 'chai'
-import * as sinon from 'sinon'
 import type { SinonStubbedInstance } from 'sinon'
+import * as sinon from 'sinon'
 
 import { DependencyManager, FeatureRegistry } from '@credo-ts/core'
 

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { pino, Logger, LevelWithSilent } from 'pino'
-import { LogLevel as CredoLogLevel, BaseLogger } from '@credo-ts/core'
+import { BaseLogger, LogLevel as CredoLogLevel } from '@credo-ts/core'
+import { LevelWithSilent, Logger, pino } from 'pino'
 
 const tsLogLevelMap = {
   silent: CredoLogLevel.off,

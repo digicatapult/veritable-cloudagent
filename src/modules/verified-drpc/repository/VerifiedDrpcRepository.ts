@@ -1,4 +1,4 @@
-import { EventEmitter, InjectionSymbols, inject, injectable, Repository, type StorageService } from '@credo-ts/core'
+import { EventEmitter, inject, injectable, InjectionSymbols, Repository, type StorageService } from '@credo-ts/core'
 
 import { VerifiedDrpcRecord } from './VerifiedDrpcRecord.js'
 

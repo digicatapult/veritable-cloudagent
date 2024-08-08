@@ -1,21 +1,26 @@
-import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
-import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { expect } from 'chai'
+import { after, afterEach, before, describe, test } from 'mocha'
+import type { Server } from 'node:net'
+import { restore as sinonRestore, stub } from 'sinon'
 
-import type { Agent, ConnectionRecord, OutOfBandRecord } from '@credo-ts/core'
-import type { Server } from 'net'
-
-import { ConnectionEventTypes, ConnectionRepository, type TrustPingMessage } from '@credo-ts/core'
+import {
+  ConnectionEventTypes,
+  ConnectionRepository,
+  type Agent,
+  type ConnectionRecord,
+  type OutOfBandRecord,
+  type TrustPingMessage,
+} from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '../../src/index.js'
 import {
-  getTestConnection,
   getTestAgent,
-  objectToJson,
-  getTestTrustPingMessage,
+  getTestConnection,
   getTestOutOfBandRecord,
+  getTestServer,
+  getTestTrustPingMessage,
+  objectToJson,
 } from './utils/helpers.js'
 
 describe('ConnectionController', () => {
@@ -28,7 +33,7 @@ describe('ConnectionController', () => {
   before(async () => {
     aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3012)
     bobAgent = await getTestAgent('Connection REST Agent Test Bob', 3013)
-    app = await startServer(bobAgent, { port: 3009 })
+    app = await getTestServer(bobAgent)
     connection = getTestConnection()
     outOfBandRecord = getTestOutOfBandRecord()
   })

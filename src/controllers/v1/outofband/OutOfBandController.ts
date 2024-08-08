@@ -1,17 +1,19 @@
 import {
   type ConnectionRecordProps,
-  type CreateOutOfBandInvitationConfig,
   type CreateLegacyInvitationConfig,
+  type CreateOutOfBandInvitationConfig,
   type ReceiveOutOfBandImplicitInvitationConfig,
+  Agent,
   AgentMessage,
   JsonTransformer,
   OutOfBandInvitation,
-  Agent,
   RecordNotFoundError,
 } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Route, Tags, Response } from 'tsoa'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
+import { RestAgent } from '../../../agent.js'
+import { HttpResponse, NotFound } from '../../../error.js'
 import {
   type OutOfBandInvitationProps,
   type OutOfBandRecordWithInvitationProps,
@@ -21,18 +23,17 @@ import {
   outOfBandRecordExample,
 } from '../../examples.js'
 import type {
-  AgentMessageType,
-  ReceiveInvitationProps,
-  ReceiveInvitationByUrlProps,
   AcceptInvitationConfig,
+  AgentMessageType,
+  ReceiveInvitationByUrlProps,
+  ReceiveInvitationProps,
 } from '../../types.js'
-import { HttpResponse, NotFound } from '../../../error.js'
 
 @Tags('Out Of Band')
 @Route('/v1/oob')
 @injectable()
 export class OutOfBandController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()

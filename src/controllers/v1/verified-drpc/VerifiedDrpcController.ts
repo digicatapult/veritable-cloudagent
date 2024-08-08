@@ -1,13 +1,13 @@
 import { Agent } from '@credo-ts/core'
-import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules/verified-drpc/index.js'
-import { Body, Controller, Path, Query, Post, Route, Tags, Response } from 'tsoa'
+import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
+import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules/verified-drpc/index.js'
 
+import { RestAgent } from '../../../agent.js'
+import { GatewayTimeout, NotFound } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
-import type { CreateProofRequestOptions } from '../../types.js'
 import { type RecordId } from '../../examples.js'
-import { NotFound, GatewayTimeout } from '../../../error.js'
-import { RestAgent } from '../../../utils/agent.js'
+import type { CreateProofRequestOptions } from '../../types.js'
 
 interface VerifiedDrpcRequestOptions {
   drpcRequest: VerifiedDrpcRequest
