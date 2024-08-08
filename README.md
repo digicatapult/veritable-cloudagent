@@ -60,32 +60,12 @@ Bellow you will find commands for starting up the containers in docker (see the 
 
 ## Development mode
 
-It is possible to configure the agent using environment variables. All properties are named in UPPER_SNAKE_CASE.
-
-```sh
-# With docker
-docker run -e WALLET_KEY=my-secret-key ghcr.io/hyperledger/afj-rest ...
-
-# Directly on computer
-WALLET_KEY="my-secret-key" npx -p @credo-ts/rest afj-rest start ...
-```
-
-#### Single Agent
-
-To get a minimal version of the agent running the following command is sufficient (uses `docker-compose.yml`):
-
-```sh
-docker-compose up --build -d
-```
-
-The agent is accessible via a `Swagger` interface (OpenAPI) on port `3000`. The API docs are available at `http://localhost:3000/api-docs`.
-
 #### Single Agent + IPFS Node
 
-The following command will spin up a single `afj` agent (named `Alice`), an IPFS node and a OpenPolicyAgent instance for testing purposes:
+The following command will spin up a single `veritable-cloudagent` agent (named `Alice`), an IPFS node and a OpenPolicyAgent instance for testing purposes:
 
 ```sh
-docker-compose -f docker-compose-agent-ipfs.yml up --build -d
+docker compose -f docker-compose.yml up --build -d
 ```
 
 This agent is also accessible via a `Swagger` (OpenAPI) interface on port `3000`.
@@ -95,7 +75,7 @@ This agent is also accessible via a `Swagger` (OpenAPI) interface on port `3000`
 The following command will create a containerised private network consisting of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
 
 ```sh
-docker-compose -f docker-compose-testnet.yml up --build -d
+docker compose -f docker-compose-testnet.yml up --build -d
 ```
 
 This private testnet has the following ports available to the user for testing:
@@ -112,38 +92,13 @@ Network name: `testnet`
 
 #### Starting Own Server
 
-Starting your own server allows more fine-grained control over the settings and allows you to extend the REST API with custom endpoints.
-
-You can create an agent instance and import the `startServer` method from the `rest` package. That's all you have to do.
-
-```ts
-import { startServer } from '@credo-ts/rest'
-import { Agent } from '@credo-ts/core'
-import { agentDependencies } from '@credo-ts/node'
-
-// The startServer function requires an initialized agent and a port.
-// An example of how to setup an agent is located in the `samples` directory.
-const run = async () => {
-  const agent = new Agent(
-    {
-      // ... AFJ Config ... //
-    },
-    agentDependencies
-  )
-  await startServer(agent, { port: 3000 })
-}
-
-// A Swagger (OpenAPI) definition is exposed on http://localhost:3000/swagger
-run()
-```
-
 ## Environment variables
 
 The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 
 | variable                                    | required | default                                                                                                                                                                                                | description                                                                                                                        |
 | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| LABEL                                       | Y        | "AFJ Rest"                                                                                                                                                                                             | A label that is used to identify the owner of the wallet                                                                           |
+| LABEL                                       | Y        | "Veritable Cloudagent"                                                                                                                                                                                 | A label that is used to identify the owner of the wallet                                                                           |
 | WALLET_ID                                   | Y        | "walletId"                                                                                                                                                                                             | An id of the Agent's wallet                                                                                                        |
 | WALLET_KEY                                  | Y        | "walletKey"                                                                                                                                                                                            | A key for the Agent's wallet                                                                                                       |
 | ENDPOINT                                    | Y        | ['http://localhost:5002', 'ws://localhost:5003']                                                                                                                                                       | An array of endpoint for the agent app, if passing as an `environment` variable in docker, please pass as a comma delimited string |
@@ -186,22 +141,22 @@ Unit test can be run with `npm run test`.
 
 Integration tests, however, require the testnet orchestration to be deployed.
 
-**If the testnet is already running locally:** (through the command `docker-compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
+**If the testnet is already running locally:** (through the command `docker compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
 
 ```
-docker build --target test -t afj-rest-integration-tests . && \
+docker build --target test -t veritable-cloudagent-integration-tests . && \
 docker run -it \
   --network=testnet \
   -e ALICE_BASE_URL=http://alice:3000 \
   -e BOB_BASE_URL=http://bob:3000 \
   -e CHARLIE_BASE_URL=http://charlie:3000 \
-  afj-rest-integration-tests
+  veritable-cloudagent-integration-tests
 ```
 
 **If the testnet is not already running:** The entire stack can be run with integration tests using the following command:
 
 ```
-docker-compose \
+docker compose \
   -f docker-compose-testnet.yml \
   -f docker-compose-integration-tests.yml \
   up --build --exit-code-from integration-tests
@@ -305,7 +260,7 @@ A credential definition can then be used to issue a credential which contains bo
 This demo uses the containerised private network of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
 
 ```sh
-docker-compose -f docker-compose-testnet.yml up --build -d
+docker compose -f docker-compose-testnet.yml up --build -d
 ```
 
 | Name    | Role         | API                                     |

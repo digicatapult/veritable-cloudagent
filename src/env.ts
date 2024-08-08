@@ -57,7 +57,7 @@ const stringArray = <T extends string = string>(
 }
 
 const envConfig = {
-  LABEL: envalid.str({ default: 'AFJ Rest', devDefault: 'AFJ Rest Agent' }),
+  LABEL: envalid.str({ default: 'Veritable Cloudagent', devDefault: 'Veritable Cloudagent' }),
   WALLET_ID: envalid.str({ default: 'walletId', devDefault: 'walletId' }),
   WALLET_KEY: envalid.str({ default: 'walletKey', devDefault: 'walletKey' }),
   ENDPOINT: stringArray({
