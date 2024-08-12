@@ -57,7 +57,7 @@ export async function getTestAgent(name: string, port: number) {
 
 export async function getTestServer(agent: RestAgent) {
   const socketServer = new WebSocket.Server({ noServer: true })
-  const app = await setupServer(agent, {
+  const app = await setupServer(agent, new PinoLogger('silent'), {
     socketServer,
   })
   const server = app.listen(0, () => {})
