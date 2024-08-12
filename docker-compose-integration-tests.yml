@@ -5,22 +5,10 @@
 #   -f docker-compose-integration-tests.yml \
 #   up --build --exit-code-from integration-tests
 #
-# or run against already deployed testnet:
-#
-# docker build --target test -t afj-rest-integration-tests . && \
-# docker run -it \
-#   --network=testnet \
-#   -e ALICE_BASE_URL=http://alice:3000 \
-#   -e BOB_BASE_URL=http://bob:3000 \
-#   -e CHARLIE_BASE_URL=http://charlie:3000 \
-#   afj-rest-integration-tests
-
-version: '3.8'
 
 services:
   integration-tests:
     container_name: integration-tests
-    image: afj-rest-integration-tests
     build:
       context: .
       dockerfile: Dockerfile

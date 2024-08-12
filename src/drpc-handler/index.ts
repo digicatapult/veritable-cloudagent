@@ -1,9 +1,10 @@
-import { injectable, singleton } from 'tsyringe'
 import { Agent } from '@credo-ts/core'
+import { injectable, singleton } from 'tsyringe'
 
 import type { VerifiedDrpcRecord, VerifiedDrpcResponse } from '../modules/verified-drpc/index.js'
-import { RestAgent } from '../utils/agent.js'
+
 import { DrpcRequestObject, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
+import { RestAgent } from '../agent.js'
 import { NotFound } from '../error.js'
 import PinoLogger from '../utils/logger.js'
 

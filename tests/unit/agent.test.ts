@@ -1,21 +1,20 @@
-import { describe, before, after, test } from 'mocha'
 import { expect } from 'chai'
+import { after, before, describe, test } from 'mocha'
 
 import type { Agent } from '@credo-ts/core'
-import type { Express } from 'express'
+import type { Server } from 'node:net'
 
 import request from 'supertest'
 
-import { setupServer } from '../../src/server.js'
-import { getTestAgent } from './utils/helpers.js'
+import { getTestAgent, getTestServer } from './utils/helpers.js'
 
 describe('AgentController', () => {
-  let app: Express
+  let app: Server
   let agent: Agent
 
   before(async () => {
     agent = await getTestAgent('Agent REST Agent Test', 3001)
-    app = await setupServer(agent, { port: 3000 })
+    app = await getTestServer(agent)
   })
 
   describe('Get agent info', () => {
@@ -37,5 +36,6 @@ describe('AgentController', () => {
   after(async () => {
     await agent.shutdown()
     await agent.wallet.delete()
+    app.close()
   })
 })

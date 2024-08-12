@@ -1,16 +1,17 @@
 import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Route, Tags, Response, Query } from 'tsoa'
+import { Body, Controller, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
+import { RestAgent } from '../../../agent.js'
+import { BadRequest, HttpResponse } from '../../../error.js'
 import { type Did, DidRecordExample, DidStateExample } from '../../examples.js'
-import { HttpResponse, BadRequest } from '../../../error.js'
+import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
 
 @Tags('Dids')
 @Route('/v1/dids')
 @injectable()
 export class DidController extends Controller {
-  private agent: Agent
+  private agent: RestAgent
 
   public constructor(agent: Agent) {
     super()

@@ -1,33 +1,75 @@
-import type { AnonCredsSchema, AnonCredsCredentialDefinition } from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
+import type { Socket } from 'node:net'
+
 import {
   type ConnectionRecordProps,
   type DidCreateResult,
   AgentMessage,
-  OutOfBandRecord,
+  ConnectionInvitationMessage,
   ConnectionRecord,
   CredentialExchangeRecord,
+  DidDocument,
   DidExchangeRole,
   DidExchangeState,
   JsonTransformer,
-  ProofExchangeRecord,
   OutOfBandInvitation,
-  ConnectionInvitationMessage,
-  DidDocument,
+  OutOfBandRecord,
+  ProofExchangeRecord,
   TrustPingMessage,
 } from '@credo-ts/core'
 import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
+import { container } from 'tsyringe'
+import { WebSocket } from 'ws'
 
-import { setupAgent } from '../../../src/utils/agent.js'
+import { RestAgent, setupAgent } from '../../../src/agent.js'
+import { setupServer } from '../../../src/server.js'
+import PinoLogger from '../../../src/utils/logger.js'
 
 export async function getTestAgent(name: string, port: number) {
+  const logger = new PinoLogger('silent')
+  container.register(PinoLogger, { useValue: logger })
   return await setupAgent({
-    port: port,
-    endpoints: [`http://localhost:${port}`],
-    // add some randomness to ensure test isolation
-    name: `${name} (${randomUUID()})`,
-    logLevel: 'silent',
+    agentConfig: {
+      // add some randomness to ensure test isolation
+      label: `${name} (${randomUUID()})`,
+      endpoints: [`http://localhost:${port}`],
+      walletConfig: { id: name, key: name },
+      useDidSovPrefixWhereAllowed: true,
+      logger,
+      autoUpdateStorageOnStartup: true,
+      backupBeforeStorageUpdate: false,
+    },
+
+    inboundTransports: [
+      {
+        transport: 'http',
+        port: port,
+      },
+    ],
+    outboundTransports: ['http'],
+
+    logger,
+    ipfsOrigin: 'https:localhost:5001',
+    verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
+}
+
+export async function getTestServer(agent: RestAgent) {
+  const socketServer = new WebSocket.Server({ noServer: true })
+  const app = await setupServer(agent, new PinoLogger('silent'), {
+    socketServer,
+  })
+  const server = app.listen(0, () => {})
+
+  server.on('upgrade', (request, socket, head) => {
+    socketServer.handleUpgrade(request, socket as Socket, head, () => {
+      // incoming messages aren't expected so ignore
+      return
+    })
+  })
+
+  return server
 }
 
 export function objectToJson<T>(result: T) {

@@ -1,25 +1,31 @@
+import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
 } from '../../src/controllers/types.js'
-import type { Agent, ProofStateChangedEvent } from '@credo-ts/core'
-import type { Server } from 'net'
 
-import { describe, before, beforeEach, after, afterEach, test } from 'mocha'
-import { expect, use as chaiUse, Assertion as assertion } from 'chai'
-import { stub, restore as sinonRestore } from 'sinon'
+import { expect } from 'chai'
+import { after, afterEach, before, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
 
-import { AgentMessage, ProofEventTypes, ProofExchangeRecord, ProofRole, ProofState } from '@credo-ts/core'
+import {
+  AgentMessage,
+  ProofEventTypes,
+  ProofExchangeRecord,
+  ProofRole,
+  ProofState,
+  type Agent,
+  type ProofStateChangedEvent,
+} from '@credo-ts/core'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { startServer } from '../../src/index.js'
-
-import { getTestAgent, getTestProof, getTestProofResponse, objectToJson } from './utils/helpers.js'
+import { getTestAgent, getTestProof, getTestProofResponse, getTestServer, objectToJson } from './utils/helpers.js'
 
 describe('ProofController', () => {
+  let port: number
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
@@ -30,7 +36,8 @@ describe('ProofController', () => {
   before(async () => {
     aliceAgent = await getTestAgent('Proof REST Agent Test Alice', 3032)
     bobAgent = await getTestAgent('Proof REST Agent Test Bob', 3912)
-    app = await startServer(bobAgent, { port: 3033 })
+    app = await getTestServer(bobAgent)
+    port = (app.address() as AddressInfo).port
 
     testProof = getTestProof()
     testProofResponse = getTestProofResponse()
@@ -363,7 +370,7 @@ describe('ProofController', () => {
       })
 
       // Start client and wait for it to be opened
-      const client = new WebSocket('ws://localhost:3033')
+      const client = new WebSocket(`ws://localhost:${port}`)
       await new Promise((resolve) => client.once('open', resolve))
 
       // Start promise to listen for message

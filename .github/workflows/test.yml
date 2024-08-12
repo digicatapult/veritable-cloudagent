@@ -122,21 +122,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - run: git fetch --depth=1 --tags origin
-
-      - name: Install yq
-        run: sudo snap install yq
-
-      - name: Check Build Version
+      - name: Check version
         id: get_version
-        run: ./scripts/check-version.sh
-        shell: bash
-
-      - name: Error if version is not increased
-        shell: bash
-        run: |
-          exit $([[ "${{steps.get_version.outputs.IS_NEW_VERSION}}" = "true" ]] && echo 0 || echo 1)
+        uses: digicatapult/check-version@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-docker:
     name: 'Build docker image'

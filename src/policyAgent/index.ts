@@ -1,5 +1,6 @@
 import { singleton } from 'tsyringe'
 
+import { Env } from '../env.js'
 import { HttpResponse, NotFound } from '../error.js'
 
 type Policy = {
@@ -14,11 +15,14 @@ type Policy = {
 }
 @singleton()
 export default class PolicyAgent {
-  constructor(private origin: string) {
+  private origin: string
+
+  constructor(env: Env) {
+    this.origin = env.get('OPA_ORIGIN')
     try {
-      new URL(origin)
+      new URL(this.origin)
     } catch (err) {
-      throw new Error(`Invalid PolicyAgent origin ${origin}`)
+      throw new Error(`Invalid PolicyAgent origin ${this.origin}`)
     }
   }
 

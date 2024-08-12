@@ -1,25 +1,25 @@
-import type { RestAgent } from '../../../utils/agent.js'
 import {
+  Agent,
   type CredentialExchangeRecordProps,
   CredentialRepository,
   CredentialState,
-  Agent,
   RecordNotFoundError,
   type SendCredentialProblemReportOptions,
 } from '@credo-ts/core'
-import { Body, Controller, Delete, Get, Path, Post, Route, Tags, Example, Query, Response } from 'tsoa'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
-import type {
-  ProposeCredentialOptions,
-  AcceptCredentialProposalOptions,
-  CreateOfferOptions,
-  AcceptCredentialRequestOptions,
-  AcceptCredentialOfferOptions,
-  OfferCredentialOptions,
-} from '../../types.js'
-import { type RecordId, CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
+import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFound } from '../../../error.js'
+import { CredentialExchangeRecordExample, CredentialFormatDataExample, type RecordId } from '../../examples.js'
+import type {
+  AcceptCredentialOfferOptions,
+  AcceptCredentialProposalOptions,
+  AcceptCredentialRequestOptions,
+  CreateOfferOptions,
+  OfferCredentialOptions,
+  ProposeCredentialOptions,
+} from '../../types.js'
 
 @Tags('Credentials')
 @Route('/v1/credentials')

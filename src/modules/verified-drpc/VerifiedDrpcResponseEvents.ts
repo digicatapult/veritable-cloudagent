@@ -1,5 +1,5 @@
-import type { VerifiedDrpcRecord } from './repository/index.js'
 import type { BaseEvent } from '@credo-ts/core'
+import type { VerifiedDrpcRecord } from './repository/index.js'
 
 export enum VerifiedDrpcResponseEventTypes {
   VerifiedDrpcResponseStateChanged = 'VerifiedDrpcResponseStateChanged',

@@ -8,9 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci && npm cache clean --force
 
-COPY tsoa.json tsconfig*.json ./
-COPY bin ./bin
-COPY schema ./schema
+COPY tsoa.json tsconfig.json ./
 COPY src ./src
 RUN npm run build
 
@@ -30,7 +28,7 @@ CMD ["npm", "run", "test"]
 
 
 # Production stage
-FROM node:lts-slim AS production
+FROM node:lts AS production
 # NB Debian bookworm-slim doesn't include OpenSSL
 
 # Need curl for healthcheck
@@ -42,16 +40,12 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /www
 
 COPY --from=build /app/package.json /app/package-lock.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/bin ./bin
-COPY --from=build /app/schema ./schema
 COPY --from=build /app/build ./build
-
-RUN npm prune
+RUN npm ci && npm cache clean --force
 
 EXPOSE 3000 5002 5003
 
 HEALTHCHECK --interval=5s --timeout=3s \
 	CMD curl -f http://localhost:3000/ || exit 1
 
-ENTRYPOINT [ "./bin/afj-rest.js", "start" ]
+ENTRYPOINT [ "node", "./build/index.js" ]

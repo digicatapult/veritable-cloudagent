@@ -1,25 +1,27 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { describe, before, after, test } from 'mocha'
 import { expect } from 'chai'
+import { after, before, describe, test } from 'mocha'
 
-import type { WebhookData } from '../../src/utils/webhook.js'
-import type { Agent, CredentialStateChangedEvent, ProofStateChangedEvent } from '@credo-ts/core'
 import type { Server } from 'net'
 
 import {
-  CredentialExchangeRecord,
-  ProofEventTypes,
-  ProofState,
-  ProofExchangeRecord,
-  CredentialState,
   CredentialEventTypes,
+  CredentialExchangeRecord,
   CredentialRole,
+  CredentialState,
+  ProofEventTypes,
+  ProofExchangeRecord,
   ProofRole,
+  ProofState,
+  type Agent,
+  type CredentialStateChangedEvent,
+  type ProofStateChangedEvent,
 } from '@credo-ts/core'
 
 import { setupServer } from '../../src/server.js'
-import { waitForHook, webhookListener } from '../../src/utils/webhook.js'
+import { waitForHook, webhookListener, type WebhookData } from '../../src/utils/webhook.js'
 
+import PinoLogger from '../../src/utils/logger.js'
 import { getTestAgent } from './utils/helpers.js'
 
 describe('WebhookTests', () => {
@@ -32,7 +34,7 @@ describe('WebhookTests', () => {
     aliceAgent = await getTestAgent('Webhook REST Agent Test Alice', 3042)
     bobAgent = await getTestAgent('Webhook REST Agent Test Bob', 3043)
     server = await webhookListener(3044, webhooks)
-    await setupServer(bobAgent, { webhookUrl: ['http://localhost:3044'], port: 6045 })
+    await setupServer(bobAgent, new PinoLogger('silent'), { webhookUrl: ['http://localhost:3044'] })
   })
 
   test('should return a webhook event when basic message state changed', async () => {

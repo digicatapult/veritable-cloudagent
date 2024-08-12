@@ -1,15 +1,20 @@
 import { Agent, utils } from '@credo-ts/core'
-import { Body, Controller, Path, Query, Post, Route, Tags, Response } from 'tsoa'
+import type { DrpcResponseObject } from '@credo-ts/drpc'
+import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
-import type { DrpcRequestObject, DrpcResponseObject } from '@credo-ts/drpc'
-
-import { type RecordId } from '../../examples.js'
-import { NotFound, GatewayTimeout, BadGatewayError, InternalError } from '../../../error.js'
-import { RestAgent } from '../../../utils/agent.js'
-import DrpcReceiveHandler from '../../../drpc-handler/index.js'
 import { z } from 'zod'
 
-type DrpcRequestOptions = Omit<DrpcRequestObject, 'id'>
+import { BadGatewayError, GatewayTimeout, InternalError, NotFound } from '../../../error.js'
+import { type RecordId } from '../../examples.js'
+
+import { RestAgent } from '../../../agent.js'
+import DrpcReceiveHandler from '../../../drpc-handler/index.js'
+
+type DrpcRequestOptions = {
+  jsonrpc: string
+  method: string
+  params?: Record<string, unknown> | unknown[]
+}
 type DrpcResponseOptions = Omit<DrpcResponseObject, 'id'>
 
 const rpcResponseParser = z.object({

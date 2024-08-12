@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { pino, Logger, LevelWithSilent } from 'pino'
-import { LogLevel as CredoLogLevel, BaseLogger } from '@credo-ts/core'
+import { BaseLogger, LogLevel as CredoLogLevel } from '@credo-ts/core'
+import { LevelWithSilent, Logger, pino } from 'pino'
 
 const tsLogLevelMap = {
   silent: CredoLogLevel.off,
@@ -26,14 +26,14 @@ const invTsLogLevelMap = {
 export type LogLevel = LevelWithSilent
 
 export default class PinoLogger extends BaseLogger {
-  private logger: Logger
+  private _logger: Logger
 
   // Map our log levels to tslog levels
 
   public constructor(logLevel: LevelWithSilent) {
     super(tsLogLevelMap[logLevel])
 
-    this.logger = pino(
+    this._logger = pino(
       {
         name: 'veritable-cloudagent',
         timestamp: true,
@@ -43,10 +43,14 @@ export default class PinoLogger extends BaseLogger {
     )
   }
 
+  public get logger() {
+    return this._logger
+  }
+
   private log(level: Exclude<CredoLogLevel, CredoLogLevel.off>, message: string, data?: Record<string, any>): void {
     const tsLogLevel = invTsLogLevelMap[level]
-    if (data) return this.logger[tsLogLevel]('%s %o', message, data)
-    this.logger[tsLogLevel](message)
+    if (data) return this._logger[tsLogLevel]('%s %o', message, data)
+    this._logger[tsLogLevel](message)
   }
 
   public test(message: string, data?: Record<string, any>): void {

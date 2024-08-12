@@ -1,5 +1,7 @@
-import { before, after } from 'mocha'
-import { MockAgent, setGlobalDispatcher, getGlobalDispatcher, Dispatcher } from 'undici'
+import { after, before } from 'mocha'
+import { Dispatcher, getGlobalDispatcher, MockAgent, setGlobalDispatcher } from 'undici'
+
+import { Env } from '../../../env.js'
 
 const examplePolicy = (id: string) => ({
   id,
@@ -19,6 +21,17 @@ const examplePolicy = (id: string) => ({
     },
   },
 })
+
+export const mockEnv = (origin: string): Env => {
+  return {
+    get: (name: string) => {
+      if (name !== 'OPA_ORIGIN') {
+        throw new Error('env value not provided')
+      }
+      return origin
+    },
+  } as Env
+}
 
 export const withGetPoliciesResponse = (id: string) => {
   const origin = `http://policy-agent`

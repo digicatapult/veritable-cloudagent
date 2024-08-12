@@ -1,26 +1,88 @@
+#!/usr/bin/env node
 import 'reflect-metadata'
 
-import type { ServerConfig } from './utils/ServerConfig.js'
-import type { Agent } from '@credo-ts/core'
-import type { Socket } from 'net'
+import type { Socket } from 'node:net'
 
 import WebSocket from 'ws'
 
+import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
+import { container } from 'tsyringe'
+import { setupAgent } from './agent.js'
+import { Env } from './env.js'
 import { setupServer } from './server.js'
+import PinoLogger from './utils/logger.js'
 
-export const startServer = async (agent: Agent, config: ServerConfig) => {
-  const socketServer = config.socketServer ?? new WebSocket.Server({ noServer: true })
-  const app = await setupServer(agent, { ...config, socketServer })
-  const server = app.listen(config.port)
+const env = container.resolve(Env)
+const logger = new PinoLogger(env.get('LOG_LEVEL'))
+container.register(PinoLogger, {
+  useValue: logger,
+})
 
-  // If no socket server is provided, we will use the existing http server
-  // to also host the websocket server
-  if (!config.socketServer) {
-    server.on('upgrade', (request, socket, head) => {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
-      socketServer.handleUpgrade(request, socket as Socket, head, () => {})
-    })
-  }
+const agent = await setupAgent({
+  agentConfig: {
+    label: env.get('LABEL'),
+    walletConfig: {
+      id: env.get('WALLET_ID'),
+      key: env.get('WALLET_KEY'),
+      storage:
+        env.get('STORAGE_TYPE') === 'sqlite'
+          ? {
+              type: 'sqlite',
+            }
+          : {
+              type: 'postgres',
+              config: {
+                host: `${env.get('POSTGRES_HOST') as string}:${env.get('POSTGRES_PORT') as string}`,
+              },
+              credentials: {
+                account: env.get('POSTGRES_USERNAME') as string,
+                password: env.get('POSTGRES_PASSWORD') as string,
+              },
+            },
+    },
+    endpoints: env.get('ENDPOINT'),
+    connectionImageUrl: env.get('CONNECTION_IMAGE_URL'),
+    backupBeforeStorageUpdate: env.get('BACKUP_BEFORE_STORAGE_UPDATE'),
+    autoUpdateStorageOnStartup: env.get('AUTO_UPDATE_STORAGE_ON_STARTUP'),
+    useDidKeyInProtocols: env.get('USE_DID_KEY_IN_PROTOCOLS'),
+    useDidSovPrefixWhereAllowed: env.get('USE_DID_SOV_PREFIX_WHERE_ALLOWED'),
+  },
 
-  return server
-}
+  inboundTransports: env.get('INBOUND_TRANSPORT'),
+  outboundTransports: env.get('OUTBOUND_TRANSPORT'),
+
+  autoAcceptConnections: env.get('AUTO_ACCEPT_CONNECTIONS'),
+  autoAcceptCredentials: env.get('AUTO_ACCEPT_CREDENTIALS') as AutoAcceptCredential,
+  autoAcceptProofs: env.get('AUTO_ACCEPT_PROOFS') as AutoAcceptProof,
+  autoAcceptMediationRequests: env.get('AUTO_ACCEPT_MEDIATION_REQUESTS'),
+  ipfsOrigin: env.get('IPFS_ORIGIN'),
+
+  verifiedDrpcOptions: {
+    proofTimeoutMs: env.get('VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS'),
+    requestTimeoutMs: env.get('VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS'),
+    proofRequestOptions: env.get('VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS'),
+  },
+
+  logger,
+})
+
+const socketServer = new WebSocket.Server({ noServer: true })
+const app = await setupServer(agent, logger, {
+  webhookUrl: env.get('WEBHOOK_URL'),
+  personaTitle: env.get('PERSONA_TITLE'),
+  personaColor: env.get('PERONA_COLOR'),
+  opaOrigin: env.get('OPA_ORIGIN'),
+  socketServer,
+})
+
+const adminPort = env.get('ADMIN_PORT')
+const server = app.listen(adminPort, () => {
+  logger.info(`Successfully started server on port ${adminPort}`)
+})
+
+server.on('upgrade', (request, socket, head) => {
+  socketServer.handleUpgrade(request, socket as Socket, head, () => {
+    // incoming messages aren't expected so ignore
+    return
+  })
+})

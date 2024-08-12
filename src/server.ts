@@ -1,39 +1,46 @@
-import 'reflect-metadata'
-import express, { type Response as ExResponse, type Request as ExRequest } from 'express'
 import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import { serve, generateHTML } from 'swagger-ui-express'
-import { container } from 'tsyringe'
+import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
+import { pinoHttp as requestLogger } from 'pino-http'
+import 'reflect-metadata'
+import { generateHTML, serve } from 'swagger-ui-express'
+import { container } from 'tsyringe'
 import { fileURLToPath } from 'url'
 
 import type { ServerConfig } from './utils/ServerConfig.js'
-import type { RestAgent } from './utils/agent.js'
+
+import { RestAgent } from './agent.js'
+import { errorHandler } from './error.js'
 import { basicMessageEvents } from './events/BasicMessageEvents.js'
 import { connectionEvents } from './events/ConnectionEvents.js'
 import { credentialEvents } from './events/CredentialEvents.js'
+import { drpcEvents } from './events/DrpcEvents.js'
 import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
-import { drpcEvents } from './events/DrpcEvents.js'
 import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
-//import { VerifiedDrpcService } from './verified-drpc/VerifiedDrpcService.js'
 import { RegisterRoutes } from './routes/routes.js'
-import { errorHandler } from './error.js'
-import PolicyAgent from './policyAgent/index.js'
+import PinoLogger from './utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
+export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
   const swaggerBuffer = await fs.readFile(path.join(__dirname, './routes/swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
 
   container.registerInstance(Agent, agent as Agent)
-  container.registerInstance(PolicyAgent, new PolicyAgent(config.opaOrigin || 'http://localhost:8181'))
 
-  const app = config.app ?? express()
+  const app = express()
+
+  app.use(
+    requestLogger({
+      logger: logger.logger,
+    })
+  )
+
   if (config.cors) app.use(cors())
 
   if (config.socketServer || (config.webhookUrl && config.webhookUrl.length > 0)) {
