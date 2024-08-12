@@ -4,6 +4,7 @@ import cors from 'cors'
 import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
+import { pinoHttp as requestLogger } from 'pino-http'
 import 'reflect-metadata'
 import { generateHTML, serve } from 'swagger-ui-express'
 import { container } from 'tsyringe'
@@ -21,17 +22,25 @@ import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
 import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
 import { RegisterRoutes } from './routes/routes.js'
+import PinoLogger from './utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export const setupServer = async (agent: RestAgent, config: ServerConfig) => {
+export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
   const swaggerBuffer = await fs.readFile(path.join(__dirname, './routes/swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
 
   container.registerInstance(Agent, agent as Agent)
 
   const app = express()
+
+  app.use(
+    requestLogger({
+      logger: logger.logger,
+    })
+  )
+
   if (config.cors) app.use(cors())
 
   if (config.socketServer || (config.webhookUrl && config.webhookUrl.length > 0)) {

@@ -67,7 +67,7 @@ const agent = await setupAgent({
 })
 
 const socketServer = new WebSocket.Server({ noServer: true })
-const app = await setupServer(agent, {
+const app = await setupServer(agent, logger, {
   webhookUrl: env.get('WEBHOOK_URL'),
   personaTitle: env.get('PERSONA_TITLE'),
   personaColor: env.get('PERONA_COLOR'),

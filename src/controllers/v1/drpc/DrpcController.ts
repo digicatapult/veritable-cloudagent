@@ -2,18 +2,18 @@ import { Agent, utils } from '@credo-ts/core'
 import type { DrpcResponseObject } from '@credo-ts/drpc'
 import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
+import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, InternalError, NotFound } from '../../../error.js'
 import { type RecordId } from '../../examples.js'
 
-import { z } from 'zod'
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
 
 type DrpcRequestOptions = {
   jsonrpc: string
   method: string
-  params?: unknown[] | Record<string, unknown>
+  params?: Record<string, unknown> | unknown[]
 }
 type DrpcResponseOptions = Omit<DrpcResponseObject, 'id'>
 
