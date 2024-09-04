@@ -205,7 +205,6 @@ describe('Onboarding & Verification flow', function () {
       .get(`/v1/credentials/${issuerCredentialRecordId}`)
       .expect('Content-Type', /json/)
       .expect(200)
-
     expect(response.body).to.have.property('state', 'done')
   })
 
