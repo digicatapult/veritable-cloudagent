@@ -10,7 +10,7 @@ export default class Ipfs {
     try {
       new URL(origin)
     } catch (err) {
-      throw new Error(`Invalid origin ${origin}`)
+      throw new Error(`Invalid origin ${origin} ${err}`)
     }
   }
 
@@ -32,7 +32,7 @@ export default class Ipfs {
       const parsedResponse = addResponseParser.parse(responseJson)
       return parsedResponse.Hash
     } catch (err) {
-      throw new Error(`Error calling IPFS`)
+      throw new Error(`Error calling IPFS ${err}`)
     }
   }
 

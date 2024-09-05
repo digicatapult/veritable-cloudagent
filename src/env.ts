@@ -40,7 +40,7 @@ const stringArray = <T extends string = string>(
       try {
         values = input.split(',').map((s) => s.trim())
       } catch (err) {
-        throw new Error('Invalid input for string array')
+        throw new Error(`Invalid input for string array ${err}`)
       }
     }
     const { allowedValues } = options

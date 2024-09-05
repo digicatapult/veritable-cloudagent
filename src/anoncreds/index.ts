@@ -53,6 +53,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     try {
       cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.schema), 'utf8'))
     } catch (err) {
+      agentContext.config.logger.debug(`${err}`)
       agentContext.config.logger.error(`Failed to upload schema to IPFS`, {
         schema: options.schema,
       })
@@ -128,6 +129,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     try {
       cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.credentialDefinition), 'utf8'))
     } catch (err) {
+      agentContext.config.logger.debug(`${err}`)
       agentContext.config.logger.error(`Failed to upload schema to IPFS`, {
         credentialDefinition: options.credentialDefinition,
       })
@@ -216,6 +218,7 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     try {
       result = JSON.parse(resultText) as AObj
     } catch (err) {
+      agentContext.config.logger.debug(`${err}`)
       agentContext.config.logger.error(`Failed to parse content of ${cid}`, {
         cid,
         schemaText: resultText,

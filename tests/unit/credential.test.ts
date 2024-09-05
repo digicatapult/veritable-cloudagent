@@ -671,7 +671,7 @@ describe('CredentialController', () => {
 
       expect(response.body).to.deep.equal(objectToJson(result))
       expect(response.statusCode).to.be.equal(200)
-      expect(problemRecordStub.calledOnce).to.be.true
+      expect(problemRecordStub.calledOnce).to.be.equal(true)
       expect(problemRecordStub.firstCall.args[0]).to.deep.equal({
         credentialRecordId: testCredential.id,
         description: 'some Error report',
