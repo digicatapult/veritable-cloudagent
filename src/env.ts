@@ -2,7 +2,6 @@ import * as dotenv from 'dotenv'
 import * as envalid from 'envalid'
 import { makeValidator } from 'envalid'
 import { singleton } from 'tsyringe'
-import { logger } from './index.js'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'tests/test.env.ts' })
@@ -41,8 +40,7 @@ const stringArray = <T extends string = string>(
       try {
         values = input.split(',').map((s) => s.trim())
       } catch (err) {
-        logger.debug(`${err}`)
-        throw new Error('Invalid input for string array')
+        throw new Error(`Invalid input for string array ${err}`)
       }
     }
     const { allowedValues } = options

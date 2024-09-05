@@ -13,7 +13,7 @@ import { setupServer } from './server.js'
 import PinoLogger from './utils/logger.js'
 
 const env = container.resolve(Env)
-export const logger = new PinoLogger(env.get('LOG_LEVEL'))
+const logger = new PinoLogger(env.get('LOG_LEVEL'))
 container.register(PinoLogger, {
   useValue: logger,
 })

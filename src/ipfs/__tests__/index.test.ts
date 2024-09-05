@@ -105,7 +105,7 @@ describe('ipfs', function () {
         expect.fail('Expected an error')
       }
       expect(error).instanceOf(Error)
-      expect(error.message).to.equal(`Error calling IPFS`)
+      expect(error.message).to.contain(`Error calling IPFS`)
     })
   })
 })

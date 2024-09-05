@@ -1,4 +1,4 @@
-import { inject, singleton } from 'tsyringe'
+import { inject, injectable, singleton } from 'tsyringe'
 
 import { Env } from '../env.js'
 import { HttpResponse, NotFound } from '../error.js'
@@ -14,6 +14,7 @@ type Policy = {
     rules: Record<string, unknown>[]
   }
 }
+@injectable()
 @singleton()
 export default class PolicyAgent {
   private origin: string

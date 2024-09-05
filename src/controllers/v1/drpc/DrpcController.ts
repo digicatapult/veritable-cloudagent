@@ -1,7 +1,7 @@
 import { Agent, utils } from '@credo-ts/core'
 import type { DrpcResponseObject } from '@credo-ts/drpc'
 import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
-import { inject, injectable } from 'tsyringe'
+import { inject, injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, InternalError, NotFound } from '../../../error.js'
@@ -34,6 +34,7 @@ const rpcResponseParser = z.object({
 @Tags('Didcomm RPC')
 @Route('/v1/drpc')
 @injectable()
+@singleton()
 export class DrpcController extends Controller {
   private agent: RestAgent
 
