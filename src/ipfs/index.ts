@@ -1,3 +1,4 @@
+import { logger } from '../index.js'
 import { addResponseParser } from './responseParser.js'
 
 export interface MetadataFile {
@@ -10,6 +11,7 @@ export default class Ipfs {
     try {
       new URL(origin)
     } catch (err) {
+      logger.debug(`${err}`)
       throw new Error(`Invalid origin ${origin}`)
     }
   }
@@ -32,6 +34,7 @@ export default class Ipfs {
       const parsedResponse = addResponseParser.parse(responseJson)
       return parsedResponse.Hash
     } catch (err) {
+      logger.debug(`${err}`)
       throw new Error(`Error calling IPFS`)
     }
   }

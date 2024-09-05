@@ -1,7 +1,7 @@
 import { Agent, utils } from '@credo-ts/core'
 import type { DrpcResponseObject } from '@credo-ts/drpc'
 import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
-import { injectable } from 'tsyringe'
+import { inject, injectable } from 'tsyringe'
 import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, InternalError, NotFound } from '../../../error.js'
@@ -9,6 +9,7 @@ import { type RecordId } from '../../examples.js'
 
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
+import PinoLogger from '../../../utils/logger.js'
 
 type DrpcRequestOptions = {
   jsonrpc: string
@@ -38,7 +39,8 @@ export class DrpcController extends Controller {
 
   public constructor(
     agent: Agent,
-    private receiveHandler: DrpcReceiveHandler
+    private receiveHandler: DrpcReceiveHandler,
+    @inject(PinoLogger) private logger: PinoLogger
   ) {
     super()
     this.agent = agent
@@ -81,6 +83,7 @@ export class DrpcController extends Controller {
     try {
       validatedResponse = rpcResponseParser.parse(response)
     } catch (err) {
+      this.logger.debug(`${err}`)
       throw new BadGatewayError('Invalid response to RPC call')
     }
 

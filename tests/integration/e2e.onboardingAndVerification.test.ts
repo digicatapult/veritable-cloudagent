@@ -32,6 +32,7 @@ describe('Onboarding & Verification flow', function () {
 
   beforeEach(function (done) {
     // abort remaining tests in suite if one fails
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     failed && this.skip()
     // pause between tests/retries to allow state to resolve on peers
     setTimeout(function () {

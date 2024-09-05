@@ -1,7 +1,8 @@
-import { singleton } from 'tsyringe'
+import { inject, singleton } from 'tsyringe'
 
 import { Env } from '../env.js'
 import { HttpResponse, NotFound } from '../error.js'
+import PinoLogger from '../utils/logger.js'
 
 type Policy = {
   id: string
@@ -17,11 +18,15 @@ type Policy = {
 export default class PolicyAgent {
   private origin: string
 
-  constructor(env: Env) {
+  constructor(
+    env: Env,
+    @inject(PinoLogger) private logger: PinoLogger
+  ) {
     this.origin = env.get('OPA_ORIGIN')
     try {
       new URL(this.origin)
     } catch (err) {
+      this.logger.debug(`${err}`)
       throw new Error(`Invalid PolicyAgent origin ${this.origin}`)
     }
   }
