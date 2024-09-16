@@ -31,7 +31,7 @@
     "lint": "eslint .",
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=tsimp/import --watch src/index.ts",
+    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=@digicatapult/tsimp/import --watch src/index.ts",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc",
