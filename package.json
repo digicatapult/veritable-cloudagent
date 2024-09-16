@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.10.19",
+  "version": "0.10.20",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -31,7 +31,7 @@
     "lint": "eslint .",
     "validate": "npm run lint && npm run check-types && npm run check-format",
     "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=tsimp/import --watch src/index.ts",
+    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=@digicatapult/tsimp/import --watch src/index.ts",
     "build": "npm run clean && npm run compile",
     "clean": "rimraf -rf ./build",
     "compile": "tsoa spec-and-routes && tsc",
@@ -95,7 +95,7 @@
     "prettier-plugin-organize-imports": "^4.0.0",
     "sinon": "^18.0.1",
     "supertest": "^7.0.0",
-    "tsimp": "^2.0.11",
+    "@digicatapult/tsimp": "^2.0.12",
     "typescript": "~5.6.2"
   },
   "engines": {
