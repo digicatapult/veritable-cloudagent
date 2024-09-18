@@ -27,7 +27,7 @@ describe('DrpcController', () => {
   })
 
   beforeEach(() => {
-    clock = useFakeTimers()
+    clock = useFakeTimers({ toFake: ['setTimeout'] })
   })
 
   afterEach(() => {
@@ -39,7 +39,6 @@ describe('DrpcController', () => {
     test("should return undefined if there's no response", async () => {
       const spy = stub(agent.modules.drpc, 'sendRequest')
       spy.resolves(stub().resolves(undefined))
-
       const response = await request(app).post(`/v1/drpc/${connection.id}/request`).send({
         jsonrpc: '2.0',
         method: 'test',
