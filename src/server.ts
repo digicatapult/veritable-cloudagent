@@ -12,6 +12,7 @@ import { fileURLToPath } from 'url'
 
 import type { ServerConfig } from './utils/ServerConfig.js'
 
+import { randomUUID } from 'crypto'
 import { RestAgent } from './agent.js'
 import { errorHandler } from './error.js'
 import { basicMessageEvents } from './events/BasicMessageEvents.js'
@@ -38,6 +39,16 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   app.use(
     requestLogger({
       logger: logger.logger,
+      genReqId: function (req: express.Request, res: express.Response): string {
+        const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
+
+        res.setHeader('x-request-id', id)
+        return id
+      },
+      quietReqLogger: true,
+      customAttributeKeys: {
+        reqId: 'req_id',
+      },
     })
   )
 

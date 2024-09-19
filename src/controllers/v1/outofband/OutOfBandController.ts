@@ -9,7 +9,8 @@ import {
   OutOfBandInvitation,
   RecordNotFoundError,
 } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -63,10 +64,15 @@ export class OutOfBandController extends Controller {
   @Example<OutOfBandRecordWithInvitationProps>(outOfBandRecordExample)
   @Get('/:outOfBandId')
   @Response<NotFound['message']>(404)
-  public async getOutOfBandRecordById(@Path('outOfBandId') outOfBandId: RecordId) {
+  public async getOutOfBandRecordById(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: RecordId) {
     const outOfBandRecord = await this.agent.oob.findById(outOfBandId)
 
-    if (!outOfBandRecord) throw new NotFound(`Out of band record with id "${outOfBandId}" not found.`)
+    if (!outOfBandRecord) {
+      req.log.warn('%s OOB record not found', outOfBandId)
+      throw new NotFound(`Out of band record with id "${outOfBandId}" not found.`)
+    }
+
+    req.log.debug('returning OOB record %j', outOfBandRecord.toJSON())
 
     return outOfBandRecord.toJSON()
   }
@@ -88,9 +94,12 @@ export class OutOfBandController extends Controller {
   })
   @Post('/create-invitation')
   public async createInvitation(
+    @Request() req: express.Request,
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
   ) {
     const outOfBandRecord = await this.agent.oob.createInvitation(config)
+    req.log.info('invitation has been created %j', outOfBandRecord.toJSON())
+
     return {
       invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
         domain: this.agent.config.endpoints[0],
@@ -116,9 +125,11 @@ export class OutOfBandController extends Controller {
   })
   @Post('/create-legacy-invitation')
   public async createLegacyInvitation(
+    @Request() req: express.Request,
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> // routing prop removed because of issues with public key serialization
   ) {
     const { outOfBandRecord, invitation } = await this.agent.oob.createLegacyInvitation(config)
+    req.log.info('legacy invitation has been created %j', outOfBandRecord.toJSON())
 
     return {
       invitationUrl: invitation.toUrl({
@@ -149,6 +160,7 @@ export class OutOfBandController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async createLegacyConnectionlessInvitation(
+    @Request() req: express.Request,
     @Body()
     config: {
       recordId: string
@@ -158,6 +170,7 @@ export class OutOfBandController extends Controller {
   ) {
     try {
       const agentMessage = JsonTransformer.fromJSON(config.message, AgentMessage)
+      req.log.info('creating a legacy connectionless invitation %j', config)
 
       return await this.agent.oob.createLegacyConnectionlessInvitation({
         ...config,
@@ -165,8 +178,10 @@ export class OutOfBandController extends Controller {
       })
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection not found', config.recordId)
         throw new NotFound(`connection with connection id "${config.recordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -184,11 +199,17 @@ export class OutOfBandController extends Controller {
     connectionRecord: ConnectionRecordExample,
   })
   @Post('/receive-invitation')
-  public async receiveInvitation(@Body() invitationRequest: ReceiveInvitationProps) {
+  public async receiveInvitation(@Request() req: express.Request, @Body() invitationRequest: ReceiveInvitationProps) {
     const { invitation, ...config } = invitationRequest
 
     const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
+    req.log.info('receive OOB invitation %j', invite)
     const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveInvitation(invite, config)
+
+    req.log.debug('receive OOB invitation records %j', {
+      OOB: outOfBandRecord.toJSON(),
+      connection: connectionRecord?.toJSON(),
+    })
 
     return {
       outOfBandRecord: outOfBandRecord.toJSON(),
@@ -211,8 +232,13 @@ export class OutOfBandController extends Controller {
   })
   @Post('/receive-implicit-invitation')
   @Response<HttpResponse>(500)
-  public async receiveImplicitInvitation(@Body() config: ReceiveOutOfBandImplicitInvitationConfig) {
+  public async receiveImplicitInvitation(
+    @Request() req: express.Request,
+    @Body() config: ReceiveOutOfBandImplicitInvitationConfig
+  ) {
     const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation(config)
+    req.log.info('implicit invitation %j', { OOB: outOfBandRecord.toJSON(), connection: connectionRecord?.toJSON() })
+
     return {
       outOfBandRecord: outOfBandRecord.toJSON(),
       connectionRecord: connectionRecord?.toJSON(),
@@ -232,10 +258,19 @@ export class OutOfBandController extends Controller {
     connectionRecord: ConnectionRecordExample,
   })
   @Post('/receive-invitation-url')
-  public async receiveInvitationFromUrl(@Body() invitationRequest: ReceiveInvitationByUrlProps) {
+  public async receiveInvitationFromUrl(
+    @Request() req: express.Request,
+    @Body() invitationRequest: ReceiveInvitationByUrlProps
+  ) {
     const { invitationUrl, ...config } = invitationRequest
+    req.log.info('invation from url %s', invitationUrl)
 
     const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveInvitationFromUrl(invitationUrl, config)
+    req.log.info('receive invitation from url %j', {
+      OOB: outOfBandRecord.toJSON(),
+      connection: connectionRecord?.toJSON(),
+    })
+
     return {
       outOfBandRecord: outOfBandRecord.toJSON(),
       connectionRecord: connectionRecord?.toJSON(),
@@ -254,6 +289,7 @@ export class OutOfBandController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async acceptInvitation(
+    @Request() req: express.Request,
     @Path('outOfBandId') outOfBandId: RecordId,
     @Body() acceptInvitationConfig: AcceptInvitationConfig
   ) {
@@ -263,14 +299,18 @@ export class OutOfBandController extends Controller {
         acceptInvitationConfig
       )
 
+      req.log.info('invitation accepted %j', { OOB: outOfBandRecord.toJSON(), connection: connectionRecord?.toJSON() })
+
       return {
         outOfBandRecord: outOfBandRecord.toJSON(),
         connectionRecord: connectionRecord?.toJSON(),
       }
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s mediator not found', acceptInvitationConfig?.mediatorId)
         throw new NotFound(`mediator with mediatorId ${acceptInvitationConfig?.mediatorId} not found`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -283,14 +323,17 @@ export class OutOfBandController extends Controller {
   @Delete('/:outOfBandId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteOutOfBandRecord(@Path('outOfBandId') outOfBandId: RecordId) {
+  public async deleteOutOfBandRecord(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: RecordId) {
     try {
       this.setStatus(204)
+      req.log.info('deleting %s OOB record', outOfBandId)
       await this.agent.oob.deleteById(outOfBandId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s OOB record not found', outOfBandId)
         throw new NotFound(`Out of band record with id "${outOfBandId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }

@@ -1,5 +1,6 @@
 import { Agent } from '@credo-ts/core'
-import { Controller, Get, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Controller, Get, Request, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -19,11 +20,14 @@ export class AgentController extends Controller {
    * Retrieve basic agent information
    */
   @Get('/')
-  public async getAgentInfo(): Promise<AgentInfo> {
-    return {
+  public async getAgentInfo(@Request() req: express.Request): Promise<AgentInfo> {
+    const info = {
       label: this.agent.config.label,
       endpoints: this.agent.config.endpoints,
       isInitialized: this.agent.isInitialized,
     }
+    req.log.info('getting agent config %j', { info })
+
+    return info
   }
 }

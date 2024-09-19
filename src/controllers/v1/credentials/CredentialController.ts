@@ -6,7 +6,8 @@ import {
   RecordNotFoundError,
   type SendCredentialProblemReportOptions,
 } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -65,14 +66,21 @@ export class CredentialController extends Controller {
   @Get('/:credentialRecordId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async getCredentialById(@Path('credentialRecordId') credentialRecordId: RecordId) {
+  public async getCredentialById(
+    @Request() req: express.Request,
+    @Path('credentialRecordId') credentialRecordId: RecordId
+  ) {
     try {
+      req.log.info('retrieving %s credential by id', credentialRecordId)
       const credential = await this.agent.credentials.getById(credentialRecordId)
+
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -87,14 +95,19 @@ export class CredentialController extends Controller {
   @Get('/:credentialRecordId/format-data')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async getCredentialFormatDataById(@Path('credentialRecordId') credentialRecordId: RecordId) {
+  public async getCredentialFormatDataById(
+    @Request() req: express.Request,
+    @Path('credentialRecordId') credentialRecordId: RecordId
+  ) {
     try {
       const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
       return formatData
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential format was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -107,14 +120,19 @@ export class CredentialController extends Controller {
   @Delete('/:credentialRecordId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteCredential(@Path('credentialRecordId') credentialRecordId: RecordId) {
+  public async deleteCredential(
+    @Request() req: express.Request,
+    @Path('credentialRecordId') credentialRecordId: RecordId
+  ) {
     try {
       this.setStatus(204)
       await this.agent.credentials.deleteById(credentialRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -130,14 +148,16 @@ export class CredentialController extends Controller {
   @Post('/propose-credential')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async proposeCredential(@Body() options: ProposeCredentialOptions) {
+  public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
     try {
       const credential = await this.agent.credentials.proposeCredential(options)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection was not found', options.connectionId)
         throw new NotFound(`connection with connection record id "${options.connectionId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -155,6 +175,7 @@ export class CredentialController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
+    @Request() req: express.Request,
     @Path('credentialRecordId') credentialRecordId: RecordId,
     @Body() options?: AcceptCredentialProposalOptions
   ) {
@@ -167,8 +188,10 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -182,8 +205,10 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
-  public async createOffer(@Body() options: CreateOfferOptions) {
+  public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
     const offer = await this.agent.credentials.createOffer(options)
+    req.log.info('credential offer has been created %j', offer)
+
     return {
       message: offer.message.toJSON(),
       credentialRecord: offer.credentialRecord.toJSON(),
@@ -201,20 +226,28 @@ export class CredentialController extends Controller {
   @Post('/offer-credential')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async offerCredential(@Body() options: OfferCredentialOptions) {
+  public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {
     try {
-      //check connection exists
+      req.log.debug('checking if connection exists %s', options.connectionId)
       const connection = await this.agent.connections.findById(options.connectionId)
-      if (!connection) throw new NotFound(`connection with connection id "${options.connectionId}" not found.`)
+      if (!connection) {
+        req.log.warn('%s connection was not found', options.connectionId)
+        throw new NotFound(`connection with connection id "${options.connectionId}" not found.`)
+      }
 
       const credential = await this.agent.credentials.offerCredential(options)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn(
+          '%s credential definition was not found',
+          options.credentialFormats.anoncreds?.credentialDefinitionId
+        )
         throw new NotFound(
           `the credential definition id "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found.`
         )
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -232,6 +265,7 @@ export class CredentialController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async acceptOffer(
+    @Request() req: express.Request,
     @Path('credentialRecordId') credentialRecordId: RecordId,
     @Body() options?: AcceptCredentialOfferOptions
   ) {
@@ -240,11 +274,15 @@ export class CredentialController extends Controller {
         ...options,
         credentialRecordId: credentialRecordId,
       })
+      req.log.debug('returning a credential %j', credential.toJSON())
+
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -262,6 +300,7 @@ export class CredentialController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async acceptRequest(
+    @Request() req: express.Request,
     @Path('credentialRecordId') credentialRecordId: RecordId,
     @Body() options?: AcceptCredentialRequestOptions
   ) {
@@ -270,11 +309,15 @@ export class CredentialController extends Controller {
         ...options,
         credentialRecordId: credentialRecordId,
       })
+      req.log.debug('returning a credential %j', credential.toJSON())
+
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -290,14 +333,21 @@ export class CredentialController extends Controller {
   @Post('/:credentialRecordId/accept-credential')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptCredential(@Path('credentialRecordId') credentialRecordId: RecordId) {
+  public async acceptCredential(
+    @Request() req: express.Request,
+    @Path('credentialRecordId') credentialRecordId: RecordId
+  ) {
     try {
       const credential = await this.agent.credentials.acceptCredential({ credentialRecordId: credentialRecordId })
+      req.log.debug('returning a credential %j', credential.toJSON())
+
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
@@ -314,6 +364,7 @@ export class CredentialController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async sendProblemReport(
+    @Request() req: express.Request,
     @Path('credentialRecordId') credentialRecordId: RecordId,
     @Body() body: { description: string }
   ) {
@@ -324,11 +375,15 @@ export class CredentialController extends Controller {
 
     try {
       const problemReport = await this.agent.credentials.sendProblemReport(options)
+      req.log.debug('returning problem report %j', problemReport.toJSON())
+
       return problemReport.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${options.credentialRecordId}" not found.`)
       }
+      req.log.error('error occured %j', error)
       throw error
     }
   }
