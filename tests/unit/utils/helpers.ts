@@ -27,7 +27,7 @@ import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
 export async function getTestAgent(name: string, port: number) {
-  const logger = new PinoLogger('silent')
+  const logger = new PinoLogger('trace')
   container.register(PinoLogger, { useValue: logger })
   return await setupAgent({
     agentConfig: {
@@ -57,7 +57,7 @@ export async function getTestAgent(name: string, port: number) {
 
 export async function getTestServer(agent: RestAgent) {
   const socketServer = new WebSocket.Server({ noServer: true })
-  const app = await setupServer(agent, new PinoLogger('silent'), {
+  const app = await setupServer(agent, new PinoLogger('trace'), {
     socketServer,
   })
   const server = app.listen(0, () => {})

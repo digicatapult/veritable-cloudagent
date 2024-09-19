@@ -34,7 +34,7 @@ const withMocks = () => {
       },
     },
   }
-  const logger = new PinoLogger('silent')
+  const logger = new PinoLogger('trace')
 
   return {
     agent,
