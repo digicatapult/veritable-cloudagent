@@ -10,7 +10,6 @@ import { type RecordId } from '../../examples.js'
 
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
-import PinoLogger from '../../../utils/logger.js'
 
 type DrpcRequestOptions = {
   jsonrpc: string
@@ -41,7 +40,7 @@ export class DrpcController extends Controller {
 
   public constructor(
     agent: Agent,
-    private receiveHandler: DrpcReceiveHandler,
+    private receiveHandler: DrpcReceiveHandler
   ) {
     super()
     this.agent = agent
