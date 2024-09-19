@@ -7,7 +7,8 @@ import {
   HandshakeProtocol,
   RecordNotFoundError,
 } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -34,6 +35,7 @@ export class ConnectionController extends Controller {
    */
   @Post('/:connectionId/send-ping')
   public async sendPing(
+    @Request() req: express.Request,
     @Path('connectionId') connectionId: string,
     @Query('responseRequested') responseRequested: boolean = true,
     @Query('withReturnRouting') withReturnRouting?: boolean
@@ -53,6 +55,7 @@ export class ConnectionController extends Controller {
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
   @Get('/')
   public async getAllConnections(
+    @Request() req: express.Request,
     @Query('outOfBandId') outOfBandId?: string,
     @Query('alias') alias?: string,
     @Query('state') state?: DidExchangeState,
@@ -64,8 +67,10 @@ export class ConnectionController extends Controller {
 
     if (outOfBandId) {
       connections = await this.agent.connections.findAllByOutOfBandId(outOfBandId)
+      req.log.info('retrieving OOB connections', connections)
     } else {
       const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
+      req.log.info('retrieving by query connections %j', { alias, myDid, theirDid, theirLabel, state })
 
       const connections = await connectionRepository.findByQuery(this.agent.context, {
         alias,
@@ -95,11 +100,15 @@ export class ConnectionController extends Controller {
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
   @Response<NotFound['message']>(404)
-  public async getConnectionById(@Path('connectionId') connectionId: RecordId) {
+  public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
     const connection = await this.agent.connections.findById(connectionId)
 
-    if (!connection) throw new NotFound(`connection with connection id "${connectionId}" not found.`)
+    if (!connection) {
+      req.log.warn('%s connection not found', connectionId)
+      throw new NotFound(`connection with connection id "${connectionId}" not found.`)
+    }
 
+    req.log.debug('returning connection %j', connection.toJSON())
     return connection.toJSON()
   }
 
@@ -111,14 +120,17 @@ export class ConnectionController extends Controller {
   @Delete('/:connectionId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteConnection(@Path('connectionId') connectionId: RecordId) {
+  public async deleteConnection(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
     try {
       this.setStatus(204)
       await this.agent.connections.deleteById(connectionId)
+      req.log.info('%s connection has been deleted', connectionId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
+      req.log.error('error occured', error)
       throw error
     }
   }
@@ -136,14 +148,18 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/accept-request')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptRequest(@Path('connectionId') connectionId: RecordId) {
+  public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
     try {
       const connection = await this.agent.connections.acceptRequest(connectionId)
+      req.log.info('accept %s connection request %j', connectionId, connection.toJSON())
+
       return connection.toJSON()
     } catch (error) {
       if (error instanceof CredoError) {
+        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
+      req.log.error('error occured', error)
       throw error
     }
   }
@@ -161,14 +177,18 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/accept-response')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptResponse(@Path('connectionId') connectionId: RecordId) {
+  public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
     try {
       const connection = await this.agent.connections.acceptResponse(connectionId)
+      req.log.info('accept %s connection response %j', connectionId, connection.toJSON())
+
       return connection.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
+      req.log.error('error occured', error)
       throw error
     }
   }
@@ -179,13 +199,15 @@ export class ConnectionController extends Controller {
    * @returns out-of-band record and connection record if one has been created.
    */
   @Post('/')
-  public async post(@Body() body: { did: string }) {
+  public async post(@Request() req: express.Request, @Body() body: { did: string }) {
     const { did } = body
 
+    req.log.info('retrieving connection by %s did', did)
     const connections = await this.agent.connections.findByInvitationDid(did)
 
     for (const { id, invitationDid } of connections) {
       if (invitationDid === did) {
+        req.log.debug('deleting %s connection', id)
         await this.agent.connections.deleteById(id)
       }
     }
@@ -194,6 +216,10 @@ export class ConnectionController extends Controller {
       handshakeProtocols: [HandshakeProtocol.Connections],
     })
 
+    req.log.info('returning an OOB records %j', {
+      OOB: outOfBandRecord.toJSON(),
+      connection: connectionRecord?.toJSON(),
+    })
     return {
       outOfBandRecord: outOfBandRecord.toJSON(),
       connectionRecord: connectionRecord?.toJSON(),

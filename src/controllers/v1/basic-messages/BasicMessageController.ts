@@ -1,5 +1,6 @@
 import { type BasicMessageRecord, type BasicMessageStorageProps, Agent, RecordNotFoundError } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Example, Get, Path, Post, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -38,14 +39,21 @@ export class BasicMessageController extends Controller {
   @Post('/:connectionId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async sendMessage(@Path('connectionId') connectionId: RecordId, @Body() request: Record<'content', string>) {
+  public async sendMessage(
+    @Request() req: express.Request,
+    @Path('connectionId') connectionId: RecordId,
+    @Body() body: Record<'content', string>
+  ) {
     try {
       this.setStatus(204)
-      await this.agent.basicMessages.sendMessage(connectionId, request.content)
+      req.log.info('sending basic message %j to %s connection', body, connectionId)
+      await this.agent.basicMessages.sendMessage(connectionId, body.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }

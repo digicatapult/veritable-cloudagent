@@ -1,5 +1,6 @@
 import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -28,10 +29,12 @@ export class DidController extends Controller {
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
   public async getCredentials(
+    @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
     @Query('method') method?: string
   ): Promise<DidResolutionResultProps[]> {
     if (!createdLocally) {
+      req.log.warn('can list only local DIDs %s', method)
       throw new BadRequest('Can only list DIDs created locally')
     }
 
@@ -39,7 +42,14 @@ export class DidController extends Controller {
       method,
     })
 
-    return await Promise.all(didResult.map(({ did }) => this.agent.dids.resolve(did)))
+    req.log.info('attempting to resolve DIDs found %j', didResult)
+
+    return await Promise.all(
+      didResult.map(({ did }) => {
+        req.log.info('resolving %s did', did)
+        return this.agent.dids.resolve(did)
+      })
+    )
   }
 
   /**
@@ -49,14 +59,17 @@ export class DidController extends Controller {
    */
   @Example<DidResolutionResultProps>(DidRecordExample)
   @Get('/:did')
-  public async getDidRecordByDid(@Path('did') did: Did) {
+  public async getDidRecordByDid(@Request() req: express.Request, @Path('did') did: Did) {
+    req.log.info('retrieving did %s by id', did)
     const resolveResult = await this.agent.dids.resolve(did)
 
     if (!resolveResult.didDocument) {
+      req.log.warn('DID document was not found', resolveResult)
       this.setStatus(500)
       return { resolveResult }
     }
 
+    req.log.debug('returning did document', resolveResult.didDocument.toJSON())
     return { ...resolveResult, didDocument: resolveResult.didDocument.toJSON() }
   }
 
@@ -70,9 +83,10 @@ export class DidController extends Controller {
   @Post('/import')
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
-  public async importDid(@Body() options: ImportDidOptions) {
+  public async importDid(@Request() req: express.Request, @Body() options: ImportDidOptions) {
     try {
       const { privateKeys, ...rest } = options
+      req.log.info('importing DIDs %j', rest)
       await this.agent.dids.import({
         ...rest,
         privateKeys: privateKeys?.map(({ keyType, privateKey }) => ({
@@ -80,8 +94,10 @@ export class DidController extends Controller {
           privateKey: TypedArrayEncoder.fromBase64(privateKey),
         })),
       })
-      return this.getDidRecordByDid(options.did)
+      req.log.debug('confirming that %s DID has been imported', options.did)
+      return this.getDidRecordByDid(req, options.did)
     } catch (error) {
+      req.log.warn('error occured while importing DID %j', error)
       if (error instanceof CredoError) {
         throw new BadRequest(`Error importing Did - ${error.message}`)
       }
@@ -98,14 +114,16 @@ export class DidController extends Controller {
   @Example<DidCreateResult>(DidStateExample)
   @Post('/create')
   @Response<HttpResponse>(500)
-  public async createDid(@Body() options: DidCreateOptions) {
+  public async createDid(@Request() req: express.Request, @Body() options: DidCreateOptions) {
     const { didState } = await this.agent.dids.create(options)
 
     if (didState.state === 'failed') {
+      req.log.warn('error creating did %s', didState.reason)
       throw new HttpResponse({
         message: `Error creating Did - ${didState.reason}`,
       })
     }
+    req.log.info('DID has been created %j', didState)
 
     return didState
   }

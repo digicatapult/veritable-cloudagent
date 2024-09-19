@@ -1,5 +1,6 @@
 import { Agent } from '@credo-ts/core'
-import { Body, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -27,12 +28,14 @@ export class SchemaController {
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
   public async getCredentials(
+    @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
     @Query('issuerId') issuerId?: string,
     @Query('schemaName') schemaName?: string,
     @Query('schemaVersion') schemaVersion?: string
   ): Promise<AnonCredsSchemaResponse[]> {
     if (!createdLocally) {
+      req.log.warn('can list only local schemas %j', { issuerId, schemaName, createdLocally, schemaVersion })
       throw new BadRequest('Can only list schema created locally')
     }
 
@@ -41,6 +44,8 @@ export class SchemaController {
       schemaName,
       schemaVersion,
     })
+
+    req.log.debug('returning schemas found %j', schemaResult)
 
     return schemaResult.map((schema) => {
       return {
@@ -61,22 +66,27 @@ export class SchemaController {
   @Response<BadRequest['message']>(400)
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async getSchemaById(@Path('schemaId') schemaId: SchemaId) {
+  public async getSchemaById(@Request() req: express.Request, @Path('schemaId') schemaId: SchemaId) {
     const { schema, resolutionMetadata } = await this.agent.modules.anoncreds.getSchema(schemaId)
 
     const error = resolutionMetadata?.error
 
     if (error === 'notFound') {
+      req.log.warn('%s schema not found', schemaId)
       throw new NotFound(`schema definition with schemaId "${schemaId}" not found.`)
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
+      req.log.warn('invalid schema structure %s', error)
       throw new BadRequest(`schemaId "${schemaId}" has invalid structure.`)
     }
 
     if (error !== undefined || schema === undefined) {
+      req.log.warn('error occured %s', error)
       throw new HttpResponse({ message: `something went wrong: schema is undefined or ${error}` })
     }
+
+    req.log.debug('schema %s has been found %j', schemaId, schema)
 
     return {
       id: schemaId,
@@ -94,6 +104,7 @@ export class SchemaController {
   @Post('/')
   @Response<HttpResponse>(500)
   public async createSchema(
+    @Request() req: express.Request,
     @Body()
     schema: {
       issuerId: Did
@@ -102,6 +113,7 @@ export class SchemaController {
       attrNames: string[]
     }
   ) {
+    req.log.info('registering a new schema %j', schema)
     const { schemaState } = await this.agent.modules.anoncreds.registerSchema({
       schema: {
         issuerId: schema.issuerId,
@@ -113,12 +125,16 @@ export class SchemaController {
     })
 
     if (schemaState.state === 'failed') {
+      req.log.warn('schema registration failed %j', schemaState)
       throw new HttpResponse({ message: `something went wrong: ${schemaState.reason}` })
     }
 
     if (schemaState.state !== 'finished' || schemaState.schemaId === undefined || schemaState.schema === undefined) {
+      req.log.warn('error occured while creating schema %j', schemaState)
       throw new HttpResponse({ message: `something went wrong creating schema: unknown` })
     }
+
+    req.log.info('%s schema has been created %j', schemaState.schemaId, schemaState)
 
     return {
       id: schemaState.schemaId,

@@ -1,5 +1,6 @@
 import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@credo-ts/core'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -33,10 +34,14 @@ export class ProofController extends Controller {
    */
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
-  public async getAllProofs(@Query('threadId') threadId?: string) {
+  public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: string) {
     let proofs = await this.agent.proofs.getAll()
+    req.log.debug('retrieving all proofs %j', proofs)
 
-    if (threadId) proofs = proofs.filter((p) => p.threadId === threadId)
+    if (threadId) {
+      proofs = proofs.filter((p) => p.threadId === threadId)
+      req.log.info('proofs for %s has been found %j', threadId, proofs)
+    }
 
     return proofs.map((proof) => proof.toJSON())
   }
@@ -51,15 +56,19 @@ export class ProofController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async getProofById(@Path('proofRecordId') proofRecordId: RecordId) {
+  public async getProofById(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: RecordId) {
+    req.log.debug('getting %s proof record', proofRecordId)
     try {
       const proof = await this.agent.proofs.getById(proofRecordId)
+      req.log.info('proof found %j', proof)
 
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }
@@ -72,14 +81,17 @@ export class ProofController extends Controller {
   @Delete('/:proofRecordId')
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteProof(@Path('proofRecordId') proofRecordId: RecordId) {
+  public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: RecordId) {
     try {
       this.setStatus(204)
+      req.log.info('deleting %s proof', proofRecordId)
       await this.agent.proofs.deleteById(proofRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }
@@ -95,15 +107,19 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async proposeProof(@Body() proposal: ProposeProofOptions) {
+  public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
+      req.log.info('proof proposal %j', proposal)
       const proof = await this.agent.proofs.proposeProof(proposal)
+      req.log.info('proof %j', proof.toJSON())
 
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection not found', proposal.connectionId)
         throw new NotFound(`connection with connectionId "${proposal.connectionId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }
@@ -121,11 +137,13 @@ export class ProofController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
+    @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: string,
     @Body()
     proposal: AcceptProofProposalOptions
   ) {
     try {
+      req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
       const proof = await this.agent.proofs.acceptProposal({
         proofRecordId,
         ...proposal,
@@ -134,8 +152,10 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }
@@ -151,14 +171,17 @@ export class ProofController extends Controller {
     message: {},
     proofRecord: ProofRecordExample,
   })
-  public async createRequest(@Body() request: CreateProofRequestOptions) {
+  public async createRequest(@Request() req: express.Request, @Body() request: CreateProofRequestOptions) {
     const { proofFormats, ...rest } = request
+    req.log.debug('creating a proof request %j', { proofFormats, ...rest })
     const { message, proofRecord } = await this.agent.proofs.createRequest({
       proofFormats: {
         anoncreds: transformProofFormat(proofFormats.anoncreds),
       },
       ...rest,
     })
+
+    req.log.info('returning proof record %j', { proofRecord, message })
 
     return {
       message,
@@ -176,9 +199,10 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async requestProof(@Body() request: RequestProofOptions) {
-    const { connectionId, proofFormats, ...rest } = request
+  public async requestProof(@Request() req: express.Request, @Body() body: RequestProofOptions) {
+    const { connectionId, proofFormats, ...rest } = body
     try {
+      req.log.info('requesting proof for %s connection %j', connectionId, body)
       const proof = await this.agent.proofs.requestProof({
         connectionId,
         proofFormats: {
@@ -187,11 +211,14 @@ export class ProofController extends Controller {
         ...rest,
       })
 
+      req.log.info('success, returning proof %j', proof.toJSON())
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connectionId "${connectionId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }
@@ -209,20 +236,25 @@ export class ProofController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async acceptRequest(
+    @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: string,
     @Body()
-    request: AcceptProofRequestOptions
+    body: AcceptProofRequestOptions
   ) {
     try {
+      req.log.info('retrieving credentials for %s proof', proofRecordId)
       const retrievedCredentials = await this.agent.proofs.selectCredentialsForRequest({
         proofRecordId,
       })
 
+      req.log.info('credentials found and accepting proof request %j', retrievedCredentials)
       const proof = await this.agent.proofs.acceptRequest({
         proofRecordId,
         proofFormats: retrievedCredentials.proofFormats,
-        ...request,
+        ...body,
       })
+
+      req.log.debug('success, returning proof %j', proof.toJSON())
 
       return proof.toJSON()
     } catch (error) {
@@ -244,15 +276,17 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptPresentation(@Path('proofRecordId') proofRecordId: string) {
+  public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: string) {
     try {
       const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
 
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
+        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
+      req.log.warn('error occured %j', error)
       throw error
     }
   }

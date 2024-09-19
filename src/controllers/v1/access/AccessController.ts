@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Path, Post, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Get, Path, Post, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { NotFound } from '../../../error.js'
@@ -26,7 +27,8 @@ export class AccessController extends Controller {
    */
   @Get('policies/:policyId')
   @Response<NotFound['message']>(404)
-  public async getPolicyById(@Path('policyId') policyId: string) {
+  public async getPolicyById(@Request() req: express.Request, @Path('policyId') policyId: string) {
+    req.log.info('retrieving policy %s', policyId)
     return this.policyAgent.getPolicy(policyId)
   }
 
@@ -36,7 +38,12 @@ export class AccessController extends Controller {
    */
   @Post('data/:packageId/eval')
   @Response<NotFound['message']>(404)
-  public async evaluate(@Path('packageId') packageId: string, @Body() requestBody: Record<string, unknown>) {
+  public async evaluate(
+    @Request() req: express.Request,
+    @Path('packageId') packageId: string,
+    @Body() requestBody: Record<string, unknown>
+  ) {
+    req.log.info('evaluating package %j', { body: requestBody, packageId })
     return this.policyAgent.evaluate(packageId, requestBody)
   }
 }

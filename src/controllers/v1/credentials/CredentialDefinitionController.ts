@@ -1,5 +1,6 @@
 import { Agent } from '@credo-ts/core'
-import { Body, Controller, Example, Get, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import express from 'express'
+import { Body, Controller, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
@@ -28,11 +29,13 @@ export class CredentialDefinitionController extends Controller {
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
   public async getCredentials(
+    @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
     @Query('issuerId') issuerId?: string,
     @Query('schemaId') schemaId?: string
   ): Promise<AnonCredsCredentialDefinitionResponse[]> {
     if (!createdLocally) {
+      req.log.warn('can list only locally created credential definitions %j', { issuerId, schemaId, createdLocally })
       throw new BadRequest('Can only list credential definitions created locally')
     }
 
@@ -40,6 +43,8 @@ export class CredentialDefinitionController extends Controller {
       issuerId,
       schemaId,
     })
+
+    req.log.info('credential definitions found %j', credentialDefinitionResult)
 
     return credentialDefinitionResult.map((cd) => {
       return {
@@ -61,6 +66,7 @@ export class CredentialDefinitionController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async getCredentialDefinitionById(
+    @Request() req: express.Request,
     @Path('credentialDefinitionId') credentialDefinitionId: CredentialDefinitionId
   ): Promise<AnonCredsCredentialDefinitionResponse> {
     const {
@@ -69,16 +75,21 @@ export class CredentialDefinitionController extends Controller {
     } = await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
 
     if (error === 'notFound') {
+      req.log.warn('%s credential definition not found', credentialDefinitionId)
       throw new NotFound(`credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`)
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
+      req.log.warn('credential definition has invalid structure %s', error)
       throw new BadRequest(`credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`)
     }
 
     if (error !== undefined || credentialDefinition === undefined) {
+      req.log.warn('error occured %s', error)
       throw error
     }
+
+    req.log.debug('returning %s credential definition %j', credentialDefinitionId, credentialDefinition)
 
     return {
       id: credentialDefinitionId,
@@ -97,6 +108,7 @@ export class CredentialDefinitionController extends Controller {
   @Response<NotFound['message']>(404)
   @Response<HttpResponse>(500)
   public async createCredentialDefinition(
+    @Request() req: express.Request,
     @Body()
     credentialDefinitionRequest: {
       issuerId: Did
@@ -104,17 +116,21 @@ export class CredentialDefinitionController extends Controller {
       tag: string
     }
   ): Promise<AnonCredsCredentialDefinitionResponse> {
+    req.log.debug('retrieving %s schema', credentialDefinitionRequest.schemaId)
     const {
       resolutionMetadata: { error },
     } = await this.agent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
 
     if (error === 'notFound' || error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
+      req.log.warn('%s schema  not found', credentialDefinitionRequest.schemaId)
       throw new NotFound(`schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`)
     }
     if (error) {
+      req.log.warn('error occured %s', error)
       throw error
     }
 
+    req.log.info('registering a credential definition %j', credentialDefinitionRequest)
     const {
       credentialDefinitionState: { state, credentialDefinitionId, credentialDefinition },
     } = await this.agent.modules.anoncreds.registerCredentialDefinition({
@@ -127,8 +143,11 @@ export class CredentialDefinitionController extends Controller {
     })
 
     if (state !== 'finished' || credentialDefinitionId === undefined || credentialDefinition === undefined) {
+      req.log.warn('error occured while creating a credential definition %j', { state, credentialDefinition })
       throw new HttpResponse({ message: `something went wrong creating credential definition` })
     }
+
+    req.log.debug('success registering new credential definition %j', credentialDefinition)
 
     return {
       id: credentialDefinitionId,
