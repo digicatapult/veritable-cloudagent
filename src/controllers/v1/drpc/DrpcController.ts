@@ -1,7 +1,7 @@
 import { Agent, utils } from '@credo-ts/core'
 import type { DrpcResponseObject } from '@credo-ts/drpc'
 import express from 'express'
-import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
