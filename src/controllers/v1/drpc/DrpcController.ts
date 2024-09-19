@@ -1,8 +1,8 @@
 import { Agent, utils } from '@credo-ts/core'
 import type { DrpcResponseObject } from '@credo-ts/drpc'
 import express from 'express'
-import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
-import { injectable } from 'tsyringe'
+import { Body, Controller, Path, Post, Query, Response, Route, Tags } from 'tsoa'
+import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, InternalError, NotFound } from '../../../error.js'
@@ -10,6 +10,7 @@ import { type RecordId } from '../../examples.js'
 
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
+import PinoLogger from '../../../utils/logger.js'
 
 type DrpcRequestOptions = {
   jsonrpc: string
@@ -34,12 +35,13 @@ const rpcResponseParser = z.object({
 @Tags('Didcomm RPC')
 @Route('/v1/drpc')
 @injectable()
+@singleton()
 export class DrpcController extends Controller {
   private agent: RestAgent
 
   public constructor(
     agent: Agent,
-    private receiveHandler: DrpcReceiveHandler
+    private receiveHandler: DrpcReceiveHandler,
   ) {
     super()
     this.agent = agent

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, spy } from 'sinon'

@@ -1,5 +1,5 @@
 {
-  "node-option": ["import=tsimp/import"],
+  "node-option": ["import=@digicatapult/tsimp/import"],
   "ignore": ["/build/", "/node_modules/", "./build/", "./node_modules/"],
   "timeout": 5000,
   "extension": ["test.ts"],
