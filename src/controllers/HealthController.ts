@@ -1,9 +1,8 @@
 import express from 'express'
 import { Controller, Get, Hidden, Request, Route, SuccessResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-import { version } from '../../package.json'
 
-const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : version || 'unknown'
+const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : 'unknown'
 
 type Health = {
   version: string

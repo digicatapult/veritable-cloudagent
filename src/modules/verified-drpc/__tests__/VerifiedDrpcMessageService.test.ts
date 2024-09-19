@@ -254,9 +254,11 @@ describe('VerifiedDrpcService', () => {
           contextCorrelationId: agentContext.contextCorrelationId,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsFake((event, callback) => {
-        setTimeout(() => callback(proofEvent), testTimeout + 100)
-      })
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsFake((_event, callback) => {
+          setTimeout(() => callback(proofEvent), testTimeout + 100)
+        })
 
       await verifiedDrpcMessageService.verifyServer(
         agentContext,
@@ -361,9 +363,11 @@ describe('VerifiedDrpcService', () => {
           contextCorrelationId: agentContext.contextCorrelationId,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsFake((event, callback) => {
-        setTimeout(() => callback(proofEvent), testTimeout + 100)
-      })
+      mockEventEmitter.on
+        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsFake((_event, callback) => {
+          setTimeout(() => callback(proofEvent), testTimeout + 100)
+        })
 
       await verifiedDrpcMessageService.verifyClient(
         agentContext,

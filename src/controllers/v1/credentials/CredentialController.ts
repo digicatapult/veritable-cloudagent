@@ -207,6 +207,8 @@ export class CredentialController extends Controller {
   @Post('/create-offer')
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
     const offer = await this.agent.credentials.createOffer(options)
+    req.log.info('credential offer has been created %j', offer)
+
     return {
       message: offer.message.toJSON(),
       credentialRecord: offer.credentialRecord.toJSON(),

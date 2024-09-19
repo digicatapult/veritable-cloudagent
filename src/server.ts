@@ -39,17 +39,6 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   app.use(
     requestLogger({
       logger: logger.logger,
-      serializers: {
-        // removing cookie from being logged since it contains refresh and access token
-        req: ({ id, headers, ...req }: { id: string; headers: Record<string, string> }) => ({
-          ...req,
-          headers: {},
-        }),
-        res: (res) => {
-          delete res.headers
-          return res
-        },
-      },
       genReqId: function (req: express.Request, res: express.Response): string {
         const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
 

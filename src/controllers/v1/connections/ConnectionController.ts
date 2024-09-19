@@ -40,6 +40,7 @@ export class ConnectionController extends Controller {
     @Query('responseRequested') responseRequested: boolean = true,
     @Query('withReturnRouting') withReturnRouting?: boolean
   ) {
+    req.log.debug('sending ping %j', { connectionId, responseRequested, withReturnRouting })
     return this.agent.connections.sendPing(connectionId, { responseRequested, withReturnRouting })
   }
 
