@@ -47,7 +47,7 @@ export class SchemaController {
 
     req.log.debug('returning schemas found %j', schemaResult)
 
-    return schemaResult.map((schema: any) => {
+    return schemaResult.map((schema) => {
       return {
         id: schema.schemaId,
         ...schema.schema,

@@ -7,9 +7,9 @@ import { mockEnv, withEvaluateResponse, withGetPoliciesResponse, withGetPolicyRe
 
 const exampleId = 'example.rego'
 const examplePackageId = 'example'
-const logger = new PinoLogger('silent')
 
 describe('policy agent', function () {
+  const logger = new PinoLogger('silent')
   describe('ctor', function () {
     it('should construct a PolicyAgent if origin is valid', function () {
       const policyAgent = new PolicyAgent(mockEnv('https://example.com'), logger)

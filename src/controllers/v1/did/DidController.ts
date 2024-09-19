@@ -28,7 +28,7 @@ export class DidController extends Controller {
   @Get('/')
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
-  public async getCredentials(
+  public async listDids(
     @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
     @Query('method') method?: string
@@ -46,7 +46,7 @@ export class DidController extends Controller {
 
     return await Promise.all(
       didResult.map(({ did }) => {
-        req.log.info('resolving %s did', did)
+        req.log.debug('resolving %s did', did)
         return this.agent.dids.resolve(did)
       })
     )
