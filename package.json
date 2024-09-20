@@ -23,22 +23,18 @@
     "veritable-cloudagent": "build/index.js"
   },
   "scripts": {
-    "check-types": "tsc --noEmit",
     "depcheck": "depcheck",
-    "prettier": "prettier -c ./src ./tests",
-    "format": "npm run prettier -- --write",
-    "check-format": "npm run prettier -- --list-different",
     "lint": "eslint .",
-    "validate": "npm run lint && npm run check-types && npm run check-format",
-    "tsoa": "tsoa spec-and-routes",
-    "dev": "tsoa spec-and-routes --ignore src/routes.ts --ignore src/swagger.json && node --import=@digicatapult/tsimp/import --watch src/index.ts",
-    "build": "npm run clean && npm run compile",
+    "lint:fix": "npm run lint -- -- fix",
+    "check": "npm run tsoa:build && tsc --noEmit",
     "clean": "rimraf -rf ./build",
-    "compile": "tsoa spec-and-routes && tsc",
-    "test": "npm run build && mocha --config .mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
+    "build": "npm run clean && npm run tsoa:build && swc ./src -d ./build --strip-leading-paths --copy-files",
+    "tsoa:build": "tsoa spec-and-routes",
+    "tsoa:watch": "node --watch-path=./src ./node_modules/.bin/tsoa spec-and-routes",
+    "dev": "concurrently \"npm run tsoa:watch\" \"SWCRC=true NODE_ENV=dev node --import @swc-node/register/esm-register --enable-source-maps --watch-path=./src --watch-path=./build/swagger.json ./src/index.ts | pino-colada\"",
+    "test": "mocha --config .mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "mocha --config .mocharc.json tests/integration/**/*.test.ts",
-    "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/",
-    "test-watch-fast": "TS_NODE_TRANSPILE_ONLY=true npm run test-watch"
+    "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
   },
   "dependencies": {
     "@credo-ts/anoncreds": "^0.5.9",
@@ -72,6 +68,9 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.1.0",
     "@eslint/js": "^9.10.0",
+    "@swc-node/register": "^1.10.9",
+    "@swc/cli": "^0.4.1-nightly.20240914",
+    "@swc/core": "^1.7.26",
     "@types/body-parser": "^1.19.5",
     "@types/chai": "^4.3.19",
     "@types/cors": "^2.8.17",
@@ -95,7 +94,6 @@
     "prettier-plugin-organize-imports": "^4.0.0",
     "sinon": "^19.0.2",
     "supertest": "^7.0.0",
-    "@digicatapult/tsimp": "^2.0.12",
     "typescript": "~5.6.2"
   },
   "engines": {

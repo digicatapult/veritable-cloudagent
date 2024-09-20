@@ -16,6 +16,8 @@
     "outDir": "build",
     "resolveJsonModule": true,
   },
-  "include": ["src", "src/routes/swagger.json"],
-  "exclude": ["test", "**/__tests__"]
+  "include": [
+    "src",
+    "tests"
+  ]
 }

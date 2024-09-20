@@ -1,6 +1,7 @@
 {
   "ignores": [
-    "@digicatapult/tsimp",
+    "@swc-node/register",
+    "concurrently",
     "prettier-plugin-organize-imports"
   ]
 }

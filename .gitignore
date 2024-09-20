@@ -2,7 +2,6 @@ config/local.json
 
 node_modules/
 build
-src/routes/swagger.json
 src/routes/routes.ts
 dist
 coverage
