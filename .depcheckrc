@@ -2,6 +2,7 @@
   "ignores": [
     "@swc-node/register",
     "concurrently",
-    "prettier-plugin-organize-imports"
+    "prettier-plugin-organize-imports",
+    "rimraf"
   ]
 }
