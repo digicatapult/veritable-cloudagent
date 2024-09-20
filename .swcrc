@@ -3,7 +3,6 @@
   "jsc": {
     "parser": {
       "syntax": "typescript",
-      "tsx": true,
       "decorators": true,
       "topLevelAwait": true,
       "importMeta": true

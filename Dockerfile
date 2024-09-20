@@ -21,7 +21,7 @@ WORKDIR /app
 ARG NODE_ENV=test
 ENV NODE_ENV=${NODE_ENV}
 
-COPY .mocharc.json .eslint* ./
+COPY .eslint* ./
 COPY tests ./tests
 
 CMD ["npm", "run", "test"]
