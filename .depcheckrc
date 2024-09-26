@@ -2,6 +2,7 @@
   "ignores": [
     "@swc-node/register",
     "concurrently",
+    "pino-colada",
     "prettier-plugin-organize-imports",
     "rimraf"
   ]
