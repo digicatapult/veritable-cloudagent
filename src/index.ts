@@ -21,6 +21,7 @@ container.register(PinoLogger, {
 const agent = await setupAgent({
   agentConfig: {
     label: env.get('LABEL'),
+    logger: logger.child({ component: 'credo-ts-agent' }),
     walletConfig: {
       id: env.get('WALLET_ID'),
       key: env.get('WALLET_KEY'),
