@@ -30,21 +30,28 @@ export default class PinoLogger extends BaseLogger {
 
   // Map our log levels to tslog levels
 
-  public constructor(logLevel: LevelWithSilent) {
+  public constructor(logLevel: LevelWithSilent, logger?: Logger) {
     super(tsLogLevelMap[logLevel])
 
-    this._logger = pino(
-      {
-        name: 'veritable-cloudagent',
-        timestamp: true,
-        level: logLevel,
-      },
-      process.stdout
-    )
+    this._logger =
+      logger ||
+      pino(
+        {
+          name: 'veritable-cloudagent',
+          timestamp: true,
+          level: logLevel,
+        },
+        process.stdout
+      )
   }
 
   public get logger() {
     return this._logger
+  }
+
+  public child(bindings: pino.Bindings): PinoLogger {
+    const child = this._logger.child(bindings)
+    return new PinoLogger(invTsLogLevelMap[this.logLevel], child)
   }
 
   private log(level: Exclude<CredoLogLevel, CredoLogLevel.off>, message: string, data?: Record<string, any>): void {
