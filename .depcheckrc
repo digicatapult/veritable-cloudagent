@@ -1,6 +1,9 @@
 {
   "ignores": [
-    "@digicatapult/tsimp",
-    "prettier-plugin-organize-imports"
+    "@swc-node/register",
+    "concurrently",
+    "pino-colada",
+    "prettier-plugin-organize-imports",
+    "rimraf"
   ]
 }

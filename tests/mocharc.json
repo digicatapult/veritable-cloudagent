@@ -1,6 +1,7 @@
 {
-  "node-option": ["import=@digicatapult/tsimp/import"],
-  "ignore": ["/build/", "/node_modules/", "./build/", "./node_modules/"],
+  "node-option": ["import=@swc-node/register/esm-register"],
+  "ignore": ["/build/", "/node_modules/"],
+  "file": ["tests/init.ts"],
   "timeout": 5000,
   "extension": ["test.ts"],
   "bail": false,

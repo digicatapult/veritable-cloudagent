@@ -29,7 +29,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
-  const swaggerBuffer = await fs.readFile(path.join(__dirname, './routes/swagger.json'))
+  const swaggerBuffer = await fs.readFile(path.join(__dirname, '..', 'build', 'routes', 'swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
 
   container.registerInstance(Agent, agent as Agent)

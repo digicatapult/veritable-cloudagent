@@ -1,0 +1,29 @@
+{
+  "$schema": "https://swc.rs/schema.json",
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "topLevelAwait": true,
+      "importMeta": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true,
+      "useDefineForClassFields": true
+    },
+    "minify": {
+      "compress": {
+        "unused": true
+      },
+      "mangle": true
+    },
+    "target": "esnext"
+  },
+  "exclude": [
+    "/__tests__/"
+  ],
+  "sourceMaps": true,
+  "isModule": true,
+  "minify": true
+}

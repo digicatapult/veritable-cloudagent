@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci && npm cache clean --force
 
-COPY tsoa.json tsconfig.json ./
+COPY tsoa.json tsconfig.json .swcrc ./
 COPY src ./src
 RUN npm run build
 
@@ -21,7 +21,7 @@ WORKDIR /app
 ARG NODE_ENV=test
 ENV NODE_ENV=${NODE_ENV}
 
-COPY .mocharc.json .eslint* ./
+COPY .swcrc .eslint* ./
 COPY tests ./tests
 
 CMD ["npm", "run", "test"]

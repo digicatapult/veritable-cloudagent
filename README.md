@@ -92,6 +92,26 @@ Network name: `testnet`
 
 #### Starting Own Server
 
+## Building and running
+
+The following lifecycle commands can be run using `npm`
+
+| command            | description                                                                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `depcheck`         | Runs dependency analysis to ensure all package.json dependencies are used and included                                                                                |
+| `lint`             | Static linting check with eslint                                                                                                                                      |
+| `lint:fix`         | Static linting check with eslint fixing issues where possible                                                                                                         |
+| `check`            | Check types are valid according to Typescript language words                                                                                                          |
+| `clean`            | Remove build artefacts                                                                                                                                                |
+| `build`            | Compile build artefacts including tsoa artefacts. Note this does not perform type checking                                                                            |
+| `tsoa:build`       | Build tsoa artefacts `routes.ts` and `swagger.json`                                                                                                                   |
+| `tsoa:watch`       | Build tsoa artefacts `routes.ts` and `swagger.json` and watches for changes. Rebuilds on changes                                                                      |
+| `dev`              | Runs `tsoa:watch` and a development server concurrently in watch mode. Can be used for live debugging. Configure with [environment variables](#environment-variables) |
+| `start`            | Start production server from build                                                                                                                                    |
+| `test`             | Run unit tests. Configure with [environment variables](#environment-variables)                                                                                        |
+| `test:integration` | Run integration tests                                                                                                                                                 |
+| `test-watch`       | Run unit tests and re-run on changes                                                                                                                                  |
+
 ## Environment variables
 
 The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
