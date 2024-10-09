@@ -21,7 +21,7 @@ Thanks for all the hard work to everybody who contributed to the [project](https
 
 ## Setup
 
-In case `npm i` fails with the references to the `node-gyp`. Please install xcode utilities by runing -> `brew install xcode`. Before executing `npm i` delete your node_modules in case it has some old references `rm -rf /node_modules`
+In case `npm i` fails on MacOS with references to `node-gyp`, please ensure XCode is installed via the App Store and accept the licence via `sudo xcodebuild -license accept`. Before executing `npm i`, delete your node_modules directory (if it was created) in case it has some old references `rm -rf ./node_modules`.
 
 #### DRPC Config
 
