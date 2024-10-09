@@ -60,7 +60,7 @@ services:
 
   opa:
     container_name: opa
-    image: openpolicyagent/opa:0.68.0-static
+    image: openpolicyagent/opa:0.69.0-static
     ports:
       - '8181:8181'
     volumes:
