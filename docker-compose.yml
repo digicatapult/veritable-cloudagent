@@ -32,7 +32,6 @@ services:
     environment:
       - ENDPOINT='http://alice:5002, ws://alice:5003'
       - IPFS_ORIGIN=http://ipfs0:5001
-      - OPA_ORIGIN=http://opa:8181
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
     networks:
@@ -51,21 +50,6 @@ services:
       - '8080:8080' # ipfs gateway - expose if needed/wanted
     volumes:
       - ipfs0:/data/ipfs
-    networks:
-      - testnet
-
-  ##################################################################################
-  ## OPA ###########################################################################
-  ##################################################################################
-
-  opa:
-    container_name: opa
-    image: openpolicyagent/opa:0.68.0-static
-    ports:
-      - '8181:8181'
-    volumes:
-      - ./docker/opa/suppliers.rego:/suppliers.rego
-    command: run --server --log-level debug suppliers.rego
     networks:
       - testnet
 

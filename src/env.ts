@@ -105,7 +105,6 @@ const envConfig = {
   IPFS_ORIGIN: envalid.str({ default: 'http://ipfs0:5001', devDefault: 'http://ipfs0:5001' }),
   PERSONA_TITLE: envalid.str({ default: 'Veritable Cloudagent' }),
   PERONA_COLOR: envalid.str({ default: 'white' }),
-  OPA_ORIGIN: envalid.str({ default: 'http://localhost:8181' }),
   STORAGE_TYPE: envalid.str({ default: 'postgres', choices: ['sqlite', 'postgres'] }),
   POSTGRES_HOST: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
   POSTGRES_PORT: envalid.str({ default: '5432', devDefault: '5432' }),

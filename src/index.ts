@@ -72,7 +72,6 @@ const app = await setupServer(agent, logger, {
   webhookUrl: env.get('WEBHOOK_URL'),
   personaTitle: env.get('PERSONA_TITLE'),
   personaColor: env.get('PERONA_COLOR'),
-  opaOrigin: env.get('OPA_ORIGIN'),
   socketServer,
 })
 

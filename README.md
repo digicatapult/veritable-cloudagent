@@ -62,7 +62,7 @@ Bellow you will find commands for starting up the containers in docker (see the 
 
 #### Single Agent + IPFS Node
 
-The following command will spin up a single `veritable-cloudagent` agent (named `Alice`), an IPFS node and a OpenPolicyAgent instance for testing purposes:
+The following command will spin up a single `veritable-cloudagent` agent (named `Alice`) and an IPFS node for testing purposes:
 
 ```sh
 docker compose -f docker-compose.yml up --build -d
@@ -86,7 +86,6 @@ This private testnet has the following ports available to the user for testing:
 | Bob     | 3001    | 5102 | 5103 |
 | Charlie | 3002    | 5202 | 5203 |
 | IPFS    |         | 8080 |      |
-| OPA     |         | 8181 |      |
 
 Network name: `testnet`
 
@@ -139,7 +138,6 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | IPFS_ORIGIN                                 | Y        | "http://ipfs0:5001"                                                                                                                                                                                    | The IPFS url endpoint                                                                                                              |
 | PERSONA_TITLE                               | N        | "Veritable Cloudagent"                                                                                                                                                                                 | Tab name which you can see in your browser                                                                                         |
 | PERSONA_COLOR                               | N        | "white"                                                                                                                                                                                                | Defines the background colour of swagger documentation                                                                             |
-| OPA_ORIGIN                                  | N        | http://localhost:8181                                                                                                                                                                                  | OPA endpoint                                                                                                                       |
 | STORAGE_TYPE                                | Y        | "postgres"                                                                                                                                                                                             | The type of storage to be used by the app                                                                                          |
 | POSTGRES_HOST                               | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a host for the database needs to be provided                                               |
 | POSTGRES_PORT                               | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a port for the database needs to be provided                                               |

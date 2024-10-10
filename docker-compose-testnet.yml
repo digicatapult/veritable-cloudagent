@@ -36,7 +36,6 @@ services:
       - PERSONA_COLOR=#eddedf
       - ENDPOINT=http://alice:5002, ws://alice:5003
       - IPFS_ORIGIN=http://ipfs0:5001
-      - OPA_ORIGIN=http://opa0:8181
       - POSTGRES_HOST=alice-postgres
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
@@ -69,7 +68,6 @@ services:
       - PERSONA_COLOR=#dfedde
       - ENDPOINT=http://bob:5002, ws://bob:5003
       - IPFS_ORIGIN=http://ipfs1:5001
-      - OPA_ORIGIN=http://opa1:8181
       - POSTGRES_HOST=bob-postgres
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
@@ -102,7 +100,6 @@ services:
       - PERSONA_COLOR=#dedfed
       - ENDPOINT=http://charlie:5002,ws://charlie:5003
       - IPFS_ORIGIN=http://ipfs2:5001
-      - OPA_ORIGIN=http://opa2:8181
       - POSTGRES_HOST=charlie-postgres
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
@@ -212,48 +209,6 @@ services:
       - cluster2:/data/ipfs-cluster
     networks:
       - testnet
-
-  ##################################################################################
-  ## OPA 0 #########################################################################
-  ##################################################################################
-
-  opa0:
-    container_name: opa0
-    image: openpolicyagent/opa:0.68.0-static
-    ports:
-      - '8181:8181'
-    volumes:
-      - ./docker/opa/suppliers.rego:/suppliers.rego
-    command: run --server --log-level debug suppliers.rego
-    networks: ['alice']
-
-  ##################################################################################
-  ## OPA 1 #########################################################################
-  ##################################################################################
-
-  opa1:
-    container_name: opa1
-    image: openpolicyagent/opa:0.68.0-static
-    ports:
-      - '8182:8181'
-    volumes:
-      - ./docker/opa/suppliers.rego:/suppliers.rego
-    command: run --server --log-level debug suppliers.rego
-    networks: ['bob']
-
-  ##################################################################################
-  ## OPA 2 #########################################################################
-  ##################################################################################
-
-  opa2:
-    container_name: opa2
-    image: openpolicyagent/opa:0.68.0-static
-    ports:
-      - '8183:8181'
-    volumes:
-      - ./docker/opa/suppliers.rego:/suppliers.rego
-    command: run --server --log-level debug suppliers.rego
-    networks: ['charlie']
 
   ##################################################################################
   ## Alice's Postgress #############################################################
