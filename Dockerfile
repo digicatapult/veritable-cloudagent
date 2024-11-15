@@ -5,8 +5,8 @@ ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci && npm cache clean --force
+COPY package*.json ./
+RUN npm ci
 
 COPY tsoa.json tsconfig.json .swcrc ./
 COPY src ./src
