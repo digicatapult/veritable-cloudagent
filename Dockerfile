@@ -28,20 +28,18 @@ CMD ["npm", "run", "test"]
 
 
 # Production stage
-FROM node:lts AS production
-# NB Debian bookworm-slim doesn't include OpenSSL
+FROM node:current-alpine AS production
 
 # Need curl for healthcheck
-RUN apt-get update && \
-	apt-get install -y curl
-
+RUN apk add --no-cache curl openssl
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /www
 
-COPY --from=build /app/package.json /app/package-lock.json ./
+COPY --from=build /app/package*.json ./
 COPY --from=build /app/build ./build
-RUN npm ci && npm cache clean --force
+COPY --from=build /app/node_modules ./node_modules
+RUN npm prune --omit=dev
 
 EXPOSE 3000 5002 5003
 
