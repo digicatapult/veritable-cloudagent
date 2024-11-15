@@ -30,7 +30,7 @@ CMD ["npm", "run", "test"]
 # Production stage
 FROM node:lts-bookworm-slim AS production
 
-# # Need curl for healthcheck
+# Need curl for healthcheck
 RUN apt-get update && apt-get install -y curl
 
 ARG NODE_ENV=production
