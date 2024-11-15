@@ -12,6 +12,7 @@ COPY tsoa.json tsconfig.json .swcrc ./
 COPY src ./src
 RUN npm run build
 
+
 # Node_Modules stage
 FROM node:lts AS modules
 
@@ -19,6 +20,7 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --omit=dev
+
 
 # Test stage
 FROM build AS test
