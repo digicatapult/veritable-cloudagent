@@ -32,6 +32,7 @@ FROM node:current-alpine AS production
 
 # Need curl for healthcheck
 RUN apk add --no-cache curl openssl
+
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /www
