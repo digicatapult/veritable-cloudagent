@@ -1,4 +1,4 @@
-#Build stage
+# Build stage
 FROM node:lts AS build
 
 ARG NODE_ENV=development
@@ -12,6 +12,13 @@ COPY tsoa.json tsconfig.json .swcrc ./
 COPY src ./src
 RUN npm run build
 
+# Node_Modules stage
+FROM node:lts AS modules
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --omit=dev
 
 # Test stage
 FROM build AS test
@@ -30,17 +37,15 @@ CMD ["npm", "run", "test"]
 # Production stage
 FROM node:lts-bookworm-slim AS production
 
-# Need curl for healthcheck
 RUN apt-get update && apt-get install -y curl
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
 WORKDIR /www
 
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/build ./build
-COPY --from=build /app/node_modules ./node_modules
-RUN npm prune --omit=dev
+COPY --from=modules /app/node_modules ./node_modules
 
 EXPOSE 3000 5002 5003
 
