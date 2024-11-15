@@ -28,10 +28,11 @@ CMD ["npm", "run", "test"]
 
 
 # Production stage
-FROM node:current-alpine AS production
+FROM node:lts-bookworm-slim AS production
 
-# Need curl for healthcheck
-RUN apk add --no-cache curl openssl
+# # Need curl for healthcheck
+# RUN apt-get install -y curl
+# RUN apt clean
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
