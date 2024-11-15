@@ -31,8 +31,7 @@ CMD ["npm", "run", "test"]
 FROM node:lts-bookworm-slim AS production
 
 # # Need curl for healthcheck
-# RUN apt-get install -y curl
-# RUN apt clean
+RUN apt-get update && apt-get install -y curl
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
