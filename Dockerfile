@@ -1,3 +1,5 @@
+# docker build -t agent -f ./Dockerfile .
+
 # Build stage
 FROM node:lts-bookworm AS build
 
