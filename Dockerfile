@@ -1,5 +1,5 @@
 # Build stage
-FROM node:lts AS build
+FROM node:lts-bookworm AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
@@ -14,7 +14,7 @@ RUN npm run build
 
 
 # Node_Modules stage
-FROM node:lts AS modules
+FROM node:lts-bookworm AS modules
 
 WORKDIR /app
 
@@ -39,7 +39,7 @@ CMD ["npm", "run", "test"]
 # Production stage
 FROM node:lts-bookworm-slim AS production
 
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl openssl
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
