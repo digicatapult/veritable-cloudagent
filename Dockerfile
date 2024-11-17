@@ -1,6 +1,6 @@
 # docker build -t agent -f ./Dockerfile .
 
-# RHEL Minimal
+# RHEL Minimal + NodeJS
 FROM redhat/ubi9-minimal:9.5 AS rhel
 
 ENV NODEJS_VERSION=20
@@ -8,7 +8,7 @@ ENV NODEJS_VERSION=20
 RUN echo -e "[nodejs]\nname=nodejs\nstream=${NODEJS_VERSION}\nprofiles=\nstate=enabled\n" > /etc/dnf/modules.d/nodejs.module
 RUN microdnf install -y nodejs && microdnf remove -y nodejs-full-i18n npm nodejs-docs && microdnf clean -y all
 RUN microdnf install -y npm && microdnf remove -y nodejs-docs && microdnf clean -y all
-
+# NB remove 'microdnf remove -y node-js-full-i18n' command if need internationalisation
 
 # Build stage
 FROM node:lts-bookworm AS build
