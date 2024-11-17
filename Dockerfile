@@ -1,16 +1,29 @@
-#Build stage
-FROM node:lts AS build
+# docker build -t agent -f ./Dockerfile .
+
+# Build stage
+FROM node:lts-bookworm AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci && npm cache clean --force
+COPY package*.json ./
+RUN npm install -g npm@10.x.x
+RUN npm ci
 
 COPY tsoa.json tsconfig.json .swcrc ./
 COPY src ./src
 RUN npm run build
+
+
+# Node_Modules stage
+FROM node:lts-bookworm AS modules
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install -g npm@10.x.x
+RUN npm ci --omit=dev
 
 
 # Test stage
@@ -28,20 +41,17 @@ CMD ["npm", "run", "test"]
 
 
 # Production stage
-FROM node:lts AS production
-# NB Debian bookworm-slim doesn't include OpenSSL
+FROM node:lts-bookworm-slim AS production
 
-# Need curl for healthcheck
-RUN apt-get update && \
-	apt-get install -y curl
+RUN apt-get update && apt-get install -y curl openssl
+RUN apt-get clean
+RUN rm -rf /var/lib/apt/lists/*
 
-ARG NODE_ENV=production
-ENV NODE_ENV=${NODE_ENV}
 WORKDIR /www
 
-COPY --from=build /app/package.json /app/package-lock.json ./
+COPY --from=build /app/package*.json ./
 COPY --from=build /app/build ./build
-RUN npm ci && npm cache clean --force
+COPY --from=modules /app/node_modules ./node_modules
 
 EXPOSE 3000 5002 5003
 
