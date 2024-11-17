@@ -1,5 +1,15 @@
 # docker build -t agent -f ./Dockerfile .
 
+# RHEL Minimal
+FROM redhat/ubi9-minimal:9.5 AS rhel
+
+ENV NODEJS_VERSION=20
+
+RUN echo -e "[nodejs]\nname=nodejs\nstream=${NODEJS_VERSION}\nprofiles=\nstate=enabled\n" > /etc/dnf/modules.d/nodejs.module
+RUN microdnf install -y nodejs && microdnf remove -y nodejs-full-i18n npm nodejs-docs && microdnf clean -y all
+RUN microdnf install -y npm && microdnf remove -y nodejs-docs && microdnf clean -y all
+
+
 # Build stage
 FROM node:lts-bookworm AS build
 
@@ -39,11 +49,10 @@ CMD ["npm", "run", "test"]
 
 
 # Production stage
-FROM node:lts-bookworm-slim AS production
+FROM rhel AS production
 
-RUN apt-get update && apt-get install -y curl openssl
-RUN apt-get clean
-RUN rm -rf /var/lib/apt/lists/*
+RUN microdnf install -y openssl && microdnf clean -y all
+RUN npm install -g npm@10.x.x && npm cache clean --force
 
 WORKDIR /www
 
