@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.26",
+  "version": "0.12.27",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -62,7 +62,7 @@
     "swagger-ui-express": "^5.0.1",
     "tsoa": "^6.5.1",
     "tsyringe": "^4.8.0",
-    "undici": "^6.21.0",
+    "undici": "^7.1.0",
     "ws": "^8.18.0",
     "zod": "^3.23.8"
   },
