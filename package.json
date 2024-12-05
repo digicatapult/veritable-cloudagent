@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.28",
+  "version": "0.12.29",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -91,7 +91,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "globals": "^15.12.0",
-    "mocha": "^10.8.2",
+    "mocha": "^11.0.1",
     "pino-colada": "^2.2.2",
     "prettier": "^3.4.1",
     "prettier-plugin-organize-imports": "^4.1.0",
