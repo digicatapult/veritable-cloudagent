@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.30",
+  "version": "0.12.31",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -52,7 +52,7 @@
     "class-validator": "^0.14.1",
     "cors": "^2.8.5",
     "did-resolver": "^4.1.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^16.4.7",
     "envalid": "^8.0.0",
     "express": "^4.21.1",
     "http-errors": "^2.0.0",
