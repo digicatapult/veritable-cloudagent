@@ -159,7 +159,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build testnet and integration images
-        uses: docker/bake-action@v5
+        uses: docker/bake-action@v6
         with:
           builder: ${{ steps.buildx.outputs.name }}
           files: |
