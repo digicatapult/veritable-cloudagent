@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.61",
+  "version": "0.12.62",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
