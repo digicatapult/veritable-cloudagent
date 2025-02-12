@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.61",
+  "version": "0.12.62",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -93,7 +93,7 @@
     "globals": "^15.14.0",
     "mocha": "^11.1.0",
     "pino-colada": "^2.2.2",
-    "prettier": "^3.4.2",
+    "prettier": "^3.5.0",
     "prettier-plugin-organize-imports": "^4.1.0",
     "rimraf": "^6.0.1",
     "sinon": "^19.0.2",
