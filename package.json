@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.67",
+  "version": "0.12.68",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -84,7 +84,7 @@
     "@types/swagger-ui-express": "^4.1.7",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
-    "chai": "^5.1.2",
+    "chai": "^5.2.0",
     "concurrently": "^9.1.2",
     "depcheck": "^1.4.7",
     "eslint": "^9.20.1",
