@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.85",
+  "version": "0.12.86",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -82,8 +82,8 @@
     "@types/sinon": "^17.0.4",
     "@types/supertest": "^6.0.2",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript-eslint/eslint-plugin": "^8.26.1",
-    "@typescript-eslint/parser": "^8.26.1",
+    "@typescript-eslint/eslint-plugin": "^8.27.0",
+    "@typescript-eslint/parser": "^8.27.0",
     "chai": "^5.2.0",
     "concurrently": "^9.1.2",
     "depcheck": "^1.4.7",
@@ -96,7 +96,7 @@
     "prettier": "^3.5.3",
     "prettier-plugin-organize-imports": "^4.1.0",
     "rimraf": "^6.0.1",
-    "sinon": "^19.0.2",
+    "sinon": "^19.0.4",
     "supertest": "^7.0.0",
     "typescript": "~5.8.2"
   },
