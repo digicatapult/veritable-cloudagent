@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.12.90",
+  "version": "0.12.91",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -47,7 +47,7 @@
     "@hyperledger/aries-askar-nodejs": "^0.2.3",
     "@tsoa/runtime": "^6.6.0",
     "@types/ws": "^8.18.0",
-    "body-parser": "^1.20.3",
+    "body-parser": "^2.2.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cors": "^2.8.5",
