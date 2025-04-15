@@ -314,7 +314,7 @@ describe('ProofController', () => {
       acceptProofStub.resolves(testProofResponse)
       const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
 
-      const response = await request(app).post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+      const response = await request(app).post(`/v1/proofs/${testProofResponse.id}/accept-request`).send({})
 
       expect(
         acceptProofStub.calledWithMatch({
@@ -328,7 +328,9 @@ describe('ProofController', () => {
     test('should give 404 not found when proof request is not found', async () => {
       const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
       selectCredentialForRequestStub.resolves({ proofFormats: {} })
-      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+      const response = await request(app)
+        .post('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+        .send({})
 
       expect(response.statusCode).to.be.equal(404)
     })
