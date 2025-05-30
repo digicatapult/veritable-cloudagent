@@ -34,7 +34,7 @@ export async function getTestAgent(name: string, port: number) {
       // add some randomness to ensure test isolation
       label: `${name} (${randomUUID()})`,
       endpoints: [`http://localhost:${port}`],
-      walletConfig: { id: name, key: name },
+      walletConfig: { id: randomUUID(), key: name },
       useDidSovPrefixWhereAllowed: true,
       logger,
       autoUpdateStorageOnStartup: true,
