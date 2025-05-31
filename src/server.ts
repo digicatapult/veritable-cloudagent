@@ -1,5 +1,4 @@
 import { Agent } from '@credo-ts/core'
-import bodyParser from 'body-parser'
 import cors from 'cors'
 import express, { type NextFunction as NextFunction, type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
