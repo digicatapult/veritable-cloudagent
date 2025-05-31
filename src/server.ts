@@ -1,11 +1,11 @@
 import { Agent } from '@credo-ts/core'
 import cors from 'cors'
-import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
+import express, { NextFunction, type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
 import { pinoHttp as requestLogger } from 'pino-http'
 import 'reflect-metadata'
-import { generateHTML, serve } from 'swagger-ui-express'
+import { generateHTML } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 import { fileURLToPath } from 'url'
 
@@ -66,11 +66,9 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   app.use(express.urlencoded({ extended: true }))
   app.use(express.json())
 
-  RegisterRoutes(app)
-
-  app.get('/', (_req: ExRequest, res: ExResponse) => {
-    res.redirect('/swagger')
-  })
+  // app.get('/', (_req: ExRequest, res: ExResponse) => {
+  //   res.redirect('/swagger')
+  // })
 
   app.get('/swagger', (_req: ExRequest, res: ExResponse) => {
     res.send(
@@ -93,6 +91,16 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
 
   app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
     res.json(swaggerJson)
+  })
+
+  RegisterRoutes(app)
+
+  app.use((req: ExRequest, res: ExResponse, next: NextFunction) => {
+    if (req.url == '/') {
+      res.redirect('/swagger')
+      return
+    }
+    next()
   })
 
   app.use(errorHandler(agent.config.logger))
