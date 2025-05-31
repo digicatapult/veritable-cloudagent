@@ -1,6 +1,6 @@
 import { Agent } from '@credo-ts/core'
 import cors from 'cors'
-import express, { type NextFunction as NextFunction, type Request as ExRequest, type Response as ExResponse } from 'express'
+import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
 import { pinoHttp as requestLogger } from 'pino-http'
@@ -38,9 +38,8 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   app.use(
     requestLogger({
       logger: logger.logger,
-      genReqId: function (req: express.Request, res: express.Response): string {
+      genReqId: function (req: ExRequest, res: ExResponse): string {
         const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
-
         res.setHeader('x-request-id', id)
         return id
       },
@@ -69,12 +68,11 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
 
   RegisterRoutes(app)
 
-  app.get('/', function (_req: ExRequest, res: ExResponse, next: NextFunction) {
+  app.get('/', (_req: ExRequest, res: ExResponse) => {
     res.redirect('/swagger')
-    next()
   })
 
-  app.get('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
+  app.get('/swagger', (_req: ExRequest, res: ExResponse) => {
     res.send(
       generateHTML(swaggerJson, {
         ...(config.personaColor && {
@@ -92,6 +90,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
       })
     )
   })
+
   app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
     res.json(swaggerJson)
   })
