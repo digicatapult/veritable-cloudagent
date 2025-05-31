@@ -72,8 +72,8 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   )
   app.use(bodyParser.json())
 
-  app.use('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
-    return res.send(
+  app.get('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
+    res.send(
       generateHTML(swaggerJson, {
         ...(config.personaColor && {
           customCss: `body { background-color: ${config.personaColor} } 
