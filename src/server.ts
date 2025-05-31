@@ -1,7 +1,7 @@
 import { Agent } from '@credo-ts/core'
 import bodyParser from 'body-parser'
 import cors from 'cors'
-import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
+import express, { type NextFunction as NextFunction, type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
 import { pinoHttp as requestLogger } from 'pino-http'
@@ -64,13 +64,16 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     verifiedDrpcEvents(agent, config)
   }
 
-  // Use body parser to read sent json payloads
-  app.use(
-    bodyParser.urlencoded({
-      extended: true,
-    })
-  )
-  app.use(bodyParser.json())
+  // Use Express native body parser to read sent json payloads
+  app.use(express.urlencoded({ extended: true }))
+  app.use(express.json())
+
+  RegisterRoutes(app)
+
+  app.get('/', function (_req: ExRequest, res: ExResponse, next: NextFunction) {
+    res.redirect('/swagger')
+    next()
+  })
 
   app.get('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
     res.send(
@@ -90,16 +93,8 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
       })
     )
   })
-  app.get('/api-docs', (_req, res) => res.json(swaggerJson))
-
-  RegisterRoutes(app)
-
-  app.use((req, res, next) => {
-    if (req.url == '/') {
-      res.redirect('/swagger')
-      return
-    }
-    next()
+  app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
+    res.json(swaggerJson)
   })
 
   app.use(errorHandler(agent.config.logger))
