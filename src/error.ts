@@ -47,30 +47,32 @@ export class InternalError extends HttpResponse {
 
 export const errorHandler =
   (logger: Logger) =>
-  (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): ExResponse | void => {
+  (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): void => {
     if (err instanceof ValidateError) {
       logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
-      return res.status(422).json({
+      res.status(422).json({
         message: 'Validation Failed',
         details: err?.fields,
       })
+      return 
     }
 
     if (err instanceof HttpResponse) {
       logger.warn(`Error thrown in handler: ${err.message}`)
-
-      return res.status(err.code).json(err.message)
+      res.status(err.code).json(err.message)
+      return 
     }
     // capture body parser errors
     if (isHttpError(err)) {
       logger.warn(`HTTPError in request: ${err.message}`)
-      return res.status(err.statusCode).json(err.message)
+      res.status(err.statusCode).json(err.message)
+      return
     }
     if (err instanceof Error) {
       logger.error(`Unexpected error thrown in handler: ${err.message}`)
       logger.trace(`Stack: ${err.stack}`)
-
-      return res.status(500).json(err)
+      res.status(500).json(err)
+      return 
     }
 
     next(err)
