@@ -71,10 +71,9 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   // })
 
   app.get('/swagger', (_req: ExRequest, res: ExResponse) => {
-    res.send(
-      generateHTML(swaggerJson, {
-        ...(config.personaColor && {
-          customCss: `body { background-color: ${config.personaColor} } 
+    const html = generateHTML(swaggerJson, {
+      ...(config.personaColor && {
+        customCss: `body { background-color: ${config.personaColor} } 
         .swagger-ui .scheme-container { background-color: inherit }
         .swagger-ui .opblock .opblock-section-header { background: inherit }
         .topbar { display: none }
@@ -83,10 +82,10 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
         .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) } 
         .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) } 
         .swagger-ui section.models { background-color: #f7f7f7 } `,
-        }),
-        ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
-      })
-    )
+      }),
+      ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
+    })
+    res.send(html)
   })
 
   app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
