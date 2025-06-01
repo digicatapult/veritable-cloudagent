@@ -1,4 +1,4 @@
-#docker-compose -f docker-compose-agent-ipfs.yml up --build -d
+#docker compose -f docker-compose-agent-ipfs.yml up --build -d
 
 ##################################################################################
 ## Docker-Compose for a Single agent + Single IPFS node
