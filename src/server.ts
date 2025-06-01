@@ -1,6 +1,7 @@
 import { Agent } from '@credo-ts/core'
+import bodyParser from 'body-parser'
 import cors from 'cors'
-import express, { NextFunction, type Request as ExRequest, type Response as ExResponse } from 'express'
+import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
 import { pinoHttp as requestLogger } from 'pino-http'
@@ -30,6 +31,20 @@ const __dirname = path.dirname(__filename)
 export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
   const swaggerBuffer = await fs.readFile(path.join(__dirname, '..', 'build', 'routes', 'swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
+  const swaggerHtml = generateHTML(swaggerJson, {
+    ...(config.personaColor && {
+      customCss: `body { background-color: ${config.personaColor} }
+      .swagger-ui .scheme-container { background-color: inherit }
+      .swagger-ui .opblock .opblock-section-header { background: inherit }
+      .topbar { display: none }
+      .swagger-ui .btn.authorize { background-color: #f7f7f7 }
+      .swagger-ui .opblock.opblock-post { background: rgba(73,204,144,.3) }
+      .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) }
+      .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) }
+      .swagger-ui section.models { background-color: #f7f7f7 } `,
+    }),
+    ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
+  })
 
   container.registerInstance(Agent, agent as Agent)
 
@@ -62,30 +77,16 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     verifiedDrpcEvents(agent, config)
   }
 
-  // Use Express native body parser to read sent json payloads
-  app.use(express.urlencoded({ extended: true }))
-  app.use(express.json())
+  // Use body parser to read sent json payloads
+  app.use(bodyParser.urlencoded({ extended: true }))
+  app.use(bodyParser.json())
 
-  // app.get('/', (_req: ExRequest, res: ExResponse) => {
-  //   res.redirect('/swagger')
-  // })
+  app.get('/', (_req: ExRequest, res: ExResponse) => {
+    res.redirect('/swagger')
+  })
 
   app.get('/swagger', (_req: ExRequest, res: ExResponse) => {
-    const html = generateHTML(swaggerJson, {
-      ...(config.personaColor && {
-        customCss: `body { background-color: ${config.personaColor} } 
-        .swagger-ui .scheme-container { background-color: inherit }
-        .swagger-ui .opblock .opblock-section-header { background: inherit }
-        .topbar { display: none }
-        .swagger-ui .btn.authorize { background-color: #f7f7f7 } 
-        .swagger-ui .opblock.opblock-post { background: rgba(73,204,144,.3) } 
-        .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) } 
-        .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) } 
-        .swagger-ui section.models { background-color: #f7f7f7 } `,
-      }),
-      ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
-    })
-    res.send(html)
+    res.send(swaggerHtml)
   })
 
   app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
@@ -93,14 +94,6 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   })
 
   RegisterRoutes(app)
-
-  app.use((req: ExRequest, res: ExResponse, next: NextFunction) => {
-    if (req.url == '/') {
-      res.redirect('/swagger')
-      return
-    }
-    next()
-  })
 
   app.use(errorHandler(agent.config.logger))
 
