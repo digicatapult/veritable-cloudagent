@@ -6,7 +6,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { pinoHttp as requestLogger } from 'pino-http'
 import 'reflect-metadata'
-import { generateHTML } from 'swagger-ui-express'
+import { serve, setup } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 import { fileURLToPath } from 'url'
 
@@ -31,9 +31,8 @@ const __dirname = path.dirname(__filename)
 export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
   const swaggerBuffer = await fs.readFile(path.join(__dirname, '..', 'build', 'routes', 'swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
-  const swaggerHtml = generateHTML(swaggerJson, {
-    ...(config.personaColor && {
-      customCss: `body { background-color: ${config.personaColor} }
+  const swaggerUiOpts = {
+    customCss: `body { background-color: ${config.personaColor} }
       .swagger-ui .scheme-container { background-color: inherit }
       .swagger-ui .opblock .opblock-section-header { background: inherit }
       .topbar { display: none }
@@ -42,9 +41,8 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
       .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) }
       .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) }
       .swagger-ui section.models { background-color: #f7f7f7 } `,
-    }),
-    ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
-  })
+    customSiteTitle: `${config.personaTitle}`,
+  }
 
   container.registerInstance(Agent, agent as Agent)
 
@@ -85,9 +83,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     res.redirect('/swagger')
   })
 
-  app.get('/swagger', (_req: ExRequest, res: ExResponse) => {
-    res.send(swaggerHtml)
-  })
+  app.use('/swagger', serve, setup(swaggerJson, swaggerUiOpts))
 
   app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
     res.json(swaggerJson)
