@@ -1,5 +1,4 @@
 import { Agent } from '@credo-ts/core'
-import bodyParser from 'body-parser'
 import cors from 'cors'
 import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
@@ -75,9 +74,9 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     verifiedDrpcEvents(agent, config)
   }
 
-  // Use body parser to read sent json payloads
-  app.use(bodyParser.urlencoded({ extended: true }))
-  app.use(bodyParser.json())
+  // Use Express native body parser to read sent json payloads
+  app.use(express.urlencoded({ extended: true }))
+  app.use(express.json())
 
   app.get('/', (_req: ExRequest, res: ExResponse) => {
     res.redirect('/swagger')
