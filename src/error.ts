@@ -54,13 +54,13 @@ export const errorHandler =
         message: 'Validation Failed',
         details: err?.fields,
       })
-      return 
+      return
     }
 
     if (err instanceof HttpResponse) {
       logger.warn(`Error thrown in handler: ${err.message}`)
       res.status(err.code).json(err.message)
-      return 
+      return
     }
     // capture body parser errors
     if (isHttpError(err)) {
@@ -72,7 +72,7 @@ export const errorHandler =
       logger.error(`Unexpected error thrown in handler: ${err.message}`)
       logger.trace(`Stack: ${err.stack}`)
       res.status(500).json(err)
-      return 
+      return
     }
 
     next(err)
