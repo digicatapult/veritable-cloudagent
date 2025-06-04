@@ -1,5 +1,4 @@
 import { Agent } from '@credo-ts/core'
-import bodyParser from 'body-parser'
 import cors from 'cors'
 import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
@@ -64,16 +63,11 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     verifiedDrpcEvents(agent, config)
   }
 
-  // Use body parser to read sent json payloads
-  app.use(
-    bodyParser.urlencoded({
-      extended: true,
-    })
-  )
-  app.use(bodyParser.json())
+  app.use(express.urlencoded({ extended: true }))
+  app.use(express.json())
 
   app.use('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
-    return res.send(
+    res.send(
       generateHTML(swaggerJson, {
         ...(config.personaColor && {
           customCss: `body { background-color: ${config.personaColor} } 
@@ -90,7 +84,9 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
       })
     )
   })
-  app.get('/api-docs', (_req, res) => res.json(swaggerJson))
+  app.get('/api-docs', (_req, res) => {
+    res.json(swaggerJson)
+  })
 
   RegisterRoutes(app)
 
