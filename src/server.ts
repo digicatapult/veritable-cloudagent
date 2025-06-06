@@ -5,7 +5,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { pinoHttp as requestLogger } from 'pino-http'
 import 'reflect-metadata'
-import { generateHTML, serve } from 'swagger-ui-express'
+import { serve, setup } from 'swagger-ui-express'
 import { container } from 'tsyringe'
 import { fileURLToPath } from 'url'
 
@@ -30,6 +30,18 @@ const __dirname = path.dirname(__filename)
 export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
   const swaggerBuffer = await fs.readFile(path.join(__dirname, '..', 'build', 'routes', 'swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
+  const swaggerUiOpts = {
+    customCss: `body { background-color: ${config.personaColor} }
+      .swagger-ui .scheme-container { background-color: inherit }
+      .swagger-ui .opblock .opblock-section-header { background: inherit }
+      .topbar { display: none }
+      .swagger-ui .btn.authorize { background-color: #f7f7f7 }
+      .swagger-ui .opblock.opblock-post { background: rgba(73,204,144,.3) }
+      .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) }
+      .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) }
+      .swagger-ui section.models { background-color: #f7f7f7 } `,
+    customSiteTitle: `${config.personaTitle}`,
+  }
 
   container.registerInstance(Agent, agent as Agent)
 
@@ -38,9 +50,8 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   app.use(
     requestLogger({
       logger: logger.logger,
-      genReqId: function (req: express.Request, res: express.Response): string {
+      genReqId: function (req: ExRequest, res: ExResponse): string {
         const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
-
         res.setHeader('x-request-id', id)
         return id
       },
@@ -63,40 +74,21 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     verifiedDrpcEvents(agent, config)
   }
 
+  // Use Express native body parser to read sent json payloads
   app.use(express.urlencoded({ extended: true }))
   app.use(express.json())
 
-  app.use('/swagger', serve, async (_req: ExRequest, res: ExResponse) => {
-    res.send(
-      generateHTML(swaggerJson, {
-        ...(config.personaColor && {
-          customCss: `body { background-color: ${config.personaColor} } 
-        .swagger-ui .scheme-container { background-color: inherit }
-        .swagger-ui .opblock .opblock-section-header { background: inherit }
-        .topbar { display: none }
-        .swagger-ui .btn.authorize { background-color: #f7f7f7 } 
-        .swagger-ui .opblock.opblock-post { background: rgba(73,204,144,.3) } 
-        .swagger-ui .opblock.opblock-get { background: rgba(97,175,254,.3) } 
-        .swagger-ui .opblock.opblock-delete { background: rgba(249,62,62,.3) } 
-        .swagger-ui section.models { background-color: #f7f7f7 } `,
-        }),
-        ...(config.personaTitle && { customSiteTitle: config.personaTitle }),
-      })
-    )
+  app.get('/', (_req: ExRequest, res: ExResponse) => {
+    res.redirect('/swagger')
   })
-  app.get('/api-docs', (_req, res) => {
+
+  app.use('/swagger', serve, setup(swaggerJson, swaggerUiOpts))
+
+  app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
     res.json(swaggerJson)
   })
 
   RegisterRoutes(app)
-
-  app.use((req, res, next) => {
-    if (req.url == '/') {
-      res.redirect('/swagger')
-      return
-    }
-    next()
-  })
 
   app.use(errorHandler(agent.config.logger))
 
