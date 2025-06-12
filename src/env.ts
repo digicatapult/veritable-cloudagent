@@ -102,6 +102,7 @@ const envConfig = {
     devDefault: ['https://my-webhook-server'],
   }),
   ADMIN_PORT: envalid.num({ default: 3000, devDefault: 3000 }),
+  ADMIN_PING_INTERVAL_MS: envalid.num({ default: 10000 }),
   IPFS_ORIGIN: envalid.str({ default: 'http://ipfs0:5001', devDefault: 'http://ipfs0:5001' }),
   PERSONA_TITLE: envalid.str({ default: 'Veritable Cloudagent' }),
   PERSONA_COLOR: envalid.str({ default: 'white' }),
