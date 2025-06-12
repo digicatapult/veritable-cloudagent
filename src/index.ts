@@ -86,7 +86,7 @@ const interval = setInterval(() => {
     zombieSockets.add(ws)
     ws.ping()
   })
-}, 10000)
+}, env.get('ADMIN_PING_INTERVAL_MS'))
 socketServer.on('close', () => {
   clearInterval(interval)
 })
