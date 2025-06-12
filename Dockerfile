@@ -8,7 +8,7 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install -g npm@10.x.x
+RUN npm install -g npm@11.x.x
 RUN npm ci
 
 COPY tsoa.json tsconfig.json .swcrc ./
