@@ -98,7 +98,7 @@ const envConfig = {
     devDefault: 'https://image.com/image.png',
   }),
   WEBHOOK_URL: stringArray({
-    default: ['https://my-webhook-server'],
+    default: [],
     devDefault: ['https://my-webhook-server'],
   }),
   ADMIN_PORT: envalid.num({ default: 3000, devDefault: 3000 }),
