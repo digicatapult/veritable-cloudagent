@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.13.9",
+  "version": "0.13.10",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -62,7 +62,7 @@
     "tsoa": "^6.6.0",
     "tsyringe": "^4.10.0",
     "undici": "^7.11.0",
-    "ws": "^8.18.2",
+    "ws": "^8.18.3",
     "zod": "^3.25.67"
   },
   "devDependencies": {
@@ -75,7 +75,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.15.33",
+    "@types/node": "^22.15.34",
     "@types/sinon": "^17.0.4",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
