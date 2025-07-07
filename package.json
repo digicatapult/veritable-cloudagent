@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.13.13",
+  "version": "0.13.14",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -63,7 +63,7 @@
     "tsyringe": "^4.10.0",
     "undici": "^7.11.0",
     "ws": "^8.18.3",
-    "zod": "^3.25.71"
+    "zod": "^3.25.74"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
