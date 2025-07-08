@@ -44,12 +44,19 @@ export class DidController extends Controller {
 
     req.log.info('attempting to resolve DIDs found %j', didResult)
 
-    return await Promise.all(
+    const results = await Promise.allSettled(
       didResult.map(({ did }) => {
         req.log.debug('resolving %s did', did)
         return this.agent.dids.resolve(did)
       })
     )
+    const fulfilled = results.filter((r) => r.status === 'fulfilled').map((r) => r.value)
+    const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
+
+    if (rejected.length > 0) {
+      throw new Error(`${rejected.length} DIDs were rejected with Error: ${rejected[0]}`)
+    }
+    return fulfilled
   }
 
   /**
