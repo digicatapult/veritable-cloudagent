@@ -6,6 +6,7 @@ import type { Socket } from 'node:net'
 import WebSocket from 'ws'
 
 import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
+import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
 import { Env } from './env.js'
@@ -68,10 +69,32 @@ const agent = await setupAgent({
 })
 
 const socketServer = new WebSocket.Server({ noServer: true })
+const zombieSockets = new WeakSet<WebSocket>()
+const interval = setInterval(() => {
+  logger.info(`WebSocket PING (socket count = ${socketServer.clients.size})`)
+  socketServer.clients.forEach((ws) => {
+    ws.once('pong', () => {
+      logger.debug('WebSocket PONG')
+      zombieSockets.delete(ws)
+    })
+
+    if (zombieSockets.has(ws)) {
+      logger.warn(`Terminating dead WebSocket`)
+      return ws.terminate()
+    }
+
+    zombieSockets.add(ws)
+    ws.ping()
+  })
+}, env.get('ADMIN_PING_INTERVAL_MS'))
+socketServer.on('close', () => {
+  clearInterval(interval)
+})
+
 const app = await setupServer(agent, logger, {
   webhookUrl: env.get('WEBHOOK_URL'),
   personaTitle: env.get('PERSONA_TITLE'),
-  personaColor: env.get('PERONA_COLOR'),
+  personaColor: env.get('PERSONA_COLOR'),
   socketServer,
 })
 

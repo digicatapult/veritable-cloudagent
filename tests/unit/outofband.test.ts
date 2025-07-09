@@ -447,7 +447,9 @@ describe('OutOfBandController', () => {
       expect(acceptInvitationStub.calledWithMatch('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', params)).equals(true)
     })
     test('should throw 404 if out of band record is not found', async () => {
-      const response = await request(app).post('/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
+      const response = await request(app)
+        .post('/v1/oob/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-invitation')
+        .send({})
 
       expect(response.statusCode).to.be.equal(404)
     })

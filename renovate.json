@@ -5,6 +5,10 @@
 		{
 			"matchPackagePatterns": ["^@credo-ts/"],
 			"enabled": false
+		},
+		{
+			"matchPackageNames": ["@hyperledger/anoncreds-nodejs"],
+			"enabled": false
 		}
 	]
 }
