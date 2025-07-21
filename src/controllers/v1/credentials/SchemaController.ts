@@ -82,7 +82,7 @@ export class SchemaController {
     }
 
     if (error !== undefined || schema === undefined) {
-      req.log.warn('error occured %s', error)
+      req.log.warn(`error occurred in GET /schemas/:schemaId ${error}`)
       throw new HttpResponse({ message: `something went wrong: schema is undefined or ${error}` })
     }
 
@@ -130,7 +130,7 @@ export class SchemaController {
     }
 
     if (schemaState.state !== 'finished' || schemaState.schemaId === undefined || schemaState.schema === undefined) {
-      req.log.warn('error occured while creating schema %j', schemaState)
+      req.log.warn('error occurred while creating schema %j', schemaState)
       throw new HttpResponse({ message: `something went wrong creating schema: unknown` })
     }
 

@@ -53,7 +53,7 @@ export class BasicMessageController extends Controller {
         req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in POST /basic-messages/:connectionId ${error}`)
       throw error
     }
   }

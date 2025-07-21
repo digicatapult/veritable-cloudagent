@@ -181,7 +181,7 @@ export class OutOfBandController extends Controller {
         req.log.warn('%s connection not found', config.recordId)
         throw new NotFound(`connection with connection id "${config.recordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`error occurred in POST /oob/create-legacy-connectionless-invitation ${error}`)
       throw error
     }
   }
@@ -263,7 +263,7 @@ export class OutOfBandController extends Controller {
     @Body() invitationRequest: ReceiveInvitationByUrlProps
   ) {
     const { invitationUrl, ...config } = invitationRequest
-    req.log.info('invation from url %s', invitationUrl)
+    req.log.info('invitation from url %s', invitationUrl)
 
     const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveInvitationFromUrl(invitationUrl, config)
     req.log.info('receive invitation from url %j', {
@@ -310,7 +310,7 @@ export class OutOfBandController extends Controller {
         req.log.warn('%s mediator not found', acceptInvitationConfig?.mediatorId)
         throw new NotFound(`mediator with mediatorId ${acceptInvitationConfig?.mediatorId} not found`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`error occurred in POST /oob/:outOfBandId/accept-invitation ${error}`)
       throw error
     }
   }
@@ -333,7 +333,7 @@ export class OutOfBandController extends Controller {
         req.log.warn('%s OOB record not found', outOfBandId)
         throw new NotFound(`Out of band record with id "${outOfBandId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`error occurred in DELETE /oob/:outOfBandId ${error}`)
       throw error
     }
   }

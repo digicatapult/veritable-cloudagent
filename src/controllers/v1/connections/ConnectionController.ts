@@ -131,7 +131,7 @@ export class ConnectionController extends Controller {
         req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.error('error occured', error)
+      req.log.error(`error occurred in DELETE /connections/:connectionId ${error}`)
       throw error
     }
   }
@@ -160,7 +160,7 @@ export class ConnectionController extends Controller {
         req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.error('error occured', error)
+      req.log.error(`error occurred in POST /connections/:connectionId/accept-request ${error}`)
       throw error
     }
   }
@@ -189,7 +189,7 @@ export class ConnectionController extends Controller {
         req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.error('error occured', error)
+      req.log.error(`error occurred in POST /connections/:connectionId/accept-response ${error}`)
       throw error
     }
   }

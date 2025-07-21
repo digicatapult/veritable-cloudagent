@@ -68,7 +68,7 @@ export class ProofController extends Controller {
         req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in GET /proofs/:proofRecordId ${error}`)
       throw error
     }
   }
@@ -91,7 +91,7 @@ export class ProofController extends Controller {
         req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in DELETE /proofs/:proofRecordId ${error}`)
       throw error
     }
   }
@@ -119,7 +119,7 @@ export class ProofController extends Controller {
         req.log.warn('%s connection not found', proposal.connectionId)
         throw new NotFound(`connection with connectionId "${proposal.connectionId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in POST /proofs/propose-proof ${error}`)
       throw error
     }
   }
@@ -155,7 +155,7 @@ export class ProofController extends Controller {
         req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in POST /proofs/:proofRecordId/accept-proposal ${error}`)
       throw error
     }
   }
@@ -218,7 +218,7 @@ export class ProofController extends Controller {
         req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connectionId "${connectionId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in POST /proofs/request-proof ${error}`)
       throw error
     }
   }
@@ -286,7 +286,7 @@ export class ProofController extends Controller {
         req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn('error occured %j', error)
+      req.log.warn(`error occurred in POST /proofs/:proofRecordId/accept-presentation ${error}`)
       throw error
     }
   }
