@@ -105,7 +105,6 @@ export class ConnectionController extends Controller {
     const connection = await this.agent.connections.findById(connectionId)
 
     if (!connection) {
-      req.log.warn('%s connection not found', connectionId)
       throw new NotFound(`connection with connection id "${connectionId}" not found.`)
     }
 
@@ -128,11 +127,9 @@ export class ConnectionController extends Controller {
       req.log.info('%s connection has been deleted', connectionId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -157,11 +154,9 @@ export class ConnectionController extends Controller {
       return connection.toJSON()
     } catch (error) {
       if (error instanceof CredoError) {
-        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -186,11 +181,9 @@ export class ConnectionController extends Controller {
       return connection.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 

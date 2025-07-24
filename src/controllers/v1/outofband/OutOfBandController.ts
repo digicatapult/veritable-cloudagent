@@ -68,7 +68,6 @@ export class OutOfBandController extends Controller {
     const outOfBandRecord = await this.agent.oob.findById(outOfBandId)
 
     if (!outOfBandRecord) {
-      req.log.warn('%s OOB record not found', outOfBandId)
       throw new NotFound(`Out of band record with id "${outOfBandId}" not found.`)
     }
 
@@ -178,11 +177,9 @@ export class OutOfBandController extends Controller {
       })
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection not found', config.recordId)
         throw new NotFound(`connection with connection id "${config.recordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -307,11 +304,9 @@ export class OutOfBandController extends Controller {
       }
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s mediator not found', acceptInvitationConfig?.mediatorId)
         throw new NotFound(`mediator with mediatorId ${acceptInvitationConfig?.mediatorId} not found`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -330,11 +325,9 @@ export class OutOfBandController extends Controller {
       await this.agent.oob.deleteById(outOfBandId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s OOB record not found', outOfBandId)
         throw new NotFound(`Out of band record with id "${outOfBandId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 }

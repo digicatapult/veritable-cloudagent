@@ -50,11 +50,9 @@ export class BasicMessageController extends Controller {
       await this.agent.basicMessages.sendMessage(connectionId, body.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connection id "${connectionId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 }

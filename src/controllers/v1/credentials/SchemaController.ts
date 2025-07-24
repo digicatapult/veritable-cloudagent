@@ -72,12 +72,10 @@ export class SchemaController {
     const error = resolutionMetadata?.error
 
     if (error === 'notFound') {
-      req.log.warn('%s schema not found', schemaId)
       throw new NotFound(`schema definition with schemaId "${schemaId}" not found.`)
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      req.log.warn('invalid schema structure %s', error)
       throw new BadRequest(`schemaId "${schemaId}" has invalid structure.`)
     }
 

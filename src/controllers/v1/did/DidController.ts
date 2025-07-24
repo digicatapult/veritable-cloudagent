@@ -104,11 +104,10 @@ export class DidController extends Controller {
       req.log.debug('confirming that %s DID has been imported', options.did)
       return this.getDidRecordByDid(req, options.did)
     } catch (error) {
-      req.log.warn(`error occurred while importing DID ${error}`)
       if (error instanceof CredoError) {
-        throw new BadRequest(`Error importing Did - ${error.message}`)
+        throw new BadRequest(`Error importing DID - ${error.message}`)
       }
-      throw error
+      throw new Error(`error importing DID ${error}`)
     }
   }
 

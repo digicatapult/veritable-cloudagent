@@ -75,18 +75,15 @@ export class CredentialDefinitionController extends Controller {
     } = await this.agent.modules.anoncreds.getCredentialDefinition(credentialDefinitionId)
 
     if (error === 'notFound') {
-      req.log.warn('%s credential definition not found', credentialDefinitionId)
       throw new NotFound(`credential definition with credentialDefinitionId "${credentialDefinitionId}" not found.`)
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      req.log.warn('credential definition has invalid structure %s', error)
       throw new BadRequest(`credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`)
     }
 
     if (error !== undefined || credentialDefinition === undefined) {
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
 
     req.log.debug('returning %s credential definition %j', credentialDefinitionId, credentialDefinition)
@@ -122,12 +119,10 @@ export class CredentialDefinitionController extends Controller {
     } = await this.agent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
 
     if (error === 'notFound' || error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      req.log.warn('%s schema  not found', credentialDefinitionRequest.schemaId)
       throw new NotFound(`schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`)
     }
     if (error) {
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
 
     req.log.info('registering a credential definition %j', credentialDefinitionRequest)

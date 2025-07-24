@@ -112,11 +112,9 @@ export class DrpcController extends Controller {
       await this.receiveHandler.respondToRequest(requestId, response)
     } catch (err) {
       if (err instanceof NotFound) {
-        req.log.warn('%s request not found', requestId)
         throw new NotFound(`Request ${requestId} not found`)
       }
-      req.log.warn(`${err}`)
-      throw new InternalError()
+      throw new InternalError(`${err}`)
     }
 
     this.setStatus(204)

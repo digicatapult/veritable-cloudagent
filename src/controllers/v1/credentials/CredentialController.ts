@@ -77,11 +77,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -104,11 +102,9 @@ export class CredentialController extends Controller {
       return formatData
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential format was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -129,11 +125,9 @@ export class CredentialController extends Controller {
       await this.agent.credentials.deleteById(credentialRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -154,11 +148,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection was not found', options.connectionId)
         throw new NotFound(`connection with connection record id "${options.connectionId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -188,11 +180,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -231,7 +221,6 @@ export class CredentialController extends Controller {
       req.log.debug('checking if connection exists %s', options.connectionId)
       const connection = await this.agent.connections.findById(options.connectionId)
       if (!connection) {
-        req.log.warn('%s connection was not found', options.connectionId)
         throw new NotFound(`connection with connection id "${options.connectionId}" not found.`)
       }
 
@@ -239,16 +228,11 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn(
-          '%s credential definition was not found',
-          options.credentialFormats.anoncreds?.credentialDefinitionId
-        )
         throw new NotFound(
           `the credential definition id "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found.`
         )
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -279,11 +263,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -314,11 +296,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -344,11 +324,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -380,11 +358,9 @@ export class CredentialController extends Controller {
       return problemReport.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${options.credentialRecordId}" not found.`)
       }
-      req.log.error(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 }

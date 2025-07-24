@@ -65,11 +65,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -88,11 +86,9 @@ export class ProofController extends Controller {
       await this.agent.proofs.deleteById(proofRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -116,11 +112,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection not found', proposal.connectionId)
         throw new NotFound(`connection with connectionId "${proposal.connectionId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -152,11 +146,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -215,11 +207,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s connection not found', connectionId)
         throw new NotFound(`connection with connectionId "${connectionId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -283,11 +273,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        req.log.warn('%s proof not found', proofRecordId)
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      req.log.warn(`${error}`)
-      throw error
+      throw new Error(`${error}`)
     }
   }
 }
