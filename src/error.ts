@@ -70,7 +70,7 @@ export const errorHandler =
     }
     if (err instanceof Error) {
       logger.error(`Unexpected error thrown in handler: ${err.message}`)
-      logger.trace(`Stack: ${err.stack}`)
+      logger.debug(`Stack: ${err.stack}`)
       res.status(500).json(err)
       return
     }
