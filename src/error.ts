@@ -15,7 +15,7 @@ export class HttpResponse extends Error {
   }
 }
 
-export class NotFound extends HttpResponse {
+export class NotFoundError extends HttpResponse {
   constructor(message = 'not found') {
     super({ code: 404, message })
   }

@@ -4,7 +4,7 @@ import { Body, Controller, Example, Get, Path, Post, Request, Response, Route, T
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { HttpResponse, NotFound } from '../../../error.js'
+import { HttpResponse, NotFoundError } from '../../../error.js'
 import { type RecordId, BasicMessageRecordExample } from '../../examples.js'
 
 @Tags('Basic Messages')
@@ -37,7 +37,7 @@ export class BasicMessageController extends Controller {
    * @param content The content of the message
    */
   @Post('/:connectionId')
-  @Response<NotFound['message']>(404)
+  @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async sendMessage(
     @Request() req: express.Request,
@@ -46,11 +46,11 @@ export class BasicMessageController extends Controller {
   ) {
     try {
       this.setStatus(204)
-      req.log.info('sending basic message %j to %s connection', body, connectionId)
+      req.log.info('sending basic message %j to connection %s', body, connectionId)
       await this.agent.basicMessages.sendMessage(connectionId, body.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFound(`connection with connection id "${connectionId}" not found.`)
+        throw new NotFoundError('connection not found')
       }
       throw new Error(`${error}`)
     }

@@ -4,7 +4,7 @@ import { Body, Example, Get, Path, Post, Query, Request, Response, Route, Tags }
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFound } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { type Did, type SchemaId, type Version, SchemaExample } from '../../examples.js'
 import type { AnonCredsSchemaResponse } from '../../types.js'
 
@@ -35,10 +35,10 @@ export class SchemaController {
     @Query('schemaVersion') schemaVersion?: string
   ): Promise<AnonCredsSchemaResponse[]> {
     if (!createdLocally) {
-      req.log.warn('can list only local schemas %j', { issuerId, schemaName, createdLocally, schemaVersion })
-      throw new BadRequest('Can only list schema created locally')
+      throw new BadRequest('Can only list schemas created locally')
     }
 
+    // TODO: error handling for invalid issuerId, schemaName, schemaVersion
     const schemaResult = await this.agent.modules.anoncreds.getCreatedSchemas({
       issuerId,
       schemaName,
@@ -64,7 +64,7 @@ export class SchemaController {
   @Example<AnonCredsSchemaResponse>(SchemaExample)
   @Get('/:schemaId')
   @Response<BadRequest['message']>(400)
-  @Response<NotFound['message']>(404)
+  @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async getSchemaById(@Request() req: express.Request, @Path('schemaId') schemaId: SchemaId) {
     const { schema, resolutionMetadata } = await this.agent.modules.anoncreds.getSchema(schemaId)
@@ -72,7 +72,7 @@ export class SchemaController {
     const error = resolutionMetadata?.error
 
     if (error === 'notFound') {
-      throw new NotFound(`schema definition with schemaId "${schemaId}" not found.`)
+      throw new NotFoundError('schema not found')
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
@@ -80,8 +80,7 @@ export class SchemaController {
     }
 
     if (error !== undefined || schema === undefined) {
-      req.log.warn(`${error}`)
-      throw new HttpResponse({ message: `something went wrong: schema is undefined or ${error}` })
+      throw new HttpResponse({ message: `something went wrong: schema may be undefined ${error}` })
     }
 
     req.log.debug('schema %s has been found %j', schemaId, schema)
@@ -123,13 +122,11 @@ export class SchemaController {
     })
 
     if (schemaState.state === 'failed') {
-      req.log.warn('schema registration failed %j', schemaState)
-      throw new HttpResponse({ message: `something went wrong: ${schemaState.reason}` })
+      throw new HttpResponse({ message: `schema registration failed: ${schemaState.reason}` })
     }
 
     if (schemaState.state !== 'finished' || schemaState.schemaId === undefined || schemaState.schema === undefined) {
-      req.log.warn(`error occurred while creating schema ${schemaState}`)
-      throw new HttpResponse({ message: `something went wrong creating schema: unknown` })
+      throw new HttpResponse({ message: `something went wrong creating schema: unknown. state ${schemaState.state}` })
     }
 
     req.log.info('%s schema has been created %j', schemaState.schemaId, schemaState)
