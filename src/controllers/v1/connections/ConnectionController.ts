@@ -67,19 +67,22 @@ export class ConnectionController extends Controller {
     let connections
 
     if (outOfBandId) {
-      connections = await this.agent.connections.findAllByOutOfBandId(outOfBandId)
       req.log.info('retrieving OOB connections', connections)
+      connections = await this.agent.connections.findAllByOutOfBandId(outOfBandId)
     } else {
       const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
       req.log.info('retrieving by query connections %j', { alias, myDid, theirDid, theirLabel, state })
-
-      const connections = await connectionRepository.findByQuery(this.agent.context, {
+      connections = await connectionRepository.findByQuery(this.agent.context, {
         alias,
         myDid,
         theirDid,
         theirLabel,
         state,
       })
+
+      if (!connections) {
+        throw new NotFoundError('no connections found')
+      }
 
       return connections.map((c) => c.toJSON())
     }
