@@ -4,7 +4,7 @@ import { Body, Controller, Example, Get, Path, Post, Query, Request, Response, R
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, InternalError, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { type Did, DidRecordExample, DidStateExample } from '../../examples.js'
 import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
 
