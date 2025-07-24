@@ -1,8 +1,7 @@
 import express from 'express'
 import { Controller, Get, Hidden, Request, Route, SuccessResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
-
-const packageVersion = process.env.npm_package_version ? process.env.npm_package_version : 'unknown'
+import version from '../utils/version'
 
 type Health = {
   version: string
@@ -23,10 +22,10 @@ export class HealthController extends Controller {
   @Hidden()
   @Get('/')
   public async get(@Request() req: express.Request): Promise<Health> {
-    req.log.info('health controller called, cloudagent version is %s', packageVersion)
+    req.log.trace('health controller called, cloudagent version is %s', version)
     return {
       status: 'ok',
-      version: packageVersion,
+      version: version,
     }
   }
 }
