@@ -98,6 +98,7 @@ export class CredentialController extends Controller {
     @Path('credentialRecordId') credentialRecordId: RecordId
   ) {
     try {
+      req.log.info('getting format data for %s', credentialRecordId)
       const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
       return formatData
     } catch (error) {
@@ -122,6 +123,7 @@ export class CredentialController extends Controller {
   ) {
     try {
       this.setStatus(204)
+      req.log.info('deleting credential %s', credentialRecordId)
       await this.agent.credentials.deleteById(credentialRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -144,6 +146,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
     try {
+      req.log.info('proposing credential to %s', options.connectionId)
       const credential = await this.agent.credentials.proposeCredential(options)
       return credential.toJSON()
     } catch (error) {
@@ -172,6 +175,7 @@ export class CredentialController extends Controller {
     @Body() options?: AcceptCredentialProposalOptions
   ) {
     try {
+      req.log.debug('accepting credential proposal for %s', credentialRecordId)
       const credential = await this.agent.credentials.acceptProposal({
         ...options,
         credentialRecordId: credentialRecordId,

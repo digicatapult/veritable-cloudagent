@@ -251,7 +251,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFound(`proof with proofRecordId "${proofRecordId}" not found.`)
       }
-      throw error
+      throw new Error(`${error}`)
     }
   }
 
@@ -268,6 +268,7 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: string) {
     try {
+      req.log.info('accepting proof presentation %s', proofRecordId)
       const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
 
       return proof.toJSON()
