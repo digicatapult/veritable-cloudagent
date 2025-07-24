@@ -58,13 +58,13 @@ export const errorHandler =
     }
 
     if (err instanceof HttpResponse) {
-      logger.warn(`Error thrown in handler: ${err.message}`)
+      logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${err.message}`)
       res.status(err.code).json(err.message)
       return
     }
     // capture body parser errors
     if (isHttpError(err)) {
-      logger.warn(`HTTPError in request: ${err.message}`)
+      logger.warn(`HTTPError in request for ${req.path}: ${err.message}`)
       res.status(err.statusCode).json(err.message)
       return
     }
