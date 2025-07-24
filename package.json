@@ -31,7 +31,7 @@
     "build": "npm run clean && npm run tsoa:build && swc ./src -d ./build --strip-leading-paths --copy-files",
     "tsoa:build": "tsoa spec-and-routes",
     "tsoa:watch": "node --watch-path=./src ./node_modules/.bin/tsoa spec-and-routes",
-    "dev": "concurrently \"npm run tsoa:watch\" \"SWCRC=true NODE_ENV=dev node --import @swc-node/register/esm-register --enable-source-maps --watch-path=./src --watch-path=./build/routes/swagger.json ./src/index.ts | pino-pretty\"",
+    "dev": "concurrently \"npm run tsoa:watch\" \"SWCRC=true NODE_ENV=dev node --import @swc-node/register/esm-register --enable-source-maps --watch-path=./src --watch-path=./build/routes/swagger.json ./src/index.ts | pino-pretty -c -S\"",
     "start": "node build/index.js",
     "test": "mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "mocha --config ./tests/mocharc.json tests/integration/**/*.test.ts",
