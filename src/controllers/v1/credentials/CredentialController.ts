@@ -80,7 +80,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -107,7 +107,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential format was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -132,7 +132,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -157,7 +157,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s connection was not found', options.connectionId)
         throw new NotFound(`connection with connection record id "${options.connectionId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -191,7 +191,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -247,7 +247,7 @@ export class CredentialController extends Controller {
           `the credential definition id "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found.`
         )
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -282,7 +282,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -317,7 +317,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -347,7 +347,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }
@@ -383,7 +383,7 @@ export class CredentialController extends Controller {
         req.log.warn('%s credential was not found', credentialRecordId)
         throw new NotFound(`credential with credential record id "${options.credentialRecordId}" not found.`)
       }
-      req.log.error('error occured %j', error)
+      req.log.error(`${error}`)
       throw error
     }
   }

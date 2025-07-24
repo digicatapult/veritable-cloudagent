@@ -85,7 +85,7 @@ export class CredentialDefinitionController extends Controller {
     }
 
     if (error !== undefined || credentialDefinition === undefined) {
-      req.log.warn('error occured %s', error)
+      req.log.warn(`${error}`)
       throw error
     }
 
@@ -126,7 +126,7 @@ export class CredentialDefinitionController extends Controller {
       throw new NotFound(`schema with schemaId "${credentialDefinitionRequest.schemaId}" not found.`)
     }
     if (error) {
-      req.log.warn('error occured %s', error)
+      req.log.warn(`${error}`)
       throw error
     }
 
@@ -143,7 +143,7 @@ export class CredentialDefinitionController extends Controller {
     })
 
     if (state !== 'finished' || credentialDefinitionId === undefined || credentialDefinition === undefined) {
-      req.log.warn('error occured while creating a credential definition %j', { state, credentialDefinition })
+      req.log.warn('error occurred while creating a credential definition %j', { state, credentialDefinition })
       throw new HttpResponse({ message: `something went wrong creating credential definition` })
     }
 

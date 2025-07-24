@@ -55,7 +55,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
         res.setHeader('x-request-id', id)
         return id
       },
-      quietReqLogger: true,
+      quietReqLogger: false,
       customAttributeKeys: {
         reqId: 'req_id',
       },

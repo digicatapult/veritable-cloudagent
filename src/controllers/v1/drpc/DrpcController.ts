@@ -115,7 +115,7 @@ export class DrpcController extends Controller {
         req.log.warn('%s request not found', requestId)
         throw new NotFound(`Request ${requestId} not found`)
       }
-      req.log.warn('error occured %j', err)
+      req.log.warn(`${err}`)
       throw new InternalError()
     }
 
