@@ -55,9 +55,9 @@ describe('DidController', () => {
       expect(response.body.didDocument).to.deep.equal(testDidDocument)
     })
 
-    test('should give 500 when did document record is not found', async () => {
+    test('should give 404 when did document record is not found', async () => {
       const response = await request(app).get(`/v1/dids/did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)
-      expect(response.statusCode).to.be.equal(500)
+      expect(response.statusCode).to.be.equal(404)
     })
   })
 
@@ -108,7 +108,7 @@ describe('DidController', () => {
         },
       }
       const response = await request(app).post(`/v1/dids/create`).send(createRequest)
-      expect(response.statusCode).to.equal(500)
+      expect(response.statusCode).to.equal(400)
     })
   })
 
