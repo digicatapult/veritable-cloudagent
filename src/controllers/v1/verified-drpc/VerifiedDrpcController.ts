@@ -5,7 +5,7 @@ import { injectable } from 'tsyringe'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules/verified-drpc/index.js'
 
 import { RestAgent } from '../../../agent.js'
-import { GatewayTimeout, NotFound } from '../../../error.js'
+import { GatewayTimeout, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
 import { type RecordId } from '../../examples.js'
 import type { CreateProofRequestOptions } from '../../types.js'
@@ -34,7 +34,7 @@ export class VerifiedDrpcController extends Controller {
    * @param timeout The timeout for receiving a response
    */
   @Post('/request/:connectionId')
-  @Response<NotFound['message']>(404)
+  @Response<NotFoundError['message']>(404)
   @Response<GatewayTimeout>(504)
   public async sendRequest(
     @Request() req: express.Request,
@@ -86,7 +86,7 @@ export class VerifiedDrpcController extends Controller {
    * @param response the verified drpc response object to send
    */
   @Post('/response/:connectionId')
-  @Response<NotFound['message']>(404)
+  @Response<NotFoundError['message']>(404)
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,

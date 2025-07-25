@@ -9,7 +9,7 @@ import request from 'supertest'
 import { ConnectionRecord } from '@credo-ts/core'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
-import { NotFound } from '../../src/error.js'
+import { NotFoundError } from '../../src/error.js'
 import { getTestAgent, getTestConnection, getTestServer } from './utils/helpers.js'
 
 describe('DrpcController', () => {
@@ -138,7 +138,7 @@ describe('DrpcController', () => {
 
     test('should return not found if requestId is not valid', async () => {
       const spy = stub(receiveHandler, 'respondToRequest')
-      spy.rejects(new NotFound())
+      spy.rejects(new NotFoundError())
 
       const response = await request(app).post(`/v1/drpc/test-id/response`).send({
         jsonrpc: '2.0',

@@ -11,7 +11,7 @@ import { fileURLToPath } from 'url'
 
 import type { ServerConfig } from './utils/ServerConfig.js'
 
-import { randomUUID } from 'crypto'
+import { randomUUID, UUID } from 'crypto'
 import { RestAgent } from './agent.js'
 import { errorHandler } from './error.js'
 import { basicMessageEvents } from './events/BasicMessageEvents.js'
@@ -50,6 +50,17 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   app.use(
     requestLogger({
       logger: logger.logger,
+      serializers: {
+        // removing cookie from being logged since it contains refresh and access token
+        req: ({ id, headers, ...req }: { id: UUID; headers: Record<string, string> }) => ({
+          ...req,
+          headers: {},
+        }),
+        res: (res) => {
+          delete res.headers
+          return res
+        },
+      },
       genReqId: function (req: ExRequest, res: ExResponse): string {
         const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
         res.setHeader('x-request-id', id)

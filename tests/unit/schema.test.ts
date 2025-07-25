@@ -117,7 +117,7 @@ describe('SchemaController', () => {
       expect(response.statusCode).to.be.equal(400)
     })
 
-    test('should return 404 NotFound when schema not found', async () => {
+    test('should return 404 NotFoundError when schema not found', async () => {
       const getSchemaStub = stub(agent.modules.anoncreds, 'getSchema')
       getSchemaStub.resolves({
         resolutionMetadata: {

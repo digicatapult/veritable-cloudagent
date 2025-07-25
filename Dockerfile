@@ -46,6 +46,6 @@ RUN npm ci && npm cache clean --force
 EXPOSE 3000 5002 5003
 
 HEALTHCHECK --interval=5s --timeout=3s \
-	CMD curl -f http://localhost:3000/ || exit 1
+	CMD curl -f http://localhost:3000/health || exit 1
 
 ENTRYPOINT [ "node", "./build/index.js" ]

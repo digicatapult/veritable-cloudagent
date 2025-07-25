@@ -128,7 +128,7 @@ describe('CredentialDefinitionController', () => {
       expect(response.statusCode).to.be.equal(400)
     })
 
-    test('should return 404 NotFound when credential definition not found', async () => {
+    test('should return 404 NotFoundError when credential definition not found', async () => {
       const spy = stub(agent.modules.anoncreds, 'getCredentialDefinition')
       spy.resolves({
         credentialDefinitionId: 'x',
