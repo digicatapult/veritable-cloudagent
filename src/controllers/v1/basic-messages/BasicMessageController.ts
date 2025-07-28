@@ -52,7 +52,7 @@ export class BasicMessageController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 }

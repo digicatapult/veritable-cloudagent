@@ -79,7 +79,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -105,7 +105,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('format data not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -129,7 +129,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -153,7 +153,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -185,7 +185,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential proposal not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -235,7 +235,7 @@ export class CredentialController extends Controller {
           `credential definition "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found`
         )
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -268,7 +268,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential offer not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -301,7 +301,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential request not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -329,7 +329,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -363,7 +363,7 @@ export class CredentialController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('credential record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 }

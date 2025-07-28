@@ -64,12 +64,12 @@ export const errorHandler =
     }
     // capture body parser errors
     if (isHttpError(err)) {
-      logger.warn(`HTTPError in request for ${req.path}: ${err.message}`)
+      logger.warn(`HTTPError in request for ${req.method} ${req.path}: ${err.message}`)
       res.status(err.statusCode).json(err.message)
       return
     }
     if (err instanceof Error) {
-      logger.error(`Unexpected error thrown in handler: ${err.message}`)
+      logger.error(`Unexpected error thrown in handler ${req.method} ${req.path}: ${err.message}`)
       logger.debug(`Stack: ${err.stack}`)
       res.status(500).json(err)
       return

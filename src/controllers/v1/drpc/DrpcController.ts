@@ -5,7 +5,7 @@ import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } f
 import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
-import { BadGatewayError, GatewayTimeout, InternalError, NotFoundError } from '../../../error.js'
+import { BadGatewayError, GatewayTimeout, NotFoundError } from '../../../error.js'
 import { type RecordId } from '../../examples.js'
 
 import { RestAgent } from '../../../agent.js'
@@ -113,7 +113,7 @@ export class DrpcController extends Controller {
       if (err instanceof NotFoundError) {
         throw new NotFoundError('request not found')
       }
-      throw new InternalError(`${err}`)
+      throw err
     }
 
     this.setStatus(204)

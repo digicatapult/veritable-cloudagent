@@ -132,7 +132,7 @@ export class ConnectionController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -159,7 +159,7 @@ export class ConnectionController extends Controller {
       if (error instanceof CredoError) {
         throw new NotFoundError('connection request not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -186,7 +186,7 @@ export class ConnectionController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection response not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 

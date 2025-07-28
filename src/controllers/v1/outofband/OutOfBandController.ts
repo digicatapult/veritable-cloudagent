@@ -179,7 +179,7 @@ export class OutOfBandController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('invitation not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 

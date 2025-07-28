@@ -67,7 +67,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('proof record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -88,7 +88,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError(`proof record not found`)
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -113,7 +113,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -147,7 +147,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('proof proposal not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -208,7 +208,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError(`proof record not found ${error}`)
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -250,7 +250,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError(`proof record not found`)
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -275,7 +275,7 @@ export class ProofController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('proof record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 }
