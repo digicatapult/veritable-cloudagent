@@ -80,10 +80,6 @@ export class ConnectionController extends Controller {
         state,
       })
 
-      if (!connections) {
-        throw new NotFoundError('no connections found')
-      }
-
       return connections.map((c) => c.toJSON())
     }
 

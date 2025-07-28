@@ -123,7 +123,7 @@ export class CredentialDefinitionController extends Controller {
       throw new NotFoundError('credential definition not found, invalid or unsupported')
     }
     if (error) {
-      throw new Error(`${error}`)
+      throw error
     }
 
     req.log.info('registering a credential definition %j', credentialDefinitionRequest)

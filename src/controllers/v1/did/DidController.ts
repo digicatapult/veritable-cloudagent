@@ -105,7 +105,7 @@ export class DidController extends Controller {
       if (error instanceof CredoError) {
         throw new BadRequest(`error importing DID ${error.message}`)
       }
-      throw new Error(`error importing DID ${error}`)
+      throw error
     }
   }
 

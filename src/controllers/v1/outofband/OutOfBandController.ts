@@ -312,7 +312,7 @@ export class OutOfBandController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('OOB invitation not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 
@@ -333,7 +333,7 @@ export class OutOfBandController extends Controller {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('OOB record not found')
       }
-      throw new Error(`${error}`)
+      throw error
     }
   }
 }
