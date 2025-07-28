@@ -71,7 +71,7 @@ const agent = await setupAgent({
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
 const interval = setInterval(() => {
-  logger.info(`WebSocket PING (socket count = ${socketServer.clients.size})`)
+  logger.trace(`WebSocket PING (socket count = ${socketServer.clients.size})`)
   socketServer.clients.forEach((ws) => {
     ws.once('pong', () => {
       logger.debug('WebSocket PONG')

@@ -3,7 +3,7 @@ import { describe, test } from 'mocha'
 import sinon from 'sinon'
 
 import { RestAgent } from '../../agent.js'
-import { NotFound } from '../../error.js'
+import { NotFoundError } from '../../error.js'
 import PinoLogger from '../../utils/logger.js'
 import DrpcReceiveHandler from '../index.js'
 
@@ -92,7 +92,7 @@ describe('DrpcReceiveHandler', function () {
       error = err
     }
 
-    expect(error).instanceOf(NotFound)
+    expect(error).instanceOf(NotFoundError)
   })
 
   test('response to invalid id should throw', async function () {
@@ -108,6 +108,6 @@ describe('DrpcReceiveHandler', function () {
       error = err
     }
 
-    expect(error).instanceOf(NotFound)
+    expect(error).instanceOf(NotFoundError)
   })
 })
