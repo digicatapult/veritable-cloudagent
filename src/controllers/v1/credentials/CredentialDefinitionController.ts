@@ -40,7 +40,6 @@ export class CredentialDefinitionController extends Controller {
       )
     }
 
-    // TODO: error handling for invalid issuerId, schemaId
     const credentialDefinitionResult = await this.agent.modules.anoncreds.getCreatedCredentialDefinitions({
       issuerId,
       schemaId,

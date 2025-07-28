@@ -38,7 +38,6 @@ export class SchemaController {
       throw new BadRequest('Can only list schemas created locally')
     }
 
-    // TODO: error handling for invalid issuerId, schemaName, schemaVersion
     const schemaResult = await this.agent.modules.anoncreds.getCreatedSchemas({
       issuerId,
       schemaName,

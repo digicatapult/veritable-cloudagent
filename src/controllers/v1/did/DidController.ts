@@ -37,7 +37,6 @@ export class DidController extends Controller {
       throw new BadRequest('can only list DIDs created locally')
     }
 
-    // TODO: error handling for invalid 'method'
     const didResult = await this.agent.dids.getCreatedDids({
       method,
     })
