@@ -74,7 +74,7 @@ Next begin the local agent for development with:
 npm run dev
 ```
 
-This agent is also accessible via a `Swagger` (OpenAPI) interface on port `3000`.
+The agent API is now accessible via a `Swagger` (OpenAPI) interface on port `3000`.
 
 #### Private 3-Agent Testnet
 
