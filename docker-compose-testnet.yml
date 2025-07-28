@@ -1,4 +1,4 @@
-#docker compose -f docker-compose-testnet.yml up --build -d
+# docker compose -f docker-compose-testnet.yml up --build -d
 
 ##################################################################################
 ## Docker-Compose for a 3-agent testnet + 3-node private IPFS cluster ############
