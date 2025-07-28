@@ -107,7 +107,7 @@ The following lifecycle commands can be run using `npm`
 | `tsoa:watch`       | Build tsoa artefacts `routes.ts` and `swagger.json` and watches for changes. Rebuilds on changes                                                                      |
 | `dev`              | Runs `tsoa:watch` and a development server concurrently in watch mode. Can be used for live debugging. Configure with [environment variables](#environment-variables) |
 | `start`            | Start production server from build                                                                                                                                    |
-| `test`             | Run unit tests. Configure with [environment variables](#environment-variables)                                                                                        |
+| `test:unit`             | Run unit tests. Configure with [environment variables](#environment-variables)                                                                                        |
 | `test:integration` | Run integration tests                                                                                                                                                 |
 | `test-watch`       | Run unit tests and re-run on changes                                                                                                                                  |
 
@@ -154,7 +154,7 @@ Unit tests and integration tests are defined in the top-level `tests` directory.
 
 #### Unit
 
-Unit test can be run with `npm run test`.
+Unit tests can be run with `npm run test:unit`.
 
 #### Integration
 
