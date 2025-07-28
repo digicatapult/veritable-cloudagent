@@ -106,15 +106,8 @@ export class DrpcController extends Controller {
     @Path('requestId') requestId: string,
     @Body() response: DrpcResponseOptions
   ) {
-    try {
-      req.log.info('responding %j to request %s', response, requestId)
-      await this.receiveHandler.respondToRequest(requestId, response)
-    } catch (err) {
-      if (err instanceof NotFoundError) {
-        throw new NotFoundError('request not found')
-      }
-      throw err
-    }
+    req.log.info('responding %j to request %s', response, requestId)
+    await this.receiveHandler.respondToRequest(requestId, response)
 
     this.setStatus(204)
   }

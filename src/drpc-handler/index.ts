@@ -53,7 +53,7 @@ export default class DrpcReceiveHandler {
   public async respondToRequest(id: string | number, response: Omit<DrpcResponseObject, 'id'>): Promise<void> {
     const request = this.requests.get(id)
     if (!request) {
-      throw new NotFoundError(`Request not found`)
+      throw new NotFoundError(`request not found`)
     }
     this.requests.delete(id)
     await request.sendResponse({
