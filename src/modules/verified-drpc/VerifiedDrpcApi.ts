@@ -22,6 +22,7 @@ import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
 import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
+import { NotFoundError } from '../../error.js'
 
 @injectable()
 export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
@@ -215,7 +216,7 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
       options.threadId
     )
     if (!verifiedDrpcMessageRecord) {
-      throw new Error(`No request found for threadId ${options.threadId}`)
+      throw new NotFoundError(`no request found for threadId ${options.threadId}`)
     }
     const { responseMessage, record } = await this.verifiedDrpcMessageService.createResponseMessage(
       this.agentContext,

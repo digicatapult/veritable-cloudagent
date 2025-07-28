@@ -69,7 +69,7 @@ export const errorHandler =
       return
     }
     if (err instanceof Error) {
-      logger.error(`Unexpected error thrown in handler ${req.method} ${req.path}: ${err.message}`)
+      logger.error(`Unexpected error thrown in handler: ${err.message}`)
       logger.debug(`Stack: ${err.stack}`)
       res.status(500).json(err)
       return
