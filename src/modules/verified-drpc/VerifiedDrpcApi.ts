@@ -18,11 +18,11 @@ import {
   injectable,
 } from '@credo-ts/core'
 
+import { NotFoundError } from '../../error.js'
 import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
 import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
-import { NotFoundError } from '../../error.js'
 
 @injectable()
 export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
