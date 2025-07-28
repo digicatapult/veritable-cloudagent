@@ -15,7 +15,7 @@ export class HttpResponse extends Error {
   }
 }
 
-export class NotFound extends HttpResponse {
+export class NotFoundError extends HttpResponse {
   constructor(message = 'not found') {
     super({ code: 404, message })
   }
@@ -58,19 +58,19 @@ export const errorHandler =
     }
 
     if (err instanceof HttpResponse) {
-      logger.warn(`Error thrown in handler: ${err.message}`)
+      logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${err.message}`)
       res.status(err.code).json(err.message)
       return
     }
     // capture body parser errors
     if (isHttpError(err)) {
-      logger.warn(`HTTPError in request: ${err.message}`)
+      logger.warn(`HTTPError in request for ${req.method} ${req.path}: ${err.message}`)
       res.status(err.statusCode).json(err.message)
       return
     }
     if (err instanceof Error) {
       logger.error(`Unexpected error thrown in handler: ${err.message}`)
-      logger.trace(`Stack: ${err.stack}`)
+      logger.debug(`Stack: ${err.stack}`)
       res.status(500).json(err)
       return
     }

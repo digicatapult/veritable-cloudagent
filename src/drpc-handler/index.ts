@@ -5,7 +5,7 @@ import type { VerifiedDrpcRecord, VerifiedDrpcResponse } from '../modules/verifi
 
 import { DrpcRequestObject, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
 import { RestAgent } from '../agent.js'
-import { NotFound } from '../error.js'
+import { NotFoundError } from '../error.js'
 import PinoLogger from '../utils/logger.js'
 
 export const verifiedDrpcRequestHandler = async (request: VerifiedDrpcRecord): Promise<VerifiedDrpcResponse> => {
@@ -53,7 +53,7 @@ export default class DrpcReceiveHandler {
   public async respondToRequest(id: string | number, response: Omit<DrpcResponseObject, 'id'>): Promise<void> {
     const request = this.requests.get(id)
     if (!request) {
-      throw new NotFound(`Request not found`)
+      throw new NotFoundError(`request not found`)
     }
     this.requests.delete(id)
     await request.sendResponse({

@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.13.22",
+  "version": "0.13.23",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -31,9 +31,9 @@
     "build": "npm run clean && npm run tsoa:build && swc ./src -d ./build --strip-leading-paths --copy-files",
     "tsoa:build": "tsoa spec-and-routes",
     "tsoa:watch": "node --watch-path=./src ./node_modules/.bin/tsoa spec-and-routes",
-    "dev": "concurrently \"npm run tsoa:watch\" \"SWCRC=true NODE_ENV=dev node --import @swc-node/register/esm-register --enable-source-maps --watch-path=./src --watch-path=./build/routes/swagger.json ./src/index.ts | pino-colada\"",
+    "dev": "concurrently \"npm run tsoa:watch\" \"SWCRC=true NODE_ENV=dev node --import @swc-node/register/esm-register --enable-source-maps --watch-path=./src --watch-path=./build/routes/swagger.json ./src/index.ts | pino-pretty -c -S\"",
     "start": "node build/index.js",
-    "test": "mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
+    "test:unit": "mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "mocha --config ./tests/mocharc.json tests/integration/**/*.test.ts",
     "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
   },
@@ -89,7 +89,7 @@
     "eslint-plugin-prettier": "^5.5.3",
     "globals": "^16.3.0",
     "mocha": "^11.7.1",
-    "pino-colada": "^2.2.2",
+    "pino-pretty": "13.0.0",
     "prettier": "^3.6.2",
     "prettier-plugin-organize-imports": "^4.1.0",
     "rimraf": "^6.0.1",

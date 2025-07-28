@@ -14,6 +14,7 @@ import {
   type Query,
 } from '@credo-ts/core'
 
+import { BadRequest, NotFoundError } from '../../../error.js'
 import {
   VerifiedDrpcRequestEventTypes,
   type VerifiedDrpcRequestStateChangedEvent,
@@ -199,7 +200,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
     )
 
     if (!verifiedDrpcMessageRecord) {
-      throw new Error('Verified DRPC message record not found')
+      throw new NotFoundError('verified DRPC message record not found')
     }
 
     verifiedDrpcMessageRecord.assertRole(VerifiedDrpcRole.Client)
@@ -220,7 +221,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
     )
 
     if (record) {
-      throw new Error('Verified DRPC message record already exists')
+      throw new BadRequest('verified DRPC message record already exists')
     }
 
     const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
