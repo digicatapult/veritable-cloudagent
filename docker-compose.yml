@@ -16,7 +16,7 @@ services:
   ## Alice #########################################################################
   ##################################################################################
 
-  agent0:
+  alice:
     container_name: alice
     build:
       context: .
@@ -24,7 +24,7 @@ services:
     restart: always
     scale: 0
     depends_on:
-      ipfs0:
+      ipfs:
         condition: service_healthy
     ports:
       - '5002:5002' #5000 is used for AirPlay in MacOS
@@ -32,7 +32,7 @@ services:
       - '3000:3000'
     environment:
       - ENDPOINT='http://alice:5002, ws://alice:5003'
-      - IPFS_ORIGIN=http://ipfs0:5001
+      - IPFS_ORIGIN=http://ipfs:5001
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
     networks:
@@ -42,15 +42,15 @@ services:
   ## IPFS ##########################################################################
   ##################################################################################
 
-  ipfs0:
-    container_name: ipfs0
+  ipfs:
+    container_name: ipfs
     image: ipfs/kubo:release
     ports:
       #     - "4001:4001" # ipfs swarm - expose if needed/wanted
       #     - "5001:5001" # ipfs api - expose if needed/wanted
       - '8080:8080' # ipfs gateway - expose if needed/wanted
     volumes:
-      - ipfs0:/data/ipfs
+      - ipfs:/data/ipfs
     networks:
       - testnet
 
@@ -73,7 +73,7 @@ services:
     networks:
       - testnet
 volumes:
-  ipfs0:
+  ipfs:
   veritable-cloudagent-storage:
 
 networks:
