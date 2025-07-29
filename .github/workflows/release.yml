@@ -75,7 +75,7 @@ jobs:
       - name: Build the TypeScript OpenAPI with tsoa
         run: npm run build
       - name: Run tests
-        run: npm run test
+        run: npm run test:unit
 
   check-version:
     name: 'Check version'

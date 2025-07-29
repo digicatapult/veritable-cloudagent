@@ -5,7 +5,7 @@ import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } f
 import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
-import { BadGatewayError, GatewayTimeout, InternalError, NotFound } from '../../../error.js'
+import { BadGatewayError, GatewayTimeout, NotFoundError } from '../../../error.js'
 import { type RecordId } from '../../examples.js'
 
 import { RestAgent } from '../../../agent.js'
@@ -54,7 +54,7 @@ export class DrpcController extends Controller {
    * @param timeout The timeout for receiving a response
    */
   @Post('/:connectionId/request')
-  @Response<NotFound>(404)
+  @Response<NotFoundError>(404)
   @Response<BadGatewayError>(502)
   @Response<GatewayTimeout>(504)
   public async sendRequest(
@@ -85,9 +85,8 @@ export class DrpcController extends Controller {
     try {
       req.log.info('validating DRPC response %j', response)
       validatedResponse = rpcResponseParser.parse(response)
-    } catch (err) {
-      req.log.warn('invalid response %j', err)
-      throw new BadGatewayError('Invalid response to RPC call')
+    } catch {
+      throw new BadGatewayError(`invalid response to RPC call`)
     }
 
     req.log.debug('returning validated response %j', validatedResponse)
@@ -100,24 +99,15 @@ export class DrpcController extends Controller {
    * @param response the verified drpc response object to send
    */
   @Post('/:requestId/response')
-  @Response<NotFound['message']>(404)
+  @Response<NotFoundError['message']>(404)
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,
     @Path('requestId') requestId: string,
     @Body() response: DrpcResponseOptions
   ) {
-    try {
-      req.log.info('responding to the %s request %j', requestId, response)
-      await this.receiveHandler.respondToRequest(requestId, response)
-    } catch (err) {
-      if (err instanceof NotFound) {
-        req.log.warn('%s request not found', requestId)
-        throw new NotFound(`Request ${requestId} not found`)
-      }
-      req.log.warn('error occured %j', err)
-      throw new InternalError()
-    }
+    req.log.info('responding %j to request %s', response, requestId)
+    await this.receiveHandler.respondToRequest(requestId, response)
 
     this.setStatus(204)
   }
