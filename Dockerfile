@@ -19,6 +19,8 @@ RUN npm run build
 # Node_Modules stage
 FROM node:lts-bookworm AS modules
 
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
@@ -38,6 +40,9 @@ CMD ["npm", "run", "test"]
 
 # Production stage
 FROM node:lts-bookworm-slim AS production
+
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
 
 RUN apt-get update && apt-get install -y curl openssl
 RUN apt-get clean
