@@ -1,7 +1,7 @@
 # docker build . -t veritable-cloudagent
 
 # Build stage
-FROM node:lts-bookworm-slim AS build
+FROM node:lts-bookworm AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
