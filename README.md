@@ -62,13 +62,25 @@ Bellow you will find commands for starting up the containers in docker (see the 
 
 #### Single Agent + IPFS Node
 
-The following command will spin up a single `veritable-cloudagent` agent (named `Alice`) and an IPFS node for testing purposes:
+The following command will spin up the infrastructure (`IPFS` node, `Postgres` database, `testnet` network) for local testing and development purposes:
 
 ```sh
 docker compose -f docker-compose.yml up --build -d
 ```
 
-This agent is also accessible via a `Swagger` (OpenAPI) interface on port `3000`.
+Next begin the local agent for development with:
+
+```sh
+npm run dev
+```
+
+The agent API is now accessible via a `Swagger` (OpenAPI) interface on port `3000`.
+
+If you wish to also start the agent (`Alice`) within docker, run the following command:
+
+```sh
+docker compose -f docker-compose.yml up --build -d --scale alice=1
+```
 
 #### Private 3-Agent Testnet
 
