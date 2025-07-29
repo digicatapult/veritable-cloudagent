@@ -1,7 +1,7 @@
 # docker build . -t veritable-cloudagent
 
 # Build stage
-FROM node:lts-bookworm AS build
+FROM node:lts-bookworm-slim AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
@@ -32,7 +32,6 @@ FROM build AS test
 WORKDIR /app
 ARG NODE_ENV=test
 ENV NODE_ENV=${NODE_ENV}
-COPY .swcrc .eslint* ./
 COPY tests ./tests
 CMD ["npm", "run", "test"]
 
