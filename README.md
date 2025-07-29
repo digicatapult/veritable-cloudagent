@@ -76,6 +76,12 @@ npm run dev
 
 The agent API is now accessible via a `Swagger` (OpenAPI) interface on port `3000`.
 
+If you wish to also start the agent (`Alice`) within docker, run the following command:
+
+```sh
+docker compose -f docker-compose.yml up --build -d --scale alice=1
+```
+
 #### Private 3-Agent Testnet
 
 The following command will create a containerised private network consisting of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
