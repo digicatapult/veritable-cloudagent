@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
-import { type RecordId, ProofRecordExample } from '../../examples.js'
+import { type UUID, ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
   AcceptProofRequestOptions,
@@ -56,7 +56,7 @@ export class ProofController extends Controller {
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async getProofById(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: RecordId) {
+  public async getProofById(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     req.log.debug('getting proof record %s', proofRecordId)
     try {
       const proof = await this.agent.proofs.getById(proofRecordId)
@@ -79,7 +79,7 @@ export class ProofController extends Controller {
   @Delete('/:proofRecordId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: RecordId) {
+  public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
       this.setStatus(204)
       req.log.info('deleting proof %s', proofRecordId)

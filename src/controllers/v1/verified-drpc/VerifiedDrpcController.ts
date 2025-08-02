@@ -7,7 +7,7 @@ import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules
 import { RestAgent } from '../../../agent.js'
 import { GatewayTimeout, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
-import { type RecordId } from '../../examples.js'
+import { type UUID } from '../../examples.js'
 import type { CreateProofRequestOptions } from '../../types.js'
 
 interface VerifiedDrpcRequestOptions {
@@ -38,7 +38,7 @@ export class VerifiedDrpcController extends Controller {
   @Response<GatewayTimeout>(504)
   public async sendRequest(
     @Request() req: express.Request,
-    @Path('connectionId') connectionId: RecordId,
+    @Path('connectionId') connectionId: UUID,
     @Body() requestOptions: VerifiedDrpcRequestOptions,
     @Query('async') async_ = false,
     @Query('timeout') timeout = 5000
@@ -90,7 +90,7 @@ export class VerifiedDrpcController extends Controller {
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,
-    @Path('connectionId') connectionId: RecordId,
+    @Path('connectionId') connectionId: UUID,
     @Query() threadId: string,
     @Body() response: VerifiedDrpcResponse
   ) {

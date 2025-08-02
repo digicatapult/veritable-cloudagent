@@ -32,7 +32,7 @@ export class SchemaController {
     @Query('createdLocally') createdLocally: boolean,
     @Query('issuerId') issuerId?: DID,
     @Query('schemaName') schemaName?: string,
-    @Query('schemaVersion') schemaVersion?: string
+    @Query('schemaVersion') schemaVersion?: Version
   ): Promise<AnonCredsSchemaResponse[]> {
     if (!createdLocally) {
       throw new BadRequest('Can only list schemas created locally')

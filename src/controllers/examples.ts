@@ -17,9 +17,11 @@ import {
 } from '@credo-ts/core'
 
 /**
- * @example "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
+ * Stringified UUIDv4.
+ * @pattern [0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}
+ * @example "52907745-7672-470e-a803-a2f8feb52944"
  */
-export type RecordId = string
+export type UUID = string
 
 /**
  * @example "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"

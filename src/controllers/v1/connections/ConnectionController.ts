@@ -13,7 +13,7 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
-import { type RecordId, ConnectionRecordExample } from '../../examples.js'
+import { type UUID, ConnectionRecordExample } from '../../examples.js'
 
 @Tags('Connections')
 @Route('/v1/connections')
@@ -100,7 +100,7 @@ export class ConnectionController extends Controller {
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
   @Response<NotFoundError['message']>(404)
-  public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     const connection = await this.agent.connections.findById(connectionId)
 
     if (!connection) {
@@ -119,7 +119,7 @@ export class ConnectionController extends Controller {
   @Delete('/:connectionId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteConnection(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async deleteConnection(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
       this.setStatus(204)
       await this.agent.connections.deleteById(connectionId)
@@ -145,7 +145,7 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/accept-request')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
       const connection = await this.agent.connections.acceptRequest(connectionId)
       req.log.info('accept %s connection request %j', connectionId, connection.toJSON())
@@ -172,7 +172,7 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/accept-response')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
       const connection = await this.agent.connections.acceptResponse(connectionId)
       req.log.info('accept %s connection response %j', connectionId, connection.toJSON())

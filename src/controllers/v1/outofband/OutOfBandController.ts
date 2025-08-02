@@ -18,7 +18,7 @@ import { HttpResponse, NotFoundError } from '../../../error.js'
 import {
   type OutOfBandInvitationProps,
   type OutOfBandRecordWithInvitationProps,
-  type RecordId,
+  type UUID,
   ConnectionRecordExample,
   outOfBandInvitationExample,
   outOfBandRecordExample,
@@ -48,7 +48,7 @@ export class OutOfBandController extends Controller {
    */
   @Example<OutOfBandRecordWithInvitationProps[]>([outOfBandRecordExample])
   @Get()
-  public async getAllOutOfBandRecords(@Query('invitationId') invitationId?: RecordId) {
+  public async getAllOutOfBandRecords(@Query('invitationId') invitationId?: UUID) {
     let outOfBandRecords = await this.agent.oob.getAll()
 
     if (invitationId) outOfBandRecords = outOfBandRecords.filter((o) => o.outOfBandInvitation.id === invitationId)
@@ -64,7 +64,7 @@ export class OutOfBandController extends Controller {
   @Example<OutOfBandRecordWithInvitationProps>(outOfBandRecordExample)
   @Get('/:outOfBandId')
   @Response<NotFoundError['message']>(404)
-  public async getOutOfBandRecordById(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: RecordId) {
+  public async getOutOfBandRecordById(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: UUID) {
     const outOfBandRecord = await this.agent.oob.findById(outOfBandId)
 
     if (!outOfBandRecord) {
@@ -290,7 +290,7 @@ export class OutOfBandController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptInvitation(
     @Request() req: express.Request,
-    @Path('outOfBandId') outOfBandId: RecordId,
+    @Path('outOfBandId') outOfBandId: UUID,
     @Body() acceptInvitationConfig: AcceptInvitationConfig
   ) {
     try {
@@ -324,7 +324,7 @@ export class OutOfBandController extends Controller {
   @Delete('/:outOfBandId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteOutOfBandRecord(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: RecordId) {
+  public async deleteOutOfBandRecord(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: UUID) {
     try {
       this.setStatus(204)
       req.log.info('deleting OOB record %s', outOfBandId)
