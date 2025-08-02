@@ -5,8 +5,8 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { type DID, type SchemaId, type Version, SchemaExample } from '../../examples.js'
-import type { AnonCredsSchemaResponse } from '../../types.js'
+import { SchemaExample } from '../../examples.js'
+import type { AnonCredsSchemaResponse, DID, SchemaId, Version } from '../../types.js'
 
 @Tags('Schemas')
 @Route('/v1/schemas')

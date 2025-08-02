@@ -6,13 +6,14 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
-import { type UUID, ProofRecordExample } from '../../examples.js'
+import { ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
   AcceptProofRequestOptions,
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
+  UUID,
 } from '../../types.js'
 
 @Tags('Proofs')
@@ -34,7 +35,7 @@ export class ProofController extends Controller {
    */
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
-  public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: string) {
+  public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: UUID) {
     let proofs = await this.agent.proofs.getAll()
     req.log.debug('retrieving all proofs %j', proofs)
 
@@ -131,7 +132,7 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptProposal(
     @Request() req: express.Request,
-    @Path('proofRecordId') proofRecordId: string,
+    @Path('proofRecordId') proofRecordId: UUID,
     @Body()
     proposal: AcceptProofProposalOptions
   ) {
@@ -226,7 +227,7 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptRequest(
     @Request() req: express.Request,
-    @Path('proofRecordId') proofRecordId: string,
+    @Path('proofRecordId') proofRecordId: UUID,
     @Body()
     body: AcceptProofRequestOptions
   ) {
@@ -265,7 +266,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: string) {
+  public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
       req.log.info('accepting proof presentation %s', proofRecordId)
       const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })

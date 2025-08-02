@@ -18,7 +18,6 @@ import { HttpResponse, NotFoundError } from '../../../error.js'
 import {
   type OutOfBandInvitationProps,
   type OutOfBandRecordWithInvitationProps,
-  type UUID,
   ConnectionRecordExample,
   outOfBandInvitationExample,
   outOfBandRecordExample,
@@ -28,6 +27,7 @@ import type {
   AgentMessageType,
   ReceiveInvitationByUrlProps,
   ReceiveInvitationProps,
+  UUID,
 } from '../../types.js'
 
 @Tags('Out Of Band')
@@ -162,7 +162,7 @@ export class OutOfBandController extends Controller {
     @Request() req: express.Request,
     @Body()
     config: {
-      recordId: string
+      recordId: UUID
       message: AgentMessageType
       domain: string
     }

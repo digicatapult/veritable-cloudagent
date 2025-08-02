@@ -13,7 +13,8 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
-import { type UUID, ConnectionRecordExample } from '../../examples.js'
+import { ConnectionRecordExample } from '../../examples.js'
+import type { DID, UUID } from '../../types.js'
 
 @Tags('Connections')
 @Route('/v1/connections')
@@ -36,7 +37,7 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/send-ping')
   public async sendPing(
     @Request() req: express.Request,
-    @Path('connectionId') connectionId: string,
+    @Path('connectionId') connectionId: UUID,
     @Query('responseRequested') responseRequested: boolean = true,
     @Query('withReturnRouting') withReturnRouting?: boolean
   ) {
@@ -51,17 +52,18 @@ export class ConnectionController extends Controller {
    * @param myDid My DID
    * @param theirDid Their DID
    * @param theirLabel Their label
+   * @param outOfBandId Out of band invitation ID
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
   @Get('/')
   public async getAllConnections(
     @Request() req: express.Request,
-    @Query('outOfBandId') outOfBandId?: string,
+    @Query('outOfBandId') outOfBandId?: UUID,
     @Query('alias') alias?: string,
     @Query('state') state?: DidExchangeState,
-    @Query('myDid') myDid?: string,
-    @Query('theirDid') theirDid?: string,
+    @Query('myDid') myDid?: DID,
+    @Query('theirDid') theirDid?: DID,
     @Query('theirLabel') theirLabel?: string
   ) {
     let connections
@@ -192,7 +194,7 @@ export class ConnectionController extends Controller {
    * @returns out-of-band record and connection record if one has been created.
    */
   @Post('/')
-  public async post(@Request() req: express.Request, @Body() body: { did: string }) {
+  public async post(@Request() req: express.Request, @Body() body: { did: DID }) {
     const { did } = body
 
     req.log.info('retrieving connection by %s DID', did)

@@ -5,6 +5,7 @@ import type { VerifiedDrpcRecord, VerifiedDrpcResponse } from '../modules/verifi
 
 import { DrpcRequestObject, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
 import { RestAgent } from '../agent.js'
+import type { UUID } from '../controllers/types.js'
 import { NotFoundError } from '../error.js'
 import PinoLogger from '../utils/logger.js'
 
@@ -50,7 +51,7 @@ export default class DrpcReceiveHandler {
     await join
   }
 
-  public async respondToRequest(id: string | number, response: Omit<DrpcResponseObject, 'id'>): Promise<void> {
+  public async respondToRequest(id: UUID | number, response: Omit<DrpcResponseObject, 'id'>): Promise<void> {
     const request = this.requests.get(id)
     if (!request) {
       throw new NotFoundError(`request not found`)

@@ -6,7 +6,7 @@ import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, NotFoundError } from '../../../error.js'
-import { type UUID } from '../../examples.js'
+import type { UUID } from '../../types.js'
 
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
@@ -103,7 +103,7 @@ export class DrpcController extends Controller {
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,
-    @Path('requestId') requestId: string,
+    @Path('requestId') requestId: UUID,
     @Body() response: DrpcResponseOptions
   ) {
     req.log.info('responding %j to request %s', response, requestId)

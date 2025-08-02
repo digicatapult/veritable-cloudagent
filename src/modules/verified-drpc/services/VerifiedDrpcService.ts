@@ -14,6 +14,7 @@ import {
   type Query,
 } from '@credo-ts/core'
 
+import type { UUID } from '../../../controllers/types.js'
 import { BadRequest, NotFoundError } from '../../../error.js'
 import {
   VerifiedDrpcRequestEventTypes,
@@ -53,7 +54,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
     this.eventEmitter = eventEmitter
   }
 
-  public async createRequestMessage(agentContext: AgentContext, request: VerifiedDrpcRequest, connectionId: string) {
+  public async createRequestMessage(agentContext: AgentContext, request: VerifiedDrpcRequest, connectionId: UUID) {
     const verifiedDrpcMessage = new VerifiedDrpcRequestMessage({ request })
 
     const verifiedDrpcMessageRecord = new VerifiedDrpcRecord({
@@ -72,7 +73,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
 
   private async verifyConnection(
     agentContext: AgentContext,
-    connectionId: string,
+    connectionId: UUID,
     proofOptions: CreateProofRequestOptions<ProofProtocol[]>,
     timeoutMs: number
   ) {
@@ -101,7 +102,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
 
   public async verifyServer(
     agentContext: AgentContext,
-    connectionId: string,
+    connectionId: UUID,
     proofOptions: CreateProofRequestOptions<ProofProtocol[]>,
     verifiedDrpcRecord: VerifiedDrpcRecord,
     timeoutMs: number = 5000
@@ -118,7 +119,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
 
   public async verifyClient(
     agentContext: AgentContext,
-    connectionId: string,
+    connectionId: UUID,
     proofOptions: CreateProofRequestOptions<ProofProtocol[]>,
     verifiedDrpcRecord: VerifiedDrpcRecord,
     timeoutMs: number = 5000
@@ -283,8 +284,8 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
 
   public findByThreadAndConnectionId(
     agentContext: AgentContext,
-    connectionId: string,
-    threadId: string
+    connectionId: UUID,
+    threadId: UUID
   ): Promise<VerifiedDrpcRecord | null> {
     return this.verifiedDrpcMessageRepository.findSingleByQuery(agentContext, {
       connectionId,
@@ -296,11 +297,11 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
     return this.verifiedDrpcMessageRepository.findByQuery(agentContext, query)
   }
 
-  public async getById(agentContext: AgentContext, verifiedDrpcMessageRecordId: string) {
+  public async getById(agentContext: AgentContext, verifiedDrpcMessageRecordId: UUID) {
     return this.verifiedDrpcMessageRepository.getById(agentContext, verifiedDrpcMessageRecordId)
   }
 
-  public async deleteById(agentContext: AgentContext, verifiedDrpcMessageRecordId: string) {
+  public async deleteById(agentContext: AgentContext, verifiedDrpcMessageRecordId: UUID) {
     const verifiedDrpcMessageRecord = await this.getById(agentContext, verifiedDrpcMessageRecordId)
     return this.verifiedDrpcMessageRepository.delete(agentContext, verifiedDrpcMessageRecord)
   }

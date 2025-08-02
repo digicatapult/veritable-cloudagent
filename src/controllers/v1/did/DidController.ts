@@ -5,8 +5,8 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { type DID, DidRecordExample, DidStateExample } from '../../examples.js'
-import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
+import { DidRecordExample, DidStateExample } from '../../examples.js'
+import type { DID, DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
 
 @Tags('Dids')
 @Route('/v1/dids')

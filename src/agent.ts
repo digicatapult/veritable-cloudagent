@@ -27,6 +27,7 @@ import { container } from 'tsyringe'
 import { AskarModule } from '@credo-ts/askar'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
+import type { CredentialDefinitionId, DID } from './controllers/types.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 import Ipfs from './ipfs/index.js'
 import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
@@ -91,7 +92,7 @@ const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
-  verifiedDrpcOptions: { credDefId?: string; issuerDid?: string } & VerifiedDrpcModuleConfigOptions<
+  verifiedDrpcOptions: { credDefId?: CredentialDefinitionId; issuerDid?: DID } & VerifiedDrpcModuleConfigOptions<
     [V2ProofProtocol<[AnonCredsProofFormatService]>]
   >
 }): RestAgentModules => {

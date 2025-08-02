@@ -1,6 +1,7 @@
 import { AgentMessage, IsValidMessageType, parseMessageType } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
+import type { UUID } from '../../../controllers/types.js'
 import { IsValidVerifiedDrpcRequest } from '../models/index.js'
 
 export interface VerifiedDrpcRequestObject {
@@ -8,7 +9,7 @@ export interface VerifiedDrpcRequestObject {
   method: string
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params?: any[] | Record<string, unknown>
-  id: string | number | null
+  id: UUID | number | null
 }
 
 export type VerifiedDrpcRequest = VerifiedDrpcRequestObject | VerifiedDrpcRequestObject[]
