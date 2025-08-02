@@ -198,23 +198,23 @@ export function getTestOutOfBandRecord() {
 export function getTestCredential() {
   const json = {
     _tags: {
-      connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
+      connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
       state: 'proposal-sent',
-      threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+      threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
     },
     type: 'CredentialRecord',
-    id: '222222aa-aa22-22a2-aa22-222a2aa22222',
+    id: '222222aa-aa22-42a2-aa22-222a2aa22222',
     createdAt: '2021-01-01T00:00:00.000Z',
     state: 'proposal-sent',
-    connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
+    connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
     metadata: {
       credentialDefinitionId: 'AAAAAAAAAAAAAAAAAAAAA:3:CL:3210:test',
       schemaId: 'AAAAAAAAAAAAAAAAAAAAA:2:string:1.0',
     },
-    threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+    threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
     offerMessage: {
       type: 'https://didcomm.org/issue-credential/1.0/offer-credential',
-      id: '333333aa-aa33-33a3-aa33-333a3aa33333',
+      id: '333333aa-aa33-43a3-aa33-333a3aa33333',
       comment: 'string',
       credentialPreview: {
         type: 'https://didcomm.org/issue-credential/1.0/credential-preview',
@@ -309,7 +309,7 @@ export function getTestOffer() {
   const json = {
     message: {
       type: 'https://didcomm.org/issue-credential/1.0/offer-credential',
-      id: '333333aa-aa33-33a3-aa33-333a3aa33333',
+      id: '333333aa-aa33-43a3-aa33-333a3aa33333',
       comment: 'string',
       credentialPreview: {
         type: 'https://didcomm.org/issue-credential/1.0/credential-preview',
@@ -333,23 +333,23 @@ export function getTestOffer() {
     },
     credentialRecord: {
       _tags: {
-        connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
         state: 'proposal-sent',
-        threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+        threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
       },
       type: 'CredentialRecord',
-      id: '222222aa-aa22-22a2-aa22-222a2aa22222',
+      id: '222222aa-aa22-42a2-aa22-222a2aa22222',
       createdAt: '2021-01-01T00:00:00.000Z',
       state: 'proposal-sent',
-      connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
+      connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
       metadata: {
         credentialDefinitionId: 'AAAAAAAAAAAAAAAAAAAAA:3:CL:3210:test',
         schemaId: 'AAAAAAAAAAAAAAAAAAAAA:2:string:1.0',
       },
-      threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+      threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
       offerMessage: {
         type: 'https://didcomm.org/issue-credential/1.0/offer-credential',
-        id: '333333aa-aa33-33a3-aa33-333a3aa33333',
+        id: '333333aa-aa33-43a3-aa33-333a3aa33333',
         comment: 'string',
         credentialPreview: {
           type: 'https://didcomm.org/issue-credential/1.0/credential-preview',
@@ -426,7 +426,7 @@ export function getTestProofResponse() {
       threadId: '9b5fce7c-e0d2-4b72-a3f8-20d0934c11c7',
     },
     metadata: {},
-    id: '222222aa-aa22-22a2-aa22-222a2aa22222',
+    id: '222222aa-aa22-42a2-aa22-222a2aa22222',
     createdAt: '2023-12-11T18:19:46.771Z',
     protocolVersion: 'v2',
     state: 'done',
@@ -443,16 +443,16 @@ export function getTestProofResponse() {
 export function getTestProof() {
   const json = {
     _tags: {
-      connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
-      threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+      connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+      threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
       state: 'string',
     },
     type: 'ProofRecord',
-    id: '222222aa-aa22-22a2-aa22-222a2aa22222',
+    id: '222222aa-aa22-42a2-aa22-222a2aa22222',
     createdAt: '2021-01-01T00:00:00.000Z',
     requestMessage: {
       type: 'https://didcomm.org/present-proof/1.0/request-presentation',
-      id: '333333aa-aa33-33a3-aa33-333a3aa33333',
+      id: '333333aa-aa33-43a3-aa33-333a3aa33333',
       comment: 'string',
       requestPresentationAttachments: [
         {
@@ -465,8 +465,8 @@ export function getTestProof() {
       ],
     },
     state: 'string',
-    connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
-    threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+    connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+    threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
     isVerified: true,
     presentationMessage: {
       type: 'https://didcomm.org/present-proof/1.0/presentation',
@@ -481,7 +481,7 @@ export function getTestProof() {
       ],
       id: '444444aa-aa44-44a4-aa44-444a4aa44444',
       thread: {
-        threadId: '111111aa-aa11-11a1-aa11-111a1aa11111',
+        threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
         senderOrder: 0,
         receivedOrders: {},
       },
