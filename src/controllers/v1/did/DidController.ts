@@ -5,7 +5,7 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { type Did, DidRecordExample, DidStateExample } from '../../examples.js'
+import { type DID, DidRecordExample, DidStateExample } from '../../examples.js'
 import type { DidCreateOptions, DidCreateResult, DidResolutionResultProps, ImportDidOptions } from '../../types.js'
 
 @Tags('Dids')
@@ -59,13 +59,13 @@ export class DidController extends Controller {
   }
 
   /**
-   * Resolves did and returns did resolution result
+   * Resolves DID and returns DID resolution result
    * @param did Decentralized Identifier
    * @returns DidResolutionResult
    */
   @Example<DidResolutionResultProps>(DidRecordExample)
   @Get('/:did')
-  public async getDidRecordByDid(@Request() req: express.Request, @Path('did') did: Did) {
+  public async getDidRecordByDid(@Request() req: express.Request, @Path('did') did: DID) {
     req.log.debug('resolving %s', did)
     const resolveResult = await this.agent.dids.resolve(did)
 
@@ -79,7 +79,7 @@ export class DidController extends Controller {
   }
 
   /**
-   * Import a Did to the Agent and return the did resolution result
+   * Import a DID to the Agent and return the DID resolution result
    *
    * @param options
    * @returns DidResolutionResultProps
@@ -110,7 +110,7 @@ export class DidController extends Controller {
   }
 
   /**
-   * Create a Did and return the did resolution result
+   * Create a DID and return the DID resolution result
    *
    * @param options
    * @returns DidResolutionResultProps

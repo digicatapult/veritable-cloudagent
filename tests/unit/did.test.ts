@@ -17,7 +17,7 @@ describe('DidController', () => {
   let testDidCreate: DidCreateResult
 
   before(async () => {
-    aliceAgent = await getTestAgent('Did REST Agent Test Alice', 3999)
+    aliceAgent = await getTestAgent('DID REST Agent Test Alice', 3999)
     app = await getTestServer(aliceAgent)
 
     testDidDocument = getTestDidDocument()
@@ -28,8 +28,8 @@ describe('DidController', () => {
     sinonRestore()
   })
 
-  describe('list dids', () => {
-    test('should return local dids when createdLocally = true', async () => {
+  describe('list DIDs', () => {
+    test('should return local DIDs when createdLocally = true', async () => {
       const did = 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL'
       const getDidsStub = stub(aliceAgent.dids, 'getCreatedDids')
       getDidsStub.resolves([{ did } as DidRecord])
@@ -46,8 +46,8 @@ describe('DidController', () => {
     })
   })
 
-  describe('Get did resolution result by did', () => {
-    test('should give 200 when did resolution record is found', async () => {
+  describe('Get DID resolution result by DID', () => {
+    test('should give 200 when DID resolution record is found', async () => {
       const did = 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL'
       const response = await request(app).get(`/v1/dids/${did}`)
 
@@ -55,14 +55,14 @@ describe('DidController', () => {
       expect(response.body.didDocument).to.deep.equal(testDidDocument)
     })
 
-    test('should give 404 when did document record is not found', async () => {
+    test('should give 404 when DID document record is not found', async () => {
       const response = await request(app).get(`/v1/dids/did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`)
       expect(response.statusCode).to.be.equal(404)
     })
   })
 
-  describe('Import Did', () => {
-    test('should return did document after importing Did', async () => {
+  describe('Import DID', () => {
+    test('should return DID document after importing DID', async () => {
       const importRequest: ImportDidOptions = { did: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL' }
       const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
@@ -70,7 +70,7 @@ describe('DidController', () => {
       expect(response.body.didDocument).to.deep.equal(testDidDocument)
     })
 
-    test('should give 400 for an invalid Did', async () => {
+    test('should give 400 for an invalid DID', async () => {
       const importRequest: ImportDidOptions = { did: 'did:key:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' }
       const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
@@ -78,7 +78,7 @@ describe('DidController', () => {
     })
   })
 
-  describe('Create Did', () => {
+  describe('Create DID', () => {
     const createRequest: DidCreateOptions = {
       method: 'key',
       options: {
@@ -86,7 +86,7 @@ describe('DidController', () => {
       },
     }
 
-    test('should return did document after creating Did', async () => {
+    test('should return DID document after creating DID', async () => {
       const createStub = stub(aliceAgent.dids, 'create').resolves(testDidCreate)
       const getResult = (): Promise<DidCreateResult> => createStub.firstCall.returnValue
 
@@ -100,7 +100,7 @@ describe('DidController', () => {
       expect(response.body).to.deep.equal(objectToJson(result.didState))
     })
 
-    test('should give 400 for an invalid Did method', async () => {
+    test('should give 400 for an invalid DID method', async () => {
       const createRequest: DidCreateOptions = {
         method: 'foo',
         options: {

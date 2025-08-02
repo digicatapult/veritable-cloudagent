@@ -128,7 +128,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by myDid', () => {
-    test('should return all credentials by specified peer did', async () => {
+    test('should return all credentials by specified peer DID', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -147,7 +147,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by theirDid', () => {
-    test('should return all credentials by specified peer did', async () => {
+    test('should return all credentials by specified peer DID', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])

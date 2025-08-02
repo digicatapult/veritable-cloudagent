@@ -5,7 +5,7 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { type Did, type SchemaId, type Version, SchemaExample } from '../../examples.js'
+import { type DID, type SchemaId, type Version, SchemaExample } from '../../examples.js'
 import type { AnonCredsSchemaResponse } from '../../types.js'
 
 @Tags('Schemas')
@@ -30,7 +30,7 @@ export class SchemaController {
   public async getCredentials(
     @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
-    @Query('issuerId') issuerId?: string,
+    @Query('issuerId') issuerId?: DID,
     @Query('schemaName') schemaName?: string,
     @Query('schemaVersion') schemaVersion?: string
   ): Promise<AnonCredsSchemaResponse[]> {
@@ -103,7 +103,7 @@ export class SchemaController {
     @Request() req: express.Request,
     @Body()
     schema: {
-      issuerId: Did
+      issuerId: DID
       name: string
       version: Version
       attrNames: string[]

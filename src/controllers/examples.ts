@@ -24,7 +24,7 @@ export type RecordId = string
 /**
  * @example "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
  */
-export type Did = string
+export type DID = string
 
 /**
  * @example "1.0.0"

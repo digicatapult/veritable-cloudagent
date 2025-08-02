@@ -323,7 +323,7 @@ describe('OutOfBandController', () => {
       const response = await request(app)
         .post('/v1/oob/receive-implicit-invitation')
         .send({
-          ...config, //send config only containing did
+          ...config, //send config only containing DID
           ...params,
         })
 

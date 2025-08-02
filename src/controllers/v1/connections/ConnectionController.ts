@@ -195,7 +195,7 @@ export class ConnectionController extends Controller {
   public async post(@Request() req: express.Request, @Body() body: { did: string }) {
     const { did } = body
 
-    req.log.info('retrieving connection by %s did', did)
+    req.log.info('retrieving connection by %s DID', did)
     const connections = await this.agent.connections.findByInvitationDid(did)
 
     for (const { id, invitationDid } of connections) {
