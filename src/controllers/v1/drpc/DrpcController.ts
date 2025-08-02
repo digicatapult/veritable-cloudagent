@@ -19,7 +19,7 @@ type DrpcRequestOptions = {
 type DrpcResponseOptions = Omit<DrpcResponseObject, 'id'>
 
 const rpcResponseParser = z.object({
-  jsonrpc: z.string(),
+  jsonrpc: z.literal('2.0'),
   result: z.any().optional(),
   error: z
     .object({
@@ -28,7 +28,7 @@ const rpcResponseParser = z.object({
       data: z.any().optional(),
     })
     .optional(),
-  id: z.string(),
+  id: z.uuid(),
 })
 
 @Tags('Didcomm RPC')
@@ -95,7 +95,7 @@ export class DrpcController extends Controller {
 
   /**
    * Sends a response to a drpc request
-   * @param requestId the connection id to use
+   * @param requestId the request id to respond to
    * @param response the verified drpc response object to send
    */
   @Post('/:requestId/response')
