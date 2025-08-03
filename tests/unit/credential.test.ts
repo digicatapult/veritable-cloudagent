@@ -36,7 +36,7 @@ import {
   objectToJson,
 } from './utils/helpers.js'
 
-describe.only('CredentialController', () => {
+describe('CredentialController', () => {
   let port: number
   let app: Server
   let aliceAgent: Agent
@@ -200,7 +200,7 @@ describe.only('CredentialController', () => {
       const getResult = (): Promise<CredentialExchangeRecord> => proposeCredentialStub.firstCall.returnValue
 
       const proposalRequest: ProposeCredentialOptions = {
-        connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
         protocolVersion: 'v2',
         credentialFormats: {
           anoncreds: {
@@ -522,7 +522,7 @@ describe.only('CredentialController', () => {
           '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
           '@type': 'https://didcomm.org/connections/1.x/invitation',
         },
-        recordId: 'string',
+        recordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
       }
 
       const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
@@ -546,7 +546,7 @@ describe.only('CredentialController', () => {
 
   describe('Offer a credential', () => {
     const offerRequest = {
-      connectionId: '000000aa-aa00-00a0-aa00-000a0aa00000',
+      connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
       protocolVersion: 'v1',
       credentialFormats: {
         anoncreds: {
