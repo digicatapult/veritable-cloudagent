@@ -507,7 +507,7 @@ export function getTestConnection({
   invitationDid = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu11111111',
   tags = {},
   theirLabel,
-  theirDid = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu22222222',
+  theirDid = 'did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM',
 }: Partial<ConnectionRecordProps> = {}) {
   return new ConnectionRecord({
     did,

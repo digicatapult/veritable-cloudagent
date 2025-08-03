@@ -23,7 +23,7 @@ import {
   objectToJson,
 } from './utils/helpers.js'
 
-describe('ConnectionController', () => {
+describe.only('ConnectionController', () => {
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
@@ -198,7 +198,7 @@ describe('ConnectionController', () => {
     })
 
     test('should give 404 not found when connection is not found', async () => {
-      const response = await request(app).get(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/connections/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -218,7 +218,7 @@ describe('ConnectionController', () => {
     })
 
     test('should throw error when connection id is not found', async () => {
-      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request`)
+      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -238,7 +238,7 @@ describe('ConnectionController', () => {
     })
 
     test('should throw error when connectionId is not found', async () => {
-      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-response`)
+      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-response`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -265,7 +265,7 @@ describe('ConnectionController', () => {
     })
   })
 
-  describe('Create connection', async function () {
+  describe.only('Create connection', async function () {
     it('Bob creates a connection with Alice', async function () {
       const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
@@ -274,7 +274,10 @@ describe('ConnectionController', () => {
       })
       const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
 
-      const response = await request(app).post('/v1/connections').send({ did: 'someDid' }).expect(200)
+      const response = await request(app)
+        .post('/v1/connections')
+        .send({ did: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000' })
+        .expect(200)
 
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
