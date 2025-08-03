@@ -50,7 +50,7 @@ export async function getTestAgent(name: string, port: number) {
     outboundTransports: ['http'],
 
     logger,
-    ipfsOrigin: 'https:localhost:5001',
+    ipfsOrigin: 'https://localhost:5001',
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
 }
@@ -456,7 +456,7 @@ export function getTestProof() {
       comment: 'string',
       requestPresentationAttachments: [
         {
-          id: 'request-presentation-0',
+          id: 'bbbbbbbb-bb11-41b1-bb11-111b1bb11111',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -472,7 +472,7 @@ export function getTestProof() {
       type: 'https://didcomm.org/present-proof/1.0/presentation',
       presentationAttachments: [
         {
-          id: 'presentation-0',
+          id: 'cccccccc-cc11-41c1-ac11-111c1cc11111',
           mimeType: 'application/json',
           data: {
             base64: 'string',
@@ -491,7 +491,7 @@ export function getTestProof() {
 }
 
 export function getTestTrustPingMessage({
-  id = 'test',
+  id = '00000000-1111-4c47-8a5a-111111111111',
   comment = 'test-comment',
   responseRequested = true,
 }: Partial<TrustPingMessage> = {}) {
@@ -501,13 +501,13 @@ export function getTestTrustPingMessage({
 export function getTestConnection({
   state = DidExchangeState.InvitationReceived,
   role = DidExchangeRole.Requester,
-  id = 'test',
-  did = 'test-did',
-  threadId = 'threadId',
-  invitationDid = 'invitation-did',
+  id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+  did = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000',
+  threadId = '33333333-3333-4c47-8a5a-333333333333',
+  invitationDid = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu11111111',
   tags = {},
   theirLabel,
-  theirDid = 'their-did',
+  theirDid = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu22222222',
 }: Partial<ConnectionRecordProps> = {}) {
   return new ConnectionRecord({
     did,
@@ -521,6 +521,7 @@ export function getTestConnection({
     theirLabel,
   })
 }
+
 export function getTestDidDocument() {
   return {
     '@context': [
