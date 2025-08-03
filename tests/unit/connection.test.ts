@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
-import type { Server } from 'node:net'
+import { AddressInfo, Server } from 'node:net'
 import { restore as sinonRestore, stub } from 'sinon'
 
 import {
@@ -23,7 +23,8 @@ import {
   objectToJson,
 } from './utils/helpers.js'
 
-describe.only('ConnectionController', () => {
+describe('ConnectionController', () => {
+  let port: number
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
@@ -34,6 +35,7 @@ describe.only('ConnectionController', () => {
     aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3012)
     bobAgent = await getTestAgent('Connection REST Agent Test Bob', 3013)
     app = await getTestServer(bobAgent)
+    port = (app.address() as AddressInfo).port
     connection = getTestConnection()
     outOfBandRecord = getTestOutOfBandRecord()
   })
@@ -245,8 +247,8 @@ describe.only('ConnectionController', () => {
   })
 
   describe('Connection WebSocket Event', () => {
-    test.skip('should return connection event sent from test agent to websocket client', async () => {
-      const client = new WebSocket('ws://localhost:3009')
+    test('should return connection event sent from test agent to websocket client', async () => {
+      const client = new WebSocket(`ws://localhost:${port}`)
 
       const aliceOutOfBandRecord = await aliceAgent.oob.createInvitation()
 
@@ -265,7 +267,7 @@ describe.only('ConnectionController', () => {
     })
   })
 
-  describe.only('Create connection', async function () {
+  describe('Create connection', async function () {
     it('Bob creates a connection with Alice', async function () {
       const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
