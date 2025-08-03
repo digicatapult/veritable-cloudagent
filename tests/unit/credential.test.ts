@@ -36,7 +36,7 @@ import {
   objectToJson,
 } from './utils/helpers.js'
 
-describe('CredentialController', () => {
+describe.only('CredentialController', () => {
   let port: number
   let app: Server
   let aliceAgent: Agent
@@ -155,7 +155,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -179,7 +179,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/format-data`)
+      const response = await request(app).get(`/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/format-data`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -187,7 +187,7 @@ describe('CredentialController', () => {
 
   describe('Delete credential by id', () => {
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).delete('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+      const response = await request(app).delete('/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -228,7 +228,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-offer')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-offer')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -294,7 +294,7 @@ describe('CredentialController', () => {
         credentialFormats: {},
       }
       const response = await request(app)
-        .post(`/v1/credentials/000000aa-aa00-00a0-aa00-000a0aa00000/accept-proposal`)
+        .post(`/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-proposal`)
         .send(proposalRequest) //added proposal request
 
       expect(response.statusCode).to.be.equal(404)
@@ -581,7 +581,7 @@ describe('CredentialController', () => {
       findByIdStub.resolves(connection) //connection is present - fails on missing credential definition
       const response = await request(app)
         .post('/v1/credentials/accept-offer')
-        .send({ credentialRecordId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
+        .send({ credentialRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -589,7 +589,7 @@ describe('CredentialController', () => {
       //fails on missing connection
       const response = await request(app)
         .post('/v1/credentials/accept-offer')
-        .send({ credentialRecordId: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })
+        .send({ credentialRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -610,7 +610,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-offer')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-offer')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -631,7 +631,7 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -652,11 +652,12 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-credential')
+      const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-credential')
 
       expect(response.statusCode).to.be.equal(404)
     })
   })
+
   describe('Send problem report about a credential', () => {
     test('should send a problem report', async () => {
       const problemRecordStub = stub(bobAgent.credentials, 'sendProblemReport')
@@ -678,6 +679,7 @@ describe('CredentialController', () => {
       })
     })
   })
+
   after(async () => {
     await aliceAgent.shutdown()
     await aliceAgent.wallet.delete()
