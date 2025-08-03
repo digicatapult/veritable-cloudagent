@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
-import { AddressInfo, Server } from 'node:net'
+import type { AddressInfo, Server } from 'node:net'
 import { restore as sinonRestore, stub } from 'sinon'
 
 import {
