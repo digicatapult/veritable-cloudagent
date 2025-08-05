@@ -5,6 +5,7 @@ FROM node:lts-bookworm AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
+ENV NODE_OPTIONS='--no-experimental-strip-types'
 WORKDIR /app
 
 COPY package*.json ./
@@ -42,7 +43,6 @@ FROM node:lts-bookworm-slim AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
-ENV NODE_OPTIONS='--no-experimental-strip-types'
 
 RUN apt-get update && apt-get install -y curl openssl
 RUN apt-get clean
