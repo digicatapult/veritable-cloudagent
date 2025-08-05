@@ -31,6 +31,12 @@ describe('AgentController', () => {
 
       expect(response.statusCode).to.equal(200)
     })
+
+    test('/health endpoint should give cloudagent version', async () => {
+      const response = await request(app).get('/health')
+
+      expect(response.body).to.have.property('version')
+    })
   })
 
   after(async () => {
