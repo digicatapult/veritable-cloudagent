@@ -307,7 +307,7 @@ describe('ConnectionController', () => {
       await request(app).post('/v1/connections').send({ did: 'bla' }).expect(422)
     })
 
-    it.only('400s if DID is invalid', async function () {
+    it('400s if DID is invalid', async function () {
       await request(app).post('/v1/connections').send({ did: 'did:bla' }).expect(400)
     })
   })
