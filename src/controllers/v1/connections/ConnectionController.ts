@@ -12,7 +12,7 @@ import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Res
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { ConnectionRecordExample } from '../../examples.js'
 import type { DID, UUID } from '../../types.js'
 
@@ -197,27 +197,34 @@ export class ConnectionController extends Controller {
   public async post(@Request() req: express.Request, @Body() body: { did: DID }) {
     const { did } = body
 
-    req.log.info('retrieving connection by %s DID', did)
-    const connections = await this.agent.connections.findByInvitationDid(did)
+    try {
+      req.log.info('retrieving connection by %s DID', did)
+      const connections = await this.agent.connections.findByInvitationDid(did)
 
-    for (const { id, invitationDid } of connections) {
-      if (invitationDid === did) {
-        req.log.debug(`connection on DID ${did} already exists. deleting connection ${id}`)
-        await this.agent.connections.deleteById(id)
+      for (const { id, invitationDid } of connections) {
+        if (invitationDid === did) {
+          req.log.debug(`connection on DID ${did} already exists. deleting connection ${id}`)
+          await this.agent.connections.deleteById(id)
+        }
       }
-    }
-    const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation({
-      did,
-      handshakeProtocols: [HandshakeProtocol.Connections],
-    })
+      const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation({
+        did,
+        handshakeProtocols: [HandshakeProtocol.Connections],
+      })
 
-    req.log.info('returning OOB record %j', {
-      OOB: outOfBandRecord.toJSON(),
-      connection: connectionRecord?.toJSON(),
-    })
-    return {
-      outOfBandRecord: outOfBandRecord.toJSON(),
-      connectionRecord: connectionRecord?.toJSON(),
+      req.log.info('returning OOB record %j', {
+        OOB: outOfBandRecord.toJSON(),
+        connection: connectionRecord?.toJSON(),
+      })
+      return {
+        outOfBandRecord: outOfBandRecord.toJSON(),
+        connectionRecord: connectionRecord?.toJSON(),
+      }
+    } catch (error) {
+      if (error instanceof CredoError) {
+        throw new BadRequest('invalid DID')
+      }
+      throw error
     }
   }
 }
