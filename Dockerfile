@@ -35,7 +35,6 @@ WORKDIR /app
 ARG NODE_ENV=test
 ENV NODE_ENV=${NODE_ENV}
 COPY tests ./tests
-CMD ["npm", "run", "test"]
 
 
 # Production stage
