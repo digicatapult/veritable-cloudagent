@@ -303,7 +303,7 @@ describe('ConnectionController', () => {
       expect(deleteByIdStub.callCount).to.equal(1)
     })
 
-    it("422s if DID doesn't start with did:", async function () {
+    it("422s if DID doesn't start with did", async function () {
       await request(app).post('/v1/connections').send({ did: 'bla' }).expect(422)
     })
 
