@@ -303,8 +303,12 @@ describe('ConnectionController', () => {
       expect(deleteByIdStub.callCount).to.equal(1)
     })
 
-    it('500s if invalid DID', async function () {
-      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(500)
+    it("422s if DID doesn't start with did:", async function () {
+      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(422)
+    })
+
+    it('500s if DID is invalid', async function () {
+      await request(app).post('/v1/connections').send({ did: 'did:bla' }).expect(500)
     })
   })
 
