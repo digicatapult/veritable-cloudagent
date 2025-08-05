@@ -3,7 +3,6 @@
 # Build stage
 FROM node:lts-bookworm AS build
 
-ARG NODE_OPTIONS='--no-experimental-strip-types'
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
@@ -20,7 +19,6 @@ RUN npm run build
 # Node_Modules stage
 FROM node:lts-bookworm AS modules
 
-ARG NODE_OPTIONS='--no-experimental-strip-types'
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
@@ -34,7 +32,7 @@ RUN npm ci --omit=dev
 FROM build AS test
 
 WORKDIR /app
-ARG NODE_OPTIONS='--no-experimental-strip-types'
+
 ARG NODE_ENV=test
 ENV NODE_ENV=${NODE_ENV}
 COPY tests ./tests
@@ -43,7 +41,6 @@ COPY tests ./tests
 # Production stage
 FROM node:lts-bookworm-slim AS production
 
-ARG NODE_OPTIONS='--no-experimental-strip-types'
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
