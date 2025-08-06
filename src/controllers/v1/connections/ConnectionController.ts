@@ -114,6 +114,7 @@ export class ConnectionController extends Controller {
   /**
    * Hangs up an active connection
    * Optional boolean value to also delete the connection record (default = false)
+   * i.e. /connectionId?delete=true
    *
    * @param connectionId Connection identifier
    */
@@ -121,10 +122,14 @@ export class ConnectionController extends Controller {
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async closeConnection(@Request() req: express.Request, @Path('connectionId') connectionId: string) {
+    const deleteConnectionRecord: boolean = req.query.delete === 'true'
     try {
       this.setStatus(204)
-      await this.agent.connections.hangup({ connectionId: connectionId })
+      await this.agent.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteConnectionRecord })
       req.log.info('%s disconnected', connectionId)
+      if (deleteConnectionRecord === true) {
+        req.log.info('%s record deleted', connectionId)
+      }
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection record not found')
