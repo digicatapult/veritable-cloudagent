@@ -467,9 +467,9 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 #### Verification
 
 Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
-In order to use the implicit invitation we need a public did hosted ‘somewhere on the internet’ for now we are using a did doc hosted on github pages. To host a did doc on your github:
+In order to use the implicit invitation we need a public DID hosted ‘somewhere on the internet’ for now we are using a DID doc hosted on github pages. To host a DID doc on your github:
 
-For our did doc above we will need to generate a key-pair. This could be done through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the did doc below we will be using the public portion of the key.
+For our DID doc above we will need to generate a key-pair. This could be done through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the DID doc below we will be using the public portion of the key.
 
 Example key-pair will look like this:
 
@@ -520,12 +520,12 @@ Example key-pair will look like this:
     }
     ```
 
-4.  you can view your did in your browser like so: https://your_username.github.io/dids/1/did.json
+4.  you can view your DID in your browser like so: https://your_username.github.io/dids/1/did.json
 
 #### Implicit Invitation
 
-In order to send an invite from Bob to Alice, Alice needs to be aware of the private key from keypair above and our did (above).
-We need to import our did with the private key on Alice using endpoint `dids/import`:
+In order to send an invite from Bob to Alice, Alice needs to be aware of the private key from keypair above and our DID (above).
+We need to import our DID with the private key on Alice using endpoint `dids/import`:
 
 ```json
 {
@@ -539,7 +539,7 @@ We need to import our did with the private key on Alice using endpoint `dids/imp
 }
 ```
 
-Once the did and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation` body:
+Once the DID and private key is successfully imported on Alice, we can attempt to use the implicit invitation endpoint on Bob via `oob/receive-implicit-invitation` body:
 
 ```json
 {

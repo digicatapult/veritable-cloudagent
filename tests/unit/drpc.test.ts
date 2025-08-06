@@ -53,7 +53,7 @@ describe('DrpcController', () => {
         stub().resolves({
           jsonrpc: '2.0',
           result: 'result',
-          id: 'test',
+          id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
         })
       )
 
@@ -66,7 +66,7 @@ describe('DrpcController', () => {
       expect(response.body).deep.equal({
         jsonrpc: '2.0',
         result: 'result',
-        id: 'test',
+        id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
       })
     })
 
@@ -121,14 +121,14 @@ describe('DrpcController', () => {
       const spy = stub(receiveHandler, 'respondToRequest')
       spy.resolves()
 
-      const response = await request(app).post(`/v1/drpc/test-id/response`).send({
+      const response = await request(app).post(`/v1/drpc/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/response`).send({
         jsonrpc: '2.0',
         result: 'test',
       })
       expect(response.statusCode).to.be.equal(204)
       expect(spy.callCount).to.equal(1)
       expect(spy.firstCall.args).to.deep.equal([
-        'test-id',
+        'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
         {
           jsonrpc: '2.0',
           result: 'test',
@@ -140,7 +140,7 @@ describe('DrpcController', () => {
       const spy = stub(receiveHandler, 'respondToRequest')
       spy.rejects(new NotFoundError())
 
-      const response = await request(app).post(`/v1/drpc/test-id/response`).send({
+      const response = await request(app).post(`/v1/drpc/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/response`).send({
         jsonrpc: '2.0',
         result: 'test',
       })
@@ -151,7 +151,7 @@ describe('DrpcController', () => {
       const spy = stub(receiveHandler, 'respondToRequest')
       spy.rejects(new Error())
 
-      const response = await request(app).post(`/v1/drpc/test-id/response`).send({
+      const response = await request(app).post(`/v1/drpc/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/response`).send({
         jsonrpc: '2.0',
         result: 'test',
       })

@@ -77,7 +77,7 @@ describe('ProofController', () => {
       const getAllStub = stub(bobAgent.proofs, 'getAll')
       getAllStub.resolves([testProof])
 
-      const response = await request(app).get('/v1/proofs').query({ threadId: 'string' })
+      const response = await request(app).get('/v1/proofs').query({ threadId: 'aaaaaaaa-aaaa-4aaa-aaaa-222222222222' })
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal([])
@@ -98,7 +98,7 @@ describe('ProofController', () => {
     })
 
     test('should return 404 not found when proof record not found', async () => {
-      const response = await request(app).get(`/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -106,7 +106,7 @@ describe('ProofController', () => {
 
   describe('Delete proof by id', () => {
     test('should give 404 not found when proof is not found', async () => {
-      const response = await request(app).delete('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+      const response = await request(app).delete('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -114,7 +114,7 @@ describe('ProofController', () => {
 
   describe('Propose proof', () => {
     const proposalRequest: ProposeProofOptions = {
-      connectionId: '123456aa-aa78-90a1-aa23-456a7da89010',
+      connectionId: '123456aa-aa78-40a1-aa23-456a7da89010',
       protocolVersion: 'v2',
       proofFormats: {
         anoncreds: {
@@ -217,7 +217,7 @@ describe('ProofController', () => {
 
   describe('Request proof', () => {
     const requestProofRequest: RequestProofOptions = {
-      connectionId: 'string',
+      connectionId: 'aaaaaaaa-aaaa-4aaa-aaaa-000000000000',
       protocolVersion: 'v2',
       proofFormats: {
         anoncreds: {
@@ -232,7 +232,7 @@ describe('ProofController', () => {
       },
     }
     const requestProofRequestWithAttr: RequestProofOptions = {
-      connectionId: 'string',
+      connectionId: 'aaaaaaaa-aaaa-4aaa-aaaa-111111111111',
       protocolVersion: 'v2',
       proofFormats: {
         anoncreds: {
@@ -273,7 +273,7 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(200)
       expect(
         requestProofStub.calledWithMatch({
-          connectionId: 'string',
+          connectionId: 'aaaaaaaa-aaaa-4aaa-aaaa-111111111111',
           protocolVersion: 'v2',
           proofFormats: {
             anoncreds: {
@@ -329,12 +329,13 @@ describe('ProofController', () => {
       const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
       selectCredentialForRequestStub.resolves({ proofFormats: {} })
       const response = await request(app)
-        .post('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request')
+        .post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request')
         .send({})
 
       expect(response.statusCode).to.be.equal(404)
     })
   })
+
   describe('Accept proof presentation', () => {
     test('should return proof record', async () => {
       const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
@@ -352,7 +353,7 @@ describe('ProofController', () => {
     })
 
     test('should give 404 not found when proof is not found', async () => {
-      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-presentation')
+      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-presentation')
 
       expect(response.statusCode).to.be.equal(404)
     })

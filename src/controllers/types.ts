@@ -28,6 +28,35 @@ import type {
 } from '@credo-ts/core'
 import type { DIDDocument } from 'did-resolver'
 
+/**
+ * Stringified UUIDv4.
+ * @pattern [0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}
+ * @example "52907745-7672-470e-a803-a2f8feb52944"
+ */
+export type UUID = string
+
+/**
+ * W3C Decentralized Identifier format v1.0
+ * @pattern did:[A-Za-z0-9:]+
+ * @example "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
+ */
+export type DID = string
+
+/**
+ * @example "1.0.0"
+ */
+export type Version = string
+
+/**
+ * @example "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
+ */
+export type CredentialDefinitionId = string
+
+/**
+ * @example "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
+ */
+export type SchemaId = string
+
 export interface AgentInfo {
   label: string
   endpoints: string[]
@@ -35,7 +64,7 @@ export interface AgentInfo {
 }
 
 export interface AgentMessageType {
-  '@id': string
+  '@id': UUID
   '@type': string
   [key: string]: unknown
 }
@@ -63,7 +92,7 @@ interface PrivateKey {
 }
 
 export interface ImportDidOptions {
-  did: string
+  did: DID
   didDocument?: DidDocument
   privateKeys?: PrivateKey[]
   overwrite?: boolean
@@ -71,7 +100,7 @@ export interface ImportDidOptions {
 
 export interface DidCreateOptions {
   method?: string
-  did?: string
+  did?: DID
   options?: { [x: string]: unknown }
   secret?: { [x: string]: unknown }
   didDocument?: DidDocument
@@ -79,27 +108,27 @@ export interface DidCreateOptions {
 
 export interface DidOperationStateFinished {
   state: 'finished'
-  did: string
+  did: DID
   secret?: { [x: string]: unknown }
   didDocument: { [x: string]: unknown }
 }
 export interface DidOperationStateFailed {
   state: 'failed'
-  did?: string
+  did?: DID
   secret?: { [x: string]: unknown }
   didDocument?: { [x: string]: unknown }
   reason: string
 }
 export interface DidOperationStateWait {
   state: 'wait'
-  did?: string
+  did?: DID
   secret?: { [x: string]: unknown }
   didDocument?: { [x: string]: unknown }
 }
 export interface DidOperationStateActionBase {
   state: 'action'
   action: string
-  did?: string
+  did?: DID
   secret?: { [x: string]: unknown }
   didDocument?: { [x: string]: unknown }
 }
@@ -113,7 +142,7 @@ export interface ProposeCredentialOptions {
   }
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  connectionId: string
+  connectionId: UUID
 }
 
 export interface AcceptCredentialProposalOptions {
@@ -136,7 +165,7 @@ export interface OfferCredentialOptions {
   credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
-  connectionId: string
+  connectionId: UUID
 }
 
 export interface AcceptCredentialOfferOptions {
@@ -171,7 +200,7 @@ export interface AcceptInvitationConfig {
 }
 
 export interface OutOfBandInvitationSchema {
-  '@id'?: string
+  '@id'?: UUID
   '@type': string
   label: string
   goalCode?: string
@@ -183,10 +212,10 @@ export interface OutOfBandInvitationSchema {
 }
 
 export interface ConnectionInvitationSchema {
-  id?: string
+  id?: UUID
   '@type': string
   label: string
-  did?: string
+  did?: DID
   recipientKeys?: string[]
   serviceEndpoint?: string
   routingKeys?: string[]
@@ -194,11 +223,11 @@ export interface ConnectionInvitationSchema {
 }
 
 export interface ProposeProofOptions {
-  connectionId: string
+  connectionId: UUID
   protocolVersion: ProofsProtocolVersionType<ProofProtocols>
   proofFormats: ProofFormatPayload<ProofFormats, 'createProposal'>
   goalCode?: string
-  parentThreadId?: string
+  parentThreadId?: UUID
   autoAcceptProof?: AutoAcceptProof
   comment?: string
 }
@@ -220,15 +249,15 @@ export interface AcceptProofRequestOptions {
 }
 
 export interface AnonCredsProofRequestRestrictionOptions {
-  schema_id?: string
-  schema_issuer_id?: string
+  schema_id?: SchemaId
+  schema_issuer_id?: DID
   schema_name?: string
-  schema_version?: string
-  issuer_id?: string
-  cred_def_id?: string
+  schema_version?: Version
+  issuer_id?: DID
+  cred_def_id?: CredentialDefinitionId
   rev_reg_id?: string
-  schema_issuer_did?: string
-  issuer_did?: string
+  schema_issuer_did?: DID
+  issuer_did?: DID
   attributeValues?: {
     [key: string]: string
   }
@@ -253,7 +282,7 @@ export interface AnonCredsRequestedPredicateOptions {
 
 export interface AnonCredsRequestProofFormatOptions {
   name: string
-  version: string
+  version: Version
   non_revoked?: AnonCredsNonRevokedInterval
   requested_attributes?: {
     [key: string]: AnonCredsRequestedAttributeOptions
@@ -269,20 +298,20 @@ export interface CreateProofRequestOptions {
     [key in ProofFormats[number] as key['formatKey']]?: AnonCredsRequestProofFormatOptions
   }
   goalCode?: string
-  parentThreadId?: string
+  parentThreadId?: UUID
   willConfirm?: boolean
   autoAcceptProof?: AutoAcceptProof
   comment?: string
 }
 
 export interface RequestProofOptions extends CreateProofRequestOptions {
-  connectionId: string
+  connectionId: UUID
 }
 
 export interface AnonCredsSchemaResponse extends AnonCredsSchema {
-  id: string
+  id: UUID
 }
 
 export interface AnonCredsCredentialDefinitionResponse extends AnonCredsCredentialDefinition {
-  id: string
+  id: UUID
 }

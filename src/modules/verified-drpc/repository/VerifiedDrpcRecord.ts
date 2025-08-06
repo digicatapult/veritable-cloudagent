@@ -1,34 +1,35 @@
 import { type RecordTags, type TagsBase, BaseRecord, CredoError, utils } from '@credo-ts/core'
+import type { UUID } from '../../../controllers/types.js'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages/index.js'
 import type { VerifiedDrpcRole, VerifiedDrpcState } from '../models/index.js'
 
 export type CustomVerifiedDrpcMessageTags = TagsBase
 export type DefaultVerifiedDrpcMessageTags = {
-  connectionId: string
-  threadId: string
+  connectionId: UUID
+  threadId: UUID
 }
 
 export type VerifiedDrpcMessageTags = RecordTags<VerifiedDrpcRecord>
 
 export interface VerifiedDrpcStorageProps {
-  id?: string
-  connectionId: string
+  id?: UUID
+  connectionId: UUID
   role: VerifiedDrpcRole
   tags?: CustomVerifiedDrpcMessageTags
   request?: VerifiedDrpcRequest
   response?: VerifiedDrpcResponse
   state: VerifiedDrpcState
-  threadId: string
+  threadId: UUID
   isVerified?: boolean
 }
 
 export class VerifiedDrpcRecord extends BaseRecord<DefaultVerifiedDrpcMessageTags, CustomVerifiedDrpcMessageTags> {
   public request?: VerifiedDrpcRequest
   public response?: VerifiedDrpcResponse
-  public connectionId!: string
+  public connectionId!: UUID
   public role!: VerifiedDrpcRole
   public state!: VerifiedDrpcState
-  public threadId!: string
+  public threadId!: UUID
   public isVerified: boolean = false
 
   public static readonly type = 'VerifiedDrpcRecord'

@@ -5,8 +5,8 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { type CredentialDefinitionId, type Did, type SchemaId, CredentialDefinitionExample } from '../../examples.js'
-import type { AnonCredsCredentialDefinitionResponse } from '../../types.js'
+import { CredentialDefinitionExample } from '../../examples.js'
+import type { AnonCredsCredentialDefinitionResponse, CredentialDefinitionId, DID, SchemaId } from '../../types.js'
 
 @Tags('Credential Definitions')
 @Route('/v1/credential-definitions')
@@ -31,8 +31,8 @@ export class CredentialDefinitionController extends Controller {
   public async getCredentials(
     @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
-    @Query('issuerId') issuerId?: string,
-    @Query('schemaId') schemaId?: string
+    @Query('issuerId') issuerId?: DID,
+    @Query('schemaId') schemaId?: SchemaId
   ): Promise<AnonCredsCredentialDefinitionResponse[]> {
     if (!createdLocally) {
       throw new BadRequest(
@@ -109,7 +109,7 @@ export class CredentialDefinitionController extends Controller {
     @Request() req: express.Request,
     @Body()
     credentialDefinitionRequest: {
-      issuerId: Did
+      issuerId: DID
       schemaId: SchemaId
       tag: string
     }

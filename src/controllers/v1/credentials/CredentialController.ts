@@ -12,7 +12,7 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
-import { CredentialExchangeRecordExample, CredentialFormatDataExample, type RecordId } from '../../examples.js'
+import { CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 import type {
   AcceptCredentialOfferOptions,
   AcceptCredentialProposalOptions,
@@ -20,6 +20,7 @@ import type {
   CreateOfferOptions,
   OfferCredentialOptions,
   ProposeCredentialOptions,
+  UUID,
 } from '../../types.js'
 
 @Tags('Credentials')
@@ -41,8 +42,8 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
   @Get('/')
   public async getAllCredentials(
-    @Query('threadId') threadId?: string,
-    @Query('connectionId') connectionId?: string,
+    @Query('threadId') threadId?: UUID,
+    @Query('connectionId') connectionId?: UUID,
     @Query('state') state?: CredentialState
   ) {
     const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
@@ -68,7 +69,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async getCredentialById(
     @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId
+    @Path('credentialRecordId') credentialRecordId: UUID
   ) {
     try {
       req.log.info('retrieving %s credential by id', credentialRecordId)
@@ -95,7 +96,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async getCredentialFormatDataById(
     @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId
+    @Path('credentialRecordId') credentialRecordId: UUID
   ) {
     try {
       req.log.info('getting format data for %s', credentialRecordId)
@@ -117,10 +118,7 @@ export class CredentialController extends Controller {
   @Delete('/:credentialRecordId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteCredential(
-    @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId
-  ) {
+  public async deleteCredential(@Request() req: express.Request, @Path('credentialRecordId') credentialRecordId: UUID) {
     try {
       this.setStatus(204)
       req.log.info('deleting credential %s', credentialRecordId)
@@ -171,7 +169,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptProposal(
     @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Path('credentialRecordId') credentialRecordId: UUID,
     @Body() options?: AcceptCredentialProposalOptions
   ) {
     try {
@@ -253,7 +251,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptOffer(
     @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Path('credentialRecordId') credentialRecordId: UUID,
     @Body() options?: AcceptCredentialOfferOptions
   ) {
     try {
@@ -286,7 +284,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptRequest(
     @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Path('credentialRecordId') credentialRecordId: UUID,
     @Body() options?: AcceptCredentialRequestOptions
   ) {
     try {
@@ -316,10 +314,7 @@ export class CredentialController extends Controller {
   @Post('/:credentialRecordId/accept-credential')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptCredential(
-    @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId
-  ) {
+  public async acceptCredential(@Request() req: express.Request, @Path('credentialRecordId') credentialRecordId: UUID) {
     try {
       const credential = await this.agent.credentials.acceptCredential({ credentialRecordId: credentialRecordId })
       req.log.debug('returning credential %j', credential.toJSON())
@@ -346,7 +341,7 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async sendProblemReport(
     @Request() req: express.Request,
-    @Path('credentialRecordId') credentialRecordId: RecordId,
+    @Path('credentialRecordId') credentialRecordId: UUID,
     @Body() body: { description: string }
   ) {
     const options: SendCredentialProblemReportOptions = {

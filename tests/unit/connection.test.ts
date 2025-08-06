@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
-import type { Server } from 'node:net'
+import type { AddressInfo, Server } from 'node:net'
 import { restore as sinonRestore, stub } from 'sinon'
 
 import {
@@ -24,6 +24,7 @@ import {
 } from './utils/helpers.js'
 
 describe('ConnectionController', () => {
+  let port: number
   let app: Server
   let aliceAgent: Agent
   let bobAgent: Agent
@@ -34,6 +35,7 @@ describe('ConnectionController', () => {
     aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3012)
     bobAgent = await getTestAgent('Connection REST Agent Test Bob', 3013)
     app = await getTestServer(bobAgent)
+    port = (app.address() as AddressInfo).port
     connection = getTestConnection()
     outOfBandRecord = getTestOutOfBandRecord()
   })
@@ -128,7 +130,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by myDid', () => {
-    test('should return all credentials by specified peer did', async () => {
+    test('should return all credentials by specified peer DID', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -147,7 +149,7 @@ describe('ConnectionController', () => {
   })
 
   describe('Get all connections by theirDid', () => {
-    test('should return all credentials by specified peer did', async () => {
+    test('should return all credentials by specified peer DID', async () => {
       const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
@@ -198,7 +200,7 @@ describe('ConnectionController', () => {
     })
 
     test('should give 404 not found when connection is not found', async () => {
-      const response = await request(app).get(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+      const response = await request(app).get(`/v1/connections/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -218,7 +220,7 @@ describe('ConnectionController', () => {
     })
 
     test('should throw error when connection id is not found', async () => {
-      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-request`)
+      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request`)
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -238,15 +240,15 @@ describe('ConnectionController', () => {
     })
 
     test('should throw error when connectionId is not found', async () => {
-      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa/accept-response`)
+      const response = await request(app).post(`/v1/connections/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-response`)
 
       expect(response.statusCode).to.be.equal(404)
     })
   })
 
   describe('Connection WebSocket Event', () => {
-    test.skip('should return connection event sent from test agent to websocket client', async () => {
-      const client = new WebSocket('ws://localhost:3009')
+    test('should return connection event sent from test agent to websocket client', async () => {
+      const client = new WebSocket(`ws://localhost:${port}`)
 
       const aliceOutOfBandRecord = await aliceAgent.oob.createInvitation()
 
@@ -274,7 +276,10 @@ describe('ConnectionController', () => {
       })
       const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
 
-      const response = await request(app).post('/v1/connections').send({ did: 'someDid' }).expect(200)
+      const response = await request(app)
+        .post('/v1/connections')
+        .send({ did: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000' })
+        .expect(200)
 
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
@@ -298,8 +303,12 @@ describe('ConnectionController', () => {
       expect(deleteByIdStub.callCount).to.equal(1)
     })
 
-    it('500s if invalid DID', async function () {
-      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(500)
+    it("422s if DID doesn't start with did", async function () {
+      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(422)
+    })
+
+    it('400s if DID is invalid', async function () {
+      await request(app).post('/v1/connections').send({ did: 'did:bla' }).expect(400)
     })
   })
 

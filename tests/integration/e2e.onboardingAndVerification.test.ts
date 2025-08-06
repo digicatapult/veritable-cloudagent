@@ -2,6 +2,7 @@ import { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
 import { afterEach, beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
+import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types.js'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? ''
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? ''
@@ -14,20 +15,20 @@ describe('Onboarding & Verification flow', function () {
   const holderClient = request(HOLDER_BASE_URL)
   const verifierClient = request(VERIFIER_BASE_URL)
   const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
-  let schemaId: string
-  let credentialDefinitionId: string
-  let issuerToHolderOobRecordId: string
-  let verifierToHolderOobRecordId: string
+  let schemaId: SchemaId
+  let credentialDefinitionId: CredentialDefinitionId
+  let issuerToHolderOobRecordId: UUID
+  let verifierToHolderOobRecordId: UUID
   let issuerToHolderInvitationUrl: string
   let verifierToHolderInvitationUrl: string
-  let holderToIssuerConnectionRecordId: string
-  let issuerToHolderConnectionRecordId: string
-  let verifierToHolderConnectionRecordId: string
-  let holderToVerifierConnectionRecordId: string
-  let issuerCredentialRecordId: string
-  let holderCredentialRecordId: string
-  let holderProofRequestId: string
-  let threadIdOnVerifier: string
+  let holderToIssuerConnectionRecordId: UUID
+  let issuerToHolderConnectionRecordId: UUID
+  let verifierToHolderConnectionRecordId: UUID
+  let holderToVerifierConnectionRecordId: UUID
+  let issuerCredentialRecordId: UUID
+  let holderCredentialRecordId: UUID
+  let holderProofRequestId: UUID
+  let threadIdOnVerifier: UUID
   let failed = false
 
   beforeEach(function (done) {

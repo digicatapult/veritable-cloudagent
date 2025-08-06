@@ -11,8 +11,9 @@ import { fileURLToPath } from 'url'
 
 import type { ServerConfig } from './utils/ServerConfig.js'
 
-import { randomUUID, UUID } from 'crypto'
+import { randomUUID } from 'crypto'
 import { RestAgent } from './agent.js'
+import type { UUID } from './controllers/types.js'
 import { errorHandler } from './error.js'
 import { basicMessageEvents } from './events/BasicMessageEvents.js'
 import { connectionEvents } from './events/ConnectionEvents.js'

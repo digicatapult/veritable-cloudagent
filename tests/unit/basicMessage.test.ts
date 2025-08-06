@@ -44,7 +44,7 @@ describe('BasicMessageController', () => {
 
     test('should give 404 not found when connection is not found', async () => {
       const response = await request(server)
-        .post(`/v1/basic-messages/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa`)
+        .post(`/v1/basic-messages/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
         .send({ content: 'Hello!' })
 
       expect(response.statusCode).to.be.equal(404)
