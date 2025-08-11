@@ -18,6 +18,7 @@ import {
   injectable,
 } from '@credo-ts/core'
 
+import type { UUID } from '../../controllers/types.js'
 import { NotFoundError } from '../../error.js'
 import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
@@ -58,7 +59,7 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
    * @returns curried function that waits for the response with an optional timeout in seconds
    */
   public async sendRequest(
-    connectionId: string,
+    connectionId: UUID,
     request: VerifiedDrpcRequest,
     proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
     proofTimeoutMs: number = this.config.proofTimeoutMs
@@ -86,7 +87,7 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
    * @param timeoutMs the time in milliseconds to wait for a response
    * @returns the response object
    */
-  private async recvResponse(messageId: string, timeoutMs?: number): Promise<VerifiedDrpcResponse | undefined> {
+  private async recvResponse(messageId: UUID, timeoutMs?: number): Promise<VerifiedDrpcResponse | undefined> {
     return new Promise((resolve) => {
       const listener = ({
         verifiedDrpcMessageRecord,
@@ -205,8 +206,8 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
    * @param response the verified drpc response object to send
    */
   public async sendResponse(options: {
-    connectionId: string
-    threadId: string
+    connectionId: UUID
+    threadId: UUID
     response: VerifiedDrpcResponse
   }): Promise<void> {
     const connection = await this.connectionsApi.getById(options.connectionId)

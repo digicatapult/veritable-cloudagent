@@ -16,31 +16,6 @@ import {
   type ProofState,
 } from '@credo-ts/core'
 
-/**
- * @example "821f9b26-ad04-4f56-89b6-e2ef9c72b36e"
- */
-export type RecordId = string
-
-/**
- * @example "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL"
- */
-export type Did = string
-
-/**
- * @example "1.0.0"
- */
-export type Version = string
-
-/**
- * @example "WgWxqztrNooG92RXvxSTWv:3:CL:20:tag"
- */
-export type CredentialDefinitionId = string
-
-/**
- * @example "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
- */
-export type SchemaId = string
-
 export const BasicMessageRecordExample = {
   _tags: {
     role: 'sender',

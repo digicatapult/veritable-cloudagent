@@ -1,6 +1,7 @@
 import { AgentMessage, IsValidMessageType, parseMessageType } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
+import type { UUID } from '../../../controllers/types.js'
 import { type VerifiedDrpcErrorCode, IsValidVerifiedDrpcResponse } from '../models/index.js'
 
 export type VerifiedDrpcResponse =
@@ -20,11 +21,11 @@ export interface VerifiedDrpcResponseObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   result?: any
   error?: VerifiedDrpcResponseError
-  id: string | number | null
+  id: UUID | number | null
 }
 
 export class VerifiedDrpcResponseMessage extends AgentMessage {
-  public constructor(options: { response: VerifiedDrpcResponse; threadId: string }) {
+  public constructor(options: { response: VerifiedDrpcResponse; threadId: UUID }) {
     super()
     if (options) {
       this.id = this.generateId()

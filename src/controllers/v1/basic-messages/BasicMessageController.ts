@@ -5,7 +5,8 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
-import { type RecordId, BasicMessageRecordExample } from '../../examples.js'
+import { BasicMessageRecordExample } from '../../examples.js'
+import type { UUID } from '../../types.js'
 
 @Tags('Basic Messages')
 @Route('/v1/basic-messages')
@@ -26,7 +27,7 @@ export class BasicMessageController extends Controller {
    */
   @Example<BasicMessageStorageProps[]>([BasicMessageRecordExample])
   @Get('/:connectionId')
-  public async getBasicMessages(@Path('connectionId') connectionId: RecordId): Promise<BasicMessageRecord[]> {
+  public async getBasicMessages(@Path('connectionId') connectionId: UUID): Promise<BasicMessageRecord[]> {
     return await this.agent.basicMessages.findAllByQuery({ connectionId })
   }
 
@@ -41,7 +42,7 @@ export class BasicMessageController extends Controller {
   @Response<HttpResponse>(500)
   public async sendMessage(
     @Request() req: express.Request,
-    @Path('connectionId') connectionId: RecordId,
+    @Path('connectionId') connectionId: UUID,
     @Body() body: Record<'content', string>
   ) {
     try {

@@ -6,7 +6,7 @@ import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, NotFoundError } from '../../../error.js'
-import { type RecordId } from '../../examples.js'
+import type { UUID } from '../../types.js'
 
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'
@@ -19,7 +19,7 @@ type DrpcRequestOptions = {
 type DrpcResponseOptions = Omit<DrpcResponseObject, 'id'>
 
 const rpcResponseParser = z.object({
-  jsonrpc: z.string(),
+  jsonrpc: z.literal('2.0'),
   result: z.any().optional(),
   error: z
     .object({
@@ -28,7 +28,7 @@ const rpcResponseParser = z.object({
       data: z.any().optional(),
     })
     .optional(),
-  id: z.string(),
+  id: z.uuid(),
 })
 
 @Tags('Didcomm RPC')
@@ -59,7 +59,7 @@ export class DrpcController extends Controller {
   @Response<GatewayTimeout>(504)
   public async sendRequest(
     @Request() req: express.Request,
-    @Path('connectionId') connectionId: RecordId,
+    @Path('connectionId') connectionId: UUID,
     @Body() requestOptions: DrpcRequestOptions,
     @Query('timeout') timeout = 5000
   ): Promise<DrpcResponseObject | undefined> {
@@ -95,7 +95,7 @@ export class DrpcController extends Controller {
 
   /**
    * Sends a response to a drpc request
-   * @param requestId the connection id to use
+   * @param requestId the request id to respond to
    * @param response the verified drpc response object to send
    */
   @Post('/:requestId/response')
@@ -103,7 +103,7 @@ export class DrpcController extends Controller {
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,
-    @Path('requestId') requestId: string,
+    @Path('requestId') requestId: UUID,
     @Body() response: DrpcResponseOptions
   ) {
     req.log.info('responding %j to request %s', response, requestId)

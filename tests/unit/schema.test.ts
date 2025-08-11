@@ -191,7 +191,7 @@ describe('SchemaController', () => {
     })
   })
   describe('create schema using new json schema ', () => {
-    test('should return created schema  using new json ', async () => {
+    test('should return created schema using new json ', async () => {
       const registerSchemaStub = stub(agent.modules.anoncreds, 'registerSchema')
       //register schema
       registerSchemaStub.resolves({

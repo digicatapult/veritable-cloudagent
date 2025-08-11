@@ -6,13 +6,14 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
-import { type RecordId, ProofRecordExample } from '../../examples.js'
+import { ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
   AcceptProofRequestOptions,
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
+  UUID,
 } from '../../types.js'
 
 @Tags('Proofs')
@@ -34,7 +35,7 @@ export class ProofController extends Controller {
    */
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
-  public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: string) {
+  public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: UUID) {
     let proofs = await this.agent.proofs.getAll()
     req.log.debug('retrieving all proofs %j', proofs)
 
@@ -56,7 +57,7 @@ export class ProofController extends Controller {
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async getProofById(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: RecordId) {
+  public async getProofById(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     req.log.debug('getting proof record %s', proofRecordId)
     try {
       const proof = await this.agent.proofs.getById(proofRecordId)
@@ -79,7 +80,7 @@ export class ProofController extends Controller {
   @Delete('/:proofRecordId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: RecordId) {
+  public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
       this.setStatus(204)
       req.log.info('deleting proof %s', proofRecordId)
@@ -131,7 +132,7 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptProposal(
     @Request() req: express.Request,
-    @Path('proofRecordId') proofRecordId: string,
+    @Path('proofRecordId') proofRecordId: UUID,
     @Body()
     proposal: AcceptProofProposalOptions
   ) {
@@ -226,7 +227,7 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async acceptRequest(
     @Request() req: express.Request,
-    @Path('proofRecordId') proofRecordId: string,
+    @Path('proofRecordId') proofRecordId: UUID,
     @Body()
     body: AcceptProofRequestOptions
   ) {
@@ -265,7 +266,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: string) {
+  public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
       req.log.info('accepting proof presentation %s', proofRecordId)
       const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })

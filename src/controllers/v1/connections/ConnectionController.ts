@@ -12,8 +12,9 @@ import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Res
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { HttpResponse, NotFoundError } from '../../../error.js'
-import { type RecordId, ConnectionRecordExample } from '../../examples.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { ConnectionRecordExample } from '../../examples.js'
+import type { DID, UUID } from '../../types.js'
 
 @Tags('Connections')
 @Route('/v1/connections')
@@ -36,7 +37,7 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/send-ping')
   public async sendPing(
     @Request() req: express.Request,
-    @Path('connectionId') connectionId: string,
+    @Path('connectionId') connectionId: UUID,
     @Query('responseRequested') responseRequested: boolean = true,
     @Query('withReturnRouting') withReturnRouting?: boolean
   ) {
@@ -51,17 +52,18 @@ export class ConnectionController extends Controller {
    * @param myDid My DID
    * @param theirDid Their DID
    * @param theirLabel Their label
+   * @param outOfBandId Out of band invitation ID
    * @returns ConnectionRecord[]
    */
   @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
   @Get('/')
   public async getAllConnections(
     @Request() req: express.Request,
-    @Query('outOfBandId') outOfBandId?: string,
+    @Query('outOfBandId') outOfBandId?: UUID,
     @Query('alias') alias?: string,
     @Query('state') state?: DidExchangeState,
-    @Query('myDid') myDid?: string,
-    @Query('theirDid') theirDid?: string,
+    @Query('myDid') myDid?: DID,
+    @Query('theirDid') theirDid?: DID,
     @Query('theirLabel') theirLabel?: string
   ) {
     let connections
@@ -100,7 +102,7 @@ export class ConnectionController extends Controller {
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
   @Response<NotFoundError['message']>(404)
-  public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     const connection = await this.agent.connections.findById(connectionId)
 
     if (!connection) {
@@ -151,7 +153,7 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/accept-request')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
       const connection = await this.agent.connections.acceptRequest(connectionId)
       req.log.info('accept %s connection request %j', connectionId, connection.toJSON())
@@ -178,7 +180,7 @@ export class ConnectionController extends Controller {
   @Post('/:connectionId/accept-response')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: RecordId) {
+  public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
       const connection = await this.agent.connections.acceptResponse(connectionId)
       req.log.info('accept %s connection response %j', connectionId, connection.toJSON())
@@ -198,30 +200,37 @@ export class ConnectionController extends Controller {
    * @returns out-of-band record and connection record if one has been created.
    */
   @Post('/')
-  public async post(@Request() req: express.Request, @Body() body: { did: string }) {
+  public async post(@Request() req: express.Request, @Body() body: { did: DID }) {
     const { did } = body
 
-    req.log.info('retrieving connection by %s did', did)
-    const connections = await this.agent.connections.findByInvitationDid(did)
+    try {
+      req.log.info('retrieving connection by %s DID', did)
+      const connections = await this.agent.connections.findByInvitationDid(did)
 
-    for (const { id, invitationDid } of connections) {
-      if (invitationDid === did) {
-        req.log.debug(`connection on DID ${did} already exists. deleting connection ${id}`)
-        await this.agent.connections.deleteById(id)
+      for (const { id, invitationDid } of connections) {
+        if (invitationDid === did) {
+          req.log.debug(`connection on DID ${did} already exists. deleting connection ${id}`)
+          await this.agent.connections.deleteById(id)
+        }
       }
-    }
-    const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation({
-      did,
-      handshakeProtocols: [HandshakeProtocol.Connections],
-    })
+      const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation({
+        did,
+        handshakeProtocols: [HandshakeProtocol.Connections],
+      })
 
-    req.log.info('returning OOB record %j', {
-      OOB: outOfBandRecord.toJSON(),
-      connection: connectionRecord?.toJSON(),
-    })
-    return {
-      outOfBandRecord: outOfBandRecord.toJSON(),
-      connectionRecord: connectionRecord?.toJSON(),
+      req.log.info('returning OOB record %j', {
+        OOB: outOfBandRecord.toJSON(),
+        connection: connectionRecord?.toJSON(),
+      })
+      return {
+        outOfBandRecord: outOfBandRecord.toJSON(),
+        connectionRecord: connectionRecord?.toJSON(),
+      }
+    } catch (error) {
+      if (error instanceof CredoError) {
+        throw new BadRequest('invalid DID')
+      }
+      throw error
     }
   }
 }
