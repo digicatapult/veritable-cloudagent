@@ -24,7 +24,7 @@ export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       for (const webhookUrl of config.webhookUrl) {
-        sendWebhookEvent(webhookUrl + '/connections', body, agent.config.logger)
+        sendWebhookEvent(`${webhookUrl}/connections`, body, agent.config.logger)
       }
     }
 
