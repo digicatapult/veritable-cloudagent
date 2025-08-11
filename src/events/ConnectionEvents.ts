@@ -16,7 +16,8 @@ export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
     // The UI only needs to know if the DID has been rotated to 0 i.e. disconnected
     if (event.type === ConnectionEventTypes.ConnectionDidRotated) {
       if (!event.payload.theirDid?.to) {
-        agent.config.logger.info(`DID rotated to falsy type`)
+        agent.config.logger.info(`DID rotated to ${event.payload.theirDid?.to}`)
+        // TODO: consider changing the did exchange state on the connection record to Abandoned
       }
     }
 
