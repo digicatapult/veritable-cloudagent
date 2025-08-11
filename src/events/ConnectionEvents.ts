@@ -13,14 +13,6 @@ export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
   const eventHandler = async (event: ConnectionStateChangedEvent | ConnectionDidRotatedEvent) => {
     const body = event.payload
 
-    // The UI only needs to know if the DID has been rotated to 0 i.e. disconnected
-    if (event.type === ConnectionEventTypes.ConnectionDidRotated) {
-      if (!event.payload.theirDid?.to) {
-        agent.config.logger.info(`DID rotated to ${event.payload.theirDid?.to}`)
-        // TODO: consider changing the did exchange state on the connection record to Abandoned
-      }
-    }
-
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       for (const webhookUrl of config.webhookUrl) {
