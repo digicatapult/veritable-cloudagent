@@ -57,8 +57,8 @@ describe('WebhookTests', () => {
       webhooks,
       (webhook) =>
         webhook.topic === 'connections' &&
-        webhook.body.connectionRecord.id === connection.id &&
-        webhook.body.connectionRecord.state === connection.state
+        webhook.body.connectionRecord!.id === connection.id &&
+        webhook.body.connectionRecord!.state === connection.state
     )
     expect(connection.toJSON()).to.deep.include(webhook?.body.connectionRecord)
   })
@@ -76,12 +76,12 @@ describe('WebhookTests', () => {
       webhooks,
       (webhook) =>
         webhook.topic === 'connections' &&
-        webhook.body.connectionRecord.id === connection.id &&
-        webhook.body.connectionRecord.state === 'completed' &&
-        !webhook.body.connectionRecord.theirDid
+        webhook.body.connectionRecord!.id === connection.id &&
+        webhook.body.connectionRecord!.state === 'completed' &&
+        !webhook.body.connectionRecord!.theirDid
     )
 
-    expect(webhook?.body.connectionRecord.previousTheirDids[0]).to.equal(connection.theirDid)
+    expect(webhook?.body.connectionRecord!.previousTheirDids[0]).to.equal(connection.theirDid)
   })
 
   test('should return a webhook event when credential state changed', async () => {
