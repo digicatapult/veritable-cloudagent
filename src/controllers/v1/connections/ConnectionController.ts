@@ -136,7 +136,7 @@ export class ConnectionController extends Controller {
           await this.agent.connections.deleteById(connectionId)
           req.log.info('%s record deleted', connectionId)
         } else {
-          throw new BadRequest('cannot hangup on connection without a did or theirDid')
+          throw new BadRequest('cannot hangup on a connection without a did or theirDid')
         }
       } else {
         this.setStatus(204)
