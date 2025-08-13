@@ -114,18 +114,34 @@ export class ConnectionController extends Controller {
   }
 
   /**
-   * Deletes a connection record from the connection repository.
+   * Hangs up an active connection
+   * Optional boolean value to also delete the connection record (default = false)
+   * i.e. /connectionId?delete=true
    *
    * @param connectionId Connection identifier
    */
   @Delete('/:connectionId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async deleteConnection(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
+  public async closeConnection(@Request() req: express.Request, @Path('connectionId') connectionId: string) {
+    const deleteConnectionRecord: boolean = req.query.delete === 'true'
     try {
-      this.setStatus(204)
-      await this.agent.connections.deleteById(connectionId)
-      req.log.info('%s connection has been deleted', connectionId)
+      const connectionRecord = await this.agent.connections.getById(connectionId)
+      if (!connectionRecord.theirDid) {
+        // If the connectionRecord doesn't have a theirDid, they've previously
+        // disconnected from us, or the connection is incomplete
+        if (deleteConnectionRecord) {
+          this.setStatus(204)
+          await this.agent.connections.deleteById(connectionId)
+          req.log.info('%s record deleted', connectionId)
+        } else {
+          throw new BadRequest('cannot hangup on connection without a theirDid')
+        }
+      } else {
+        this.setStatus(204)
+        await this.agent.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteConnectionRecord })
+        req.log.info(`${connectionId}${deleteConnectionRecord ? ' disconnected' : ' disconnected and deleted'}`)
+      }
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection record not found')

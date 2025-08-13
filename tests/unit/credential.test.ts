@@ -26,6 +26,7 @@ import WebSocket from 'ws'
 
 import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 import {
+  closeWebSocket,
   getCredentialFormatData,
   getTestAgent,
   getTestConnection,
@@ -34,11 +35,13 @@ import {
   getTestOutOfBandRecord,
   getTestServer,
   objectToJson,
+  openWebSocket,
 } from './utils/helpers.js'
 
 describe('CredentialController', () => {
   let port: number
   let app: Server
+  let socket: WebSocket
   let aliceAgent: Agent
   let bobAgent: Agent
   let testCredential: CredentialExchangeRecord
@@ -65,6 +68,7 @@ describe('CredentialController', () => {
 
   afterEach(() => {
     sinonRestore()
+    closeWebSocket(socket)
   })
 
   describe('Get all credentials', () => {
@@ -306,13 +310,11 @@ describe('CredentialController', () => {
       const now = new Date()
 
       // Start client and wait for it to be opened
-      const client = new WebSocket(`ws://localhost:${port}`)
-      await new Promise((resolve) => client.once('open', resolve))
+      socket = await openWebSocket(port)
 
       // Start promise to listen for message
       const waitForEvent = new Promise((resolve) =>
-        client.on('message', (data) => {
-          client.terminate()
+        socket.on('message', (data) => {
           resolve(JSON.parse(data.toString()))
         })
       )
@@ -685,6 +687,7 @@ describe('CredentialController', () => {
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()
     await bobAgent.wallet.delete()
+    await closeWebSocket(socket)
     app.close()
   })
 })

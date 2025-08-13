@@ -12,7 +12,7 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       for (const webhookUrl of config.webhookUrl) {
-        sendWebhookEvent(webhookUrl + '/proofs', body, agent.config.logger)
+        sendWebhookEvent(`${webhookUrl}/proofs`, body, agent.config.logger)
       }
     }
 
