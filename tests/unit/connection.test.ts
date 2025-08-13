@@ -17,6 +17,7 @@ import WebSocket from 'ws'
 import {
   getTestAgent,
   getTestConnection,
+  getTestConnectionNoDid,
   getTestOutOfBandRecord,
   getTestServer,
   getTestTrustPingMessage,
@@ -246,6 +247,51 @@ describe('ConnectionController', () => {
     })
   })
 
+  describe('Create connection', async function () {
+    test('Bob creates a connection with Alice', async function () {
+      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      receiveImplicitInvitationStub.resolves({
+        outOfBandRecord: outOfBandRecord,
+        connectionRecord: connection,
+      })
+      const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
+
+      const response = await request(app)
+        .post('/v1/connections')
+        .send({ did: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000' })
+        .expect(200)
+
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
+    test('Bob replaces old connection with Alice', async function () {
+      const { invitationDid } = connection
+
+      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      receiveImplicitInvitationStub.resolves({
+        outOfBandRecord: outOfBandRecord,
+        connectionRecord: connection,
+      })
+
+      // stub a connection to be replaced
+      stub(bobAgent.connections, 'findByInvitationDid').resolves([connection])
+
+      // assert old connection is deleted
+      const deleteByIdStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).post('/v1/connections').send({ did: invitationDid }).expect(200)
+      expect(deleteByIdStub.callCount).to.equal(1)
+    })
+
+    test("422s if DID doesn't start with did", async function () {
+      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(422)
+    })
+
+    test('400s if DID is invalid', async function () {
+      await request(app).post('/v1/connections').send({ did: 'did:bla' }).expect(400)
+    })
+  })
+
   describe('Connection WebSocket Event', () => {
     test('should return connection event sent from test agent to websocket client', async () => {
       const client = new WebSocket(`ws://localhost:${port}`)
@@ -267,48 +313,33 @@ describe('ConnectionController', () => {
     })
   })
 
-  describe('Create connection', async function () {
-    it('Bob creates a connection with Alice', async function () {
-      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
-      receiveImplicitInvitationStub.resolves({
-        outOfBandRecord: outOfBandRecord,
-        connectionRecord: connection,
-      })
-      const getResult = () => receiveImplicitInvitationStub.firstCall.returnValue
+  describe('Call for hangup or deletion', async function () {
+    test('should call for hangup', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      stub(bobAgent.connections, 'hangup')
 
-      const response = await request(app)
-        .post('/v1/connections')
-        .send({ did: 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000' })
-        .expect(200)
-
-      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
     })
 
-    it('Bob replaces old connection with Alice', async function () {
-      const { invitationDid } = connection
+    test('should call for hangup and record deletion', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      stub(bobAgent.connections, 'hangup')
 
-      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
-      receiveImplicitInvitationStub.resolves({
-        outOfBandRecord: outOfBandRecord,
-        connectionRecord: connection,
-      })
-
-      // stub a connection to be replaced
-      stub(bobAgent.connections, 'findByInvitationDid').resolves([connection])
-
-      // assert old connection is deleted
-      const deleteByIdStub = stub(bobAgent.connections, 'deleteById')
-
-      await request(app).post('/v1/connections').send({ did: invitationDid }).expect(200)
-      expect(deleteByIdStub.callCount).to.equal(1)
+      await request(app).delete(`/v1/connections/${connection.id}?delete=true`).expect(204)
     })
 
-    it("422s if DID doesn't start with did", async function () {
-      await request(app).post('/v1/connections').send({ did: 'bla' }).expect(422)
+    test('should 400 if no theirDid on record and no deletion request', async () => {
+      // Doesn't like object destructuring to blank theirDid value
+      const noTheirDid = getTestConnectionNoDid()
+      stub(bobAgent.connections, 'getById').resolves(noTheirDid)
+      stub(bobAgent.connections, 'hangup')
+
+      await request(app).delete(`/v1/connections/${connection.id}`).expect(400)
     })
 
-    it('400s if DID is invalid', async function () {
-      await request(app).post('/v1/connections').send({ did: 'did:bla' }).expect(400)
+    test('should 404 if no connection record exists', async () => {
+      stub(bobAgent.connections, 'hangup')
+      await request(app).delete(`/v1/connections/aaaaaaaa-aaaa-4444-aaaa-aaaaaaaaaaaa`).expect(404)
     })
   })
 
