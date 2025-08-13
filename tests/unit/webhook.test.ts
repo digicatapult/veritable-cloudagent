@@ -24,9 +24,9 @@ import PinoLogger from '../../src/utils/logger.js'
 import { getTestAgent } from './utils/helpers.js'
 
 describe('WebhookTests', () => {
+  let server: Server
   let aliceAgent: Agent
   let bobAgent: Agent
-  let server: Server
   const webhooks: WebhookData[] = []
 
   before(async () => {

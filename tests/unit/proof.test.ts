@@ -22,11 +22,20 @@ import {
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { getTestAgent, getTestProof, getTestProofResponse, getTestServer, objectToJson } from './utils/helpers.js'
+import {
+  closeWebSocket,
+  getTestAgent,
+  getTestProof,
+  getTestProofResponse,
+  getTestServer,
+  objectToJson,
+  openWebSocket,
+} from './utils/helpers.js'
 
 describe('ProofController', () => {
   let port: number
   let app: Server
+  let socket: WebSocket
   let aliceAgent: Agent
   let bobAgent: Agent
   let testMessage: AgentMessage
@@ -44,8 +53,9 @@ describe('ProofController', () => {
     testMessage = new AgentMessage()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     sinonRestore()
+    await closeWebSocket(socket)
   })
 
   describe('Get all proofs', () => {
@@ -373,13 +383,11 @@ describe('ProofController', () => {
       })
 
       // Start client and wait for it to be opened
-      const client = new WebSocket(`ws://localhost:${port}`)
-      await new Promise((resolve) => client.once('open', resolve))
+      socket = await openWebSocket(port)
 
       // Start promise to listen for message
       const waitForEvent = new Promise((resolve) =>
-        client.on('message', (data) => {
-          client.terminate()
+        socket.on('message', (data) => {
           resolve(JSON.parse(data.toString()))
         })
       )
@@ -421,6 +429,7 @@ describe('ProofController', () => {
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()
     await bobAgent.wallet.delete()
+    await closeWebSocket(socket)
     app.close()
   })
 })

@@ -636,3 +636,22 @@ export function getTestDidCreate() {
     },
   } as DidCreateResult
 }
+
+export async function openWebSocket(port: number): Promise<WebSocket> {
+  const ws = new WebSocket(`ws://localhost:${port}`)
+  await new Promise<void>((resolve, reject) => {
+    ws.once('open', resolve)
+    ws.once('error', reject)
+  })
+  return ws
+}
+
+export async function closeWebSocket(ws: WebSocket) {
+  return new Promise<void>((resolve, reject) => {
+    if (!ws || ws.readyState === ws.CLOSED) return resolve()
+    ws.removeAllListeners()
+    ws.once('close', () => resolve())
+    ws.once('error', (err) => reject(err))
+    ws.close()
+  })
+}

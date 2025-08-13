@@ -7,11 +7,12 @@ import { AddressInfo, Server } from 'node:net'
 import request from 'supertest'
 import WebSocket from 'ws'
 
-import { getTestAgent, getTestServer, objectToJson } from './utils/helpers.js'
+import { closeWebSocket, getTestAgent, getTestServer, objectToJson, openWebSocket } from './utils/helpers.js'
 
 describe('BasicMessageController', () => {
   let port: number
   let server: Server
+  let socket: WebSocket
   let aliceAgent: Agent
   let bobAgent: Agent
   let bobConnectionToAlice: ConnectionRecord
@@ -29,8 +30,9 @@ describe('BasicMessageController', () => {
     bobConnectionToAlice = await bobAgent.connections.returnWhenIsConnected(bobConnectionAtBobAlice!.id)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     sinonRestore()
+    await closeWebSocket(socket)
   })
 
   describe('Send basic message to connection', () => {
@@ -53,15 +55,14 @@ describe('BasicMessageController', () => {
 
   describe('Basic Message WebSocket event', () => {
     test('should return basic message event sent from test agent to clients', async () => {
-      const client = new WebSocket(`ws://localhost:${port}`)
+      socket = await openWebSocket(port)
 
       const waitForMessagePromise = new Promise((resolve) => {
-        client.on('message', (data) => {
+        socket.on('message', (data) => {
           const event = JSON.parse(data.toString())
 
           if (event.type === BasicMessageEventTypes.BasicMessageStateChanged) {
             expect(event.payload.basicMessageRecord.connectionId).to.be.equal(bobConnectionToAlice.id)
-            client.terminate()
             resolve(undefined)
           }
         })
@@ -92,6 +93,7 @@ describe('BasicMessageController', () => {
     await aliceAgent.wallet.delete()
     await bobAgent.shutdown()
     await bobAgent.wallet.delete()
+    await closeWebSocket(socket)
     server.close()
   })
 })
