@@ -127,15 +127,16 @@ export class ConnectionController extends Controller {
     const deleteConnectionRecord: boolean = req.query.delete === 'true'
     try {
       const connectionRecord = await this.agent.connections.getById(connectionId)
-      if (!connectionRecord.theirDid) {
-        // If the connectionRecord doesn't have a theirDid, they've previously
-        // disconnected from us, or the connection is incomplete
+      // If the connectionRecord doesn't have a theirDid, they've previously
+      // disconnected from us, or the connection is incomplete
+      // If it doesn't have a did then we're not connected
+      if (!connectionRecord.theirDid || !connectionRecord.did) {
         if (deleteConnectionRecord) {
           this.setStatus(204)
           await this.agent.connections.deleteById(connectionId)
           req.log.info('%s record deleted', connectionId)
         } else {
-          throw new BadRequest('cannot hangup on connection without a theirDid')
+          throw new BadRequest('cannot hangup on connection without a did or theirDid')
         }
       } else {
         this.setStatus(204)
