@@ -125,10 +125,10 @@ export class ConnectionController extends Controller {
   public async closeConnection(@Request() req: express.Request, @Path('connectionId') connectionId: string) {
     const deleteConnectionRecord: boolean = req.query.delete === 'true'
     try {
-      // If we've hung up on them already, Did will be blank - just delete
-      // If they've hung up on us already, theirDid will be blank - just delete
       this.setStatus(204)
       const connectionRecord = await this.agent.connections.getById(connectionId)
+      // If we've hung up on them already, Did will be blank - just delete
+      // If they've hung up on us already, theirDid will be blank - just delete
       if (!connectionRecord.theirDid || !connectionRecord.did) {
         await this.agent.connections.deleteById(connectionId)
         req.log.info('%s record deleted', connectionId)
