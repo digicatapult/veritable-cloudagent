@@ -117,7 +117,6 @@ export class ConnectionController extends Controller {
    * Hangs up an active connection
    * Optional boolean value to also delete the connection record (default = false)
    * i.e. /connectionId?delete=true
-   *
    * @param connectionId Connection identifier
    */
   @Delete('/:connectionId')
@@ -126,20 +125,14 @@ export class ConnectionController extends Controller {
   public async closeConnection(@Request() req: express.Request, @Path('connectionId') connectionId: string) {
     const deleteConnectionRecord: boolean = req.query.delete === 'true'
     try {
+      // If we've hung up on them already, Did will be blank - just delete
+      // If they've hung up on us already, theirDid will be blank - just delete
+      this.setStatus(204)
       const connectionRecord = await this.agent.connections.getById(connectionId)
-      // If the connectionRecord doesn't have a theirDid, they've previously
-      // disconnected from us, or the connection is incomplete
-      // If it doesn't have a did then we're not connected
       if (!connectionRecord.theirDid || !connectionRecord.did) {
-        if (deleteConnectionRecord) {
-          this.setStatus(204)
-          await this.agent.connections.deleteById(connectionId)
-          req.log.info('%s record deleted', connectionId)
-        } else {
-          throw new BadRequest('cannot hangup on a connection without a did or theirDid')
-        }
+        await this.agent.connections.deleteById(connectionId)
+        req.log.info('%s record deleted', connectionId)
       } else {
-        this.setStatus(204)
         await this.agent.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteConnectionRecord })
         req.log.info(`${connectionId}${deleteConnectionRecord ? ' disconnected' : ' disconnected and deleted'}`)
       }
