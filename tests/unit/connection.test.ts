@@ -19,6 +19,7 @@ import {
   getTestAgent,
   getTestConnection,
   getTestConnectionNoDid,
+  getTestConnectionNoTheirDid,
   getTestOutOfBandRecord,
   getTestServer,
   getTestTrustPingMessage,
@@ -311,13 +312,26 @@ describe('ConnectionController', () => {
       await request(app).delete(`/v1/connections/${connection.id}?delete=true`).expect(204)
     })
 
-    test('should 400 if no theirDid on record and no deletion request', async () => {
+    test('should call deleteById if no theirDid on record', async () => {
       // Doesn't like object destructuring to blank theirDid value
-      const noTheirDid = getTestConnectionNoDid()
+      const noTheirDid = getTestConnectionNoTheirDid()
       stub(bobAgent.connections, 'getById').resolves(noTheirDid)
       stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
 
-      await request(app).delete(`/v1/connections/${connection.id}`).expect(400)
+      await request(app).delete(`/v1/connections/${connection.id}`)
+      expect(deleteCallStub.callCount).to.equal(1)
+    })
+
+    test('should call deleteById if no Did on record', async () => {
+      // Doesn't like object destructuring to blank Did value
+      const noDid = getTestConnectionNoDid()
+      stub(bobAgent.connections, 'getById').resolves(noDid)
+      stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).delete(`/v1/connections/${connection.id}`)
+      expect(deleteCallStub.callCount).to.equal(1)
     })
 
     test('should 404 if no connection record exists', async () => {

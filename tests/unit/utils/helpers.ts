@@ -523,7 +523,7 @@ export function getTestConnection({
 }
 
 // Test doesn't like object destructuring to blank theirDid value
-export function getTestConnectionNoDid({
+export function getTestConnectionNoTheirDid({
   state = DidExchangeState.InvitationReceived,
   role = DidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
@@ -533,6 +533,31 @@ export function getTestConnectionNoDid({
   tags = {},
   theirLabel,
   theirDid = '',
+}: Partial<ConnectionRecordProps> = {}) {
+  return new ConnectionRecord({
+    did,
+    invitationDid,
+    threadId,
+    theirDid,
+    id,
+    role,
+    state,
+    tags,
+    theirLabel,
+  })
+}
+
+// Test doesn't like object destructuring to blank Did value
+export function getTestConnectionNoDid({
+  state = DidExchangeState.InvitationReceived,
+  role = DidExchangeRole.Requester,
+  id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+  did = '',
+  threadId = '33333333-3333-4c47-8a5a-333333333333',
+  invitationDid = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu11111111',
+  tags = {},
+  theirLabel,
+  theirDid = 'did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM',
 }: Partial<ConnectionRecordProps> = {}) {
   return new ConnectionRecord({
     did,
