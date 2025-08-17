@@ -122,7 +122,7 @@ export class ConnectionController extends Controller {
   @Delete('/:connectionId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  public async closeConnection(@Request() req: express.Request, @Path('connectionId') connectionId: string) {
+  public async closeConnection(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     const deleteConnectionRecord: boolean = req.query.delete === 'true'
     try {
       this.setStatus(204)
