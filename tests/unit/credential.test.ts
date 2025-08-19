@@ -66,9 +66,9 @@ describe('CredentialController', () => {
     connection = getTestConnection()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     sinonRestore()
-    closeWebSocket(socket)
+    await closeWebSocket(socket)
   })
 
   describe('Get all credentials', () => {
