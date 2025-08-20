@@ -18,6 +18,8 @@ import {
   closeWebSocket,
   getTestAgent,
   getTestConnection,
+  getTestConnectionNoDid,
+  getTestConnectionNoTheirDid,
   getTestOutOfBandRecord,
   getTestServer,
   getTestTrustPingMessage,
@@ -295,6 +297,49 @@ describe('ConnectionController', () => {
     })
   })
 
+  describe('Call for hangup or deletion', async function () {
+    test('should call for hangup', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      stub(bobAgent.connections, 'hangup')
+
+      await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
+    })
+
+    test('should call for hangup and record deletion', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      stub(bobAgent.connections, 'hangup')
+
+      await request(app).delete(`/v1/connections/${connection.id}?delete=true`).expect(204)
+    })
+
+    test('should call deleteById if no theirDid on record', async () => {
+      // Doesn't like object destructuring to blank theirDid value
+      const noTheirDid = getTestConnectionNoTheirDid()
+      stub(bobAgent.connections, 'getById').resolves(noTheirDid)
+      stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).delete(`/v1/connections/${connection.id}`)
+      expect(deleteCallStub.callCount).to.equal(1)
+    })
+
+    test('should call deleteById if no Did on record', async () => {
+      // Doesn't like object destructuring to blank Did value
+      const noDid = getTestConnectionNoDid()
+      stub(bobAgent.connections, 'getById').resolves(noDid)
+      stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).delete(`/v1/connections/${connection.id}`)
+      expect(deleteCallStub.callCount).to.equal(1)
+    })
+
+    test('should 404 if no connection record exists', async () => {
+      stub(bobAgent.connections, 'hangup')
+      await request(app).delete(`/v1/connections/aaaaaaaa-aaaa-4444-aaaa-aaaaaaaaaaaa`).expect(404)
+    })
+  })
+
   describe('WebSocket Events', () => {
     beforeEach(async () => {
       socket = await openWebSocket(port)
@@ -316,6 +361,33 @@ describe('ConnectionController', () => {
       })
 
       await bobAgent.oob.receiveInvitation(aliceOutOfBandRecord.outOfBandInvitation)
+      await waitForMessagePromise
+    })
+
+    test('should return disconnection event sent from test agent to websocket client', async () => {
+      const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
+
+      const waitForMessagePromise = new Promise((resolve) => {
+        socket.on('message', (data) => {
+          const event = JSON.parse(data.toString())
+          if (event.type === ConnectionEventTypes.ConnectionDidRotated) {
+            const connectionRecord = event.payload.connectionRecord
+            expect(connectionRecord.protocol).to.be.equal('https://didcomm.org/didexchange/1.x')
+            expect(connectionRecord).to.not.have.property('theirDid')
+            expect(connectionRecord.previousTheirDids).to.be.an('array')
+            resolve(undefined)
+          }
+        })
+      })
+
+      const { connectionRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
+      const connection = await bobAgent.connections.returnWhenIsConnected(connectionRecord!.id)
+
+      // Workaround to get Alice's connection record from the ThreadId in Bob's connection record
+      const { id: connectionId } = await aliceAgent.connections.getByThreadId(connection.threadId!)
+      // Alice hangs up on Bob
+      await aliceAgent.connections.hangup({ connectionId })
+
       await waitForMessagePromise
     })
   })
