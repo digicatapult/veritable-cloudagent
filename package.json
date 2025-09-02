@@ -38,11 +38,11 @@
     "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
   },
   "dependencies": {
-    "@credo-ts/anoncreds": "^0.5.17-alpha-20250807200940",
-    "@credo-ts/askar": "^0.5.17-alpha-20250807200940",
-    "@credo-ts/core": "^0.5.17-alpha-20250807200940",
-    "@credo-ts/drpc": "^0.5.17-alpha-20250807200940",
-    "@credo-ts/node": "^0.5.17-alpha-20250807200940",
+    "@credo-ts/anoncreds": "^0.5.17",
+    "@credo-ts/askar": "^0.5.17",
+    "@credo-ts/core": "^0.5.17",
+    "@credo-ts/drpc": "^0.5.17",
+    "@credo-ts/node": "^0.5.17",
     "@hyperledger/anoncreds-nodejs": "^0.2.4",
     "@hyperledger/aries-askar-nodejs": "^0.2.3",
     "@tsoa/runtime": "^6.6.0",
