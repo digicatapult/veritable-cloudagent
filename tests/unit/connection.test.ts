@@ -305,11 +305,42 @@ describe('ConnectionController', () => {
       await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
     })
 
-    test('should call for hangup and record deletion', async () => {
+    test('should call for hangup not deletion when deleteConnectionRecord is not set', async () => {
       stub(bobAgent.connections, 'getById').resolves(connection)
-      stub(bobAgent.connections, 'hangup')
+      const hangupCallStub = stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
 
-      await request(app).delete(`/v1/connections/${connection.id}?delete=true`).expect(204)
+      await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
+      expect(deleteCallStub.callCount).to.equal(0)
+      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: undefined }])
+    })
+
+    test('should only call for hangup not deletion when deleteConnectionRecord is false', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=false`).expect(204)
+      expect(deleteCallStub.callCount).to.equal(0)
+      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: false }])
+    })
+
+    test('should only call for hangup not deletion if passed invalid query', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+
+      await request(app).delete(`/v1/connections/${connection.id}?foobar=false`).expect(204)
+      expect(deleteCallStub.callCount).to.equal(0)
+      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: undefined }])
+    })
+
+    test('should call for hangup and record deletion when deleteConnectionRecord is true', async () => {
+      stub(bobAgent.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.connections, 'hangup')
+
+      await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=true`).expect(204)
+      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: true }])
     })
 
     test('should call deleteById if no theirDid on record', async () => {
