@@ -27,7 +27,7 @@ export interface WebhookData {
   body: {
     id: string
     state: string
-    connectionRecord?: ConnectionRecord
+    connectionRecord: ConnectionRecord
     [key: string]: unknown
   }
   topic: string
