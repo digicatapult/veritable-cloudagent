@@ -120,6 +120,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/:connectionId')
+  @Response<BadRequest['message']>(400)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async closeConnection(
@@ -128,17 +129,26 @@ export class ConnectionController extends Controller {
     @Query('deleteConnectionRecord') deleteConnectionRecord?: boolean
   ) {
     try {
-      this.setStatus(204)
       const connectionRecord = await this.agent.connections.getById(connectionId)
-      // If we've hung up on them already, Did will be blank - just delete
-      // If they've hung up on us already, theirDid will be blank - just delete
-      if (!connectionRecord.theirDid || !connectionRecord.did) {
+      // If we've hung up on them already, Did will be blank
+      // If they've hung up on us already, theirDid will be blank
+      const alreadyDisconnected = !connectionRecord.theirDid || !connectionRecord.did
+      const deleteAfter = Boolean(deleteConnectionRecord)
+      if (alreadyDisconnected) {
+        if (!deleteAfter) {
+          throw new BadRequest(`cannot send hangup to disconnected peer ${connectionId}`)
+        }
         await this.agent.connections.deleteById(connectionId)
-        req.log.info('%s record deleted', connectionId)
-      } else {
-        await this.agent.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteConnectionRecord })
-        req.log.info(`${connectionId}${deleteConnectionRecord ? ' disconnected' : ' disconnected and deleted'}`)
+        req.log.info('connection record deleted %s', connectionId)
+        this.setStatus(204)
+        return
       }
+      await this.agent.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteAfter })
+      req.log.info(
+        { connectionId, deleteAfterHangup: deleteAfter },
+        deleteAfter ? 'disconnected and deleted' : 'disconnected'
+      )
+      this.setStatus(204)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection record not found')

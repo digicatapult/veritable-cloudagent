@@ -312,7 +312,7 @@ describe('ConnectionController', () => {
 
       await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
       expect(deleteCallStub.callCount).to.equal(0)
-      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: undefined }])
+      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: false }])
     })
 
     test('should only call for hangup not deletion when deleteConnectionRecord is false', async () => {
@@ -332,7 +332,7 @@ describe('ConnectionController', () => {
 
       await request(app).delete(`/v1/connections/${connection.id}?foobar=false`).expect(204)
       expect(deleteCallStub.callCount).to.equal(0)
-      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: undefined }])
+      expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: false }])
     })
 
     test('should call for hangup and record deletion when deleteConnectionRecord is true', async () => {
@@ -343,26 +343,35 @@ describe('ConnectionController', () => {
       expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: true }])
     })
 
-    test('should call deleteById if no theirDid on record', async () => {
+    test('should call deleteById if no theirDid on record when deleteConnectionRecord is true', async () => {
       // Doesn't like object destructuring to blank theirDid value
       const noTheirDid = getTestConnectionNoTheirDid()
       stub(bobAgent.connections, 'getById').resolves(noTheirDid)
       stub(bobAgent.connections, 'hangup')
       const deleteCallStub = stub(bobAgent.connections, 'deleteById')
 
-      await request(app).delete(`/v1/connections/${connection.id}`)
+      await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=true`)
       expect(deleteCallStub.callCount).to.equal(1)
     })
 
-    test('should call deleteById if no Did on record', async () => {
+    test('should call deleteById if no Did on record when deleteConnectionRecord is true', async () => {
       // Doesn't like object destructuring to blank Did value
       const noDid = getTestConnectionNoDid()
       stub(bobAgent.connections, 'getById').resolves(noDid)
       stub(bobAgent.connections, 'hangup')
       const deleteCallStub = stub(bobAgent.connections, 'deleteById')
 
-      await request(app).delete(`/v1/connections/${connection.id}`)
+      await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=true`)
       expect(deleteCallStub.callCount).to.equal(1)
+    })
+
+    test('should 400 if already disconnected and deleteConnectionRecord is false / not set', async () => {
+      // Doesn't like object destructuring to blank Did value
+      const noDid = getTestConnectionNoDid()
+      stub(bobAgent.connections, 'getById').resolves(noDid)
+      stub(bobAgent.connections, 'hangup')
+
+      await request(app).delete(`/v1/connections/${connection.id}`).expect(400)
     })
 
     test('should 404 if no connection record exists', async () => {
