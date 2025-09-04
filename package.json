@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.13.38",
+  "version": "0.14.0",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -38,11 +38,11 @@
     "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
   },
   "dependencies": {
-    "@credo-ts/anoncreds": "^0.5.15",
-    "@credo-ts/askar": "^0.5.15",
-    "@credo-ts/core": "^0.5.15",
-    "@credo-ts/drpc": "^0.5.15",
-    "@credo-ts/node": "^0.5.15",
+    "@credo-ts/anoncreds": "^0.5.17",
+    "@credo-ts/askar": "^0.5.17",
+    "@credo-ts/core": "^0.5.17",
+    "@credo-ts/drpc": "^0.5.17",
+    "@credo-ts/node": "^0.5.17",
     "@hyperledger/anoncreds-nodejs": "^0.2.4",
     "@hyperledger/aries-askar-nodejs": "^0.2.3",
     "@tsoa/runtime": "^6.6.0",

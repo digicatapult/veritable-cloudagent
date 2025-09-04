@@ -1,5 +1,6 @@
 import type { IncomingHttpHeaders } from 'http'
 
+import { ConnectionRecord } from '@credo-ts/core'
 import express, { json } from 'express'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -26,6 +27,7 @@ export interface WebhookData {
   body: {
     id: string
     state: string
+    connectionRecord: ConnectionRecord
     [key: string]: unknown
   }
   topic: string

@@ -56,10 +56,32 @@ describe('WebhookTests', () => {
     const webhook = await waitForHook(
       webhooks,
       (webhook) =>
-        webhook.topic === 'connections' && webhook.body.id === connection.id && webhook.body.state === connection.state
+        webhook.topic === 'connections' &&
+        webhook.body.connectionRecord!.id === connection.id &&
+        webhook.body.connectionRecord!.state === connection.state
+    )
+    expect(connection.toJSON()).to.deep.include(webhook?.body.connectionRecord)
+  })
+
+  test('should return a webhook event when disconnected by hangup', async () => {
+    const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
+    const { connectionRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
+    const connection = await bobAgent.connections.returnWhenIsConnected(connectionRecord!.id)
+    // Workaround to get Alice's connection record from the ThreadId in Bob's connection record
+    const { id: connectionId } = await aliceAgent.connections.getByThreadId(connection.threadId!)
+    // Alice hangs up on Bob
+    await aliceAgent.connections.hangup({ connectionId })
+
+    const webhook = await waitForHook(
+      webhooks,
+      (webhook) =>
+        webhook.topic === 'connections' &&
+        webhook.body.connectionRecord!.id === connection.id &&
+        webhook.body.connectionRecord!.state === 'completed' &&
+        !webhook.body.connectionRecord!.theirDid
     )
 
-    expect(JSON.parse(JSON.stringify(connection.toJSON()))).to.deep.include(webhook?.body as Record<string, unknown>)
+    expect(webhook?.body.connectionRecord!.previousTheirDids[0]).to.equal(connection.theirDid)
   })
 
   test('should return a webhook event when credential state changed', async () => {
