@@ -117,6 +117,10 @@ const envConfig = {
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
   }),
+  DID_WEB_ENABLED: envalid.bool({ default: false, devDefault: true }),
+  DID_WEB_PORT: envalid.num({ default: 8443, devDefault: 8443 }),
+  DID_WEB_HOST: envalid.str({ default: 'localhost', devDefault: 'localhost' }),
+  DID_WEB_DID_ID: envalid.str({ default: '', devDefault: 'did:web:localhost:8443' }),
 }
 
 export type ENV_CONFIG = typeof envConfig

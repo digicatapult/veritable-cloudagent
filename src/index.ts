@@ -9,6 +9,7 @@ import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
+import { DidWebServer } from './didweb/index.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
 import PinoLogger from './utils/logger.js'
@@ -109,3 +110,31 @@ server.on('upgrade', (request, socket, head) => {
     return
   })
 })
+
+// Start the did:web server if enabled
+const didWebServer = new DidWebServer(agent, logger)
+try {
+  await didWebServer.start()
+} catch (error) {
+  logger.error(`Failed to start did:web server: ${error}`)
+  process.exit(1)
+}
+
+// Graceful shutdown handling
+const shutdown = async (signal: string) => {
+  logger.info(`Received ${signal}, shutting down gracefully`)
+  
+  try {
+    await didWebServer.stop()
+    server.close(() => {
+      logger.info('Main server closed')
+      process.exit(0)
+    })
+  } catch (error) {
+    logger.error(`Error during shutdown: ${error}`)
+    process.exit(1)
+  }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'))
+process.on('SIGINT', () => shutdown('SIGINT'))
