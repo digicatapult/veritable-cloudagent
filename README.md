@@ -159,6 +159,10 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS    | N        | 5000                                                                                                                                                                                                   | Timeout in ms for DRCP requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS | Y        | `{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` | Options for proof request                                                                                                          |
+| DID_WEB_ENABLED                             | N        | false                                                                                                                                                                                                  | Enables the did:web server for serving DID documents                                                                              |
+| DID_WEB_PORT                                | N        | 8443                                                                                                                                                                                                   | Port for the did:web HTTPS server                                                                                                 |
+| DID_WEB_HOST                                | N        | "localhost"                                                                                                                                                                                            | Host for the did:web server                                                                                                       |
+| DID_WEB_DID_ID                              | N        | ""                                                                                                                                                                                                     | The DID identifier to create and serve (e.g., "did:web:localhost:8443")                                                          |
 
 ## Testing
 
@@ -521,6 +525,67 @@ Example key-pair will look like this:
     ```
 
 4.  you can view your DID in your browser like so: https://your_username.github.io/dids/1/did.json
+
+#### Local did:web Server
+
+The Veritable CloudAgent includes a built-in did:web server that can serve DID documents locally over HTTPS. This eliminates the need to publish DID documents to external services like GitHub Pages during development and testing.
+
+To enable the local did:web server, set the following environment variables:
+
+```bash
+DID_WEB_ENABLED=true
+DID_WEB_PORT=8443  # Optional, defaults to 8443
+DID_WEB_HOST=localhost  # Optional, defaults to localhost
+DID_WEB_DID_ID=did:web:localhost%3A8443  # The DID identifier to create and serve
+```
+
+When enabled, the server will:
+
+1. **Automatically generate keys and create a DID document** at startup if one doesn't exist
+2. **Serve the DID document over HTTPS** at `https://localhost:8443/.well-known/did.json`
+3. **Support path-based DID resolution** for DIDs like `did:web:localhost%3A8443:path:to:did` served at `https://localhost:8443/path/to/did/did.json`
+4. **Use self-signed certificates** for local development (browsers will show security warnings which can be safely ignored for testing)
+
+Example DID document served by the local server:
+
+```json
+{
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    "https://w3id.org/security/suites/jws-2020/v1"
+  ],
+  "id": "did:web:localhost%3A8443",
+  "verificationMethod": [
+    {
+      "id": "did:web:localhost%3A8443#owner",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:localhost%3A8443",
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "generated-public-key"
+      }
+    }
+  ],
+  "authentication": ["did:web:localhost%3A8443#owner"],
+  "assertionMethod": ["did:web:localhost%3A8443#owner"],
+  "service": [
+    {
+      "id": "did:web:localhost%3A8443#did-communication",
+      "type": "did-communication",
+      "priority": 0,
+      "recipientKeys": ["did:web:localhost%3A8443#owner"],
+      "routingKeys": [],
+      "serviceEndpoint": "http://localhost:5002"
+    }
+  ]
+}
+```
+
+The server also provides:
+- **Health check endpoint**: `https://localhost:8443/health`
+- **Proper CORS headers** for cross-origin requests
+- **Automatic HTTPS certificate generation** using @expo/devcert
 
 #### Implicit Invitation
 
