@@ -4,10 +4,10 @@ import type PinoLogger from '../utils/logger.js'
 import { certificateFor } from '@expo/devcert'
 import express from 'express'
 import https from 'https'
-import path from 'path'
 import { container } from 'tsyringe'
 
 import { Env } from '../env.js'
+import { RegisterRoutes } from './routes/routes.js'
 import { DidWebService } from './service.js'
 
 export interface DidWebServerConfig {
@@ -54,16 +54,13 @@ export class DidWebServer {
       next()
     })
 
-    // Handle did:web resolution paths
-    // Path format: /.well-known/did.json or /path/to/did/did.json
-    this.app.get('/.well-known/did.json', this.handleDidRequest.bind(this))
-    this.app.get(/.*\/did\.json$/, this.handleDidRequest.bind(this))
-    
-    // Health check endpoint
-    this.app.get('/health', (req, res) => {
-      res.json({ status: 'ok', service: 'did:web-server' })
-    })
+    // Register tsoa-generated routes (handles /.well-known/did.json and /health)
+    RegisterRoutes(this.app)
 
+    // Handle path-based DID resolution that tsoa doesn't support
+    // This middleware runs after tsoa routes and handles patterns like /path/to/did/did.json
+    this.app.get(/.*\/did\.json$/, this.handlePathBasedDidRequest.bind(this))
+    
     // Fallback for other requests
     this.app.use((req, res) => {
       this.logger.warn(`DID document not found for path: ${req.path}`)
@@ -71,10 +68,15 @@ export class DidWebServer {
     })
   }
 
-  private async handleDidRequest(req: express.Request, res: express.Response): Promise<void> {
+  private async handlePathBasedDidRequest(req: express.Request, res: express.Response): Promise<void> {
     try {
+      // Skip if this is the .well-known path (already handled by tsoa)
+      if (req.path === '/.well-known/did.json') {
+        return
+      }
+
       const requestedPath = req.path
-      this.logger.info(`DID document requested for path: ${requestedPath}`)
+      this.logger.info(`Path-based DID document requested for path: ${requestedPath}`)
 
       // Construct the did:web identifier from the request
       const didId = this.constructDidFromPath(req)
@@ -90,7 +92,7 @@ export class DidWebServer {
       this.logger.info(`Serving DID document for: ${didId}`)
       res.json(didDocument)
     } catch (error) {
-      this.logger.error(`Error serving DID document: ${error}`)
+      this.logger.error(`Error serving path-based DID document: ${error}`)
       res.status(500).json({ error: 'Internal server error' })
     }
   }
