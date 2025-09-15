@@ -1,8 +1,12 @@
 import type { RestAgent } from '../agent.js'
 import type PinoLogger from '../utils/logger.js'
-import type { DidDocument } from '@credo-ts/core'
 
 import { KeyType, TypedArrayEncoder } from '@credo-ts/core'
+import { container } from 'tsyringe'
+
+import { Env } from '../env.js'
+import { DatabaseConfig, DidWebDatabase } from './database.js'
+import { MockDidWebDatabase } from './mock-database.js'
 
 export interface StoredDidDocument {
   did: string
@@ -14,11 +18,36 @@ export interface StoredDidDocument {
 export class DidWebService {
   private agent: RestAgent
   private logger: PinoLogger
-  private didDocuments: Map<string, Record<string, unknown>> = new Map()
+  private database: DidWebDatabase | MockDidWebDatabase
 
-  constructor(agent: RestAgent, logger: PinoLogger) {
+  constructor(agent: RestAgent, logger: PinoLogger, databaseConfig?: DatabaseConfig, useMockDatabase?: boolean) {
     this.agent = agent
     this.logger = logger.child({ component: 'did-web-service' })
+    
+    if (useMockDatabase) {
+      this.database = new MockDidWebDatabase(this.logger)
+    } else {
+      // If no database config provided, get it from environment
+      if (!databaseConfig) {
+        const env = container.resolve(Env)
+        databaseConfig = {
+          host: env.get('POSTGRES_HOST'),
+          port: parseInt(env.get('POSTGRES_PORT'), 10),
+          username: env.get('POSTGRES_USERNAME'),
+          password: env.get('POSTGRES_PASSWORD'),
+          database: 'postgres-veritable-cloudagent',
+        }
+      }
+      
+      this.database = new DidWebDatabase(databaseConfig, this.logger)
+    }
+  }
+
+  /**
+   * Initialize the database
+   */
+  async init(): Promise<void> {
+    await this.database.init()
   }
 
   /**
@@ -51,11 +80,10 @@ export class DidWebService {
    */
   async getDidDocument(didId: string): Promise<Record<string, unknown> | null> {
     try {
-      // For now, use in-memory storage. In production, this would query the database
-      const doc = this.didDocuments.get(didId)
-      if (doc) {
-        this.logger.debug(`Retrieved DID document from memory for: ${didId}`)
-        return doc
+      const record = await this.database.getDidDocument(didId)
+      if (record) {
+        this.logger.debug(`Retrieved DID document from database for: ${didId}`)
+        return record.didDocument
       }
 
       this.logger.debug(`DID document not found for: ${didId}`)
@@ -71,8 +99,7 @@ export class DidWebService {
    */
   async storeDidDocument(didId: string, didDocument: Record<string, unknown>): Promise<void> {
     try {
-      // For now, use in-memory storage. In production, this would store in the database
-      this.didDocuments.set(didId, didDocument)
+      await this.database.storeDidDocument(didId, didDocument)
       this.logger.info(`Stored DID document for: ${didId}`)
     } catch (error) {
       this.logger.error(`Error storing DID document: ${error}`)
@@ -105,7 +132,7 @@ export class DidWebService {
 
       // Get the public key in JWK format
       let publicKeyJwk: any
-      if ('publicKeyBase58' in verificationMethod) {
+      if ('publicKeyBase58' in verificationMethod && verificationMethod.publicKeyBase58) {
         // Convert base58 to base64url for JWK format
         const publicKeyBytes = TypedArrayEncoder.fromBase58(verificationMethod.publicKeyBase58)
         const publicKeyBase64 = TypedArrayEncoder.toBase64URL(publicKeyBytes)
@@ -163,7 +190,7 @@ export class DidWebService {
    * Lists all stored DID documents
    */
   async listDidDocuments(): Promise<string[]> {
-    return Array.from(this.didDocuments.keys())
+    return await this.database.listDidDocuments()
   }
 
   /**
@@ -171,17 +198,23 @@ export class DidWebService {
    */
   async deleteDidDocument(didId: string): Promise<boolean> {
     try {
-      const existed = this.didDocuments.has(didId)
-      this.didDocuments.delete(didId)
+      const deleted = await this.database.deleteDidDocument(didId)
       
-      if (existed) {
+      if (deleted) {
         this.logger.info(`Deleted DID document for: ${didId}`)
       }
       
-      return existed
+      return deleted
     } catch (error) {
       this.logger.error(`Error deleting DID document: ${error}`)
       throw error
     }
+  }
+
+  /**
+   * Close database connections
+   */
+  async close(): Promise<void> {
+    await this.database.close()
   }
 }

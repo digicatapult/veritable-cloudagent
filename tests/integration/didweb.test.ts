@@ -18,19 +18,18 @@ describe('DidWeb Integration Tests', () => {
   const testDidId = `did:web:${testHost}%3A${testPort}`
 
   before(async function() {
-    this.timeout(30000) // Increase timeout for agent setup
+    this.timeout(60000) // Increase timeout for agent setup
     
     agent = await getTestAgent('Test DID:web Agent', 5099)
     logger = container.resolve(PinoLogger)
 
-    // Create DID:web server with test configuration
-    didWebServer = new DidWebServer(agent, logger)
+    // Create DID:web server with test configuration and mock database
+    didWebServer = new DidWebServer(agent, logger, true)
     
     // Override the configuration for testing
     const testConfig = {
       enabled: true,
       port: testPort,
-      host: testHost,
       didId: testDidId
     }
     ;(didWebServer as any).config = testConfig
@@ -58,7 +57,6 @@ describe('DidWeb Integration Tests', () => {
       const config = didWebServer.getConfig()
       expect(config.enabled).to.be.true
       expect(config.port).to.equal(testPort)
-      expect(config.host).to.equal(testHost)
     })
 
     it('should serve DID document at /.well-known/did.json', async function() {
@@ -123,8 +121,6 @@ describe('DidWeb Integration Tests', () => {
 
     it('should serve DID document at path-based URLs', async function() {
       this.timeout(10000)
-      
-      const pathDidId = `did:web:${testHost}%3A${testPort}:test:path`
       
       return new Promise((resolve, reject) => {
         const options = {

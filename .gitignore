@@ -3,6 +3,7 @@ config/local.json
 node_modules/
 build
 src/routes/routes.ts
+src/didweb/routes/
 dist
 coverage
 .tsimp
