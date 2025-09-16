@@ -8,6 +8,7 @@ const agents = ['https://alice:8443', 'https://bob:8443', 'https://charlie:8443'
 const httpsAgent = new Agent({
   connect: {
     ca: ca,
+    rejectUnauthorized: false,
   },
 })
 
