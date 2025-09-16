@@ -28,3 +28,4 @@ knexfile.js
 id_ed25519
 
 id_ed25519
+*.pem

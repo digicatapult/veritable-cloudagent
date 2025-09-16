@@ -4,7 +4,7 @@ import { makeValidator } from 'envalid'
 import { singleton } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
-  dotenv.config({ path: 'tests/test.env.ts' })
+  dotenv.config({ path: 'tests/test.env' })
 } else {
   dotenv.config()
 }
@@ -111,12 +111,17 @@ const envConfig = {
   POSTGRES_PORT: envalid.str({ default: '5432', devDefault: '5432' }),
   POSTGRES_USERNAME: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
   POSTGRES_PASSWORD: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
-  VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS: envalid.num({ default: 5000, devDefault: 5000 }),
+  VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS: envalid.num({ default: 5000, devDefault: 5000 }),
   VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS: envalid.num({ default: 5000, devDefault: 5000 }),
   VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS: envalid.json({
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
   }),
+  DID_WEB_ENABLED: envalid.bool({ default: false }),
+  DID_WEB_PORT: envalid.num({ devDefault: 8443 }),
+  DID_WEB_USE_HTTPS: envalid.bool({ default: false, devDefault: true }),
+  DID_WEB_HTTPS_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
+  DID_WEB_HTTPS_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
 }
 
 export type ENV_CONFIG = typeof envConfig

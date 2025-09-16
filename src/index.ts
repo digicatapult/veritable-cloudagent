@@ -9,6 +9,7 @@ import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
+import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
 import PinoLogger from './utils/logger.js'
@@ -60,7 +61,7 @@ const agent = await setupAgent({
   ipfsOrigin: env.get('IPFS_ORIGIN'),
 
   verifiedDrpcOptions: {
-    proofTimeoutMs: env.get('VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS'),
+    proofTimeoutMs: env.get('VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS'),
     requestTimeoutMs: env.get('VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS'),
     proofRequestOptions: env.get('VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS'),
   },
@@ -109,3 +110,6 @@ server.on('upgrade', (request, socket, head) => {
     return
   })
 })
+
+const didWebServer = new DidWebServer(logger)
+await didWebServer.start()

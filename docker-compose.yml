@@ -30,13 +30,22 @@ services:
       - '5002:5002' #5000 is used for AirPlay in MacOS
       - '5003:5003'
       - '3000:3000'
+      - '8443:8443'
     environment:
       - ENDPOINT='http://alice:5002, ws://alice:5003'
       - IPFS_ORIGIN=http://ipfs:5001
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
+      - DID_WEB_ENABLED=true
+      - DID_WEB_USE_HTTPS=true
+      - DID_WEB_PORT=8443
+      - DID_WEB_HTTPS_CERT_PATH=/localhost.pem
+      - DID_WEB_HTTPS_KEY_PATH=/localhost-key.pem
     networks:
       - testnet
+    volumes:
+      - ./localhost.pem:/localhost.pem
+      - ./localhost-key.pem:/localhost-key.pem
 
   ##################################################################################
   ## IPFS ##########################################################################

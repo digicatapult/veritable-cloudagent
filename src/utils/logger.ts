@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseLogger, LogLevel as CredoLogLevel } from '@credo-ts/core'
 import pino, { LevelWithSilent, Logger } from 'pino'
+import { pinoHttp } from 'pino-http'
+import { randomUUID } from 'crypto'
+import type { Request as ExRequest, Response as ExResponse } from 'express'
+import type { UUID } from '../controllers/types.js'
 
 const tsLogLevelMap = {
   silent: CredoLogLevel.off,
@@ -87,4 +91,29 @@ export default class PinoLogger extends BaseLogger {
   public fatal(message: string, data?: Record<string, any>): void {
     this.log(CredoLogLevel.fatal, message, data)
   }
+}
+
+export function createRequestLogger(logger: PinoLogger) {
+  return pinoHttp({
+    logger: logger.logger,
+    serializers: {
+      req: ({ id, headers, ...req }: { id: UUID; headers: Record<string, string> }) => ({
+        ...req,
+        headers: {},
+      }),
+      res: (res) => {
+        delete res.headers
+        return res
+      },
+    },
+    genReqId: function (req: ExRequest, res: ExResponse): string {
+      const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
+      res.setHeader('x-request-id', id)
+      return id
+    },
+    quietReqLogger: true,
+    customAttributeKeys: {
+      reqId: 'req_id',
+    },
+  })
 }

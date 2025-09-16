@@ -158,6 +158,15 @@ jobs:
 
       - uses: actions/checkout@v5
 
+      - name: Install mkcert
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools mkcert
+      - name: Generate HTTPS certificates
+        run: |
+          mkcert -install
+          mkcert localhost
+
       - name: Build testnet and integration images
         uses: docker/bake-action@v6
         with:

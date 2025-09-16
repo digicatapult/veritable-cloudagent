@@ -3,7 +3,6 @@ import cors from 'cors'
 import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
-import { pinoHttp as requestLogger } from 'pino-http'
 import 'reflect-metadata'
 import { serve, setup } from 'swagger-ui-express'
 import { container } from 'tsyringe'
@@ -11,9 +10,7 @@ import { fileURLToPath } from 'url'
 
 import type { ServerConfig } from './utils/ServerConfig.js'
 
-import { randomUUID } from 'crypto'
 import { RestAgent } from './agent.js'
-import type { UUID } from './controllers/types.js'
 import { errorHandler } from './error.js'
 import { basicMessageEvents } from './events/BasicMessageEvents.js'
 import { connectionEvents } from './events/ConnectionEvents.js'
@@ -23,7 +20,7 @@ import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
 import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
 import { RegisterRoutes } from './routes/routes.js'
-import PinoLogger from './utils/logger.js'
+import PinoLogger, { createRequestLogger } from './utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -48,31 +45,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
 
   const app = express()
 
-  app.use(
-    requestLogger({
-      logger: logger.logger,
-      serializers: {
-        // removing cookie from being logged since it contains refresh and access token
-        req: ({ id, headers, ...req }: { id: UUID; headers: Record<string, string> }) => ({
-          ...req,
-          headers: {},
-        }),
-        res: (res) => {
-          delete res.headers
-          return res
-        },
-      },
-      genReqId: function (req: ExRequest, res: ExResponse): string {
-        const id: string = (req.headers['x-request-id'] as string) || (req.id as string) || randomUUID()
-        res.setHeader('x-request-id', id)
-        return id
-      },
-      quietReqLogger: true,
-      customAttributeKeys: {
-        reqId: 'req_id',
-      },
-    })
-  )
+  app.use(createRequestLogger(logger))
 
   if (config.cors) app.use(cors())
 

@@ -60,6 +60,22 @@ Bellow you will find commands for starting up the containers in docker (see the 
 
 ## Development mode
 
+### `did:web` server
+
+This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Since `did:web` always [resolves to HTTPS](https://w3c-ccg.github.io/did-method-web/#read-resolve/), the server runs as HTTPS in dev mode. A local trusted certificate and key must be generated before it can be accessed in your browser.
+
+- Install [mkcert](https://github.com/FiloSottile/mkcert#installation).
+- Run the following commands at root:
+
+```
+mkcert -install
+mkcert localhost
+```
+
+This will create `localhost.pem` and `localhost-key.pem` at root. The `DID_WEB_HTTPS_CERT_PATH` and `DID_WEB_HTTPS_KEY_PATH` envs default to reading from these files.
+
+In production, the server runs HTTP only (`DID_WEB_USE_HTTPS=false`) and HTTPS is handled by ingress.
+
 #### Single Agent + IPFS Node
 
 The following command will spin up the infrastructure (`IPFS` node, `Postgres` database, `testnet` network) for local testing and development purposes:
@@ -119,7 +135,7 @@ The following lifecycle commands can be run using `npm`
 | `tsoa:watch`       | Build tsoa artefacts `routes.ts` and `swagger.json` and watches for changes. Rebuilds on changes                                                                      |
 | `dev`              | Runs `tsoa:watch` and a development server concurrently in watch mode. Can be used for live debugging. Configure with [environment variables](#environment-variables) |
 | `start`            | Start production server from build                                                                                                                                    |
-| `test:unit`             | Run unit tests. Configure with [environment variables](#environment-variables)                                                                                        |
+| `test:unit`        | Run unit tests. Configure with [environment variables](#environment-variables)                                                                                        |
 | `test:integration` | Run integration tests                                                                                                                                                 |
 | `test-watch`       | Run unit tests and re-run on changes                                                                                                                                  |
 
@@ -156,9 +172,14 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | POSTGRES_PORT                               | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a port for the database needs to be provided                                               |
 | POSTGRES_USERNAME                           | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a username for the database needs to be provided                                           |
 | POSTGRES_PASSWORD                           | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a password for the database needs to be provided                                           |
-| VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
+| VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS    | N        | 5000                                                                                                                                                                                                   | Timeout in ms for DRCP requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS | Y        | `{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` | Options for proof request                                                                                                          |
+| DID_WEB_ENABLED                             | N        | false                                                                                                                                                                                                  | Enables the did:web server.                                                                                                        |
+| DID_WEB_PORT                                | N        | 8443                                                                                                                                                                                                   | Port for the did:web server.                                                                                                       |
+| DID_WEB_USE_HTTPS                           | N        | true                                                                                                                                                                                                   | Enables HTTPS for did:web server in dev. Set to false in production.                                                               |
+| DID_WEB_HTTPS_CERT_PATH                     | N        | ./localhost.pem                                                                                                                                                                                        | Path to HTTPS certificate for did:web server.                                                                                      |
+| DID_WEB_HTTPS_KEY_PATH                      | N        | ./localhost-key.pem                                                                                                                                                                                    | Path to HTTPS key for did:web server.                                                                                              |
 
 ## Testing
 
