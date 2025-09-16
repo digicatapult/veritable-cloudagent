@@ -37,10 +37,10 @@ services:
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
       - DID_WEB_ENABLED=true
-      - DID_WEB_USE_HTTPS=true
+      - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_HTTPS_CERT_PATH=/localhost.pem
-      - DID_WEB_HTTPS_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     networks:
       - testnet
     volumes:

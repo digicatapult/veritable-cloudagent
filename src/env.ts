@@ -119,9 +119,9 @@ const envConfig = {
   }),
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
-  DID_WEB_USE_HTTPS: envalid.bool({ default: false, devDefault: true }),
-  DID_WEB_HTTPS_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
-  DID_WEB_HTTPS_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
+  DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
+  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
+  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
 }
 
 export type ENV_CONFIG = typeof envConfig

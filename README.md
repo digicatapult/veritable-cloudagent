@@ -72,9 +72,9 @@ mkcert -install
 mkcert localhost
 ```
 
-This will create `localhost.pem` and `localhost-key.pem` at root. The `DID_WEB_HTTPS_CERT_PATH` and `DID_WEB_HTTPS_KEY_PATH` envs default to reading from these files.
+This will create `localhost.pem` and `localhost-key.pem` at root. The `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs default to reading from these files.
 
-In production, the server runs HTTP only (`DID_WEB_USE_HTTPS=false`) and HTTPS is handled by ingress.
+In production, the server runs HTTP only (`DID_WEB_USE_DEV_CERT=false`) and HTTPS is handled by ingress.
 
 #### Single Agent + IPFS Node
 
@@ -177,9 +177,9 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS | Y        | `{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` | Options for proof request                                                                                                          |
 | DID_WEB_ENABLED                             | N        | false                                                                                                                                                                                                  | Enables the did:web server.                                                                                                        |
 | DID_WEB_PORT                                | N        | 8443                                                                                                                                                                                                   | Port for the did:web server.                                                                                                       |
-| DID_WEB_USE_HTTPS                           | N        | false                                                                                                                                                                                                  | Enables HTTPS for did:web server in dev. Set to false in production.                                                               |
-| DID_WEB_HTTPS_CERT_PATH                     | N        | ``                                                                                                                                                                                                     | Path to HTTPS certificate for did:web server.                                                                                      |
-| DID_WEB_HTTPS_KEY_PATH                      | N        | ``                                                                                                                                                                                                     | Path to HTTPS key for did:web server.                                                                                              |
+| DID_WEB_USE_DEV_CERT                        | N        | false                                                                                                                                                                                                  | Use dev certificates for did:web server HTTPS. Set to false in production.                                                         |
+| DID_WEB_DEV_CERT_PATH                       | N        | ``                                                                                                                                                                                                     | Path to dev-only HTTPS certificate for did:web server.                                                                             |
+| DID_WEB_DEV_KEY_PATH                        | N        | ``                                                                                                                                                                                                     | Path to dev-only HTTPS key for did:web server.                                                                                     |
 
 ## Testing
 

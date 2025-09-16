@@ -41,10 +41,10 @@ services:
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
       - DID_WEB_ENABLED=true
-      - DID_WEB_USE_HTTPS=true
+      - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_HTTPS_CERT_PATH=/localhost.pem
-      - DID_WEB_HTTPS_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
@@ -82,10 +82,10 @@ services:
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
       - DID_WEB_ENABLED=true
-      - DID_WEB_USE_HTTPS=true
+      - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_HTTPS_CERT_PATH=/localhost.pem
-      - DID_WEB_HTTPS_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     ports:
       #- '5102:5002'
       #- '5103:5003'
@@ -123,10 +123,10 @@ services:
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
       - DID_WEB_ENABLED=true
-      - DID_WEB_USE_HTTPS=true
+      - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_HTTPS_CERT_PATH=/localhost.pem
-      - DID_WEB_HTTPS_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     ports:
       #- '5202:5002'
       #- '5203:5003'

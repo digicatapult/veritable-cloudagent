@@ -10,7 +10,7 @@ import { errorHandler } from './error.js'
 export interface DidWebServerConfig {
   enabled: boolean
   port: number
-  useHttps: boolean
+  useDevCert: boolean
   certPath: string
   keyPath: string
 }
@@ -47,7 +47,7 @@ export class DidWebServer {
       this.logger.info('DID:web server disabled')
       return
     }
-    if (!this.config.useHttps) {
+    if (!this.config.useDevCert) {
       this.app.listen(this.config.port, () => {
         this.logger.info(`DID:web server started on http port ${this.config.port}`)
       })

@@ -114,9 +114,9 @@ server.on('upgrade', (request, socket, head) => {
 const didWebServer = new DidWebServer(logger.logger, {
   enabled: env.get('DID_WEB_ENABLED'),
   port: env.get('DID_WEB_PORT'),
-  useHttps: env.get('DID_WEB_USE_HTTPS'),
-  certPath: env.get('DID_WEB_HTTPS_CERT_PATH'),
-  keyPath: env.get('DID_WEB_HTTPS_KEY_PATH'),
+  useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
+  certPath: env.get('DID_WEB_DEV_CERT_PATH'),
+  keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
 })
 
 await didWebServer.start()

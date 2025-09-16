@@ -32,7 +32,7 @@ services:
       - CHARLIE_DID
       - CHARLIE_PRIV_KEY
       - LOG_LEVEL=debug
-      - DID_WEB_HTTPS_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
     command: ['npm', 'run', 'test:integration']
     networks:
       - testnet
