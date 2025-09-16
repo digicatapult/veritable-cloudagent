@@ -118,7 +118,7 @@ const envConfig = {
     devDefault: JSON.parse(proofRequestOptions),
   }),
   DID_WEB_ENABLED: envalid.bool({ default: false }),
-  DID_WEB_PORT: envalid.num({ devDefault: 8443 }),
+  DID_WEB_PORT: envalid.num({ default: 8443 }),
   DID_WEB_USE_HTTPS: envalid.bool({ default: false, devDefault: true }),
   DID_WEB_HTTPS_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
   DID_WEB_HTTPS_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
