@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { BaseLogger, LogLevel as CredoLogLevel } from '@credo-ts/core'
-import pino, { LevelWithSilent, Logger } from 'pino'
-import { pinoHttp } from 'pino-http'
 import { randomUUID } from 'crypto'
 import type { Request as ExRequest, Response as ExResponse } from 'express'
+import pino, { LevelWithSilent, Logger } from 'pino'
+import { pinoHttp } from 'pino-http'
 import type { UUID } from '../controllers/types.js'
 
 const tsLogLevelMap = {

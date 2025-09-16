@@ -1,14 +1,12 @@
-import type PinoLogger from '../utils/logger.js'
-
 import cors from 'cors'
 import express from 'express'
 import fs from 'fs'
 import https from 'https'
+import PinoLogger, { createRequestLogger } from '../utils/logger.js'
 
 import { container } from 'tsyringe'
 import { Env } from '../env.js'
 import { errorHandler } from '../error.js'
-import { createRequestLogger } from '../utils/logger.js'
 
 export interface DidWebServerConfig {
   enabled: boolean
@@ -69,7 +67,7 @@ export class DidWebServer {
         cert: fs.readFileSync(this.config.certPath),
         key: fs.readFileSync(this.config.keyPath),
       }
-    } catch (err) {
+    } catch {
       throw new Error('Failed to read certificate or key file. Have you generated them?')
     }
 
