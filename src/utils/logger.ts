@@ -93,9 +93,9 @@ export default class PinoLogger extends BaseLogger {
   }
 }
 
-export function createRequestLogger(logger: PinoLogger) {
+export function createRequestLogger(logger: Logger) {
   return pinoHttp({
-    logger: logger.logger,
+    logger,
     serializers: {
       req: ({ id, headers, ...req }: { id: UUID; headers: Record<string, string> }) => ({
         ...req,

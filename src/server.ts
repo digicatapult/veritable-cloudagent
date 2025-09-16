@@ -45,7 +45,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
 
   const app = express()
 
-  app.use(createRequestLogger(logger))
+  app.use(createRequestLogger(logger.logger))
 
   if (config.cors) app.use(cors())
 
