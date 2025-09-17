@@ -2,13 +2,12 @@ import { expect } from 'chai'
 import fs from 'fs'
 import { Agent, fetch } from 'undici'
 
-const ca = fs.readFileSync(process.env.DID_WEB_DEV_CERT_PATH || '/localhost.pem')
+const ca = fs.readFileSync('/rootCA.pem')
 
 const agents = ['https://alice:8443', 'https://bob:8443', 'https://charlie:8443']
 const httpsAgent = new Agent({
   connect: {
     ca: ca,
-    rejectUnauthorized: false,
   },
 })
 

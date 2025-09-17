@@ -165,7 +165,12 @@ jobs:
       - name: Generate HTTPS certificates
         run: |
           mkcert -install
-          mkcert localhost
+          mkcert alice
+          mkcert bob
+          mkcert charlie
+          
+      - name: Set root CA path
+        run: echo "DID_WEB_ROOT_CERT_PATH=$(mkcert -CAROOT)/rootCA.pem" >> $GITHUB_ENV
 
       - name: Build testnet and integration images
         uses: docker/bake-action@v6

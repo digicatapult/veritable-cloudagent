@@ -70,6 +70,9 @@ This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Sinc
 ```
 mkcert -install
 mkcert localhost
+mkcert alice
+mkcert bob
+mkcert charlie
 ```
 
 This will create `localhost.pem` and `localhost-key.pem` at root. The `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs default to reading from these files.
@@ -191,7 +194,16 @@ Unit tests can be run with `npm run test:unit`.
 
 #### Integration
 
-Integration tests, however, require the testnet orchestration to be deployed.
+Integration tests require certificates for each persona:
+
+```
+mkcert -install
+mkcert alice
+mkcert bob
+mkcert charlie
+```
+
+Then the testnet orchestration can be deployed.
 
 **If the testnet is already running locally:** (through the command `docker compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
 

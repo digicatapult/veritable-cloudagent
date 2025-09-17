@@ -54,6 +54,8 @@ services:
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
+      - ./alice.pem:/alice.pem
+      - ./alice-key.pem:/alice-key.pem
 
   ##################################################################################
   ## Bob ###########################################################################
@@ -95,6 +97,8 @@ services:
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
+      - ./bob.pem:/bob.pem
+      - ./bob-key.pem:/bob-key.pem
 
   ##################################################################################
   ## Charlie #######################################################################
@@ -136,6 +140,8 @@ services:
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
+      - ./charlie.pem:/charlie.pem
+      - ./charlie-key.pem:/charlie-key.pem
 
   ##################################################################################
   ## Cluster PEER 0 ################################################################
