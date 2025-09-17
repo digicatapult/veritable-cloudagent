@@ -70,9 +70,6 @@ This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Sinc
 ```
 mkcert -install
 mkcert localhost
-mkcert alice
-mkcert bob
-mkcert charlie
 ```
 
 This will create `localhost.pem` and `localhost-key.pem` at root. The `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs default to reading from these files.
@@ -194,10 +191,11 @@ Unit tests can be run with `npm run test:unit`.
 
 #### Integration
 
-Integration tests require certificates for each persona:
+Integration tests require certificates for each persona + setting an env for the path to the root CA:
 
 ```
 mkcert -install
+export DID_WEB_ROOT_CERT_PATH="$(mkcert -CAROOT)/rootCA.pem"
 mkcert alice
 mkcert bob
 mkcert charlie
