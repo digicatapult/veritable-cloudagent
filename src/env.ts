@@ -108,7 +108,7 @@ const envConfig = {
   PERSONA_COLOR: envalid.str({ default: 'white' }),
   STORAGE_TYPE: envalid.str({ default: 'postgres', choices: ['sqlite', 'postgres'] }),
   POSTGRES_HOST: envalid.str({ default: 'postgres', devDefault: 'localhost' }),
-  POSTGRES_PORT: envalid.str({ default: '5432', devDefault: '5432' }),
+  POSTGRES_PORT: envalid.port({ default: 5432, devDefault: 5432 }),
   POSTGRES_USERNAME: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
   POSTGRES_PASSWORD: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
   VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS: envalid.num({ default: 5000, devDefault: 5000 }),
@@ -122,6 +122,7 @@ const envConfig = {
   DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
   DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
   DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
+  DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
 }
 
 export type ENV_CONFIG = typeof envConfig

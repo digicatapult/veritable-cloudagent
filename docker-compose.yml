@@ -41,6 +41,7 @@ services:
       - DID_WEB_PORT=8443
       - DID_WEB_DEV_CERT_PATH=/localhost.pem
       - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DB_NAME=did-web-server
     networks:
       - testnet
     volumes:
@@ -78,7 +79,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres-veritable-cloudagent
+      - POSTGRES_DB=did-web-server
     networks:
       - testnet
 volumes:

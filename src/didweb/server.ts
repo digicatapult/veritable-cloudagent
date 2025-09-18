@@ -5,6 +5,7 @@ import type { Server } from 'http'
 import https from 'https'
 import { Logger } from 'pino'
 import { createRequestLogger } from '../utils/logger.js'
+import Database, { DatabaseConnectionConfig } from './db.js'
 import { errorHandler } from './error.js'
 
 export interface DidWebServerConfig {
@@ -13,6 +14,7 @@ export interface DidWebServerConfig {
   useDevCert: boolean
   certPath: string
   keyPath: string
+  db: DatabaseConnectionConfig
 }
 
 export class DidWebServer {
@@ -20,11 +22,13 @@ export class DidWebServer {
   private server?: Server
   private logger: Logger
   private config: DidWebServerConfig
+  private database: Database
 
   constructor(logger: Logger, config: DidWebServerConfig) {
     this.logger = logger
     this.config = config
     this.app = express()
+    this.database = new Database(this.config.db)
     this.setupRoutes()
   }
 
@@ -36,7 +40,8 @@ export class DidWebServer {
   }
 
   private healthCheck = async (_req: express.Request, res: express.Response) => {
-    res.json({ status: 'ok' })
+    const test = await this.database.get('did_web')
+    res.json({ status: 'ok', test })
   }
 
   async start(): Promise<void> {

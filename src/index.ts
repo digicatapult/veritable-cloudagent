@@ -35,7 +35,7 @@ const agent = await setupAgent({
           : {
               type: 'postgres',
               config: {
-                host: `${env.get('POSTGRES_HOST') as string}:${env.get('POSTGRES_PORT') as string}`,
+                host: `${env.get('POSTGRES_HOST') as string}:${String(env.get('POSTGRES_PORT'))}`,
               },
               credentials: {
                 account: env.get('POSTGRES_USERNAME') as string,
@@ -117,6 +117,13 @@ const didWebServer = new DidWebServer(logger.logger, {
   useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
   certPath: env.get('DID_WEB_DEV_CERT_PATH'),
   keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
+  db: {
+    host: env.get('POSTGRES_HOST'),
+    database: env.get('DID_WEB_DB_NAME'),
+    user: env.get('POSTGRES_USERNAME'),
+    password: env.get('POSTGRES_PASSWORD'),
+    port: env.get('POSTGRES_PORT'),
+  },
 })
 
 await didWebServer.start()
