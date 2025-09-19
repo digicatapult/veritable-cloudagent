@@ -40,11 +40,22 @@ services:
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
+      - DID_WEB_ENABLED=true
+      - DID_WEB_USE_DEV_CERT=true
+      - DID_WEB_PORT=8443
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
       - '3000:3000'
+      - '8443:8443'
     networks: ['alice', 'testnet']
+    volumes:
+      - ./localhost.pem:/localhost.pem
+      - ./localhost-key.pem:/localhost-key.pem
+      - ./alice.pem:/alice.pem
+      - ./alice-key.pem:/alice-key.pem
 
   ##################################################################################
   ## Bob ###########################################################################
@@ -72,11 +83,22 @@ services:
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
+      - DID_WEB_ENABLED=true
+      - DID_WEB_USE_DEV_CERT=true
+      - DID_WEB_PORT=8443
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     ports:
       #- '5102:5002'
       #- '5103:5003'
       - '3001:3000'
+      - '8444:8443'
     networks: ['bob', 'testnet']
+    volumes:
+      - ./localhost.pem:/localhost.pem
+      - ./localhost-key.pem:/localhost-key.pem
+      - ./bob.pem:/bob.pem
+      - ./bob-key.pem:/bob-key.pem
 
   ##################################################################################
   ## Charlie #######################################################################
@@ -104,11 +126,22 @@ services:
       - POSTGRES_PORT=5432
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
+      - DID_WEB_ENABLED=true
+      - DID_WEB_USE_DEV_CERT=true
+      - DID_WEB_PORT=8443
+      - DID_WEB_DEV_CERT_PATH=/localhost.pem
+      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
     ports:
       #- '5202:5002'
       #- '5203:5003'
       - '3002:3000'
+      - '8445:8443'
     networks: ['charlie', 'testnet']
+    volumes:
+      - ./localhost.pem:/localhost.pem
+      - ./localhost-key.pem:/localhost-key.pem
+      - ./charlie.pem:/charlie.pem
+      - ./charlie-key.pem:/charlie-key.pem
 
   ##################################################################################
   ## Cluster PEER 0 ################################################################
@@ -211,7 +244,7 @@ services:
       - testnet
 
   ##################################################################################
-  ## Alice's Postgress #############################################################
+  ## Alice's Postgres ##############################################################
   ##################################################################################
   alice-postgres:
     container_name: alice-postgres
@@ -234,7 +267,7 @@ services:
       - testnet
 
   ##################################################################################
-  ## Bob's Postgress ###############################################################
+  ## Bob's Postgres ################################################################
   ##################################################################################
   bob-postgres:
     container_name: bob-postgres
@@ -257,7 +290,7 @@ services:
       - testnet
 
   ##################################################################################
-  ## Charlie's Postgress ###########################################################
+  ## Charlie's Postgres ############################################################
   ##################################################################################
   charlie-postgres:
     container_name: charlie-postgres
