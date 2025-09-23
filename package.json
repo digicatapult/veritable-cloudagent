@@ -38,6 +38,7 @@
     "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
   },
   "dependencies": {
+    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.3",
     "@credo-ts/anoncreds": "^0.5.17",
     "@credo-ts/askar": "^0.5.17",
     "@credo-ts/core": "^0.5.17",
@@ -101,6 +102,13 @@
     "node": ">= 20"
   },
   "overrides": {
+    "@2060.io/credo-ts-didcomm-media-sharing": {
+      "@credo-ts/anoncreds": "0.5.17",
+      "@credo-ts/askar": "0.5.17",
+      "@credo-ts/core": "0.5.17",
+      "@credo-ts/drpc": "0.5.17",
+      "@credo-ts/node": "0.5.17"
+    },
     "ref-napi": "npm:@2060.io/ref-napi"
   }
 }

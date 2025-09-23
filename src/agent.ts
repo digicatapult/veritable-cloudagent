@@ -24,6 +24,7 @@ import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@cr
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { container } from 'tsyringe'
 
+import { MediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
 import { AskarModule } from '@credo-ts/askar'
 import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
@@ -73,6 +74,7 @@ export interface RestAgentModules extends ModulesMap {
   anoncreds: AnonCredsModule
   drpc: DrpcModule
   verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  media: MediaSharingModule
 }
 
 export type RestAgent<
@@ -83,6 +85,7 @@ export type RestAgent<
     anoncreds: AnonCredsModule
     drpc: DrpcModule
     verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+    media: MediaSharingModule
   },
 > = Agent<modules>
 
@@ -96,7 +99,7 @@ const getAgentModules = (options: {
     [V2ProofProtocol<[AnonCredsProofFormatService]>]
   >
 }): RestAgentModules => {
-  return {
+  const modules: RestAgentModules = {
     connections: new ConnectionsModule({
       autoAcceptConnections: options.autoAcceptConnections,
     }),
@@ -152,7 +155,9 @@ const getAgentModules = (options: {
         return rest
       })()
     ),
+    media: new MediaSharingModule(),
   }
+  return modules
 }
 
 export async function setupAgent(restConfig: AriesRestConfig) {
