@@ -60,6 +60,22 @@ Bellow you will find commands for starting up the containers in docker (see the 
 
 ## Development mode
 
+### `did:web` server
+
+This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Since `did:web` always [resolves to HTTPS](https://w3c-ccg.github.io/did-method-web/#read-resolve/), the server runs as HTTPS in dev mode. A local trusted certificate and key must be generated before it can be accessed in your browser.
+
+- Install [mkcert](https://github.com/FiloSottile/mkcert#installation).
+- Run the following commands at root:
+
+```
+mkcert -install
+mkcert localhost
+```
+
+This will create `localhost.pem` and `localhost-key.pem` at root. The `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs default to reading from these files.
+
+In production, the server runs HTTP only (`DID_WEB_USE_DEV_CERT=false`) and HTTPS is handled by ingress.
+
 #### Single Agent + IPFS Node
 
 The following command will spin up the infrastructure (`IPFS` node, `Postgres` database, `testnet` network) for local testing and development purposes:
@@ -156,12 +172,18 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | POSTGRES_PORT                               | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a port for the database needs to be provided                                               |
 | POSTGRES_USERNAME                           | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a username for the database needs to be provided                                           |
 | POSTGRES_PASSWORD                           | N        | "postgres"                                                                                                                                                                                             | If type of storage is set to "postgres" a password for the database needs to be provided                                           |
-| VERIFIED_DRPC_OPTOPNS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
+| VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS    | N        | 5000                                                                                                                                                                                                   | Timeout in ms for DRCP requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS | Y        | `{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` | Options for proof request                                                                                                          |
 | ENABLE_DID_WEB_GENERATION                   | N        | false                                                                                                                                                                                                  | Enable automatic generation of DID:web document at startup                                                                         |
 | DID_WEB_ID                                  | N        | ""                                                                                                                                                                                                     | The DID:web identifier to generate (e.g., "did:web:example.com")                                                                   |
 | DID_WEB_SERVICE_ENDPOINT                    | N        | ""                                                                                                                                                                                                     | The service endpoint URL for the DID:web document                                                                                  |
+
+| DID_WEB_ENABLED | N | false | Enables the did:web server. |
+| DID_WEB_PORT | N | 8443 | Port for the did:web server. |
+| DID_WEB_USE_DEV_CERT | N | false | Use dev certificates for did:web server HTTPS. Set to false in production. |
+| DID_WEB_DEV_CERT_PATH | N | `                                                                                                                                                                                                    | Path to dev-only HTTPS certificate for did:web server.                                                                             |
+| DID_WEB_DEV_KEY_PATH                        | N        |` | Path to dev-only HTTPS key for did:web server. |
 
 ## DID:web Document Generation
 
@@ -196,7 +218,17 @@ Unit tests can be run with `npm run test:unit`.
 
 #### Integration
 
-Integration tests, however, require the testnet orchestration to be deployed.
+Integration tests require certificates for each persona + setting an env for the path to the root CA:
+
+```
+mkcert -install
+export DID_WEB_ROOT_CERT_PATH="$(mkcert -CAROOT)/rootCA.pem"
+mkcert alice
+mkcert bob
+mkcert charlie
+```
+
+Then the testnet orchestration can be deployed.
 
 **If the testnet is already running locally:** (through the command `docker compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
 

@@ -35,15 +35,23 @@ services:
     command: ['npm', 'run', 'test:integration']
     networks:
       - testnet
+    volumes:
+      - ${DID_WEB_ROOT_CERT_PATH}:/rootCA.pem
 
   alice:
     environment:
       - STORAGE_TYPE=sqlite
+      - DID_WEB_DEV_CERT_PATH=/alice.pem
+      - DID_WEB_DEV_KEY_PATH=/alice-key.pem
 
   bob:
     environment:
       - STORAGE_TYPE=sqlite
+      - DID_WEB_DEV_CERT_PATH=/bob.pem
+      - DID_WEB_DEV_KEY_PATH=/bob-key.pem
 
   charlie:
     environment:
       - STORAGE_TYPE=sqlite
+      - DID_WEB_DEV_CERT_PATH=/charlie.pem
+      - DID_WEB_DEV_KEY_PATH=/charlie-key.pem
