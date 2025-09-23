@@ -31,22 +31,31 @@ services:
       - '5003:5003'
       - '3000:3000'
       - '8443:8443'
+    command: >
+      sh -c "
+        npm i -g pino-pretty
+        node ./node_modules/.bin/knex migrate:latest
+        npm start | pino-pretty -c -S"
     environment:
       - ENDPOINT='http://alice:5002, ws://alice:5003'
       - IPFS_ORIGIN=http://ipfs:5001
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=postgres
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
       - DID_WEB_DEV_CERT_PATH=/localhost.pem
       - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
       - DID_WEB_DB_NAME=did-web-server
+      - DID_WEB_DOMAIN=localhost%3A8443
     networks:
       - testnet
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
+      - ./dids/alice:/dids
 
   ##################################################################################
   ## IPFS ##########################################################################

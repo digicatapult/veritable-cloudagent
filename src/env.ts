@@ -123,6 +123,8 @@ const envConfig = {
   DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
   DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
   DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
+  DID_WEB_DIR: envalid.str({ default: '/dids' }),
+  DID_WEB_DOMAIN: envalid.str({ default: '', devDefault: 'localhost%3A8443' }),
 }
 
 export type ENV_CONFIG = typeof envConfig

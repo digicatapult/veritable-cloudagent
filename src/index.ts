@@ -9,6 +9,7 @@ import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
+import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
@@ -111,19 +112,21 @@ server.on('upgrade', (request, socket, head) => {
   })
 })
 
-const didWebServer = new DidWebServer(logger.logger, {
+const database = new Database({
+  host: env.get('POSTGRES_HOST'),
+  database: env.get('DID_WEB_DB_NAME'),
+  user: env.get('POSTGRES_USERNAME'),
+  password: env.get('POSTGRES_PASSWORD'),
+  port: env.get('POSTGRES_PORT'),
+})
+const didWebServer = new DidWebServer(logger.logger.child({ component: 'did-web-server' }), database, {
   enabled: env.get('DID_WEB_ENABLED'),
   port: env.get('DID_WEB_PORT'),
   useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
   certPath: env.get('DID_WEB_DEV_CERT_PATH'),
   keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
-  db: {
-    host: env.get('POSTGRES_HOST'),
-    database: env.get('DID_WEB_DB_NAME'),
-    user: env.get('POSTGRES_USERNAME'),
-    password: env.get('POSTGRES_PASSWORD'),
-    port: env.get('POSTGRES_PORT'),
-  },
+  didWebDir: env.get('DID_WEB_DIR'),
+  didWebDomain: env.get('DID_WEB_DOMAIN'),
 })
 
 await didWebServer.start()

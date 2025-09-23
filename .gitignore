@@ -21,7 +21,6 @@ logs.txt
 npm-debug.log*
 *.log
 *.tsbuildinfo
-knexfile.js
 *.pid
 *.seed
 *.pid.lock
@@ -29,3 +28,4 @@ id_ed25519
 
 id_ed25519
 *.pem
+dids/**/*.json

@@ -1,6 +1,6 @@
 import knex, { Knex } from 'knex'
 import { z } from 'zod'
-import Zod, { IDatabase, Models, Order, TABLE, Update, Where, tablesList } from './types.js'
+import Zod, { IDatabase, Models, Order, TABLE, Where, tablesList } from './types.js'
 
 const reduceWhere = <M extends TABLE>(query: Knex.QueryBuilder, where?: Where<M>): Knex.QueryBuilder => {
   if (!where) return query
@@ -52,34 +52,13 @@ export default class Database {
     this.db = models
   }
 
-  insert = async <M extends TABLE>(
+  upsert = async <M extends TABLE>(
     model: M,
-    record: Models[typeof model]['insert']
+    record: Models[typeof model]['insert'],
+    conflictCol: string
   ): Promise<Models[typeof model]['get'][]> => {
-    return z
-      .array(Zod[model].get)
-      .parse(await this.db[model]().insert(record).returning('*')) as Models[typeof model]['get'][]
-  }
-
-  delete = async <M extends TABLE>(model: M, where: Where<M>): Promise<void> => {
-    return this.db[model]()
-      .where(where || {})
-      .delete()
-  }
-
-  update = async <M extends TABLE>(
-    model: M,
-    where: Where<M>,
-    updates: Update<M>,
-    autoUpdatedAt: boolean = true
-  ): Promise<Models[typeof model]['get'][]> => {
-    let query = this.db[model]().update({
-      ...updates,
-      ...(autoUpdatedAt ? { updated_at: this.client.fn.now() } : {}),
-    })
-    query = reduceWhere(query, where)
-
-    return z.array(Zod[model].get).parse(await query.returning('*')) as Models[typeof model]['get'][]
+    const result = await this.db[model]().insert(record).onConflict(conflictCol).merge().returning('*')
+    return z.array(Zod[model].get).parse(result) as Models[typeof model]['get'][]
   }
 
   get = async <M extends TABLE>(
