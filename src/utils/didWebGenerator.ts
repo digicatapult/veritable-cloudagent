@@ -36,7 +36,7 @@ export interface DidWebGenerationResult {
   privateKey: string
 }
 
-export class DidWebGenerator {
+export class DidWebDocGenerator {
   private agent: Agent
   private env: Env
   private logger: PinoLogger

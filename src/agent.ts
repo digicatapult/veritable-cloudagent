@@ -29,10 +29,8 @@ import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
 import type { CredentialDefinitionId, DID } from './controllers/types.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
-import { Env } from './env.js'
 import Ipfs from './ipfs/index.js'
 import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
-import { DidWebGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
@@ -214,11 +212,6 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
   const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
   await drpcReceiveHandler.start()
-
-  // Generate and register DID:web if enabled
-  const env = container.resolve(Env)
-  const didWebGenerator = new DidWebGenerator(agent, env, restConfig.logger)
-  await didWebGenerator.generateAndRegisterIfNeeded()
 
   return agent
 }
