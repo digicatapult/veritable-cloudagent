@@ -39,6 +39,7 @@ export default [
         'warn',
         {
           ignoreRestSiblings: true,
+          argsIgnorePattern: '^_',
         },
       ],
 

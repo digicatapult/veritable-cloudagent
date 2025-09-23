@@ -4,6 +4,7 @@
     "concurrently",
     "pino-pretty",
     "prettier-plugin-organize-imports",
-    "rimraf"
+    "rimraf",
+    "pg"
   ]
 }

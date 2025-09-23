@@ -38,6 +38,8 @@ services:
       - IPFS_ORIGIN=http://ipfs0:5001
       - POSTGRES_HOST=alice-postgres
       - POSTGRES_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=postgres
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
       - DID_WEB_ENABLED=true
@@ -45,17 +47,25 @@ services:
       - DID_WEB_PORT=8443
       - DID_WEB_DEV_CERT_PATH=/localhost.pem
       - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DB_NAME=did-web-server
+      - DID_WEB_DOMAIN=alice%3A8443
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
       - '3000:3000'
       - '8443:8443'
+    command: >
+      sh -c "
+        npm i -g pino-pretty
+        node ./node_modules/.bin/knex migrate:latest
+        npm start | pino-pretty -c -S"
     networks: ['alice', 'testnet']
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
       - ./alice.pem:/alice.pem
       - ./alice-key.pem:/alice-key.pem
+      - ./dids/alice:/dids
 
   ##################################################################################
   ## Bob ###########################################################################
@@ -81,6 +91,8 @@ services:
       - IPFS_ORIGIN=http://ipfs1:5001
       - POSTGRES_HOST=bob-postgres
       - POSTGRES_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=postgres
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
       - DID_WEB_ENABLED=true
@@ -88,17 +100,25 @@ services:
       - DID_WEB_PORT=8443
       - DID_WEB_DEV_CERT_PATH=/localhost.pem
       - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DB_NAME=did-web-server
+      - DID_WEB_DOMAIN=bob%3A8443
     ports:
       #- '5102:5002'
       #- '5103:5003'
       - '3001:3000'
       - '8444:8443'
+    command: >
+      sh -c "
+        npm i -g pino-pretty
+        node ./node_modules/.bin/knex migrate:latest
+        npm start | pino-pretty -c -S"
     networks: ['bob', 'testnet']
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
       - ./bob.pem:/bob.pem
       - ./bob-key.pem:/bob-key.pem
+      - ./dids/bob:/dids
 
   ##################################################################################
   ## Charlie #######################################################################
@@ -124,6 +144,8 @@ services:
       - IPFS_ORIGIN=http://ipfs2:5001
       - POSTGRES_HOST=charlie-postgres
       - POSTGRES_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=postgres
       - AUTO_ACCEPT_CREDENTIALS=always
       - AUTO_ACCEPT_PROOFS=always
       - DID_WEB_ENABLED=true
@@ -131,17 +153,25 @@ services:
       - DID_WEB_PORT=8443
       - DID_WEB_DEV_CERT_PATH=/localhost.pem
       - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DB_NAME=did-web-server
+      - DID_WEB_DOMAIN=charlie%3A8443
     ports:
       #- '5202:5002'
       #- '5203:5003'
       - '3002:3000'
       - '8445:8443'
+    command: >
+      sh -c "
+        npm i -g pino-pretty
+        node ./node_modules/.bin/knex migrate:latest
+        npm start | pino-pretty -c -S"
     networks: ['charlie', 'testnet']
     volumes:
       - ./localhost.pem:/localhost.pem
       - ./localhost-key.pem:/localhost-key.pem
       - ./charlie.pem:/charlie.pem
       - ./charlie-key.pem:/charlie-key.pem
+      - ./dids/charlie:/dids
 
   ##################################################################################
   ## Cluster PEER 0 ################################################################
@@ -257,6 +287,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=did-web-server
     healthcheck:
       test: ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
       interval: 5s
@@ -280,6 +311,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=did-web-server
     healthcheck:
       test: ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
       interval: 5s
@@ -303,6 +335,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=did-web-server
     healthcheck:
       test: ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
       interval: 5s
