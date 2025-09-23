@@ -117,6 +117,15 @@ const envConfig = {
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
   }),
+  ENABLE_DID_WEB_GENERATION: envalid.bool({ default: false, devDefault: true }),
+  DID_WEB_ID: envalid.str({
+    default: '',
+    devDefault: 'did:web:localhost:5002',
+  }),
+  DID_WEB_SERVICE_ENDPOINT: envalid.str({
+    default: '',
+    devDefault: 'http://localhost:5002',
+  }),
 }
 
 export type ENV_CONFIG = typeof envConfig
