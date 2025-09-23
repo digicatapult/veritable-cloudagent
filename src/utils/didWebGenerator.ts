@@ -4,6 +4,7 @@ import { JWK } from 'ts-jose'
 import { Env } from '../env.js'
 import PinoLogger from './logger.js'
 
+// Following the format we used for testing in the past
 export interface DidWebDocument {
   '@context': string[]
   id: string
@@ -50,9 +51,19 @@ export class DidWebGenerator {
    * Validates if a DID ID follows the did:web specification
    */
   private validateDidWebId(didId: string): boolean {
-    // did:web format: did:web:domain[:path]
+    // did:web format: did:web:domain
     const didWebRegex = /^did:web:[a-zA-Z0-9.-]+(?::[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=%]+)?$/
     return didWebRegex.test(didId)
+  }
+  /**
+   * Validates if a service endpoint is a valid localhost URL with optional percent-encoded port
+   */
+  private validateServiceEndpoint(endpoint: string): boolean {
+    // Allow http(s)://localhost or http(s)://localhost%3Aport
+    const regex = /^https?:\/\/localhost(%3A\d+)?(\/.*)?$/
+    // Disallow raw colon in localhost:port
+    if (/^https?:\/\/localhost:\d+/.test(endpoint)) return false
+    return regex.test(endpoint)
   }
 
   /**
@@ -69,14 +80,18 @@ export class DidWebGenerator {
     if (!serviceEndpoint) {
       throw new Error('DID_WEB_SERVICE_ENDPOINT environment variable is required')
     }
+
     if (!this.validateDidWebId(didId)) {
       throw new Error(`Invalid DID:web ID format: ${didId}`)
+    }
+    if (!this.validateServiceEndpoint(serviceEndpoint)) {
+      throw new Error(`Invalid service endpoint format: ${serviceEndpoint}`)
     }
 
     const key = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
 
     const publicJwk = (await key.toPublic()).toObject() // { kty:'OKP', crv:'Ed25519', x:'...' }
-    const privateJwk = key.toObject(true) // same + d
+    const privateJwk = key.toObject(true) // same as above + d
 
     // Will need the private key BYTES for import
     const privateKeyB64Url = privateJwk.d!
@@ -115,7 +130,7 @@ export class DidWebGenerator {
       ],
     }
 
-    // 4. Store the DID document as a JSON file in /public/dids
+    // Store the DID document as a JSON file in /public/dids
     try {
       const didFileName = didId.replace(/^did:web:/, '').replace(/[:/]/g, '_') + '.json'
       const didFilePath = `${process.cwd()}/public/dids/${didFileName}`

@@ -124,7 +124,7 @@ const envConfig = {
   }),
   DID_WEB_SERVICE_ENDPOINT: envalid.str({
     default: '',
-    devDefault: 'http://localhost:5002',
+    devDefault: 'http://localhost%3A5002',
   }),
 }
 
