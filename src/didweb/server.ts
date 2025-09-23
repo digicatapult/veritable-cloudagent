@@ -77,17 +77,17 @@ export class DidWebServer {
     await Promise.all(
       files.map(async (f) => {
         const raw = await readFile(path.join(this.config.didWebDir, f.name), 'utf8')
-        await this.upsertDid(raw)
+        await this.upsertDid(raw, f.name)
       })
     )
   }
 
-  public async upsertDid(file: string): Promise<void> {
+  public async upsertDid(file: string, filename: string): Promise<void> {
     let json
     try {
       json = JSON.parse(file)
     } catch {
-      this.logger.info(`File contains invalid JSON`)
+      this.logger.info(`File '${filename}' contains invalid JSON`)
       return
     }
 
@@ -100,6 +100,7 @@ export class DidWebServer {
   async start(): Promise<void> {
     if (!this.config.enabled) {
       this.logger.info('DID:web server disabled')
+      return
     }
     await this.loadDidDocuments()
     const setupGracefulExit = (sigName: NodeJS.Signals, server: Server, exitCode: number) => {

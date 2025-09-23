@@ -25,7 +25,7 @@ const config = {
     ...pgConfig,
     connection: {
       host: process.env.POSTGRES_HOST,
-      port: parseInt(process.env.POSTGRES_PORT || ''),
+      port: process.env.POSTGRES_PORT,
       user: process.env.POSTGRES_USERNAME,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.DID_WEB_DB_NAME,

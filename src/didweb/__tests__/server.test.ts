@@ -26,13 +26,13 @@ describe('did:web server', () => {
         id: `did:web:${didWebDomain}`,
       }
       const spy = dbMock.upsert
-      await server.upsertDid(JSON.stringify(did))
+      await server.upsertDid(JSON.stringify(did), 'test.json')
       expect(spy.firstCall.args).to.deep.equal(['did_web', { did: did.id, document: did }, 'did'])
     })
 
     it('ignores invalid JSON', async () => {
       const spy = dbMock.upsert
-      await server.upsertDid('{')
+      await server.upsertDid('{', 'test.json')
       expect(spy.callCount).to.equal(0)
     })
 
@@ -41,7 +41,8 @@ describe('did:web server', () => {
       await server.upsertDid(
         JSON.stringify({
           notId: '',
-        })
+        }),
+        'test.json'
       )
       expect(spy.callCount).to.equal(0)
     })
@@ -51,7 +52,8 @@ describe('did:web server', () => {
       await server.upsertDid(
         JSON.stringify({
           notId: 123,
-        })
+        }),
+        'test.json'
       )
       expect(spy.callCount).to.equal(0)
     })
