@@ -2,18 +2,30 @@ import knex, { Knex } from 'knex'
 import { z } from 'zod'
 import Zod, { IDatabase, Models, Order, TABLE, Where, tablesList } from './types.js'
 
-const reduceWhere = <M extends TABLE>(query: Knex.QueryBuilder, where?: Where<M>): Knex.QueryBuilder => {
-  if (!where) return query
-  if (Array.isArray(where)) {
-    return where.reduce((acc: Knex.QueryBuilder, clause) => {
-      if (Array.isArray(clause)) {
-        const [col, op, val] = clause as [string, string, any]
-        return acc.where(col, op as any, val)
+export const reduceWhere = <M extends TABLE>(
+  query: knex.Knex.QueryBuilder,
+  where?: Where<M>
+): knex.Knex.QueryBuilder => {
+  if (where) {
+    if (!Array.isArray(where)) {
+      where = [where]
+    }
+    query = where.reduce((acc, w) => {
+      if (Array.isArray(w)) {
+        return acc.where(w[0], w[1], w[2])
       }
-      return acc.where(clause)
+      return acc.where(
+        Object.entries(w).reduce(
+          (acc, [k, v]) => {
+            if (v !== undefined) acc[k] = v
+            return acc
+          },
+          {} as Record<string, unknown>
+        )
+      )
     }, query)
   }
-  return query.where(where)
+  return query
 }
 
 export interface DatabaseConnectionConfig {

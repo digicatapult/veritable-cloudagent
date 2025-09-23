@@ -32,4 +32,9 @@ describe('get did:web', function () {
       expect(body).to.deep.equal(JSON.parse([aliceDid, bobDid, charlieDid][index].toString('utf8')))
     })
   })
+
+  it(`should return 404 for non-existent DID`, async function () {
+    const res = await fetch(`${agents[0]}/non-existent/did.json`, { dispatcher: httpsAgent })
+    expect(res.status).to.equal(404)
+  })
 })

@@ -3,11 +3,6 @@ import { z } from 'zod'
 
 export const tablesList = ['did_web'] as const
 
-const defaultFields = z.object({
-  created_at: z.date(),
-  updated_at: z.date(),
-})
-
 const insertDidWeb = z.object({
   did: z.string(),
   document: z.unknown(),
@@ -16,7 +11,7 @@ const insertDidWeb = z.object({
 const Zod = {
   did_web: {
     insert: insertDidWeb,
-    get: insertDidWeb.extend(defaultFields.shape),
+    get: insertDidWeb,
   },
 }
 

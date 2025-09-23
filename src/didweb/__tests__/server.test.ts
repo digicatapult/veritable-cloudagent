@@ -14,12 +14,12 @@ const config: DidWebServerConfig = {
   didWebDomain,
 } as DidWebServerConfig
 
-describe.only('did:web server', () => {
-  afterEach(() => {
-    sinon.resetHistory()
-  })
-
+describe('did:web server', () => {
   describe('upsert DID', async () => {
+    beforeEach(() => {
+      dbMock.upsert.resetHistory()
+    })
+
     const server = new DidWebServer(logger, dbMockDep, config)
     it('insert valid DID', async () => {
       const did = {
