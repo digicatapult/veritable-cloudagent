@@ -182,8 +182,8 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | DID_WEB_ENABLED | N | false | Enables the did:web server. |
 | DID_WEB_PORT | N | 8443 | Port for the did:web server. |
 | DID_WEB_USE_DEV_CERT | N | false | Use dev certificates for did:web server HTTPS. Set to false in production. |
-| DID_WEB_DEV_CERT_PATH | N | `                                                                                                                                                                                                    | Path to dev-only HTTPS certificate for did:web server.                                                                             |
-| DID_WEB_DEV_KEY_PATH                        | N        |` | Path to dev-only HTTPS key for did:web server. |
+| DID_WEB_DEV_CERT_PATH | N | "" | Path to dev-only HTTPS certificate for did:web server. |
+| DID_WEB_DEV_KEY_PATH | N | "" | Path to dev-only HTTPS key for did:web server. |
 
 ## DID:web Document Generation
 
