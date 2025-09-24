@@ -70,10 +70,14 @@ const agent = await setupAgent({
   logger,
 })
 // Generate and register DID:web if enabled
-if (env.get('ENABLE_DID_WEB_GENERATION') === true) {
-  const didWebGenerator = new DidWebDocGenerator(agent, env, logger)
-  await didWebGenerator.generateAndRegisterIfNeeded()
-}
+// if (env.get('ENABLE_DID_WEB_GENERATION') === true) {
+//   logger.info('DID:web generation is enabled')
+const didGenerationEnabled = env.get('ENABLE_DID_WEB_GENERATION')
+const didId = env.get('DID_WEB_ID')
+const serviceEndpoint = env.get('DID_WEB_SERVICE_ENDPOINT')
+const didWebGenerator = new DidWebDocGenerator(agent, env, logger)
+await didWebGenerator.generateAndRegisterIfNeeded(didId, serviceEndpoint, didGenerationEnabled)
+// }
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()

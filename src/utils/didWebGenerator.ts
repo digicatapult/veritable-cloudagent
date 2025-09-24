@@ -47,9 +47,6 @@ export class DidWebDocGenerator {
     this.logger = logger
   }
 
-  /**
-   * Validates if a DID ID follows the did:web specification
-   */
   private validateDidWebId(didId: string): boolean {
     // did:web format: did:web:domain
     const didWebRegex = /^did:web:[a-zA-Z0-9.-]+(?::[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=%]+)?$/
@@ -59,35 +56,13 @@ export class DidWebDocGenerator {
    * Validates if a service endpoint is a valid localhost URL with optional percent-encoded port
    */
   private validateServiceEndpoint(endpoint: string): boolean {
-    // Allow http(s)://localhost or http(s)://localhost%3Aport
-    const regex = /^https?:\/\/localhost(%3A\d+)?(\/.*)?$/
+    const regex = /^https?:\/\/[^/:]+(%3A\d+)?(\/.*)?$/
     // Disallow raw colon in localhost:port
-    if (/^https?:\/\/localhost:\d+/.test(endpoint)) return false
+    if (/^https?:\/\/[^/]+:\d+/.test(endpoint)) return false
     return regex.test(endpoint)
   }
 
-  /**
-   * Generates a DID:web document with cryptographic material
-   */
-  async generateDidWebDocument(): Promise<DidWebGenerationResult> {
-    const didId = this.env.get('DID_WEB_ID')
-    const serviceEndpoint = this.env.get('DID_WEB_SERVICE_ENDPOINT')
-
-    // Validate inputs
-    if (!didId) {
-      throw new Error('DID_WEB_ID environment variable is required')
-    }
-    if (!serviceEndpoint) {
-      throw new Error('DID_WEB_SERVICE_ENDPOINT environment variable is required')
-    }
-
-    if (!this.validateDidWebId(didId)) {
-      throw new Error(`Invalid DID:web ID format: ${didId}`)
-    }
-    if (!this.validateServiceEndpoint(serviceEndpoint)) {
-      throw new Error(`Invalid service endpoint format: ${serviceEndpoint}`)
-    }
-
+  async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
     const key = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
 
     const publicJwk = (await key.toPublic()).toObject() // { kty:'OKP', crv:'Ed25519', x:'...' }
@@ -178,18 +153,27 @@ export class DidWebDocGenerator {
   /**
    * Main method to generate and register DID:web if enabled and not already exists
    */
-  async generateAndRegisterIfNeeded(): Promise<void> {
-    const isEnabled = this.env.get('ENABLE_DID_WEB_GENERATION')
-
-    if (!isEnabled) {
+  async generateAndRegisterIfNeeded(
+    didId: string,
+    serviceEndpoint: string,
+    didGenerationEnabled: boolean
+  ): Promise<void> {
+    if (didGenerationEnabled == false) {
       this.logger.debug('DID:web generation is disabled')
       return
     }
-
-    const didId = this.env.get('DID_WEB_ID')
     if (!didId) {
-      this.logger.warn('DID:web generation is enabled but DID_WEB_ID is not set')
-      return
+      throw new Error('DID_WEB_ID environment variable is required')
+    }
+    if (!serviceEndpoint) {
+      throw new Error('DID_WEB_SERVICE_ENDPOINT environment variable is required')
+    }
+
+    if (!this.validateDidWebId(didId)) {
+      throw new Error(`Invalid DID:web ID format: ${didId}`)
+    }
+    if (!this.validateServiceEndpoint(serviceEndpoint)) {
+      throw new Error(`Invalid service endpoint format: ${serviceEndpoint}`)
     }
 
     // Check if DID:web already exists
@@ -200,7 +184,7 @@ export class DidWebDocGenerator {
     }
 
     try {
-      const result = await this.generateDidWebDocument()
+      const result = await this.generateDidWebDocument(didId, serviceEndpoint)
 
       // Import did to the agent
       await this.importDidWeb(result)

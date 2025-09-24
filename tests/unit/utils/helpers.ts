@@ -1,5 +1,4 @@
 import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
-import * as envalid from 'envalid'
 import type { Socket } from 'node:net'
 
 import {
@@ -23,11 +22,9 @@ import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
 import { WebSocket } from 'ws'
 
-import { cleanEnv } from 'envalid'
 import fs from 'fs/promises'
 import path from 'node:path'
 import { RestAgent, setupAgent } from '../../../src/agent.js'
-import { Env, envConfig } from '../../../src/env.js'
 import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
@@ -695,18 +692,4 @@ export async function cleanupCreatedDids() {
   } catch {
     // Directory may not exist, ignore
   }
-}
-
-export const testEnv = () => {
-  const testEnv = cleanEnv(process.env, {
-    ...envConfig,
-    ENABLE_DID_WEB_GENERATION: envalid.bool({ default: true }),
-  })
-
-  class MockEnv {
-    get(key: keyof typeof testEnv) {
-      return testEnv[key]
-    }
-  }
-  container.registerInstance<Env>(Env, new MockEnv() as Env)
 }
