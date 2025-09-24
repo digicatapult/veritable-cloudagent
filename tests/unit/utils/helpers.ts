@@ -692,24 +692,11 @@ export async function cleanupCreatedDids() {
   try {
     const files = await fs.readdir(didsDir)
     await Promise.all(files.map((file) => fs.unlink(path.join(didsDir, file))))
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     // Directory may not exist, ignore
   }
 }
-
-// export const testEnv = () => {
-//   const testEnv = cleanEnv(process.env, {
-//     ...envConfig,
-//     ENABLE_DID_WEB_GENERATION: envalid.bool({ default: true }),
-//   })
-
-//   class MockEnv {
-//     get(key: keyof typeof testEnv) {
-//       return testEnv[key]
-//     }
-//   }
-//   container.registerInstance<Env>(Env, new MockEnv() as Env)
-// }
 
 export const testEnv = () => {
   const testEnv = cleanEnv(process.env, {

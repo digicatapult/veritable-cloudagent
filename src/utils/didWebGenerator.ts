@@ -137,7 +137,13 @@ export class DidWebDocGenerator {
       await fs.writeFile(didFilePath, JSON.stringify(didWebDocument, null, 2), 'utf-8')
       this.logger.info(`DID:web document saved to ${didFilePath}`)
     } catch (err) {
-      this.logger.error('Failed to save DID:web document locally:', err as Record<string, any>)
+      if (err instanceof Error) {
+        this.logger.error('Failed to save DID:web document locally:', err)
+      } else if (err !== null) {
+        this.logger.error('Failed to save DID:web document locally:', err)
+      }
+
+      throw new Error('Failed to save DID:web document locally')
     }
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
@@ -163,8 +169,12 @@ export class DidWebDocGenerator {
       })
       this.logger.info(`Successfully registered DID:web ${result.did} with agent`)
     } catch (error) {
-      this.logger.error(`Failed to register DID:web ${result.did}:`, error as Record<string, any>)
-      throw error
+      if (error instanceof Error) {
+        this.logger.error(`Failed to register DID:web ${result.did}:`, error)
+      } else if (error !== null) {
+        this.logger.error(`Failed to register DID:web ${result.did}:`, error)
+      }
+      throw new Error('Failed to register DID:web')
     }
   }
 
@@ -200,8 +210,12 @@ export class DidWebDocGenerator {
 
       this.logger.info(`DID:web document generated and registered successfully: ${didId}`)
     } catch (error) {
-      this.logger.error('Failed to generate and register DID:web:', error as Record<string, any>)
-      throw error
+      if (error instanceof Error) {
+        this.logger.error('Failed to generate and register DID:web:', error)
+      } else if (error !== null) {
+        this.logger.error('Failed to generate and register DID:web:', error)
+      }
+      throw new Error('Failed to generate and register DID:web')
     }
   }
   /**
