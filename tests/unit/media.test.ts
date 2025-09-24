@@ -86,7 +86,5 @@ describe('MediaController', () => {
       expect(shareStub.firstCall.args[0]).to.deep.include({ recordId: 'rec-123' })
       expect(res.body).to.deep.equal(objectToJson(sharedRecord))
     })
-
-    // Additional validation/error tests can be added once request schema constraints are defined via decorators
   })
 })
