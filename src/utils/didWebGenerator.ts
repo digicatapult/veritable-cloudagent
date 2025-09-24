@@ -133,7 +133,9 @@ export class DidWebDocGenerator {
     // Store the DID document as a JSON file in /public/dids
     try {
       const didFileName = didId.replace(/^did:web:/, '').replace(/[:/]/g, '_') + '.json'
-      const didFilePath = `${process.cwd()}/public/dids/${didFileName}`
+      const didDirPath = `${process.cwd()}/public/dids`
+      const didFilePath = `${didDirPath}/${didFileName}`
+      await fs.mkdir(didDirPath, { recursive: true })
       await fs.writeFile(didFilePath, JSON.stringify(didWebDocument, null, 2), 'utf-8')
       this.logger.info(`DID:web document saved to ${didFilePath}`)
     } catch (err) {
