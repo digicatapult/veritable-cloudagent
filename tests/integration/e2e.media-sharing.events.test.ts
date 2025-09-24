@@ -97,12 +97,12 @@ describe('Media Sharing Events (WS)', function () {
         const state = payloadObj?.payload?.mediaSharingRecord?.state
         if (state && !states.includes(state)) states.push(state)
       }
-      if (states.includes('created') && states.includes('shared')) break
+      if (states.includes('init') && states.includes('media-shared')) break
       await new Promise((r) => setTimeout(r, 250))
     }
 
-    expect(states, `States captured: ${states.join(',')}`).to.include('created')
-    expect(states, `States captured: ${states.join(',')}`).to.include('shared')
+    expect(states, `States captured: ${states.join(',')}`).to.include('init')
+    expect(states, `States captured: ${states.join(',')}`).to.include('media-shared')
   })
 
   it('Closes WebSocket', function () {
