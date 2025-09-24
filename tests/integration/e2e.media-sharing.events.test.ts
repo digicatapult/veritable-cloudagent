@@ -5,7 +5,7 @@ import WebSocket from 'ws'
 
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-const ALICE_WS_URL = ALICE_BASE_URL.replace('http', 'ws')
+const ALICE_WS_URL = process.env.ALICE_WS_URL ?? 'ws://localhost:5003'
 
 // Integration test validating websocket media-sharing events for create/share lifecycle
 // Assumes media-sharing module forwards events on topic 'media-sharing' via WebSocket
@@ -32,7 +32,7 @@ describe('Media Sharing Events (WS)', function () {
   let ws: WebSocket
 
   it('Connects WebSocket to Alice', function (done) {
-    ws = new WebSocket(ALICE_WS_URL.replace(/:\\d+$/, ':5003'))
+    ws = new WebSocket(ALICE_WS_URL)
 
     ws.on('open', () => done())
     ws.on('message', (data) => {
