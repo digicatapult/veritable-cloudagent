@@ -692,8 +692,7 @@ export async function cleanupCreatedDids() {
   try {
     const files = await fs.readdir(didsDir)
     await Promise.all(files.map((file) => fs.unlink(path.join(didsDir, file))))
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (err) {
+  } catch {
     // Directory may not exist, ignore
   }
 }
