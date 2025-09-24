@@ -75,7 +75,7 @@ const agent = await setupAgent({
 const didGenerationEnabled = env.get('ENABLE_DID_WEB_GENERATION')
 const didId = env.get('DID_WEB_ID')
 const serviceEndpoint = env.get('DID_WEB_SERVICE_ENDPOINT')
-const didWebGenerator = new DidWebDocGenerator(agent, env, logger)
+const didWebGenerator = new DidWebDocGenerator(agent, logger)
 await didWebGenerator.generateAndRegisterIfNeeded(didId, serviceEndpoint, didGenerationEnabled)
 // }
 

@@ -1,7 +1,6 @@
 import { Agent, KeyType, TypedArrayEncoder } from '@credo-ts/core'
 import fs from 'fs/promises'
 import { JWK } from 'ts-jose'
-import { Env } from '../env.js'
 import PinoLogger from './logger.js'
 
 // Following the format we used for testing in the past
@@ -38,12 +37,10 @@ export interface DidWebGenerationResult {
 
 export class DidWebDocGenerator {
   private agent: Agent
-  private env: Env
   private logger: PinoLogger
 
-  constructor(agent: Agent, env: Env, logger: PinoLogger) {
+  constructor(agent: Agent, logger: PinoLogger) {
     this.agent = agent
-    this.env = env
     this.logger = logger
   }
 

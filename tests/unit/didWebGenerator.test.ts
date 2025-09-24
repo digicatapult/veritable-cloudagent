@@ -2,13 +2,9 @@ import { type Agent } from '@credo-ts/core'
 import { expect } from 'chai'
 import fs from 'fs'
 import sinon from 'sinon'
-import { container } from 'tsyringe'
-import { Env } from '../../src/env.js'
 import { DidWebDocGenerator } from '../../src/utils/didWebGenerator.js'
 import PinoLogger from '../../src/utils/logger.js'
 import { cleanupCreatedDids, getTestAgent } from './utils/helpers.js'
-
-const env = container.resolve(Env)
 
 describe('didWebGenerator', function () {
   let aliceAgent: Agent
@@ -28,11 +24,11 @@ describe('didWebGenerator', function () {
     sinon.restore()
   })
   it('should make a new instance of DidWebDocGenerator', function () {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
     expect(didWebDocGenerator).to.be.an.instanceof(DidWebDocGenerator)
   })
   it('should generate a did doc if it does not exist', async function () {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
     const generatedDoc = await didWebDocGenerator.generateDidWebDocument(
       'did:web:localhost:5002',
       'http://localhost%3A5002'
@@ -46,7 +42,7 @@ describe('didWebGenerator', function () {
   })
 
   it('should not create 2nd document if one already exists ', async function () {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
     const generatedDoc = await didWebDocGenerator.generateDidWebDocument(
       'did:web:localhost:5002',
       'http://localhost%3A5002'
@@ -64,33 +60,36 @@ describe('didWebGenerator', function () {
     expect(files.length).to.equal(1)
   })
   it('should throw if did is of wrong format', async () => {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
 
     try {
       await didWebDocGenerator.generateAndRegisterIfNeeded('invalid-did', 'http://localhost%3A5002', true)
       throw new Error('Expected method to throw.')
-    } catch (err: any) {
-      expect(err.message).to.equal('Invalid DID:web ID format: invalid-did')
+    } catch (err) {
+      expect(err).to.be.instanceOf(Error)
+      expect(err).to.have.property('message', 'Invalid DID:web ID format: invalid-did')
     }
   })
   it('should throw if endpoint is of wrong format', async () => {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
 
     try {
       await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:localhost:5002', 'invalid-endpoint', true)
       throw new Error('Expected method to throw.')
-    } catch (err: any) {
-      expect(err.message).to.equal('Invalid service endpoint format: invalid-endpoint')
+    } catch (err) {
+      expect(err).to.be.instanceOf(Error)
+      expect(err).to.have.property('message', 'Invalid service endpoint format: invalid-endpoint')
     }
   })
   it('should throw if endpoint is of wrong format with a colon', async () => {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
 
     try {
       await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:localhost:5002', 'http://localhost:5002', true)
       throw new Error('Expected method to throw.')
-    } catch (err: any) {
-      expect(err.message).to.equal('Invalid service endpoint format: http://localhost:5002')
+    } catch (err) {
+      expect(err).to.be.instanceOf(Error)
+      expect(err).to.have.property('message', 'Invalid service endpoint format: http://localhost:5002')
     }
   })
 })
