@@ -46,7 +46,7 @@ describe('Media Sharing Events (WS)', function () {
           received.push({ type: evt.type ?? evt.payload?.mediaSharingRecord?.state, payload: evt })
         }
       } catch {
-          logger.error('Failed to parse WebSocket message', { data })
+        logger.error('Failed to parse WebSocket message', { data })
       }
     })
     ws.on('error', (err) => done(err))
