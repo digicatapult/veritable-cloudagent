@@ -32,8 +32,8 @@ describe('Media Sharing Events (WS)', function () {
   let ws: WebSocket
 
   it('Connects WebSocket to Alice', function (done) {
-      const wsPort = process.env.ALICE_WS_PORT ?? '5003'
-      ws = new WebSocket(ALICE_WS_URL.replace('/:\\d+$/', `:${wsPort}`))
+    const wsPort = process.env.ALICE_WS_PORT ?? '5003'
+    ws = new WebSocket(ALICE_WS_URL.replace('/:\\d+$/', `:${wsPort}`))
 
     ws.on('open', () => done())
     ws.on('message', (data) => {

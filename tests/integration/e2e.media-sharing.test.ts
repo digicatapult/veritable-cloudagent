@@ -16,7 +16,6 @@ describe('Media Sharing A→B', function () {
 
   let oobRecordId: string
   let aliceToBobInvitationUrl: string
-  let bobConnectionId: string
   let aliceConnectionId: string
 
   it('Alice creates invitation', async function () {
@@ -35,13 +34,11 @@ describe('Media Sharing A→B', function () {
   })
 
   it('Bob accepts invitation', async function () {
-    const res = await bob
+    await bob
       .post('/v1/oob/receive-invitation-url')
       .send({ invitationUrl: aliceToBobInvitationUrl })
       .expect('Content-Type', /json/)
       .expect(200)
-
-    bobConnectionId = res.body.connectionRecord.id
   })
 
   it('Alice sees her connection', async function () {
@@ -70,18 +67,18 @@ describe('Media Sharing A→B', function () {
   })
 
   it('Bob can download the file from the provided URI (mock check)', async function () {
-      // Stub network fetch so test is deterministic and offline-friendly
-      const fetchStub = stub(globalThis, 'fetch')
-      fetchStub.withArgs('https://httpbin.org/bytes/16').resolves(
-          new Response(Buffer.from([...Array(16).keys()].map((i) => i)), {
-              status: 200,
-              headers: { 'content-type': 'application/octet-stream' },
-          }),
-      )
+    // Stub network fetch so test is deterministic and offline-friendly
+    const fetchStub = stub(globalThis, 'fetch')
+    fetchStub.withArgs('https://httpbin.org/bytes/16').resolves(
+      new Response(Buffer.from([...Array(16).keys()].map((i) => i)), {
+        status: 200,
+        headers: { 'content-type': 'application/octet-stream' },
+      })
+    )
     const file = await fetch('https://httpbin.org/bytes/16')
     expect(file.ok).to.equal(true)
     const buf = Buffer.from(await file.arrayBuffer())
     expect(buf.length).to.equal(16)
-      fetchStub.restore()
+    fetchStub.restore()
   })
 })
