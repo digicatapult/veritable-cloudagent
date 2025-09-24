@@ -2,10 +2,13 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import request from 'supertest'
 import WebSocket from 'ws'
+import PinoLogger from '../../src/utils/logger.js'
 
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const ALICE_WS_URL = ALICE_BASE_URL.replace('http', 'ws')
+
+const logger = new PinoLogger('trace')
 
 // Integration test validating websocket media-sharing events for create/share lifecycle
 // Assumes media-sharing module forwards events on topic 'media-sharing' via WebSocket
@@ -43,7 +46,7 @@ describe('Media Sharing Events (WS)', function () {
           received.push({ type: evt.type ?? evt.payload?.mediaSharingRecord?.state, payload: evt })
         }
       } catch {
-        // ignore parse errors
+          logger.error('Failed to parse WebSocket message', { data })
       }
     })
     ws.on('error', (err) => done(err))
