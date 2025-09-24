@@ -1,6 +1,5 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
-import { stub } from 'sinon'
 import request from 'supertest'
 
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
