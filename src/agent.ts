@@ -99,7 +99,7 @@ const getAgentModules = (options: {
     [V2ProofProtocol<[AnonCredsProofFormatService]>]
   >
 }): RestAgentModules => {
-  const modules: RestAgentModules = {
+  return {
     connections: new ConnectionsModule({
       autoAcceptConnections: options.autoAcceptConnections,
     }),
@@ -157,7 +157,6 @@ const getAgentModules = (options: {
     ),
     media: new MediaSharingModule(),
   }
-  return modules
 }
 
 export async function setupAgent(restConfig: AriesRestConfig) {

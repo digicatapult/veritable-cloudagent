@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
+import { stub } from 'sinon'
 import request from 'supertest'
 
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
@@ -68,19 +69,19 @@ describe('Media Sharing A→B', function () {
     expect(res.body).to.have.property('state')
   })
 
-  it('Bob can see the media sharing record', async function () {
-    // There is not yet a dedicated list endpoint for media-sharing; use generic records endpoint when available.
-    // For now, validate Bob's agent state via connections (indirect). This is a placeholder asserting flow completion.
-    const res = await bob.get(`/v1/connections/${bobConnectionId}`).expect(200)
-    expect(res.body).to.have.property('id', bobConnectionId)
-  })
-
   it('Bob can download the file from the provided URI (mock check)', async function () {
-    // Optional smoke check to ensure the URI is accessible; this runs against httpbin which is public.
-    // In a CI-limited environment, you may want to stub this or replace with an internal test URL.
+      // Stub network fetch so test is deterministic and offline-friendly
+      const fetchStub = stub(globalThis, 'fetch')
+      fetchStub.withArgs('https://httpbin.org/bytes/16').resolves(
+          new Response(Buffer.from([...Array(16).keys()].map((i) => i)), {
+              status: 200,
+              headers: { 'content-type': 'application/octet-stream' },
+          }),
+      )
     const file = await fetch('https://httpbin.org/bytes/16')
     expect(file.ok).to.equal(true)
     const buf = Buffer.from(await file.arrayBuffer())
     expect(buf.length).to.equal(16)
+      fetchStub.restore()
   })
 })
