@@ -142,8 +142,8 @@ export class DidWebDocGenerator {
       } else if (err !== null) {
         this.logger.error('Failed to save DID:web document locally:', err)
       }
-
-      throw new Error('Failed to save DID:web document locally')
+      this.logger
+      throw err
     }
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
@@ -174,7 +174,7 @@ export class DidWebDocGenerator {
       } else if (error !== null) {
         this.logger.error(`Failed to register DID:web ${result.did}:`, error)
       }
-      throw new Error('Failed to register DID:web')
+      throw error
     }
   }
 
