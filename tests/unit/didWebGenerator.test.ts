@@ -63,4 +63,34 @@ describe('didWebGenerator', function () {
     const files = await fs.promises.readdir(didsDir)
     expect(files.length).to.equal(1)
   })
+  it('should throw if did is of wrong format', async () => {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+
+    try {
+      await didWebDocGenerator.generateAndRegisterIfNeeded('invalid-did', 'http://localhost%3A5002', true)
+      throw new Error('Expected method to throw.')
+    } catch (err: any) {
+      expect(err.message).to.equal('Invalid DID:web ID format: invalid-did')
+    }
+  })
+  it('should throw if endpoint is of wrong format', async () => {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+
+    try {
+      await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:localhost:5002', 'invalid-endpoint', true)
+      throw new Error('Expected method to throw.')
+    } catch (err: any) {
+      expect(err.message).to.equal('Invalid service endpoint format: invalid-endpoint')
+    }
+  })
+  it('should throw if endpoint is of wrong format with a colon', async () => {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, env, logger)
+
+    try {
+      await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:localhost:5002', 'http://localhost:5002', true)
+      throw new Error('Expected method to throw.')
+    } catch (err: any) {
+      expect(err.message).to.equal('Invalid service endpoint format: http://localhost:5002')
+    }
+  })
 })

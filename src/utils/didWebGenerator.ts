@@ -63,6 +63,12 @@ export class DidWebDocGenerator {
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
+    if (!this.validateDidWebId(didId)) {
+      throw new Error(`Invalid DID:web ID format: ${didId}`)
+    }
+    if (!this.validateServiceEndpoint(serviceEndpoint)) {
+      throw new Error(`Invalid service endpoint format: ${serviceEndpoint}`)
+    }
     const key = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
 
     const publicJwk = (await key.toPublic()).toObject() // { kty:'OKP', crv:'Ed25519', x:'...' }
