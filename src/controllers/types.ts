@@ -35,6 +35,23 @@ import type { DIDDocument } from 'did-resolver'
  */
 export type UUID = string
 
+// Media Sharing
+export interface MediaItemRequest {
+  uri: string
+  mimeType: string
+  description?: string
+  byteCount?: number
+  fileName?: string
+  metadata?: Record<string, unknown>
+}
+
+export interface MediaShareRequest {
+  connectionId: UUID
+  description?: string
+  metadata?: Record<string, unknown>
+  items?: MediaItemRequest[]
+}
+
 /**
  * W3C Decentralized Identifier format v1.0
  * @pattern did:[A-Za-z0-9:]+
