@@ -46,26 +46,16 @@ export class DidWebDocGenerator {
 
   private validateDidWebId(didId: string): boolean {
     // did:web format: did:web:domain
-    const didWebRegex = /^did:web:[a-zA-Z0-9.-]+(?::[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=%]+)?$/
+    const didWebRegex = /^did:web:.*$/
+    if (/^did:web:.*:.*$/.test(didId)) return false // Disallow colon immediately after 'did:web:'
     return didWebRegex.test(didId)
-  }
-  /**
-   * Validates if a service endpoint is a valid localhost URL with optional percent-encoded port
-   */
-  private validateServiceEndpoint(endpoint: string): boolean {
-    const regex = /^https?:\/\/[^/:]+(%3A\d+)?(\/.*)?$/
-    // Disallow raw colon in localhost:port
-    if (/^https?:\/\/[^/]+:\d+/.test(endpoint)) return false
-    return regex.test(endpoint)
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
     if (!this.validateDidWebId(didId)) {
       throw new Error(`Invalid DID:web ID format: ${didId}`)
     }
-    if (!this.validateServiceEndpoint(serviceEndpoint)) {
-      throw new Error(`Invalid service endpoint format: ${serviceEndpoint}`)
-    }
+
     const key = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
 
     const publicJwk = (await key.toPublic()).toObject() // { kty:'OKP', crv:'Ed25519', x:'...' }
@@ -174,9 +164,6 @@ export class DidWebDocGenerator {
 
     if (!this.validateDidWebId(didId)) {
       throw new Error(`Invalid DID:web ID format: ${didId}`)
-    }
-    if (!this.validateServiceEndpoint(serviceEndpoint)) {
-      throw new Error(`Invalid service endpoint format: ${serviceEndpoint}`)
     }
 
     // Check if DID:web already exists

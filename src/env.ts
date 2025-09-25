@@ -121,7 +121,7 @@ export const envConfig = {
   ENABLE_DID_WEB_GENERATION: envalid.bool({ default: false, devDefault: true }),
   DID_WEB_ID: envalid.str({
     default: '',
-    devDefault: 'did:web:localhost:5002',
+    devDefault: 'did:web:localhost%3A5002',
   }),
   DID_WEB_SERVICE_ENDPOINT: envalid.str({
     default: '',

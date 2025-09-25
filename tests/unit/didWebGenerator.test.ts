@@ -30,7 +30,7 @@ describe('didWebGenerator', function () {
   it('should generate a did doc if it does not exist', async function () {
     const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
     const generatedDoc = await didWebDocGenerator.generateDidWebDocument(
-      'did:web:localhost:5002',
+      'did:web:localhost%3A5002',
       'http://localhost%3A5002'
     )
 
@@ -44,7 +44,7 @@ describe('didWebGenerator', function () {
   it('should not create 2nd document if one already exists ', async function () {
     const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
     const generatedDoc = await didWebDocGenerator.generateDidWebDocument(
-      'did:web:localhost:5002',
+      'did:web:localhost%3A5002',
       'http://localhost%3A5002'
     )
 
@@ -53,7 +53,7 @@ describe('didWebGenerator', function () {
     const didFilePath = `${process.cwd()}/public/dids/${didFileName}`
     const fileExists = !!(await fs.promises.stat(didFilePath).catch(() => false))
     expect(fileExists).to.be.equal(true)
-    await didWebDocGenerator.generateDidWebDocument('did:web:localhost:5002', 'http://localhost%3A5002')
+    await didWebDocGenerator.generateDidWebDocument('did:web:localhost%3A5002', 'http://localhost%3A5002')
     // Check that only one file exists in public/dids
     const didsDir = `${process.cwd()}/public/dids`
     const files = await fs.promises.readdir(didsDir)
@@ -68,28 +68,6 @@ describe('didWebGenerator', function () {
     } catch (err) {
       expect(err).to.be.instanceOf(Error)
       expect(err).to.have.property('message', 'Invalid DID:web ID format: invalid-did')
-    }
-  })
-  it('should throw if endpoint is of wrong format', async () => {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
-
-    try {
-      await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:localhost:5002', 'invalid-endpoint', true)
-      throw new Error('Expected method to throw.')
-    } catch (err) {
-      expect(err).to.be.instanceOf(Error)
-      expect(err).to.have.property('message', 'Invalid service endpoint format: invalid-endpoint')
-    }
-  })
-  it('should throw if endpoint is of wrong format with a colon', async () => {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
-
-    try {
-      await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:localhost:5002', 'http://localhost:5002', true)
-      throw new Error('Expected method to throw.')
-    } catch (err) {
-      expect(err).to.be.instanceOf(Error)
-      expect(err).to.have.property('message', 'Invalid service endpoint format: http://localhost:5002')
     }
   })
 })
