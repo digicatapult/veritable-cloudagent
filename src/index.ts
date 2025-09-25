@@ -12,6 +12,7 @@ import { setupAgent } from './agent.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
+import { DidWebDocGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
 const env = container.resolve(Env)
@@ -68,6 +69,12 @@ const agent = await setupAgent({
 
   logger,
 })
+// Generate and register DID:web if enabled
+const didGenerationEnabled = env.get('ENABLE_DID_WEB_GENERATION')
+const didId = env.get('DID_WEB_ID')
+const serviceEndpoint = env.get('DID_WEB_SERVICE_ENDPOINT')
+const didWebGenerator = new DidWebDocGenerator(agent, logger)
+await didWebGenerator.generateAndRegisterIfNeeded(didId, serviceEndpoint, didGenerationEnabled)
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()

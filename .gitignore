@@ -2,6 +2,7 @@ config/local.json
 
 node_modules/
 build
+public/dids
 src/routes/routes.ts
 dist
 coverage

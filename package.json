@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.14.13",
+  "version": "0.14.14",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -33,7 +33,7 @@
     "tsoa:watch": "node --watch-path=./src ./node_modules/.bin/tsoa spec-and-routes",
     "dev": "concurrently \"npm run tsoa:watch\" \"SWCRC=true NODE_ENV=dev node --import @swc-node/register/esm-register --enable-source-maps --watch-path=./src --watch-path=./build/routes/swagger.json ./src/index.ts | pino-pretty -c -S\"",
     "start": "node build/index.js",
-    "test:unit": "NODE_OPTIONS='--no-experimental-strip-types' mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
+    "test:unit": "NODE_OPTIONS='--no-experimental-strip-types' NODE_ENV=test mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "NODE_OPTIONS='--no-experimental-strip-types' mocha --config ./tests/mocharc.json tests/integration/**/*.test.ts",
     "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
   },
@@ -59,6 +59,7 @@
     "pino-http": "^10.5.0",
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.1",
+    "ts-jose": "^6.0.11",
     "tsoa": "^6.6.0",
     "tsyringe": "^4.10.0",
     "undici": "^7.16.0",

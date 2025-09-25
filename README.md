@@ -175,11 +175,38 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS      | N        | 5000                                                                                                                                                                                                   | Timeout in ms on proof requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_REQUEST_TIMEOUT_MS    | N        | 5000                                                                                                                                                                                                   | Timeout in ms for DRCP requests                                                                                                    |
 | VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS | Y        | `{"protocolVersion": "v2", "proofFormats": {"anoncreds": {"name": "drpc-proof-request", "version": "1.0", "requested_attributes": {"companiesHouseNumberExists": {"name": "companiesHouseNumber"}}}}}` | Options for proof request                                                                                                          |
-| DID_WEB_ENABLED                             | N        | false                                                                                                                                                                                                  | Enables the did:web server.                                                                                                        |
-| DID_WEB_PORT                                | N        | 8443                                                                                                                                                                                                   | Port for the did:web server.                                                                                                       |
-| DID_WEB_USE_DEV_CERT                        | N        | false                                                                                                                                                                                                  | Use dev certificates for did:web server HTTPS. Set to false in production.                                                         |
-| DID_WEB_DEV_CERT_PATH                       | N        | ``                                                                                                                                                                                                     | Path to dev-only HTTPS certificate for did:web server.                                                                             |
-| DID_WEB_DEV_KEY_PATH                        | N        | ``                                                                                                                                                                                                     | Path to dev-only HTTPS key for did:web server.                                                                                     |
+| ENABLE_DID_WEB_GENERATION                   | N        | false                                                                                                                                                                                                  | Enable automatic generation of DID:web document at startup                                                                         |
+| DID_WEB_ID                                  | N        | ""                                                                                                                                                                                                     | The DID:web identifier to generate (e.g., "did:web:example.com")                                                                   |
+| DID_WEB_SERVICE_ENDPOINT                    | N        | ""                                                                                                                                                                                                     | The service endpoint URL for the DID:web document                                                                                  |
+
+| DID_WEB_ENABLED | N | false | Enables the did:web server. |
+| DID_WEB_PORT | N | 8443 | Port for the did:web server. |
+| DID_WEB_USE_DEV_CERT | N | false | Use dev certificates for did:web server HTTPS. Set to false in production. |
+| DID_WEB_DEV_CERT_PATH | N | "" | Path to dev-only HTTPS certificate for did:web server. |
+| DID_WEB_DEV_KEY_PATH | N | "" | Path to dev-only HTTPS key for did:web server. |
+
+## DID:web Document Generation
+
+The cloud agent supports automatic generation of DID:web documents at startup. This feature allows you to create a DID:web document that can be hosted on a web server and resolved by other parties.
+
+### Configuration
+
+To enable DID:web generation, set the following environment variables:
+
+- `ENABLE_DID_WEB_GENERATION=true` - Enables the feature
+- `DID_WEB_ID=did:web:yourdomain.com` - The DID identifier (must follow did:web format)
+- `DID_WEB_SERVICE_ENDPOINT=https://yourdomain.com` - The service endpoint URL
+
+### Generated DID Document Structure
+
+The generated DID:web document follows the W3C DID Core specification and includes:
+
+- **@context**: Standard DID contexts
+- **id**: The DID identifier
+- **verificationMethod**: Cryptographic key material
+- **authentication**: Authentication methods
+- **assertionMethod**: Assertion methods
+- **service**: Service endpoints for communication
 
 ## Testing
 

@@ -5,6 +5,7 @@ import { singleton } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'tests/test.env' })
+  dotenv.config({ override: true })
 } else {
   dotenv.config()
 }
@@ -56,7 +57,7 @@ const stringArray = <T extends string = string>(
   return validator(spec)
 }
 
-const envConfig = {
+export const envConfig = {
   LABEL: envalid.str({ default: 'Veritable Cloudagent', devDefault: 'Veritable Cloudagent' }),
   WALLET_ID: envalid.str({ default: 'walletId', devDefault: 'walletId' }),
   WALLET_KEY: envalid.str({ default: 'walletKey', devDefault: 'walletKey' }),
@@ -116,6 +117,15 @@ const envConfig = {
   VERIFIED_DRPC_OPTIONS_PROOF_REQUEST_OPTIONS: envalid.json({
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
+  }),
+  ENABLE_DID_WEB_GENERATION: envalid.bool({ default: false, devDefault: true }),
+  DID_WEB_ID: envalid.str({
+    default: '',
+    devDefault: 'did:web:localhost%3A5002',
+  }),
+  DID_WEB_SERVICE_ENDPOINT: envalid.str({
+    default: '',
+    devDefault: 'http://localhost%3A5002',
   }),
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
