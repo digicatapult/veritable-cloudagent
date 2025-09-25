@@ -70,15 +70,4 @@ describe('didWebGenerator', function () {
       expect(err).to.have.property('message', 'Invalid DID:web ID format: invalid-did')
     }
   })
-  it('should throw if did is of wrong format', async () => {
-    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
-
-    try {
-      await didWebDocGenerator.generateAndRegisterIfNeeded('did:web:invalid:did', 'http://localhost%3A5002', true)
-      throw new Error('Expected method to throw.')
-    } catch (err) {
-      expect(err).to.be.instanceOf(Error)
-      expect(err).to.have.property('message', 'Invalid DID:web ID format: did:web:invalid:did')
-    }
-  })
 })

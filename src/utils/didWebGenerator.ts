@@ -47,7 +47,6 @@ export class DidWebDocGenerator {
   private validateDidWebId(didId: string): boolean {
     // did:web format: did:web:domain
     const didWebRegex = /^did:web:.*$/
-    if (/^did:web:.*:.*$/.test(didId)) return false // Disallow colon immediately after 'did:web:'
     return didWebRegex.test(didId)
   }
 
