@@ -11,7 +11,10 @@ const insertDidWeb = z.object({
 const Zod = {
   did_web: {
     insert: insertDidWeb,
-    get: insertDidWeb,
+    get: insertDidWeb.extend({
+      created_at: z.date(),
+      updated_at: z.date(),
+    }),
   },
 }
 

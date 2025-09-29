@@ -1,7 +1,6 @@
 import { Agent, KeyType, TypedArrayEncoder } from '@credo-ts/core'
-import fs from 'fs/promises'
+import { Logger } from 'pino'
 import { JWK } from 'ts-jose'
-import PinoLogger from './logger.js'
 
 // Following the format we used for testing in the past
 export interface DidWebDocument {
@@ -37,24 +36,14 @@ export interface DidWebGenerationResult {
 
 export class DidWebDocGenerator {
   private agent: Agent
-  private logger: PinoLogger
+  private logger: Logger
 
-  constructor(agent: Agent, logger: PinoLogger) {
+  constructor(agent: Agent, logger: Logger) {
     this.agent = agent
     this.logger = logger
   }
 
-  private validateDidWebId(didId: string): boolean {
-    // did:web format: did:web:domain
-    const didWebRegex = /^did:web:.*$/
-    return didWebRegex.test(didId)
-  }
-
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
-    if (!this.validateDidWebId(didId)) {
-      throw new Error(`Invalid DID:web ID format: ${didId}`)
-    }
-
     const key = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
 
     const publicJwk = (await key.toPublic()).toObject() // { kty:'OKP', crv:'Ed25519', x:'...' }
@@ -97,21 +86,6 @@ export class DidWebDocGenerator {
       ],
     }
 
-    // Store the DID document as a JSON file in /public/dids
-    try {
-      const didFileName = didId.replace(/^did:web:/, '').replace(/[:/]/g, '_') + '.json'
-      const didDirPath = `${process.cwd()}/public/dids`
-      const didFilePath = `${didDirPath}/${didFileName}`
-      await fs.mkdir(didDirPath, { recursive: true })
-      await fs.writeFile(didFilePath, JSON.stringify(didWebDocument, null, 2), 'utf-8')
-      this.logger.info(`DID:web document saved to ${didFilePath}`)
-    } catch (err) {
-      if (err) {
-        this.logger.error('Failed to save DID:web document locally:', err)
-      }
-      throw err
-    }
-
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
 
     return {
@@ -135,68 +109,48 @@ export class DidWebDocGenerator {
       })
       this.logger.info(`Successfully registered DID:web ${result.did} with agent`)
     } catch (error) {
-      if (error) {
-        this.logger.error(`Failed to register DID:web ${result.did}:`, error)
-      }
-      throw error
+      this.logger.error(error, `Failed to register DID:web ${result.did}:`)
     }
   }
 
   /**
-   * Main method to generate and register DID:web if enabled and not already exists
+   * Main method to generate DID:web if enabled
    */
-  async generateAndRegisterIfNeeded(
-    didId: string,
+  async generate(
+    didWebDomain: string,
     serviceEndpoint: string,
     didGenerationEnabled: boolean
-  ): Promise<void> {
-    if (didGenerationEnabled == false) {
+  ): Promise<DidWebGenerationResult | void> {
+    if (!didGenerationEnabled) {
       this.logger.debug('DID:web generation is disabled')
       return
     }
-    if (!didId) {
-      throw new Error('DID_WEB_ID environment variable is required')
+    if (!didWebDomain) {
+      throw new Error('DID_WEB_DOMAIN environment variable is required')
     }
     if (!serviceEndpoint) {
       throw new Error('DID_WEB_SERVICE_ENDPOINT environment variable is required')
     }
-
-    if (!this.validateDidWebId(didId)) {
-      throw new Error(`Invalid DID:web ID format: ${didId}`)
-    }
-
-    // Check if DID:web already exists
-    const exists = await this.doesDidWebExist(didId)
-    if (exists) {
-      this.logger.info(`DID:web ${didId} already exists, skipping generation`)
+    const did = `did:web:${didWebDomain}`
+    const alreadyImported = await this.isDidWebAlreadyImported(did)
+    if (alreadyImported) {
+      this.logger.info(`DID:web ${did} already exists in agent, skipping generation`)
       return
     }
 
     try {
-      const result = await this.generateDidWebDocument(didId, serviceEndpoint)
-
-      // Import did to the agent
-      await this.importDidWeb(result)
-
-      this.logger.info(`DID:web document generated and registered successfully: ${didId}`)
+      return this.generateDidWebDocument(did, serviceEndpoint)
     } catch (error) {
-      if (error) {
-        this.logger.error('Failed to generate and register DID:web:', error)
-      }
-      throw error
+      this.logger.error(error, 'Failed to generate and register DID:web:')
     }
   }
+
   /**
-   * Checks if a DID:web document already exists in the public/dids directory
+   * Checks if a DID:web document already exists in the agent
    */
-  private async doesDidWebExist(didId: string): Promise<boolean> {
-    const didFileName = didId.replace(/^did:web:/, '').replace(/[:/]/g, '_') + '.json'
-    const didFilePath = `${process.cwd()}/public/dids/${didFileName}`
-    try {
-      await fs.access(didFilePath)
-      return true
-    } catch {
-      return false
-    }
+  public async isDidWebAlreadyImported(did: string): Promise<boolean> {
+    const resolve = await this.agent.dids.resolve(did)
+
+    return !!resolve.didDocument
   }
 }

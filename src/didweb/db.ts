@@ -69,7 +69,11 @@ export default class Database {
     record: Models[typeof model]['insert'],
     conflictCol: string
   ): Promise<Models[typeof model]['get'][]> => {
-    const result = await this.db[model]().insert(record).onConflict(conflictCol).merge().returning('*')
+    const result = await this.db[model]()
+      .insert(record)
+      .onConflict(conflictCol)
+      .merge({ ...record, updated_at: this.client.fn.now() })
+      .returning('*')
     return z.array(Zod[model].get).parse(result) as Models[typeof model]['get'][]
   }
 

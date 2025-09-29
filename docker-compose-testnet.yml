@@ -45,10 +45,12 @@ services:
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_DEV_CERT_PATH=/localhost.pem
-      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/alice.pem
+      - DID_WEB_DEV_KEY_PATH=/alice-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=alice%3A8443
+      - DID_WEB_SERVICE_ENDPOINT=http://alice:5002
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
       #- '5003:5003'
@@ -61,11 +63,9 @@ services:
         npm start | pino-pretty -c -S"
     networks: ['alice', 'testnet']
     volumes:
-      - ./localhost.pem:/localhost.pem
-      - ./localhost-key.pem:/localhost-key.pem
-      - ./alice.pem:/alice.pem
-      - ./alice-key.pem:/alice-key.pem
-      - ./dids/alice:/dids
+      - ./alice+1.pem:/alice.pem
+      - ./alice+1-key.pem:/alice-key.pem
+      - ${NODE_EXTRA_CA_CERTS}:/rootCA.pem
 
   ##################################################################################
   ## Bob ###########################################################################
@@ -98,10 +98,12 @@ services:
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_DEV_CERT_PATH=/localhost.pem
-      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/bob.pem
+      - DID_WEB_DEV_KEY_PATH=/bob-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=bob%3A8443
+      - DID_WEB_SERVICE_ENDPOINT=http://bob:5002
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5102:5002'
       #- '5103:5003'
@@ -114,11 +116,9 @@ services:
         npm start | pino-pretty -c -S"
     networks: ['bob', 'testnet']
     volumes:
-      - ./localhost.pem:/localhost.pem
-      - ./localhost-key.pem:/localhost-key.pem
-      - ./bob.pem:/bob.pem
-      - ./bob-key.pem:/bob-key.pem
-      - ./dids/bob:/dids
+      - ./bob+1.pem:/bob.pem
+      - ./bob+1-key.pem:/bob-key.pem
+      - ${NODE_EXTRA_CA_CERTS}:/rootCA.pem
 
   ##################################################################################
   ## Charlie #######################################################################
@@ -151,10 +151,12 @@ services:
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_DEV_CERT_PATH=/localhost.pem
-      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/charlie.pem
+      - DID_WEB_DEV_KEY_PATH=/charlie-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=charlie%3A8443
+      - DID_WEB_SERVICE_ENDPOINT=http://charlie:5002
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5202:5002'
       #- '5203:5003'
@@ -167,11 +169,9 @@ services:
         npm start | pino-pretty -c -S"
     networks: ['charlie', 'testnet']
     volumes:
-      - ./localhost.pem:/localhost.pem
-      - ./localhost-key.pem:/localhost-key.pem
-      - ./charlie.pem:/charlie.pem
-      - ./charlie-key.pem:/charlie-key.pem
-      - ./dids/charlie:/dids
+      - ./charlie+1.pem:/charlie.pem
+      - ./charlie+1-key.pem:/charlie-key.pem
+      - ${NODE_EXTRA_CA_CERTS}:/rootCA.pem
 
   ##################################################################################
   ## Cluster PEER 0 ################################################################

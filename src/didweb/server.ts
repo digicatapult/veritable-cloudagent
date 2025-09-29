@@ -3,9 +3,8 @@ import express from 'express'
 import fs from 'fs'
 import type { Server } from 'http'
 import https from 'https'
-import { access, readdir, readFile } from 'node:fs/promises'
-import path from 'node:path'
 import { Logger } from 'pino'
+import { DidWebDocument } from '../utils/didWebGenerator.js'
 import { createRequestLogger } from '../utils/logger.js'
 import Database from './db.js'
 import { errorHandler, NotFoundError } from './error.js'
@@ -16,7 +15,6 @@ export interface DidWebServerConfig {
   useDevCert: boolean
   certPath: string
   keyPath: string
-  didWebDir: string
   didWebDomain: string
 }
 
@@ -57,44 +55,15 @@ export class DidWebServer {
     return `did:web:${this.config.didWebDomain}${slashToColon}`
   }
 
-  private serveDid = async (req: express.Request, res: express.Response) => {
+  public serveDid = async (req: express.Request, res: express.Response) => {
     const did = this.reqPathToDid(req.path)
     const [record] = await this.db.get('did_web', { did })
     if (!record) throw new NotFoundError(`DID document not found: ${did}`)
     res.json(record.document)
   }
 
-  private async loadDidDocuments(): Promise<void> {
-    try {
-      await access(this.config.didWebDir)
-    } catch {
-      this.logger.warn(`DID directory '${this.config.didWebDir}' does not exist`)
-      return
-    }
-    this.logger.info(`Loading DIDs from '${this.config.didWebDir}' directory`)
-    const dirents = await readdir(this.config.didWebDir, { withFileTypes: true })
-    const files = dirents.filter((f) => f.isFile() && f.name.endsWith('.json'))
-    await Promise.all(
-      files.map(async (f) => {
-        const raw = await readFile(path.join(this.config.didWebDir, f.name), 'utf8')
-        await this.upsertDid(raw, f.name)
-      })
-    )
-  }
-
-  public async upsertDid(file: string, filename: string): Promise<void> {
-    let json
-    try {
-      json = JSON.parse(file)
-    } catch {
-      this.logger.info(`File '${filename}' contains invalid JSON`)
-      return
-    }
-
-    if (json?.id && typeof json.id === 'string') {
-      this.logger.info(`Loading DID '${json.id}'`)
-      await this.db.upsert('did_web', { did: json.id, document: json }, 'did')
-    }
+  public async upsertDid(document: DidWebDocument): Promise<void> {
+    await this.db.upsert('did_web', { did: document.id, document }, 'did')
   }
 
   async start(): Promise<void> {
@@ -102,7 +71,6 @@ export class DidWebServer {
       this.logger.info('DID:web server disabled')
       return
     }
-    await this.loadDidDocuments()
     const setupGracefulExit = (sigName: NodeJS.Signals, server: Server, exitCode: number) => {
       process.on(sigName, async () => {
         server.close(() => {

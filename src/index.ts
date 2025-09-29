@@ -70,12 +70,35 @@ const agent = await setupAgent({
 
   logger,
 })
-// Generate and register DID:web if enabled
-const didGenerationEnabled = env.get('ENABLE_DID_WEB_GENERATION')
-const didId = env.get('DID_WEB_ID')
-const serviceEndpoint = env.get('DID_WEB_SERVICE_ENDPOINT')
-const didWebGenerator = new DidWebDocGenerator(agent, logger)
-await didWebGenerator.generateAndRegisterIfNeeded(didId, serviceEndpoint, didGenerationEnabled)
+// Generate DID:web if enabled
+const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
+const generatedDid = await didWebGenerator.generate(
+  env.get('DID_WEB_DOMAIN'),
+  env.get('DID_WEB_SERVICE_ENDPOINT'),
+  env.get('DID_WEB_ENABLED')
+)
+
+const database = new Database({
+  host: env.get('POSTGRES_HOST'),
+  database: env.get('DID_WEB_DB_NAME'),
+  user: env.get('POSTGRES_USERNAME'),
+  password: env.get('POSTGRES_PASSWORD'),
+  port: env.get('POSTGRES_PORT'),
+})
+const didWebServer = new DidWebServer(logger.logger.child({ component: 'did-web-server' }), database, {
+  enabled: env.get('DID_WEB_ENABLED'),
+  port: env.get('DID_WEB_PORT'),
+  useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
+  certPath: env.get('DID_WEB_DEV_CERT_PATH'),
+  keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
+  didWebDomain: env.get('DID_WEB_DOMAIN'),
+})
+
+await didWebServer.start()
+if (generatedDid) {
+  await didWebServer.upsertDid(generatedDid.didDocument)
+  await didWebGenerator.importDidWeb(generatedDid)
+}
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
@@ -118,22 +141,3 @@ server.on('upgrade', (request, socket, head) => {
     return
   })
 })
-
-const database = new Database({
-  host: env.get('POSTGRES_HOST'),
-  database: env.get('DID_WEB_DB_NAME'),
-  user: env.get('POSTGRES_USERNAME'),
-  password: env.get('POSTGRES_PASSWORD'),
-  port: env.get('POSTGRES_PORT'),
-})
-const didWebServer = new DidWebServer(logger.logger.child({ component: 'did-web-server' }), database, {
-  enabled: env.get('DID_WEB_ENABLED'),
-  port: env.get('DID_WEB_PORT'),
-  useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
-  certPath: env.get('DID_WEB_DEV_CERT_PATH'),
-  keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
-  didWebDir: env.get('DID_WEB_DIR'),
-  didWebDomain: env.get('DID_WEB_DOMAIN'),
-})
-
-await didWebServer.start()

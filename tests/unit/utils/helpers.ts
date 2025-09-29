@@ -683,12 +683,10 @@ export async function closeWebSocket(ws: WebSocket) {
   })
 }
 
-export async function cleanupCreatedDids() {
-  const didsDir = path.join(process.cwd(), 'public', 'dids')
-
+export async function cleanupCreatedDids(dir: string) {
   try {
-    const files = await fs.readdir(didsDir)
-    await Promise.all(files.map((file) => fs.unlink(path.join(didsDir, file))))
+    const files = await fs.readdir(dir)
+    await Promise.all(files.map((file) => fs.unlink(path.join(dir, file))))
   } catch {
     // Directory may not exist, ignore
   }

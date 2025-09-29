@@ -46,16 +46,15 @@ services:
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_DEV_CERT_PATH=/localhost.pem
-      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/alice.pem
+      - DID_WEB_DEV_KEY_PATH=/alice-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=localhost%3A8443
     networks:
       - testnet
     volumes:
-      - ./localhost.pem:/localhost.pem
-      - ./localhost-key.pem:/localhost-key.pem
-      - ./dids/alice:/dids
+      - ./alice+1.pem:/alice.pem
+      - ./alice+1-key.pem:/alice-key.pem
 
   ##################################################################################
   ## IPFS ##########################################################################

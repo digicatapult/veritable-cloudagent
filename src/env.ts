@@ -118,11 +118,6 @@ export const envConfig = {
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
   }),
-  ENABLE_DID_WEB_GENERATION: envalid.bool({ default: false, devDefault: true }),
-  DID_WEB_ID: envalid.str({
-    default: '',
-    devDefault: 'did:web:localhost%3A8443',
-  }),
   DID_WEB_SERVICE_ENDPOINT: envalid.str({
     default: '',
     devDefault: 'http://localhost:5002',
@@ -130,10 +125,9 @@ export const envConfig = {
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
   DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
-  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
-  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
+  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'alice.pem' }),
+  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'alice-key.pem' }),
   DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
-  DID_WEB_DIR: envalid.str({ default: '/dids' }),
   DID_WEB_DOMAIN: envalid.str({ default: '', devDefault: 'localhost%3A8443' }),
 }
 

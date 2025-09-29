@@ -3,11 +3,9 @@ import { readFileSync } from 'fs'
 import { Agent, fetch } from 'undici'
 
 const ca = readFileSync('/rootCA.pem')
-const aliceDid = readFileSync('/dids/alice.json')
-const bobDid = readFileSync('/dids/bob.json')
-const charlieDid = readFileSync('/dids/charlie.json')
 
 const agents = ['https://alice:8443', 'https://bob:8443', 'https://charlie:8443']
+const dids = ['did:web:alice%3A8443', 'did:web:bob%3A8443', 'did:web:charlie%3A8443']
 const httpsAgent = new Agent({
   connect: {
     ca: ca,
@@ -29,7 +27,7 @@ describe('get did:web', function () {
     it(`should return test DID from ${baseUrl}`, async function () {
       const res = await fetch(`${baseUrl}/did.json`, { dispatcher: httpsAgent })
       const body = await res.json()
-      expect(body).to.deep.equal(JSON.parse([aliceDid, bobDid, charlieDid][index].toString('utf8')))
+      expect(body).to.deep.include({ id: dids[index] })
     })
   })
 
