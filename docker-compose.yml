@@ -81,7 +81,7 @@ services:
 
   postgres:
     container_name: veritable-cloudagent-postgres
-    image: postgres:17.6-alpine
+    image: postgres:18.0-alpine
     restart: on-failure
     ports:
       - 5432:5432
