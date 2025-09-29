@@ -26,7 +26,7 @@ export class DidWebServer {
   private db: Database
 
   constructor(logger: Logger, db: Database, config: DidWebServerConfig) {
-    this.logger = logger
+    this.logger = logger.child({ component: 'did-web-server' })
     this.config = config
     this.app = express()
     this.db = db
@@ -63,6 +63,7 @@ export class DidWebServer {
   }
 
   public async upsertDid(document: DidWebDocument): Promise<void> {
+    this.logger.info(`Uploading did to server: ${document.id}`)
     await this.db.upsert('did_web', { did: document.id, document }, 'did')
   }
 

@@ -40,7 +40,7 @@ export class DidWebDocGenerator {
 
   constructor(agent: Agent, logger: Logger) {
     this.agent = agent
-    this.logger = logger
+    this.logger = logger.child({ component: 'did-web-generator' })
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
@@ -114,12 +114,13 @@ export class DidWebDocGenerator {
   }
 
   /**
-   * Main method to generate DID:web if enabled
+   * Main method to generate and register did:web
    */
-  async generate(
+  async generateAndRegister(
     didWebDomain: string,
     serviceEndpoint: string,
-    didGenerationEnabled: boolean
+    didGenerationEnabled: boolean,
+    uploadDidToServer: (document: DidWebDocument) => Promise<void>
   ): Promise<DidWebGenerationResult | void> {
     if (!didGenerationEnabled) {
       this.logger.debug('DID:web generation is disabled')
@@ -137,9 +138,12 @@ export class DidWebDocGenerator {
       this.logger.info(`DID:web ${did} already exists in agent, skipping generation`)
       return
     }
+    this.logger.info(`${did} not found in agent, generating new document`)
 
     try {
-      return this.generateDidWebDocument(did, serviceEndpoint)
+      const generated = await this.generateDidWebDocument(did, serviceEndpoint)
+      await uploadDidToServer(generated.didDocument)
+      await this.importDidWeb(generated)
     } catch (error) {
       this.logger.error(error, 'Failed to generate and register DID:web:')
     }
@@ -149,6 +153,7 @@ export class DidWebDocGenerator {
    * Checks if a DID:web document already exists in the agent
    */
   public async isDidWebAlreadyImported(did: string): Promise<boolean> {
+    this.logger.info(`Checking if ${did} is already imported in agent`)
     const resolve = await this.agent.dids.resolve(did)
 
     return !!resolve.didDocument

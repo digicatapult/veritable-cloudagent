@@ -50,11 +50,14 @@ services:
       - DID_WEB_DEV_KEY_PATH=/alice-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=localhost%3A8443
+      - DID_WEB_SERVICE_ENDPOINT=http://localhost:5002
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
     networks:
       - testnet
     volumes:
       - ./alice+1.pem:/alice.pem
       - ./alice+1-key.pem:/alice-key.pem
+      - ${NODE_EXTRA_CA_CERTS}:/rootCA.pem
 
   ##################################################################################
   ## IPFS ##########################################################################

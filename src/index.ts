@@ -70,13 +70,6 @@ const agent = await setupAgent({
 
   logger,
 })
-// Generate DID:web if enabled
-const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
-const generatedDid = await didWebGenerator.generate(
-  env.get('DID_WEB_DOMAIN'),
-  env.get('DID_WEB_SERVICE_ENDPOINT'),
-  env.get('DID_WEB_ENABLED')
-)
 
 const database = new Database({
   host: env.get('POSTGRES_HOST'),
@@ -85,7 +78,7 @@ const database = new Database({
   password: env.get('POSTGRES_PASSWORD'),
   port: env.get('POSTGRES_PORT'),
 })
-const didWebServer = new DidWebServer(logger.logger.child({ component: 'did-web-server' }), database, {
+const didWebServer = new DidWebServer(logger.logger, database, {
   enabled: env.get('DID_WEB_ENABLED'),
   port: env.get('DID_WEB_PORT'),
   useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
@@ -93,12 +86,15 @@ const didWebServer = new DidWebServer(logger.logger.child({ component: 'did-web-
   keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
   didWebDomain: env.get('DID_WEB_DOMAIN'),
 })
-
 await didWebServer.start()
-if (generatedDid) {
-  await didWebServer.upsertDid(generatedDid.didDocument)
-  await didWebGenerator.importDidWeb(generatedDid)
-}
+
+const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
+await didWebGenerator.generateAndRegister(
+  env.get('DID_WEB_DOMAIN'),
+  env.get('DID_WEB_SERVICE_ENDPOINT'),
+  env.get('DID_WEB_ENABLED'),
+  (document) => didWebServer.upsertDid(document)
+)
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
