@@ -2,6 +2,12 @@ import knex, { Knex } from 'knex'
 import { z } from 'zod'
 import Zod, { IDatabase, Models, Order, TABLE, Where, tablesList } from './types.js'
 
+/**
+ * Applies where conditions to a Knex query builder
+ * @param query - The Knex query builder to modify
+ * @param where - Optional where conditions as objects or tuples
+ * @returns The modified query builder
+ */
 export const reduceWhere = <M extends TABLE>(
   query: knex.Knex.QueryBuilder,
   where?: Where<M>
@@ -28,6 +34,9 @@ export const reduceWhere = <M extends TABLE>(
   return query
 }
 
+/**
+ * Configuration for database connection
+ */
 export interface DatabaseConnectionConfig {
   host: string
   database: string
@@ -36,10 +45,18 @@ export interface DatabaseConnectionConfig {
   port: number
 }
 
+/**
+ * Database abstraction layer providing type-safe CRUD operations
+ */
 export default class Database {
   private db: IDatabase
   private client: Knex
 
+  /**
+   * Creates a new Database instance
+   * @param connection - Database connection configuration
+   * @param client - Optional pre-configured Knex client
+   */
   constructor(connection: DatabaseConnectionConfig, client?: Knex) {
     this.client =
       client ??
@@ -64,6 +81,13 @@ export default class Database {
     this.db = models
   }
 
+  /**
+   * Insert or update a record based on conflict resolution
+   * @param model - The table name
+   * @param record - The record to insert/update
+   * @param conflictCol - Column to use for conflict detection
+   * @returns Array of affected records
+   */
   upsert = async <M extends TABLE>(
     model: M,
     record: Models[typeof model]['insert'],
@@ -77,6 +101,14 @@ export default class Database {
     return z.array(Zod[model].get).parse(result) as Models[typeof model]['get'][]
   }
 
+  /**
+   * Retrieve records from a table with optional filtering, ordering, and limiting
+   * @param model - The table name
+   * @param where - Optional where conditions
+   * @param order - Optional ordering specifications
+   * @param limit - Optional maximum number of records to return
+   * @returns Array of matching records
+   */
   get = async <M extends TABLE>(
     model: M,
     where?: Where<M>,

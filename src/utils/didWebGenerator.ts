@@ -110,6 +110,7 @@ export class DidWebDocGenerator {
       this.logger.info(`Successfully registered DID:web ${result.did} with agent`)
     } catch (error) {
       this.logger.error(error, `Failed to register DID:web ${result.did}:`)
+      throw error
     }
   }
 
@@ -146,6 +147,7 @@ export class DidWebDocGenerator {
       await this.importDidWeb(generated)
     } catch (error) {
       this.logger.error(error, 'Failed to generate and register DID:web:')
+      throw error
     }
   }
 

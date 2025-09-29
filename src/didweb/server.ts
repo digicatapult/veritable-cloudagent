@@ -45,6 +45,12 @@ export class DidWebServer {
     res.json({ status: 'ok' })
   }
 
+  /**
+   * Converts a request path to a did:web identifier
+   * @param reqPath - The HTTP request path (e.g., '/.well-known/did.json' or '/path/to/did.json')
+   * @returns The corresponding did:web identifier
+   * @throws Error if the path doesn't end with 'did.json'
+   */
   public reqPathToDid(reqPath: string): string {
     if (reqPath === '/.well-known/did.json' || reqPath === '/did.json') return `did:web:${this.config.didWebDomain}`
 
