@@ -22,8 +22,6 @@ import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
 import { WebSocket } from 'ws'
 
-import fs from 'fs/promises'
-import path from 'node:path'
 import { RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
@@ -681,13 +679,4 @@ export async function closeWebSocket(ws: WebSocket) {
     ws.once('error', (err) => reject(err))
     ws.close()
   })
-}
-
-export async function cleanupCreatedDids(dir: string) {
-  try {
-    const files = await fs.readdir(dir)
-    await Promise.all(files.map((file) => fs.unlink(path.join(dir, file))))
-  } catch {
-    // Directory may not exist, ignore
-  }
 }
