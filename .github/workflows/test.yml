@@ -133,8 +133,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           file: ./Dockerfile
-          # The arm64 img is added only in release ( arm ETA build-time is ~1h )
-          platforms: linux/amd64
+          platforms: linux/amd64, linux/arm64
           push: false
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},mode=max
