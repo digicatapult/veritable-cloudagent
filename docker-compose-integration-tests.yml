@@ -36,13 +36,11 @@ services:
     networks:
       - testnet
     volumes:
-      - ${DID_WEB_ROOT_CERT_PATH}:/rootCA.pem
+      - ${NODE_EXTRA_CA_CERTS}:/rootCA.pem
 
   alice:
     environment:
       - STORAGE_TYPE=sqlite
-      - DID_WEB_DEV_CERT_PATH=/alice.pem
-      - DID_WEB_DEV_KEY_PATH=/alice-key.pem
 
   bob:
     environment:
