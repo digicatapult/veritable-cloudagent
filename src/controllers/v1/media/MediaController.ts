@@ -1,6 +1,6 @@
 import { Agent } from '@credo-ts/core'
 import express from 'express'
-import { Body, Controller, Example, Post, Request, Response, Route, Tags } from 'tsoa'
+import { Body, Controller, Example, Hidden, Post, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
@@ -36,6 +36,7 @@ export class MediaController extends Controller {
       },
     ],
   })
+  @Hidden()
   @Post('/share')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
