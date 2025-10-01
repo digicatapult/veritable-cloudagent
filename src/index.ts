@@ -9,9 +9,11 @@ import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
+import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
+import { DidWebDocGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
 const env = container.resolve(Env)
@@ -35,7 +37,7 @@ const agent = await setupAgent({
           : {
               type: 'postgres',
               config: {
-                host: `${env.get('POSTGRES_HOST') as string}:${env.get('POSTGRES_PORT') as string}`,
+                host: `${env.get('POSTGRES_HOST') as string}:${String(env.get('POSTGRES_PORT'))}`,
               },
               credentials: {
                 account: env.get('POSTGRES_USERNAME') as string,
@@ -68,6 +70,31 @@ const agent = await setupAgent({
 
   logger,
 })
+
+const database = new Database({
+  host: env.get('POSTGRES_HOST'),
+  database: env.get('DID_WEB_DB_NAME'),
+  user: env.get('POSTGRES_USERNAME'),
+  password: env.get('POSTGRES_PASSWORD'),
+  port: env.get('POSTGRES_PORT'),
+})
+const didWebServer = new DidWebServer(logger.logger, database, {
+  enabled: env.get('DID_WEB_ENABLED'),
+  port: env.get('DID_WEB_PORT'),
+  useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
+  certPath: env.get('DID_WEB_DEV_CERT_PATH'),
+  keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
+  didWebDomain: env.get('DID_WEB_DOMAIN'),
+})
+await didWebServer.start()
+
+const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
+await didWebGenerator.generateAndRegister(
+  env.get('DID_WEB_DOMAIN'),
+  env.get('DID_WEB_SERVICE_ENDPOINT'),
+  env.get('DID_WEB_ENABLED'),
+  (document) => didWebServer.upsertDid(document)
+)
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
@@ -110,13 +137,3 @@ server.on('upgrade', (request, socket, head) => {
     return
   })
 })
-
-const didWebServer = new DidWebServer(logger.logger, {
-  enabled: env.get('DID_WEB_ENABLED'),
-  port: env.get('DID_WEB_PORT'),
-  useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
-  certPath: env.get('DID_WEB_DEV_CERT_PATH'),
-  keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
-})
-
-await didWebServer.start()

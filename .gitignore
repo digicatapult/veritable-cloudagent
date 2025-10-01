@@ -2,6 +2,7 @@ config/local.json
 
 node_modules/
 build
+public/dids
 src/routes/routes.ts
 dist
 coverage
@@ -21,7 +22,6 @@ logs.txt
 npm-debug.log*
 *.log
 *.tsbuildinfo
-knexfile.js
 *.pid
 *.seed
 *.pid.lock
