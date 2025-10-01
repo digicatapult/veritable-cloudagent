@@ -2,11 +2,18 @@
 /**
  * Script to register a predefined AnonCreds schema with a running cloud agent.
  *
- * Usage example:
- *   ISSUER_ID=did:key:xyz BASE_URL=http://localhost:3000 node scripts/register-schema.mjs makeAuthorisation
+ * Usage:
+ *   node scripts/register-schema.mjs <schemaKey> --issuer <did> --base-url <agent_url>
+ * Example:
+ *   node scripts/register-schema.mjs makeAuthorisation --issuer did:key:z6Abc123 --base-url http://localhost:3000
  *
- * Looks for a schema JSON under scripts/schemas/<schemaKey>.json
- * Adds the issuerId from env and POSTs to /v1/schemas.
+ * Flags:
+ *   --issuer, -i     DID of issuer (required)
+ *   --base-url, -b   Base URL of the agent (default: http://localhost:3000)
+ *   --help, -h       Show usage
+ *
+ * Looks for schema JSON under scripts/schemas/<schemaKey>.json
+ * Adds issuerId and POSTs to /v1/schemas.
  */
 import fs from 'fs'
 import path from 'path'
@@ -17,12 +24,47 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+function parseArgs(argv) {
+  const args = argv.slice(2)
+  let schemaKey
+  let issuerId
+  let baseUrl = 'http://localhost:3000'
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === '--issuer' || a === '-i') {
+      issuerId = args[++i]
+      continue
+    }
+    if (a === '--base-url' || a === '-b') {
+      baseUrl = args[++i]
+      continue
+    }
+    if (a === '--help' || a === '-h') {
+      printUsageAndExit(0)
+    }
+    if (!a.startsWith('-') && !schemaKey) {
+      schemaKey = a
+      continue
+    }
+    // Unknown / duplicate argument
+    process.stderr.write(`Unknown or duplicate argument: ${a}\n`)
+    printUsageAndExit(1)
+  }
+  return { schemaKey, issuerId, baseUrl }
+}
+
+function printUsageAndExit(code) {
+  process.stderr.write(
+    'Usage: node scripts/register-schema.mjs <schemaKey> --issuer <did> [--base-url <url>]\n' +
+      'Example: node scripts/register-schema.mjs makeAuthorisation --issuer did:key:abc --base-url http://localhost:3000\n'
+  )
+  process.exit(code)
+}
+
 async function main() {
-  const schemaKey = process.argv[2]
+  const { schemaKey, issuerId, baseUrl } = parseArgs(process.argv)
   if (!schemaKey) throw new Error('Schema key argument required, e.g. `makeAuthorisation`')
-  const issuerId = process.env.ISSUER_ID
-  if (!issuerId) throw new Error('ISSUER_ID env var required')
-  const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+  if (!issuerId) throw new Error('Issuer DID is required via --issuer')
 
   const schemaPath = path.join(__dirname, 'schemas', `${schemaKey}.json`)
   if (!fs.existsSync(schemaPath)) throw new Error(`Schema definition not found: ${schemaPath}`)
