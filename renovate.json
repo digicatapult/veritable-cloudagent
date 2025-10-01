@@ -1,14 +1,18 @@
 {
-	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"extends": ["github>digicatapult/renovate-config"],
-	"packageRules": [
-		{
-			"matchPackagePatterns": ["^@credo-ts/"],
-			"enabled": false
-		},
-		{
-			"matchPackageNames": ["@hyperledger/anoncreds-nodejs"],
-			"enabled": false
-		}
-	]
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>digicatapult/renovate-config"],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["^@credo-ts/"],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": ["@hyperledger/anoncreds-nodejs"],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": ["@swc/core"],
+      "enabled": false
+    }
+  ]
 }
