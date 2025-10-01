@@ -117,6 +117,34 @@ This private testnet has the following ports available to the user for testing:
 
 Network name: `testnet`
 
+#### Demo Script for MOD
+
+You can also run a script to set up a demo state where the MOD (aka Alice) is connected to both OEM and Maker.
+In order to run the script please make a file called `.mod.env` with the content:
+
+```
+# Agent API bases
+MOD_API=http://localhost:3000
+MAKER_API=http://localhost:3001
+OEM_API=http://localhost:3002
+
+# DIDs
+MOD_DID=did:web:CORRECT_DID
+MAKER_DID=did:web:CORRECT_DID
+OEM_DID=did:web:CORRECT_DID
+
+# Timing
+TIMEOUT_SECS=30
+POLL_INTERVAL_SECS=1
+
+```
+
+Then run:
+
+```
+bash scripts/mod-setup.sh
+```
+
 #### Starting Own Server
 
 ## Building and running
