@@ -23,6 +23,7 @@ services:
     environment:
       - NODE_ENV=test
       - ALICE_BASE_URL=http://alice:3000
+      - ALICE_WS_PORT=5003
       - ALICE_DID
       - ALICE_PRIV_KEY
       - BOB_BASE_URL=http://bob:3000

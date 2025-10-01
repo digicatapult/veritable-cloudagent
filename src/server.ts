@@ -16,6 +16,7 @@ import { basicMessageEvents } from './events/BasicMessageEvents.js'
 import { connectionEvents } from './events/ConnectionEvents.js'
 import { credentialEvents } from './events/CredentialEvents.js'
 import { drpcEvents } from './events/DrpcEvents.js'
+import { mediaSharingEvents } from './events/MediaSharingEvents.js'
 import { proofEvents } from './events/ProofEvents.js'
 import { trustPingEvents } from './events/TrustPingEvents.js'
 import { verifiedDrpcEvents } from './events/VerifiedDrpcEvents.js'
@@ -57,6 +58,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
     trustPingEvents(agent, config)
     drpcEvents(agent, config)
     verifiedDrpcEvents(agent, config)
+    mediaSharingEvents(agent, config)
   }
 
   // Use Express native body parser to read sent json payloads
