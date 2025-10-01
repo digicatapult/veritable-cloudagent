@@ -31,21 +31,33 @@ services:
       - '5003:5003'
       - '3000:3000'
       - '8443:8443'
+    command: >
+      sh -c "
+        npm i -g pino-pretty
+        node ./node_modules/.bin/knex migrate:latest
+        npm start | pino-pretty -c -S"
     environment:
       - ENDPOINT='http://alice:5002, ws://alice:5003'
       - IPFS_ORIGIN=http://ipfs:5001
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=postgres
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443
-      - DID_WEB_DEV_CERT_PATH=/localhost.pem
-      - DID_WEB_DEV_KEY_PATH=/localhost-key.pem
+      - DID_WEB_DEV_CERT_PATH=/alice.pem
+      - DID_WEB_DEV_KEY_PATH=/alice-key.pem
+      - DID_WEB_DB_NAME=did-web-server
+      - DID_WEB_DOMAIN=localhost%3A8443
+      - DID_WEB_SERVICE_ENDPOINT=http://localhost:5002
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
     networks:
       - testnet
     volumes:
-      - ./localhost.pem:/localhost.pem
-      - ./localhost-key.pem:/localhost-key.pem
+      - ./alice+1.pem:/alice.pem
+      - ./alice+1-key.pem:/alice-key.pem
+      - ${NODE_EXTRA_CA_CERTS}:/rootCA.pem
 
   ##################################################################################
   ## IPFS ##########################################################################
@@ -69,16 +81,16 @@ services:
 
   postgres:
     container_name: veritable-cloudagent-postgres
-    image: postgres:17.6-alpine
+    image: postgres:18.0-alpine
     restart: on-failure
     ports:
       - 5432:5432
     volumes:
-      - veritable-cloudagent-storage:/var/lib/postgresql/data
+      - veritable-cloudagent-storage:/var/lib/postgresql
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres-veritable-cloudagent
+      - POSTGRES_DB=did-web-server
     networks:
       - testnet
 volumes:

@@ -5,6 +5,7 @@ import { singleton } from 'tsyringe'
 
 if (process.env.NODE_ENV === 'test') {
   dotenv.config({ path: 'tests/test.env' })
+  dotenv.config({ override: true })
 } else {
   dotenv.config()
 }
@@ -56,7 +57,7 @@ const stringArray = <T extends string = string>(
   return validator(spec)
 }
 
-const envConfig = {
+export const envConfig = {
   LABEL: envalid.str({ default: 'Veritable Cloudagent', devDefault: 'Veritable Cloudagent' }),
   WALLET_ID: envalid.str({ default: 'walletId', devDefault: 'walletId' }),
   WALLET_KEY: envalid.str({ default: 'walletKey', devDefault: 'walletKey' }),
@@ -108,7 +109,7 @@ const envConfig = {
   PERSONA_COLOR: envalid.str({ default: 'white' }),
   STORAGE_TYPE: envalid.str({ default: 'postgres', choices: ['sqlite', 'postgres'] }),
   POSTGRES_HOST: envalid.str({ default: 'postgres', devDefault: 'localhost' }),
-  POSTGRES_PORT: envalid.str({ default: '5432', devDefault: '5432' }),
+  POSTGRES_PORT: envalid.port({ default: 5432, devDefault: 5432 }),
   POSTGRES_USERNAME: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
   POSTGRES_PASSWORD: envalid.str({ default: 'postgres', devDefault: 'postgres' }),
   VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS: envalid.num({ default: 5000, devDefault: 5000 }),
@@ -117,11 +118,17 @@ const envConfig = {
     default: JSON.parse(proofRequestOptions),
     devDefault: JSON.parse(proofRequestOptions),
   }),
+  DID_WEB_SERVICE_ENDPOINT: envalid.str({
+    default: '',
+    devDefault: 'http://localhost:5002',
+  }),
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
   DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
-  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'localhost.pem' }),
-  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'localhost-key.pem' }),
+  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'alice.pem' }),
+  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'alice-key.pem' }),
+  DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
+  DID_WEB_DOMAIN: envalid.str({ default: '', devDefault: 'localhost%3A8443' }),
 }
 
 export type ENV_CONFIG = typeof envConfig
