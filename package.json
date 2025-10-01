@@ -35,7 +35,8 @@
     "start": "node build/index.js",
     "test:unit": "NODE_OPTIONS='--no-experimental-strip-types' mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "NODE_OPTIONS='--no-experimental-strip-types' mocha --config ./tests/mocharc.json tests/integration/**/*.test.ts",
-    "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/"
+    "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/",
+    "register:schema": "node scripts/register-schema.mjs"
   },
   "dependencies": {
     "@credo-ts/anoncreds": "^0.5.17",
