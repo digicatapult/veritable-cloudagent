@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.15.4",
+  "version": "0.15.5",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -42,6 +42,7 @@
     "db:rollback": "npm run db:cmd -- migrate:rollback"
   },
   "dependencies": {
+    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.3",
     "@credo-ts/anoncreds": "^0.5.17",
     "@credo-ts/askar": "^0.5.17",
     "@credo-ts/core": "^0.5.17",
@@ -61,7 +62,7 @@
     "http-errors": "^2.0.0",
     "knex": "^3.1.0",
     "pg": "^8.16.3",
-    "pino": "^9.11.0",
+    "pino": "^9.12.0",
     "pino-http": "^10.5.0",
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.1",
@@ -108,6 +109,13 @@
     "node": ">= 20"
   },
   "overrides": {
+    "@2060.io/credo-ts-didcomm-media-sharing": {
+      "@credo-ts/anoncreds": "0.5.17",
+      "@credo-ts/askar": "0.5.17",
+      "@credo-ts/core": "0.5.17",
+      "@credo-ts/drpc": "0.5.17",
+      "@credo-ts/node": "0.5.17"
+    },
     "ref-napi": "npm:@2060.io/ref-napi"
   }
 }
