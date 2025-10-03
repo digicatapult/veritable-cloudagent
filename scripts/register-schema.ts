@@ -126,9 +126,56 @@ async function main() {
     throw new Error(`Failed registering schema: ${res.status} ${text}`)
   }
 
-  const json = (await res.json()) as { id?: string; [k: string]: unknown }
-  log('Schema registered:', json)
-  if (json.id) process.stdout.write(`${json.id}\n`)
+  const json = (await res.json()) as { id?: string; name?: string; version?: string; [k: string]: unknown }
+  if (!json.id) throw new Error('Schema registration response missing id')
+  const schemaId = json.id
+  log('Schema registered:', { id: schemaId })
+
+  let credDefId: string | undefined
+  // Derive tag: <schemaName>_V<version>
+  const baseName = (json.name ?? schemaKey).replace(/\s+/g, '_')
+  const version = json.version ?? '1.0.0'
+  const tag = `${baseName}_V${version}`
+
+  // First attempt to find existing credential definition
+  const listUrl = new URL(`${baseUrl}/v1/credential-definitions`)
+  listUrl.searchParams.set('createdLocally', 'true')
+  listUrl.searchParams.set('issuerId', issuerId)
+  listUrl.searchParams.set('schemaId', schemaId)
+  try {
+    const existingRes = await fetch(listUrl.toString(), {})
+    if (existingRes.ok) {
+      const existing = (await existingRes.json()) as Array<{ id: string; tag?: string }>
+      const found = existing.find((e) => e.tag === tag) || existing[0]
+      if (found) {
+        credDefId = found.id
+        log('Reusing existing credential definition', { id: credDefId, tag })
+      }
+    }
+  } catch (e) {
+    log('Warning: unable to query existing credential definitions', (e as Error).message)
+  }
+
+  if (!credDefId) {
+    log('Creating credential definition', { tag })
+    const cdRes = await fetch(`${baseUrl}/v1/credential-definitions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ issuerId, schemaId, tag }),
+    })
+    if (!cdRes.ok) {
+      const text = await cdRes.text()
+      throw new Error(`Failed registering credential definition: ${cdRes.status} ${text}`)
+    }
+    const cdJson = (await cdRes.json()) as { id?: string }
+    if (!cdJson.id) throw new Error('Credential definition response missing id')
+    credDefId = cdJson.id
+    log('Credential definition registered', { id: credDefId })
+  }
+
+  // Output (stdout) schemaId first line, credential definition (if any) second line.
+  process.stdout.write(`${schemaId}\n`)
+  if (credDefId) process.stdout.write(`${credDefId}\n`)
 }
 
 main().catch((e) => process.stderr.write((e as Error).stack + '\n') && process.exit(1))
