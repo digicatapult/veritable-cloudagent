@@ -3,7 +3,7 @@
  * Script to register a predefined AnonCreds schema with a running cloud agent.
  *
  * Usage:
- *   node --experimental-strip-types ./scripts/register-schema.ts <schemaKey> --issuer <did> --base-url <agent_url>
+ *   node --experimental-strip-types ./scripts/register-schema.ts <schemaFileName> --issuer <did> --base-url <agent_url>
  *   node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation \
  *     --issuer did:key:z6Abc123 --base-url http://localhost:3000
  *
@@ -12,7 +12,7 @@
  *   --base-url, -b   Base agent URL (default: http://localhost:3000) (Alice)
  *   --help, -h       Show usage
  *
- * Looks for schema JSON under scripts/schemas/<schemaKey>.json, adds issuerId and POSTs it.
+ * Looks for schema JSON under scripts/schemas/<schemaFileName>.json, adds issuerId and POSTs it.
  * Prints the created schema id (last line on stdout) for easy scripting.
  */
 import fs from 'fs'
@@ -37,7 +37,7 @@ interface ParsedArgs {
 
 function printUsageAndExit(code: number): never {
   process.stderr.write(
-    'Usage: register-schema <schemaKey> [--issuer <did>] [--base-url <url>]\n' +
+    'Usage: register-schema <schemaFileName> [--issuer <did>] [--base-url <url>]\n' +
       'Examples:\n' +
       '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation --issuer did:key:abc --base-url http://localhost:3000\n' +
       '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation --base-url http://localhost:3000\n' +

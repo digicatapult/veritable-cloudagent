@@ -731,8 +731,6 @@ This project ships with a registration helper script that:
 2. Automatically (by default) registers or reuses a credential definition for that schema
 3. Prints the IDs to stdout (first line = schemaId, second line = credentialDefinitionId)
 
-The script supports auto-resolving an issuer DID from a `did:web` endpoint or accepting one explicitly.
-
 ##### Script Location
 `scripts/register-schema.ts`
 
