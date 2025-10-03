@@ -3,8 +3,8 @@
  * Script to register a predefined AnonCreds schema with a running cloud agent.
  *
  * Usage:
- *   node --experimental-strip-types scripts/register-schema.ts <schemaKey> --issuer <did> --base-url <agent_url>
- *   node --import @swc-node/register/esm-register scripts/register-schema.ts makeAuthorisation \
+ *   node --experimental-strip-types ./scripts/register-schema.ts <schemaKey> --issuer <did> --base-url <agent_url>
+ *   node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation \
  *     --issuer did:key:z6Abc123 --base-url http://localhost:3000
  *
  * Flags:
@@ -19,6 +19,12 @@ import fs from 'fs'
 import path from 'path'
 import process from 'process'
 import { fileURLToPath } from 'url'
+import type {
+  AnonCredsCredentialDefinitionResponse,
+  AnonCredsSchemaResponse,
+  CredentialDefinitionId,
+  SchemaId,
+} from '../src/controllers/types.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -33,8 +39,8 @@ function printUsageAndExit(code: number): never {
   process.stderr.write(
     'Usage: register-schema <schemaKey> [--issuer <did>] [--base-url <url>]\n' +
       'Examples:\n' +
-      '  node scripts/register-schema.mjs makeAuthorisation --issuer did:key:abc --base-url http://localhost:3000\n' +
-      '  ts-node scripts/register-schema.ts makeAuthorisation --base-url http://localhost:3000\n' +
+      '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation --issuer did:key:abc --base-url http://localhost:3000\n' +
+      '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation --base-url http://localhost:3000\n' +
       'If --issuer is omitted, DID will be did:web:alice%3A8443\n'
   )
   process.exit(code)
@@ -96,12 +102,13 @@ async function main() {
     throw new Error(`Failed registering schema: ${res.status} ${text}`)
   }
 
-  const json = (await res.json()) as { id?: string; name?: string; version?: string; [k: string]: unknown }
+  const json = (await res.json()) as AnonCredsSchemaResponse
+
   if (!json.id) throw new Error('Schema registration response missing id')
-  const schemaId = json.id
+  const schemaId: SchemaId = json.id
   log('Schema registered:', { id: schemaId })
 
-  let credDefId: string | undefined
+  let credDefId: CredentialDefinitionId | undefined
   // Derive tag: <schemaName>_V<version>
   const baseName = (json.name ?? schemaFileName).replace(/\s+/g, '_')
   const version = json.version ?? '1.0.0'
@@ -115,7 +122,7 @@ async function main() {
   try {
     const existingRes = await fetch(listUrl.toString(), {})
     if (existingRes.ok) {
-      const existing = (await existingRes.json()) as Array<{ id: string; tag?: string }>
+      const existing = (await existingRes.json()) as Array<AnonCredsCredentialDefinitionResponse>
       const found = existing.find((e) => e.tag === tag) || existing[0]
       if (found) {
         credDefId = found.id
@@ -137,7 +144,7 @@ async function main() {
       const text = await cdRes.text()
       throw new Error(`Failed registering credential definition: ${cdRes.status} ${text}`)
     }
-    const cdJson = (await cdRes.json()) as { id?: string }
+    const cdJson = (await cdRes.json()) as { id?: CredentialDefinitionId }
     if (!cdJson.id) throw new Error('Credential definition response missing id')
     credDefId = cdJson.id
     log('Credential definition registered', { id: credDefId })
