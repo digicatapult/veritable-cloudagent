@@ -727,7 +727,7 @@ The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proo
 
 This project ships with a registration helper script that:
 
-1. Registers a schema (from a JSON file under `scripts/schemas/<schemaKey>.json`)
+1. Registers a schema (from a JSON file under `scripts/schemas/<schemaFileName>.json`)
 2. Automatically (by default) registers or reuses a credential definition for that schema
 3. Prints the IDs to stdout (first line = schemaId, second line = credentialDefinitionId)
 
@@ -747,45 +747,33 @@ Each schema JSON file MUST contain at minimum:
 ```
 The `issuerId` is NOT stored in the JSON file – it is injected at runtime.
 
-##### Tag Convention for Credential Definitions
-Generated automatically as: `<schemaName>_V<version>` (spaces replaced with underscores).  
-You can later add a `--tag` flag (future enhancement) if a different convention is needed.
 
 ##### Command Line Flags
 | Flag | Alias | Required | Default | Description |
 |------|-------|----------|---------|-------------|
-| `<schemaKey>` | – | Yes | – | The base filename (without `.json`) in `scripts/schemas/` |
-| `--issuer <did>` | `-i` | No* | – | Explicit issuer DID (skip auto `did:web` lookup) |
-| `--base-url <url>` | `-b` | No | `http://localhost:3000` | REST base URL for the agent (the OpenAPI server) |
-| `--did-web-host <host>` | – | No | `localhost` | Host for resolving `did:web` (if `--issuer` omitted) |
-| `--did-web-port <port>` | – | No | `8443` | Port for resolving `did:web` (Alice: 8443, Bob: 8444, Charlie: 8445) |
-| `--insecure-did-web` | – | No | Off | Use `http` instead of `https` for local insecure `did:web` fetch |
-| `--no-cred-def` | – | No | Off | Skip credential definition creation (register schema only) |
+| `<schemaFileName>` | – | Yes | – | The base filename in `scripts/schemas/` |
+| `--issuer <did>` | `-i` | No | `did:web:alice%3A8443` | Explicit issuer DID |
+| `--base-url <url>` | `-b` | No | `http://localhost:3000` | REST base URL for the cloudagent |
 | `--help` | `-h` | No | – | Show usage |
 
-*If `--issuer` is absent, the script fetches `https://<did-web-host>:<port>/did.json` and uses its `id`.
 
 ##### Output Format
 Stdout lines:
 ```
 <schemaId>
-<credentialDefinitionId?>
+<credentialDefinitionId>
 ```
-If `--no-cred-def` is used, only the schemaId is printed.
 
 ##### Examples
 
-Register the default Make Authorisation schema for Alice (auto-resolve DID via did:web):
+Register the default Make Authorisation schema for Alice:
 ```bash
-node --experimental-strip-types scripts/register-schema.ts makeAuthorisation \
-  --base-url http://localhost:3000 \
-  --did-web-host localhost \
-  --did-web-port 8443
+node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json
 ```
 
 Explicit DID (if already known):
 ```bash
 node --experimental-strip-types scripts/register-schema.ts makeAuthorisation \
-  --issuer did:web:localhost%3A8443 \
-  --base-url http://localhost:3000
+  --issuer did:web:bob%3A8443 \
+  --base-url http://localhost:3001
 ```
