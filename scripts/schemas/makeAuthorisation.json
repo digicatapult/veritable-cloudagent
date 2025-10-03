@@ -1,0 +1,24 @@
+{
+  "name": "mod_make_authorisation",
+  "version": "1.0.0",
+  "attrNames": [
+    "request_id",
+    "requested_part_number",
+    "requested_part_name",
+    "requester_unit",
+    "requester_contact_name",
+    "requester_contact_email",
+    "authorising_body",
+    "authorisation_scope",
+    "authorisation_issue_date",
+    "authorisation_expiry_date",
+    "security_classification",
+    "export_control_classification",
+    "tdp_reference",
+    "tdp_version",
+    "tdp_format",
+    "permitted_use",
+    "caveats",
+    "revocation_reference"
+  ]
+}
