@@ -11,6 +11,7 @@ coverage
 .DS_Store
 .npm
 .env
+.mod.env
 .cache
 
 .local
