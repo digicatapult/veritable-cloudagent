@@ -16,7 +16,6 @@
  * Prints the created schema id (last line on stdout) for easy scripting.
  */
 import fs from 'fs'
-import fetch from 'node-fetch'
 import path from 'path'
 import process from 'process'
 import { fileURLToPath } from 'url'
@@ -26,9 +25,8 @@ const __dirname = path.dirname(__filename)
 
 interface ParsedArgs {
   schemaFileName?: string
-  issuerId?: string
+  issuerId: string
   baseUrl: string
-  didWebDomain: string
 }
 
 function printUsageAndExit(code: number): never {
@@ -46,7 +44,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
     baseUrl: 'http://localhost:3000',
-    didWebDomain: 'localhost:8443',
+    issuerId: 'did:web:alice%3A8443',
   }
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
@@ -56,10 +54,6 @@ function parseArgs(argv: string[]): ParsedArgs {
     }
     if (a === '--base-url' || a === '-b') {
       parsed.baseUrl = args[++i]
-      continue
-    }
-    if (a === '--did-web-domain') {
-      parsed.didWebDomain = args[++i]
       continue
     }
     if (a === '--help' || a === '-h') {
@@ -76,20 +70,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { schemaFileName, issuerId: issuerIdArg, baseUrl, didWebDomain } = parseArgs(process.argv)
+  const { schemaFileName, issuerId, baseUrl } = parseArgs(process.argv)
   if (!schemaFileName) throw new Error('Schema key argument required, e.g. `makeAuthorisation`')
-  let issuerId = issuerIdArg
-  if (!issuerId) {
-    const didWebUrl = `https://${didWebDomain}/did.json`
-    const didRes = await fetch(didWebUrl, {})
-    if (!didRes.ok) {
-      const text = await didRes.text()
-      throw new Error(`Failed to resolve did:web document from ${didWebUrl}: ${didRes.status} ${text}`)
-    }
-    const didJson = (await didRes.json()) as { id?: string }
-    if (!didJson.id) throw new Error(`did.json at ${didWebUrl} missing 'id' field`)
-    issuerId = didJson.id
-  }
 
   const schemaPath = path.join(__dirname, 'schemas', `${schemaFileName}`)
   if (!fs.existsSync(schemaPath)) throw new Error(`Schema definition not found: ${schemaPath}`)
