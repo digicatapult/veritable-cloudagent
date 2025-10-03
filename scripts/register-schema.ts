@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 interface ParsedArgs {
-  schemaKey?: string
+  schemaFileName?: string
   issuerId?: string
   baseUrl: string
   didWebDomain: string
@@ -65,8 +65,8 @@ function parseArgs(argv: string[]): ParsedArgs {
     if (a === '--help' || a === '-h') {
       printUsageAndExit(0)
     }
-    if (!a.startsWith('-') && !parsed.schemaKey) {
-      parsed.schemaKey = a
+    if (!a.startsWith('-') && !parsed.schemaFileName) {
+      parsed.schemaFileName = a
       continue
     }
     process.stderr.write(`Unknown or duplicate argument: ${a}\n`)
@@ -76,8 +76,8 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { schemaKey, issuerId: issuerIdArg, baseUrl, didWebDomain } = parseArgs(process.argv)
-  if (!schemaKey) throw new Error('Schema key argument required, e.g. `makeAuthorisation`')
+  const { schemaFileName, issuerId: issuerIdArg, baseUrl, didWebDomain } = parseArgs(process.argv)
+  if (!schemaFileName) throw new Error('Schema key argument required, e.g. `makeAuthorisation`')
   let issuerId = issuerIdArg
   if (!issuerId) {
     const didWebUrl = `https://${didWebDomain}/did.json`
@@ -91,7 +91,7 @@ async function main() {
     issuerId = didJson.id
   }
 
-  const schemaPath = path.join(__dirname, 'schemas', `${schemaKey}.json`)
+  const schemaPath = path.join(__dirname, 'schemas', `${schemaFileName}`)
   if (!fs.existsSync(schemaPath)) throw new Error(`Schema definition not found: ${schemaPath}`)
   const raw = fs.readFileSync(schemaPath, 'utf8')
   const schema = JSON.parse(raw)
@@ -101,7 +101,7 @@ async function main() {
     // use stderr so that any stdout piping (e.g. capturing id) is clean
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
-  log(`Registering schema '${schemaKey}' at ${baseUrl}/v1/schemas with issuerId ${issuerId}`)
+  log(`Registering schema '${schemaFileName}' at ${baseUrl}/v1/schemas with issuerId ${issuerId}`)
 
   const res = await fetch(`${baseUrl}/v1/schemas`, {
     method: 'POST',
@@ -121,7 +121,7 @@ async function main() {
 
   let credDefId: string | undefined
   // Derive tag: <schemaName>_V<version>
-  const baseName = (json.name ?? schemaKey).replace(/\s+/g, '_')
+  const baseName = (json.name ?? schemaFileName).replace(/\s+/g, '_')
   const version = json.version ?? '1.0.0'
   const tag = `${baseName}_V${version}`
 
