@@ -3,7 +3,7 @@
  * Script to register a predefined AnonCreds schema with a running cloud agent.
  *
  * Usage:
- *   ts-node scripts/register-schema.ts <schemaKey> --issuer <did> --base-url <agent_url>
+ *   node --experimental-strip-types scripts/register-schema.ts <schemaKey> --issuer <did> --base-url <agent_url>
  *   node --import @swc-node/register/esm-register scripts/register-schema.ts makeAuthorisation \
  *     --issuer did:key:z6Abc123 --base-url http://localhost:3000
  *
