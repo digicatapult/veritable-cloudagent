@@ -1,7 +1,7 @@
 {
   "ignores": [
     "@swc-node/register",
-    "@types/node-fetch",
+    "node-fetch",
     "concurrently",
     "pino-pretty",
     "prettier-plugin-organize-imports",
