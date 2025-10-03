@@ -28,9 +28,7 @@ interface ParsedArgs {
   schemaKey?: string
   issuerId?: string
   baseUrl: string
-  didWebHost: string
-  didWebPort: number
-  insecureDidWeb: boolean
+  didWebDomain: string
 }
 
 function printUsageAndExit(code: number): never {
@@ -48,9 +46,7 @@ function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
     baseUrl: 'http://localhost:3000',
-    didWebHost: 'localhost',
-    didWebPort: 8443,
-    insecureDidWeb: false,
+    didWebDomain: 'localhost:8443',
   }
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
@@ -62,16 +58,8 @@ function parseArgs(argv: string[]): ParsedArgs {
       parsed.baseUrl = args[++i]
       continue
     }
-    if (a === '--did-web-host') {
-      parsed.didWebHost = args[++i]
-      continue
-    }
-    if (a === '--did-web-port') {
-      parsed.didWebPort = Number(args[++i])
-      continue
-    }
-    if (a === '--insecure-did-web') {
-      parsed.insecureDidWeb = true
+    if (a === '--did-web-domain') {
+      parsed.didWebDomain = args[++i]
       continue
     }
     if (a === '--help' || a === '-h') {
@@ -88,11 +76,11 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { schemaKey, issuerId: issuerIdArg, baseUrl, didWebHost, didWebPort } = parseArgs(process.argv)
+  const { schemaKey, issuerId: issuerIdArg, baseUrl, didWebDomain } = parseArgs(process.argv)
   if (!schemaKey) throw new Error('Schema key argument required, e.g. `makeAuthorisation`')
   let issuerId = issuerIdArg
   if (!issuerId) {
-    const didWebUrl = `https://${didWebHost}:${didWebPort}/did.json`
+    const didWebUrl = `https://${didWebDomain}/did.json`
     const didRes = await fetch(didWebUrl, {})
     if (!didRes.ok) {
       const text = await didRes.text()

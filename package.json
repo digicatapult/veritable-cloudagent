@@ -36,7 +36,6 @@
     "test:unit": "NODE_OPTIONS='--no-experimental-strip-types' NODE_ENV=test mocha --config ./tests/mocharc.json tests/unit/**/*.test.ts **/__tests__/*.test.ts",
     "test:integration": "NODE_OPTIONS='--no-experimental-strip-types' mocha --config ./tests/mocharc.json tests/integration/**/*.test.ts",
     "test-watch": "npm run test -- --watch --watch-files src/,tests/unit/",
-    "register:schema": "node scripts/register-schema.mjs",
     "db:cmd": "node --import @swc-node/register/esm-register ./node_modules/.bin/knex",
     "db:migrate": "npm run db:cmd -- migrate:latest",
     "db:rollback": "npm run db:cmd -- migrate:rollback"
