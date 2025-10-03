@@ -7,8 +7,8 @@ import request from 'supertest'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const MAKER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-const SCRIPT_PATH = path.resolve(process.cwd(), 'scripts', 'register-schema.mjs')
-const SCHEMA_KEY = 'makeAuthorisation'
+const SCRIPT_PATH = path.resolve(process.cwd(), 'scripts', 'register-schema.ts')
+const SCHEMA_KEY = 'makeAuthorisation.json'
 const SCHEMA_NAME = 'mod_make_authorisation'
 
 // Hard-coded attributes list should match scripts/schemas/makeAuthorisation.json

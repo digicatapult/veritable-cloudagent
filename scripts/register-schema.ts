@@ -8,8 +8,8 @@
  *     --issuer did:key:z6Abc123 --base-url http://localhost:3000
  *
  * Flags:
- *   --issuer, -i     DID of issuer (required)
- *   --base-url, -b   Base agent URL (default: http://localhost:3000)
+ *   --issuer, -i     DID of issuer (default: did:web:alice%3A8443) (Alice)
+ *   --base-url, -b   Base agent URL (default: http://localhost:3000) (Alice)
  *   --help, -h       Show usage
  *
  * Looks for schema JSON under scripts/schemas/<schemaKey>.json, adds issuerId and POSTs it.
@@ -31,11 +31,11 @@ interface ParsedArgs {
 
 function printUsageAndExit(code: number): never {
   process.stderr.write(
-    'Usage: register-schema <schemaKey> [--issuer <did>] [--base-url <url>] [--did-web-host <host>] [--did-web-port <port>] [--insecure-did-web]\n' +
+    'Usage: register-schema <schemaKey> [--issuer <did>] [--base-url <url>]\n' +
       'Examples:\n' +
       '  node scripts/register-schema.mjs makeAuthorisation --issuer did:key:abc --base-url http://localhost:3000\n' +
-      '  ts-node scripts/register-schema.ts makeAuthorisation --base-url http://localhost:3000 --did-web-host localhost --did-web-port 8443\n' +
-      'If --issuer is omitted, DID will be fetched from https://<did-web-host>:<did-web-port>/did.json (or http if --insecure-did-web).\n'
+      '  ts-node scripts/register-schema.ts makeAuthorisation --base-url http://localhost:3000\n' +
+      'If --issuer is omitted, DID will be did:web:alice%3A8443\n'
   )
   process.exit(code)
 }
