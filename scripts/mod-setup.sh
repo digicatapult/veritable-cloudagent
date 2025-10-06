@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# This script sets up connections between three agents (BOB -> Alice <- Charlie)
+# using implicit invitations based on their DIDs.
+# It waits for the agents' APIs to be available, then initiates and completes
+# connections.
+
 # Load env if present
 [ -f .mod.env ] && set -a && . ./.mod.env && set +a
 
-: "${MOD_API:?MOD_API missing}"
-: "${MAKER_DID:?MAKER_DID missing}"
-: "${OEM_DID:?OEM_DID missing}"
+: "${ALICE_API:?ALICE_API missing}"
+: "${BOB_DID:?BOB_DID missing}"
+: "${CHARLIE_DID:?CHARLIE_DID missing}"
 TIMEOUT_SECS="${TIMEOUT_SECS:-30}"
 POLL_INTERVAL_SECS="${POLL_INTERVAL_SECS:-1}"
 
@@ -54,9 +59,9 @@ wait_connection_completed() {
 ensure_connected(){
   # implicit invite to oem and maker 
   log "Trying to connect by did to maker."
-  connect_by_did "$MAKER_DID" "$MOD_API"
+  connect_by_did "$BOB_DID" "$ALICE_API"
   log "Trying to connect by did to oem."
-  connect_by_did "$OEM_DID" "$MOD_API"
+  connect_by_did "$CHARLIE_DID" "$ALICE_API"
 
 }
 
@@ -77,16 +82,16 @@ complete_connection(){
 main() {
   # wait until all endpoints are available 
   command -v jq >/dev/null || { echo "jq is required"; exit 1; }
-  wait_for_api "$MOD_API/health" || true  
-  wait_for_api "$OEM_API/health" || true
-  wait_for_api "$MAKER_API/health" || true
+  wait_for_api "$ALICE_API/health" || true  
+  wait_for_api "$BOB_API/health" || true
+  wait_for_api "$CHARLIE_API/health" || true
 
   ensure_connected
 
-  log "Attempting to complete connection to oem"
-  complete_connection "$OEM_API" "$OEM_DID"
-  log "Attempting to complete connection to maker"
-  complete_connection "$MAKER_API" "$MAKER_DID"
+  log "Attempting to complete connection to charlie"
+  complete_connection "$CHARLIE_API" "$CHARLIE_DID"
+  log "Attempting to complete connection to bob"
+  complete_connection "$BOB_API" "$BOB_DID"
 
 
   log "Startup connectivity complete."
