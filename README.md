@@ -168,15 +168,17 @@ MAKER_API=http://localhost:3001
 OEM_API=http://localhost:3002
 
 # DIDs
-MOD_DID=did:web:CORRECT_DID
-MAKER_DID=did:web:CORRECT_DID
-OEM_DID=did:web:CORRECT_DID
+MOD_DID=did:web:alice%3A8443
+MAKER_DID=did:web:bob%3A8443
+OEM_DID=did:web:charlie%3A8443
 
 # Timing
 TIMEOUT_SECS=30
 POLL_INTERVAL_SECS=1
 
 ```
+
+The env `DID_WEB_ENABLED` needs to be set to `true`.
 
 Then run:
 
