@@ -23,33 +23,11 @@ wait_for_api() {
   done
 }
 
-# unnecessary??
-# has_oob_records() {
-#   local count
-#   curl -fsS "$MOD_API/v1/oob" | jq .
-#   count="$(curl -fsS "$MOD_API/v1/oob" | jq '[.oobRecords // .items // []] | length')"
-#   if [ "$count" -gt 0 ]; then
-#     return 0  # success, at least one record exists
-#   else
-#     return 1  # failure, no records found
-#   fi
-# }
-
-# unnecessary??
-# find_completed_connection_id() {
-#   local their_did="$1"
-#   curl -fsS  "$MOD_API/v1/connections" \
-#     | jq -r --arg DID "$their_did" '
-#         (.connections // .items // [])[]
-#         | select((.theirDid == $DID) and (.state == "completed"))
-#         | (.id // .connectionId)' \
-#     | head -n1
-# }
-
 connect_by_did() {
   local their_did="$1"
+  local api="$2"
   log "Connecting to $their_did via implicit invitation..."
-  curl -fsS -X POST  "$MOD_API/v1/oob/receive-implicit-invitation" \
+  curl -fsS -X POST  "$api/v1/oob/receive-implicit-invitation" \
     -H 'content-type: application/json' \
     -d "{
       \"did\":\"$their_did\",
@@ -76,9 +54,9 @@ wait_connection_completed() {
 ensure_connected(){
   # implicit invite to oem and maker 
   log "Trying to connect by did to maker."
-  connect_by_did "$MAKER_DID"
+  connect_by_did "$MAKER_DID" "$MOD_API"
   log "Trying to connect by did to oem."
-  connect_by_did "$OEM_DID"
+  connect_by_did "$OEM_DID" "$MOD_API"
 
 }
 
@@ -109,6 +87,7 @@ main() {
   complete_connection "$OEM_API" "$OEM_DID"
   log "Attempting to complete connection to maker"
   complete_connection "$MAKER_API" "$MAKER_DID"
+
 
   log "Startup connectivity complete."
 }
