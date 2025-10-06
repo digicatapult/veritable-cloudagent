@@ -163,14 +163,14 @@ In order to run the script please make a file called `.mod.env` with the content
 
 ```
 # Agent API bases
-MOD_API=http://localhost:3000
-MAKER_API=http://localhost:3001
-OEM_API=http://localhost:3002
+ALICE_API=http://localhost:3000
+BOB_API=http://localhost:3001
+CHARLIE_API=http://localhost:3002
 
 # DIDs
-MOD_DID=did:web:alice%3A8443
-MAKER_DID=did:web:bob%3A8443
-OEM_DID=did:web:charlie%3A8443
+ALICE_DID=did:web:alice%3A8443
+BOB_DID=did:web:bob%3A8443
+CHARLIE_DID=did:web:charlie%3A8443
 
 # Timing
 TIMEOUT_SECS=30
@@ -762,10 +762,13 @@ This project ships with a registration helper script that:
 3. Prints the IDs to stdout (first line = schemaId, second line = credentialDefinitionId)
 
 ##### Script Location
+
 `scripts/register-schema.ts`
 
 ##### JSON Schema Definition Layout
+
 Each schema JSON file MUST contain at minimum:
+
 ```json
 {
   "name": "mod_make_authorisation",
@@ -773,20 +776,22 @@ Each schema JSON file MUST contain at minimum:
   "attrNames": ["attr_one", "attr_two", "..."]
 }
 ```
+
 The `issuerId` is NOT stored in the JSON file – it is injected at runtime.
 
-
 ##### Command Line Flags
-| Flag | Alias | Required | Default | Description |
-|------|-------|----------|---------|-------------|
-| `<schemaFileName>` | – | Yes | – | The base filename in `scripts/schemas/` |
-| `--issuer <did>` | `-i` | No | `did:web:alice%3A8443` | Explicit issuer DID |
-| `--base-url <url>` | `-b` | No | `http://localhost:3000` | REST base URL for the cloudagent |
-| `--help` | `-h` | No | – | Show usage |
 
+| Flag               | Alias | Required | Default                 | Description                             |
+| ------------------ | ----- | -------- | ----------------------- | --------------------------------------- |
+| `<schemaFileName>` | –     | Yes      | –                       | The base filename in `scripts/schemas/` |
+| `--issuer <did>`   | `-i`  | No       | `did:web:alice%3A8443`  | Explicit issuer DID                     |
+| `--base-url <url>` | `-b`  | No       | `http://localhost:3000` | REST base URL for the cloudagent        |
+| `--help`           | `-h`  | No       | –                       | Show usage                              |
 
 ##### Output Format
+
 Stdout lines:
+
 ```
 <schemaId>
 <credentialDefinitionId>
@@ -795,11 +800,13 @@ Stdout lines:
 ##### Examples
 
 Register the default Make Authorisation schema for Alice:
+
 ```bash
 node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json
 ```
 
 Explicit DID (if already known):
+
 ```bash
 node --experimental-strip-types scripts/register-schema.ts makeAuthorisation \
   --issuer did:web:bob%3A8443 \

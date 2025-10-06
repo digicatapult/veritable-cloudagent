@@ -45,6 +45,7 @@ connect_by_did() {
 
 wait_connection_completed() {
   local conn_id="$1" deadline=$(( $(date +%s) + TIMEOUT_SECS ))
+  local api="$2"
   while true; do
     state="$(curl -fsS "$api/v1/connections/$conn_id" | jq -r '.state')"
     if [ "$state" = "completed" ]; then return 0; fi
@@ -60,15 +61,13 @@ wait_connection_completed() {
 
 complete_connection(){
   local api="$1"
-  conns="$(curl -fsS "$api/v1/connections")"
-  log "Connections: $conns"
   # get the 1st connection as there should only be one
   conn_id="$(curl -fsS "$api/v1/connections" | jq -r '.[0].id')"
   log "First connection id: $conn_id"
   #complete the connection
   curl -fsS -X POST "$api/v1/connections/$conn_id/accept-request"
 
-  wait_connection_completed "$conn_id" 
+  wait_connection_completed "$conn_id" "$api"
 
 }
 
