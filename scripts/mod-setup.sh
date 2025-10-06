@@ -40,7 +40,7 @@ connect_by_did() {
       \"autoAcceptInvitation\":true,
       \"handshakeProtocols\":[\"https://didcomm.org/didexchange/1.x\"]
     }"
-    log "Initialised connection to $their_did via implicit invitation..."
+  log "Initialised connection to $their_did via implicit invitation..."
 }
 
 wait_connection_completed() {
@@ -74,9 +74,9 @@ complete_connection(){
 main() {
   # wait until all endpoints are available 
   command -v jq >/dev/null || { echo "jq is required"; exit 1; }
-  wait_for_api "$ALICE_API/health" || true  
-  wait_for_api "$BOB_API/health" || true
-  wait_for_api "$CHARLIE_API/health" || true
+  wait_for_api "$ALICE_API/health"
+  wait_for_api "$BOB_API/health"
+  wait_for_api "$CHARLIE_API/health"
 
   # implicit invite to oem and maker 
   log "Trying to connect by did to maker."
@@ -86,9 +86,9 @@ main() {
 
   # complete connections
   log "Attempting to complete connection to charlie"
-  complete_connection "$CHARLIE_API" "$CHARLIE_DID"
+  complete_connection "$CHARLIE_API" 
   log "Attempting to complete connection to bob"
-  complete_connection "$BOB_API" "$BOB_DID"
+  complete_connection "$BOB_API" 
 
 
   log "Startup connectivity complete."
