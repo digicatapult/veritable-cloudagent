@@ -56,14 +56,7 @@ wait_connection_completed() {
   done
 }
 
-ensure_connected(){
-  # implicit invite to oem and maker 
-  log "Trying to connect by did to maker."
-  connect_by_did "$BOB_DID" "$ALICE_API"
-  log "Trying to connect by did to oem."
-  connect_by_did "$CHARLIE_DID" "$ALICE_API"
 
-}
 
 complete_connection(){
   local api="$1"
@@ -86,8 +79,13 @@ main() {
   wait_for_api "$BOB_API/health" || true
   wait_for_api "$CHARLIE_API/health" || true
 
-  ensure_connected
+  # implicit invite to oem and maker 
+  log "Trying to connect by did to maker."
+  connect_by_did "$BOB_DID" "$ALICE_API"
+  log "Trying to connect by did to oem."
+  connect_by_did "$CHARLIE_DID" "$ALICE_API"
 
+  # complete connections
   log "Attempting to complete connection to charlie"
   complete_connection "$CHARLIE_API" "$CHARLIE_DID"
   log "Attempting to complete connection to bob"
