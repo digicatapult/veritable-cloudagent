@@ -156,10 +156,10 @@ This private testnet has the following ports available to the user for testing:
 
 Network name: `testnet`
 
-#### Demo Script for MOD
+#### Demo Script for Connection
 
-You can also run a script to set up a demo state where the MOD (aka Alice) is connected to both OEM and Maker.
-In order to run the script please make a file called `.mod.env` with the content:
+You can also run a script to set up a demo state where the Alice is connected to both Bob and Charlie.
+In order to run the script please make a file called `.connection.env` with the content:
 
 ```
 # Agent API bases
@@ -183,7 +183,7 @@ The env `DID_WEB_ENABLED` needs to be set to `true`.
 Then run:
 
 ```
-bash scripts/mod-setup.sh
+bash scripts/connection-setup.sh
 ```
 
 #### Starting Own Server

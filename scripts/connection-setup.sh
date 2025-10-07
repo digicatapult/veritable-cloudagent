@@ -7,7 +7,7 @@ set -euo pipefail
 # connections.
 
 # Load env if present
-[ -f .mod.env ] && set -a && . ./.mod.env && set +a
+[ -f .connection.env ] && set -a && . ./.connection.env && set +a
 
 : "${ALICE_API:?ALICE_API missing}"
 : "${BOB_DID:?BOB_DID missing}"
@@ -78,17 +78,17 @@ main() {
   wait_for_api "$BOB_API/health"
   wait_for_api "$CHARLIE_API/health"
 
-  # implicit invite to oem and maker 
-  log "Trying to connect by did to maker."
+  # implicit invite to Bob and Charlie
+  log "Trying to connect by did to Bob."
   connect_by_did "$BOB_DID" "$ALICE_API"
-  log "Trying to connect by did to oem."
+  log "Trying to connect by did to Charlie."
   connect_by_did "$CHARLIE_DID" "$ALICE_API"
 
   # complete connections
-  log "Attempting to complete connection to charlie"
-  complete_connection "$CHARLIE_API" 
-  log "Attempting to complete connection to bob"
-  complete_connection "$BOB_API" 
+  log "Attempting to complete connection to Charlie"
+  complete_connection "$CHARLIE_API"
+  log "Attempting to complete connection to Bob"
+  complete_connection "$BOB_API"
 
 
   log "Startup connectivity complete."
