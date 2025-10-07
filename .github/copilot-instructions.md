@@ -1,6 +1,3 @@
-
-# Copilot Coding Agent Onboarding: veritable-cloudagent
-
 # Copilot Coding Agent Onboarding: veritable-cloudagent
 
 ## Repository Summary
