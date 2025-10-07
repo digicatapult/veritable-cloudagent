@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.15.10",
+  "version": "0.15.11",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -62,7 +62,7 @@
     "http-errors": "^2.0.0",
     "knex": "^3.1.0",
     "pg": "^8.16.3",
-    "pino": "^9.13.1",
+    "pino": "^10.0.0",
     "pino-http": "^10.5.0",
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.1",
