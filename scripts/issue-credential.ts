@@ -3,6 +3,7 @@
 // Get credential definiton and schema
 // Propose a credential to maker
 import z from 'zod'
+import type { OfferCredentialOptions } from '../src/controllers/types.js'
 
 const schemaParser = z.array(
   z.object({
@@ -19,6 +20,12 @@ const credentialParser = z.array(
     schemaId: z.string(),
     tag: z.string(),
     issuerId: z.string(),
+  })
+)
+const connectionParser = z.array(
+  z.object({
+    id: z.string(),
+    invitationDid: z.string(),
   })
 )
 
@@ -39,13 +46,13 @@ async function getschemaAndCredentialDefinition(
     }
 
     const jsonRes = await res.json()
-    const parsed = schemaParser.parse(jsonRes)
+    const parsedSchema = schemaParser.parse(jsonRes)
 
-    if (parsed.length === 0) {
+    if (parsedSchema.length === 0) {
       throw new Error('No schemas found')
     }
 
-    const schemaId = parsed[0].id
+    const schemaId = parsedSchema[0].id
     log(`${schemaId} schemas found`)
 
     // Get credential definition for schema
@@ -67,7 +74,7 @@ async function getschemaAndCredentialDefinition(
     }
 
     log(`credDef ${parsedCredDef[0].id} found for schema ${schemaId}`)
-    return { schemaId, credDefId: parsedCredDef[0].id }
+    return { parsedSchema: parsedSchema[0], credDefId: parsedCredDef[0].id }
   } catch (error) {
     log('Error during credential setup:', error instanceof Error ? error.message : String(error))
     throw error
@@ -81,12 +88,129 @@ async function main() {
   }
   // we are alice atm and are connected to both bob and charlie
   const oemDid = 'did:web:charlie%3A8443'
+  const makerDid = 'did:web:bob%3A8443'
+  const modDid = 'did:web:alice%3A8443'
   const baseUrl = 'http://localhost:3000'
 
-  const { schemaId, credDefId } = await getschemaAndCredentialDefinition(baseUrl, oemDid, log)
+  const { parsedSchema, credDefId } = await getschemaAndCredentialDefinition(baseUrl, oemDid, log)
+  // get connectionId for bob
+  const connections = await fetch(`${baseUrl}/v1/connections`, {
+    method: 'GET',
+    headers: { 'content-type': 'application/json' },
+  })
+  const connectionsJson = await connections.json()
+  const parsedConnections = connectionParser.parse(connectionsJson)
+  log(`Found ${parsedConnections.length} connections`)
+  log('Looking for maker connection based on invitation DID', makerDid)
 
-  // register credential
-  // const proposeCredentialBody:ProposeCredentialOptions={}
+  const makerConnection = parsedConnections.find((c) => c.invitationDid === makerDid)
+  if (!makerConnection) {
+    throw new Error(`No connection found for maker DID ${makerDid}`)
+  }
+  const connectionId = makerConnection.id
+  log('Found connection for maker', connectionId)
+
+  // propose credential for someone we already have a connection with
+  const offerCredentialBody: OfferCredentialOptions = {
+    connectionId: connectionId,
+    protocolVersion: 'v2',
+    credentialFormats: {
+      anoncreds: {
+        credentialDefinitionId: credDefId,
+
+        attributes: [
+          {
+            name: 'request_id',
+            value: 'REQ-2025-001',
+          },
+          {
+            name: 'requested_part_number',
+            value: 'P-12345-ABC',
+          },
+          {
+            name: 'requested_part_name',
+            value: 'Engine Control Unit',
+          },
+          {
+            name: 'requester_unit',
+            value: 'Manufacturing Division',
+          },
+          {
+            name: 'requester_contact_name',
+            value: 'John Smith',
+          },
+          {
+            name: 'requester_contact_email',
+            value: 'john.smith@example.com',
+          },
+          {
+            name: 'authorising_body',
+            value: 'Quality Assurance Department',
+          },
+          {
+            name: 'authorisation_scope',
+            value: 'Manufacturing and Testing',
+          },
+          {
+            name: 'authorisation_issue_date',
+            value: '2025-10-09',
+          },
+          {
+            name: 'authorisation_expiry_date',
+            value: '2026-10-09',
+          },
+          {
+            name: 'security_classification',
+            value: 'Internal Use Only',
+          },
+          {
+            name: 'export_control_classification',
+            value: 'EAR99',
+          },
+          {
+            name: 'tdp_reference',
+            value: 'TDP-2025-ECU-001',
+          },
+          {
+            name: 'tdp_version',
+            value: '1.0',
+          },
+          {
+            name: 'tdp_format',
+            value: 'PDF',
+          },
+          {
+            name: 'permitted_use',
+            value: 'Manufacturing and Quality Testing',
+          },
+          {
+            name: 'caveats',
+            value: 'Not for reverse engineering',
+          },
+          {
+            name: 'revocation_reference',
+            value: 'REV-2025-001',
+          },
+          {
+            name: 'oem_did',
+            value: oemDid,
+          },
+        ],
+      },
+    },
+  }
+
+  //propose a credential
+  try {
+    const proposeCredRes = await fetch(`${baseUrl}/v1/credentials/offer-credential`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(offerCredentialBody),
+    })
+  } catch (error) {
+    log('Error during credential proposal:', error instanceof Error ? error.message : String(error))
+    throw error
+  }
 }
 
 main().catch((e) => process.stderr.write((e as Error).stack + '\n') && process.exit(1))
