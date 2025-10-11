@@ -16,6 +16,7 @@ export interface DidWebServerConfig {
   certPath: string
   keyPath: string
   didWebDomain: string
+  serviceEndpoint?: string
 }
 
 export class DidWebServer {
@@ -23,14 +24,38 @@ export class DidWebServer {
   private server?: Server
   private logger: Logger
   private config: DidWebServerConfig
-  private db: Database
+  private db?: Database
+  private didGenerator?: (domain: string, serviceEndpoint?: string) => Promise<DidWebDocument>
 
-  constructor(logger: Logger, db: Database, config: DidWebServerConfig) {
+  constructor(logger: Logger, config: DidWebServerConfig) {
     this.logger = logger.child({ component: 'did-web-server' })
     this.config = config
     this.app = express()
-    this.db = db
     this.setupRoutes()
+  }
+
+  /**
+   * Allows the main application to provide a DID generator function
+   * This maintains loose coupling - the server can generate DIDs but doesn't depend on the agent
+   */
+  public setDidGenerator(generator: (domain: string, serviceEndpoint?: string) => Promise<DidWebDocument>): void {
+    this.didGenerator = generator
+  }
+
+  private async generateDidIfNeeded(): Promise<void> {
+    if (!this.didGenerator) {
+      this.logger.info('No DID generator provided, skipping DID generation')
+      return
+    }
+
+    try {
+      const didDocument = await this.didGenerator(this.config.didWebDomain, this.config.serviceEndpoint)
+      await this.upsertDid(didDocument)
+      this.logger.info(`Successfully generated and stored DID: ${didDocument.id}`)
+    } catch (error) {
+      this.logger.error(`Failed to generate DID: ${String(error)}`)
+      // Don't throw - DID generation failure shouldn't prevent server startup
+    }
   }
 
   private setupRoutes(): void {
@@ -62,6 +87,7 @@ export class DidWebServer {
   }
 
   public serveDid = async (req: express.Request, res: express.Response) => {
+    if (!this.db) throw new Error('Database not initialized')
     const did = this.reqPathToDid(req.path)
     const [record] = await this.db.get('did_web', { did })
     if (!record) throw new NotFoundError(`DID document not found: ${did}`)
@@ -69,8 +95,34 @@ export class DidWebServer {
   }
 
   public async upsertDid(document: DidWebDocument): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized')
     this.logger.info(`Uploading did to server: ${document.id}`)
     await this.db.upsert('did_web', { did: document.id, document }, 'did')
+  }
+
+  private async initializeDatabase(): Promise<void> {
+    const { ensureDatabaseExists } = await import('./dbSetup.js')
+
+    // Ensure database exists
+    await ensureDatabaseExists(
+      {
+        host: process.env.POSTGRES_HOST || 'localhost',
+        user: process.env.POSTGRES_USERNAME || 'postgres',
+        password: process.env.POSTGRES_PASSWORD || 'postgres',
+        port: parseInt(process.env.POSTGRES_PORT || '5432'),
+        targetDatabase: process.env.DID_WEB_DB_NAME || 'did-web-server',
+      },
+      this.logger
+    )
+
+    // Create Database instance after ensuring it exists
+    this.db = new Database({
+      host: process.env.POSTGRES_HOST || 'localhost',
+      database: process.env.DID_WEB_DB_NAME || 'did-web-server',
+      user: process.env.POSTGRES_USERNAME || 'postgres',
+      password: process.env.POSTGRES_PASSWORD || 'postgres',
+      port: parseInt(process.env.POSTGRES_PORT || '5432'),
+    })
   }
 
   async start(): Promise<void> {
@@ -78,6 +130,12 @@ export class DidWebServer {
       this.logger.info('DID:web server disabled')
       return
     }
+
+    // Initialize database independently
+    await this.initializeDatabase()
+
+    // Generate and store DID document if generator is available
+    await this.generateDidIfNeeded()
     const setupGracefulExit = (sigName: NodeJS.Signals, server: Server, exitCode: number) => {
       process.on(sigName, async () => {
         server.close(() => {

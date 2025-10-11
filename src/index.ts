@@ -9,7 +9,6 @@ import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
-import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
@@ -71,30 +70,28 @@ const agent = await setupAgent({
   logger,
 })
 
-const database = new Database({
-  host: env.get('POSTGRES_HOST'),
-  database: env.get('DID_WEB_DB_NAME'),
-  user: env.get('POSTGRES_USERNAME'),
-  password: env.get('POSTGRES_PASSWORD'),
-  port: env.get('POSTGRES_PORT'),
-})
-const didWebServer = new DidWebServer(logger.logger, database, {
+// Create DID:web server with loose coupling - it manages its own database and lifecycle
+const didWebServer = new DidWebServer(logger.logger, {
   enabled: env.get('DID_WEB_ENABLED'),
   port: env.get('DID_WEB_PORT'),
   useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
   certPath: env.get('DID_WEB_DEV_CERT_PATH'),
   keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
   didWebDomain: env.get('DID_WEB_DOMAIN'),
+  serviceEndpoint: env.get('DID_WEB_SERVICE_ENDPOINT'),
 })
-await didWebServer.start()
 
-const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
-await didWebGenerator.generateAndRegister(
-  env.get('DID_WEB_DOMAIN'),
-  env.get('DID_WEB_SERVICE_ENDPOINT'),
-  env.get('DID_WEB_ENABLED'),
-  (document) => didWebServer.upsertDid(document)
-)
+// Provide DID generation capability to the server (loose coupling)
+if (env.get('DID_WEB_ENABLED')) {
+  const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
+  didWebServer.setDidGenerator(async (domain: string, serviceEndpoint?: string) => {
+    const result = await didWebGenerator.generateDidWebDocument(domain, serviceEndpoint || '')
+    return result.didDocument
+  })
+}
+
+// Start the DID:web server - it will handle its own initialization
+await didWebServer.start()
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
