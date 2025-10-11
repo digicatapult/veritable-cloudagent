@@ -1,8 +1,9 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
-import { DidWebServer, DidWebServerConfig } from '../../didweb/server.js'
 import { DidWebDocument } from '../../utils/didWebGenerator.js'
 import PinoLogger from '../../utils/logger.js'
+import Database from '../db.js'
+import { DidWebServer, DidWebServerConfig } from '../server.js'
 
 const didWebDomain = 'test.com'
 const did = {
@@ -13,6 +14,7 @@ const logger = new PinoLogger('silent').logger
 describe('did:web server', () => {
   let config: DidWebServerConfig
   let server: DidWebServer
+  let mockDatabase: Database
 
   beforeEach(() => {
     config = {
@@ -24,6 +26,13 @@ describe('did:web server', () => {
       didWebDomain,
       serviceEndpoint: 'http://test.com:5002',
     }
+
+    // Create a mock database instance with required methods
+    mockDatabase = {
+      upsert: sinon.stub().resolves(),
+      migrate: sinon.stub().resolves(),
+      destroy: sinon.stub().resolves(),
+    } as unknown as Database
   })
 
   afterEach(() => {
@@ -32,14 +41,14 @@ describe('did:web server', () => {
 
   describe('constructor', () => {
     it('should create instance with correct configuration', () => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
       expect(server).to.be.instanceOf(DidWebServer)
     })
   })
 
   describe('setDidGenerator', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
     })
 
     it('should accept DID generator function', () => {
@@ -50,7 +59,7 @@ describe('did:web server', () => {
 
   describe('reqPath to DID', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
     })
 
     it('should convert well-known path to DID', () => {
@@ -83,14 +92,14 @@ describe('did:web server', () => {
   describe('start method', () => {
     it('should skip initialization when disabled', async () => {
       const disabledConfig = { ...config, enabled: false }
-      server = new DidWebServer(logger, disabledConfig)
+      server = new DidWebServer(logger, mockDatabase, disabledConfig)
 
       // Should complete without error when disabled
       await server.start()
     })
 
     it('should handle enabled configuration without error', async () => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
 
       // Mock the environment variables needed for database initialization
       const envStub = sinon.stub(process, 'env').value({
@@ -116,22 +125,20 @@ describe('did:web server', () => {
 
   describe('upsertDid method', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
     })
 
-    it('should throw error when database not initialized', async () => {
-      try {
-        await server.upsertDid(did)
-        expect.fail('Should have thrown error')
-      } catch (error) {
-        expect((error as Error).message).to.equal('Database not initialized')
-      }
+    it('should call database upsert method', async () => {
+      await server.upsertDid(did)
+      const upsertStub = mockDatabase.upsert as sinon.SinonStub
+      sinon.assert.calledOnce(upsertStub)
+      sinon.assert.calledWith(upsertStub, 'did_web', { did: did.id, document: did }, 'did')
     })
   })
 
   describe('error handling', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
     })
 
     it('should handle database not initialized for public methods', () => {
@@ -142,7 +149,7 @@ describe('did:web server', () => {
 
   describe('integration with loose coupling', () => {
     it('should allow setting DID generator after construction', () => {
-      server = new DidWebServer(logger, config)
+      server = new DidWebServer(logger, mockDatabase, config)
       const mockGenerator = sinon.stub().resolves(did)
 
       // Should not throw when setting generator
@@ -151,7 +158,7 @@ describe('did:web server', () => {
 
     it('should work with different domain configurations', () => {
       const customConfig = { ...config, didWebDomain: 'custom-domain.com' }
-      server = new DidWebServer(logger, customConfig)
+      server = new DidWebServer(logger, mockDatabase, customConfig)
 
       const result = server.reqPathToDid('/did.json')
       expect(result).to.equal('did:web:custom-domain.com')
@@ -159,7 +166,7 @@ describe('did:web server', () => {
 
     it('should handle URL-encoded domains correctly', () => {
       const encodedConfig = { ...config, didWebDomain: 'localhost%3A8443' }
-      server = new DidWebServer(logger, encodedConfig)
+      server = new DidWebServer(logger, mockDatabase, encodedConfig)
 
       const result = server.reqPathToDid('/users/alice/did.json')
       expect(result).to.equal('did:web:localhost%3A8443:users:alice')
@@ -178,7 +185,7 @@ describe('did:web server', () => {
         serviceEndpoint: 'http://example.com:5002',
       }
 
-      expect(() => new DidWebServer(logger, minimalConfig)).to.not.throw()
+      expect(() => new DidWebServer(logger, mockDatabase, minimalConfig)).to.not.throw()
     })
 
     it('should work with development certificate configuration', () => {
@@ -189,7 +196,7 @@ describe('did:web server', () => {
         keyPath: '/dev/key.pem',
       }
 
-      expect(() => new DidWebServer(logger, devConfig)).to.not.throw()
+      expect(() => new DidWebServer(logger, mockDatabase, devConfig)).to.not.throw()
     })
   })
 })

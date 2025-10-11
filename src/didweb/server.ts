@@ -24,12 +24,13 @@ export class DidWebServer {
   private server?: Server
   private logger: Logger
   private config: DidWebServerConfig
-  private db?: Database
+  private db: Database
   private didGenerator?: (domain: string, serviceEndpoint?: string) => Promise<DidWebDocument>
 
-  constructor(logger: Logger, config: DidWebServerConfig) {
+  constructor(logger: Logger, database: Database, config: DidWebServerConfig) {
     this.logger = logger.child({ component: 'did-web-server' })
     this.config = config
+    this.db = database
     this.app = express()
     this.setupRoutes()
   }
@@ -95,34 +96,8 @@ export class DidWebServer {
   }
 
   public async upsertDid(document: DidWebDocument): Promise<void> {
-    if (!this.db) throw new Error('Database not initialised')
     this.logger.info(`Uploading did to server: ${document.id}`)
     await this.db.upsert('did_web', { did: document.id, document }, 'did')
-  }
-
-  private async initialiseDatabase(): Promise<void> {
-    const { ensureDatabaseExists } = await import('./dbSetup.js')
-
-    // Ensure database exists
-    await ensureDatabaseExists(
-      {
-        host: process.env.POSTGRES_HOST || 'localhost',
-        user: process.env.POSTGRES_USERNAME || 'postgres',
-        password: process.env.POSTGRES_PASSWORD || 'postgres',
-        port: parseInt(process.env.POSTGRES_PORT || '5432'),
-        targetDatabase: process.env.DID_WEB_DB_NAME || 'did-web-server',
-      },
-      this.logger
-    )
-
-    // Create Database instance after ensuring it exists
-    this.db = new Database({
-      host: process.env.POSTGRES_HOST || 'localhost',
-      database: process.env.DID_WEB_DB_NAME || 'did-web-server',
-      user: process.env.POSTGRES_USERNAME || 'postgres',
-      password: process.env.POSTGRES_PASSWORD || 'postgres',
-      port: parseInt(process.env.POSTGRES_PORT || '5432'),
-    })
   }
 
   async start(): Promise<void> {
@@ -130,9 +105,6 @@ export class DidWebServer {
       this.logger.info('DID:web server disabled')
       return
     }
-
-    // Initialise database independently
-    await this.initialiseDatabase()
 
     // Generate and store DID document if generator is available
     await this.generateDidIfNeeded()
