@@ -86,14 +86,14 @@ describe('DidWebServer', () => {
     it('should skip initialization when disabled', async () => {
       const disabledConfig = { ...config, enabled: false }
       server = new DidWebServer(logger, disabledConfig)
-      
+
       // Should complete without error when disabled
       await server.start()
     })
 
     it('should handle enabled configuration', async () => {
       server = new DidWebServer(logger, config)
-      
+
       // Mock the environment variables needed for database initialization
       const envStub = sinon.stub(process, 'env').value({
         POSTGRES_HOST: 'localhost',
@@ -110,7 +110,7 @@ describe('DidWebServer', () => {
         // Expected in test environment due to missing database
         expect((error as Error).message).to.include('Cannot resolve module')
       }
-      
+
       envStub.restore()
     })
   })
@@ -145,7 +145,7 @@ describe('DidWebServer', () => {
     it('should allow setting DID generator after construction', () => {
       server = new DidWebServer(logger, config)
       const mockGenerator = sinon.stub().resolves(did)
-      
+
       // Should not throw when setting generator
       expect(() => server.setDidGenerator(mockGenerator)).to.not.throw()
     })
@@ -153,7 +153,7 @@ describe('DidWebServer', () => {
     it('should work with different domain configurations', () => {
       const customConfig = { ...config, didWebDomain: 'custom-domain.com' }
       server = new DidWebServer(logger, customConfig)
-      
+
       const result = server.reqPathToDid('/did.json')
       expect(result).to.equal('did:web:custom-domain.com')
     })
@@ -161,7 +161,7 @@ describe('DidWebServer', () => {
     it('should handle URL-encoded domains correctly', () => {
       const encodedConfig = { ...config, didWebDomain: 'localhost%3A8443' }
       server = new DidWebServer(logger, encodedConfig)
-      
+
       const result = server.reqPathToDid('/users/alice/did.json')
       expect(result).to.equal('did:web:localhost%3A8443:users:alice')
     })
@@ -178,7 +178,7 @@ describe('DidWebServer', () => {
         didWebDomain: 'example.com',
         serviceEndpoint: 'http://example.com:5002',
       }
-      
+
       expect(() => new DidWebServer(logger, minimalConfig)).to.not.throw()
     })
 
@@ -189,7 +189,7 @@ describe('DidWebServer', () => {
         certPath: '/dev/cert.pem',
         keyPath: '/dev/key.pem',
       }
-      
+
       expect(() => new DidWebServer(logger, devConfig)).to.not.throw()
     })
   })
