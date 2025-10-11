@@ -30,8 +30,8 @@ export class DidWebServer {
   constructor(logger: Logger, db: Database, config: DidWebServerConfig) {
     this.logger = logger.child({ component: 'did-web-server' })
     this.config = config
-    this.db = db
     this.app = express()
+    this.db = db
     this.setupRoutes()
   }
 
