@@ -87,7 +87,7 @@ export class DidWebServer {
   }
 
   public serveDid = async (req: express.Request, res: express.Response) => {
-    if (!this.db) throw new Error('Database not initialized')
+    if (!this.db) throw new Error('Database not initialised')
     const did = this.reqPathToDid(req.path)
     const [record] = await this.db.get('did_web', { did })
     if (!record) throw new NotFoundError(`DID document not found: ${did}`)
@@ -95,12 +95,12 @@ export class DidWebServer {
   }
 
   public async upsertDid(document: DidWebDocument): Promise<void> {
-    if (!this.db) throw new Error('Database not initialized')
+    if (!this.db) throw new Error('Database not initialised')
     this.logger.info(`Uploading did to server: ${document.id}`)
     await this.db.upsert('did_web', { did: document.id, document }, 'did')
   }
 
-  private async initializeDatabase(): Promise<void> {
+  private async initialiseDatabase(): Promise<void> {
     const { ensureDatabaseExists } = await import('./dbSetup.js')
 
     // Ensure database exists
@@ -131,8 +131,8 @@ export class DidWebServer {
       return
     }
 
-    // Initialize database independently
-    await this.initializeDatabase()
+    // Initialise database independently
+    await this.initialiseDatabase()
 
     // Generate and store DID document if generator is available
     await this.generateDidIfNeeded()
