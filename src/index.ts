@@ -90,7 +90,27 @@ if (env.get('DID_WEB_ENABLED')) {
   })
 }
 
-// Start the DID:web server - it will handle its own initialization
+// Initialize database before starting DID:web server
+if (env.get('DID_WEB_ENABLED') && env.get('STORAGE_TYPE') === 'postgres') {
+  try {
+    const { ensureDatabaseExists } = await import('./didweb/dbSetup.js')
+    await ensureDatabaseExists(
+      {
+        host: env.get('POSTGRES_HOST') as string,
+        port: env.get('POSTGRES_PORT') as number,
+        user: env.get('POSTGRES_USERNAME') as string,
+        password: env.get('POSTGRES_PASSWORD') as string,
+        targetDatabase: env.get('DID_WEB_DB_NAME') as string,
+      },
+      logger.logger
+    )
+  } catch (error) {
+    logger.logger.error(`Failed to initialize DID:web database: ${error}`)
+    throw error
+  }
+}
+
+// Start the DID:web server
 await didWebServer.start()
 
 const socketServer = new WebSocket.Server({ noServer: true })

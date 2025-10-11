@@ -10,7 +10,7 @@ const did = {
 } as DidWebDocument
 const logger = new PinoLogger('silent').logger
 
-describe('DidWebServer', () => {
+describe('did:web server', () => {
   let config: DidWebServerConfig
   let server: DidWebServer
 
@@ -48,7 +48,7 @@ describe('DidWebServer', () => {
     })
   })
 
-  describe('reqPathToDid', () => {
+  describe('reqPath to DID', () => {
     beforeEach(() => {
       server = new DidWebServer(logger, config)
     })
@@ -58,14 +58,12 @@ describe('DidWebServer', () => {
       expect(result).to.equal(`did:web:${didWebDomain}`)
     })
 
-    it('should convert root path to DID', () => {
-      const result = server.reqPathToDid('/did.json')
-      expect(result).to.equal(`did:web:${didWebDomain}`)
+    it('no nested path', () => {
+      expect(server.reqPathToDid('/did.json')).to.equal(`did:web:${didWebDomain}`)
     })
 
-    it('should convert nested path to DID with colons', () => {
-      const result = server.reqPathToDid('/users/alice/did.json')
-      expect(result).to.equal(`did:web:${didWebDomain}:users:alice`)
+    it('nested path', () => {
+      expect(server.reqPathToDid('/users/alice/did.json')).to.equal(`did:web:${didWebDomain}:users:alice`)
     })
 
     it('should handle complex nested paths', () => {
@@ -93,7 +91,7 @@ describe('DidWebServer', () => {
 
     it('should handle enabled configuration without error', async () => {
       server = new DidWebServer(logger, config)
-      
+
       // Mock the environment variables needed for database initialization
       const envStub = sinon.stub(process, 'env').value({
         POSTGRES_HOST: 'localhost',
@@ -111,7 +109,7 @@ describe('DidWebServer', () => {
         // Expected errors in test environment are acceptable
         expect(error).to.be.instanceOf(Error)
       }
-      
+
       envStub.restore()
     })
   })
