@@ -27,10 +27,10 @@ export class DidWebServer {
   private db: Database
   private didGenerator?: (domain: string, serviceEndpoint?: string) => Promise<DidWebDocument>
 
-  constructor(logger: Logger, database: Database, config: DidWebServerConfig) {
+  constructor(logger: Logger, db: Database, config: DidWebServerConfig) {
     this.logger = logger.child({ component: 'did-web-server' })
     this.config = config
-    this.db = database
+    this.db = db
     this.app = express()
     this.setupRoutes()
   }
