@@ -19,6 +19,28 @@ export interface DidWebServerConfig {
   serviceEndpoint?: string
 }
 
+/**
+ * Validates the DID web server configuration
+ */
+function validateConfig(config: DidWebServerConfig): void {
+  if (config.enabled) {
+    if (!config.didWebDomain?.trim()) {
+      throw new Error('DID web domain is required when server is enabled')
+    }
+    if (!Number.isInteger(config.port) || config.port <= 0 || config.port > 65535) {
+      throw new Error(`Invalid port: ${config.port}. Must be a valid port number between 1 and 65535`)
+    }
+    if (config.useDevCert) {
+      if (!config.certPath?.trim()) {
+        throw new Error('Certificate path is required when using dev certificates')
+      }
+      if (!config.keyPath?.trim()) {
+        throw new Error('Key path is required when using dev certificates')
+      }
+    }
+  }
+}
+
 export class DidWebServer {
   private app: express.Application
   private server?: Server
@@ -28,6 +50,7 @@ export class DidWebServer {
   private didGenerator?: (domain: string, serviceEndpoint?: string) => Promise<DidWebDocument>
 
   constructor(logger: Logger, db: Database, config: DidWebServerConfig) {
+    validateConfig(config)
     this.logger = logger.child({ component: 'did-web-server' })
     this.config = config
     this.app = express()

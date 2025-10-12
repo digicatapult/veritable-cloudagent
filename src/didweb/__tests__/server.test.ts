@@ -101,15 +101,6 @@ describe('did:web server', () => {
     it('should handle enabled configuration without error', async () => {
       server = new DidWebServer(logger, mockDatabase, config)
 
-      // Mock the environment variables needed for database initialization
-      const envStub = sinon.stub(process, 'env').value({
-        POSTGRES_HOST: 'localhost',
-        POSTGRES_USERNAME: 'postgres',
-        POSTGRES_PASSWORD: 'postgres',
-        POSTGRES_PORT: '5432',
-        DID_WEB_DB_NAME: 'did-web-server',
-      })
-
       // Test completes without throwing - database errors are expected in test environment
       try {
         await server.start()
@@ -118,8 +109,6 @@ describe('did:web server', () => {
         // Expected errors in test environment are acceptable
         expect(error).to.be.instanceOf(Error)
       }
-
-      envStub.restore()
     })
   })
 
@@ -131,8 +120,8 @@ describe('did:web server', () => {
     it('should call database upsert method', async () => {
       await server.upsertDid(did)
       const upsertStub = mockDatabase.upsert as sinon.SinonStub
-      sinon.assert.calledOnce(upsertStub)
-      sinon.assert.calledWith(upsertStub, 'did_web', { did: did.id, document: did }, 'did')
+      expect(upsertStub.calledOnce).to.equal(true)
+      expect(upsertStub.calledWith('did_web', { did: did.id, document: did }, 'did')).to.equal(true)
     })
   })
 
@@ -197,6 +186,65 @@ describe('did:web server', () => {
       }
 
       expect(() => new DidWebServer(logger, mockDatabase, devConfig)).to.not.throw()
+    })
+
+    it('should accept disabled configuration without validation', () => {
+      const disabledConfig: DidWebServerConfig = {
+        enabled: false,
+        port: 0, // Invalid port, but should be ignored when disabled
+        useDevCert: false,
+        certPath: '',
+        keyPath: '',
+        didWebDomain: '', // Invalid domain, but should be ignored when disabled
+      }
+
+      expect(() => new DidWebServer(logger, mockDatabase, disabledConfig)).to.not.throw()
+    })
+
+    it('should throw error for missing domain when enabled', () => {
+      const invalidConfig: DidWebServerConfig = {
+        ...config,
+        didWebDomain: '',
+      }
+
+      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
+        'DID web domain is required when server is enabled'
+      )
+    })
+
+    it('should throw error for invalid port when enabled', () => {
+      const invalidConfig: DidWebServerConfig = {
+        ...config,
+        port: -1,
+      }
+
+      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
+        'Invalid port: -1. Must be a valid port number between 1 and 65535'
+      )
+    })
+
+    it('should throw error for missing cert path when using dev certs', () => {
+      const invalidConfig: DidWebServerConfig = {
+        ...config,
+        useDevCert: true,
+        certPath: '',
+      }
+
+      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
+        'Certificate path is required when using dev certificates'
+      )
+    })
+
+    it('should throw error for missing key path when using dev certs', () => {
+      const invalidConfig: DidWebServerConfig = {
+        ...config,
+        useDevCert: true,
+        keyPath: '',
+      }
+
+      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
+        'Key path is required when using dev certificates'
+      )
     })
   })
 })
