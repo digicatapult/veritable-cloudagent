@@ -1,38 +1,40 @@
+import { type Agent } from '@credo-ts/core'
 import { expect } from 'chai'
+import { Client } from 'pg'
 import sinon from 'sinon'
+import { container } from 'tsyringe'
 import { DidWebDocument } from '../../utils/didWebGenerator.js'
 import PinoLogger from '../../utils/logger.js'
 import Database from '../db.js'
-import { DidWebServer, DidWebServerConfig } from '../server.js'
+import { DidWebServer } from '../server.js'
 
-const didWebDomain = 'test.com'
+interface DidWebServerTestInterface {
+  db?: Database
+  initialiseDatabase(): Promise<void>
+}
+
+// Helper function to create a type-safe mock Database with Sinon stubs
+function createMockDatabase(): Database & { upsert: sinon.SinonStub; get: sinon.SinonStub } {
+  const mockDatabase = {
+    upsert: sinon.stub().resolves(),
+    get: sinon.stub().resolves([]),
+  }
+  return mockDatabase as unknown as Database & { upsert: sinon.SinonStub; get: sinon.SinonStub }
+}
+
+const didWebDomain = 'localhost%3A8443' // Default from env.ts devDefault
 const did = {
   id: `did:web:${didWebDomain}`,
 } as DidWebDocument
 const logger = new PinoLogger('silent').logger
 
-describe('did:web server', () => {
-  let config: DidWebServerConfig
+describe('DidWebServer', () => {
   let server: DidWebServer
-  let mockDatabase: Database
+  let mockDatabase: Database & { upsert: sinon.SinonStub; get: sinon.SinonStub }
 
   beforeEach(() => {
-    config = {
-      enabled: true,
-      port: 8443,
-      useDevCert: false,
-      certPath: '/cert.pem',
-      keyPath: '/key.pem',
-      didWebDomain,
-      serviceEndpoint: 'http://test.com:5002',
-    }
-
-    // Create a mock database instance with required methods
-    mockDatabase = {
-      upsert: sinon.stub().resolves(),
-      migrate: sinon.stub().resolves(),
-      destroy: sinon.stub().resolves(),
-    } as unknown as Database
+    // Create a mock database instance
+    mockDatabase = createMockDatabase()
   })
 
   afterEach(() => {
@@ -40,211 +42,262 @@ describe('did:web server', () => {
   })
 
   describe('constructor', () => {
-    it('should create instance with correct configuration', () => {
-      server = new DidWebServer(logger, mockDatabase, config)
+    it('should create instance with environment-based configuration', () => {
+      server = new DidWebServer(logger)
       expect(server).to.be.instanceOf(DidWebServer)
     })
   })
 
   describe('setDidGenerator', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, mockDatabase, config)
+      server = new DidWebServer(logger)
     })
 
-    it('should accept DID generator function', () => {
+    it('should set DID generator function', () => {
       const mockGenerator = sinon.stub().resolves(did)
-      expect(() => server.setDidGenerator(mockGenerator)).to.not.throw()
+      server.setDidGenerator(mockGenerator)
+      expect(mockGenerator.called).to.equal(false)
     })
   })
 
   describe('reqPath to DID', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, mockDatabase, config)
+      server = new DidWebServer(logger)
     })
 
-    it('should convert well-known path to DID', () => {
+    it('should convert /.well-known/did.json to correct DID', () => {
       const result = server.reqPathToDid('/.well-known/did.json')
       expect(result).to.equal(`did:web:${didWebDomain}`)
     })
 
-    it('no nested path', () => {
-      expect(server.reqPathToDid('/did.json')).to.equal(`did:web:${didWebDomain}`)
+    it('should convert /did.json to correct DID', () => {
+      const result = server.reqPathToDid('/did.json')
+      expect(result).to.equal(`did:web:${didWebDomain}`)
     })
 
-    it('nested path', () => {
-      expect(server.reqPathToDid('/users/alice/did.json')).to.equal(`did:web:${didWebDomain}:users:alice`)
-    })
-
-    it('should handle complex nested paths', () => {
-      const result = server.reqPathToDid('/org/dept/user/alice/did.json')
-      expect(result).to.equal(`did:web:${didWebDomain}:org:dept:user:alice`)
+    it('should convert nested path to correct DID', () => {
+      const result = server.reqPathToDid('/path/to/did.json')
+      expect(result).to.equal(`did:web:${didWebDomain}:path:to`)
     })
 
     it('should throw error for invalid path', () => {
-      expect(() => server.reqPathToDid('/users/alice/did')).to.throw('Invalid DID URL path: /users/alice/did')
-    })
-
-    it('should throw error for empty path', () => {
-      expect(() => server.reqPathToDid('')).to.throw('Invalid DID URL path: ')
+      expect(() => server.reqPathToDid('/invalid/path')).to.throw('Invalid DID URL path: /invalid/path')
     })
   })
 
-  describe('start method', () => {
-    it('should skip initialization when disabled', async () => {
-      const disabledConfig = { ...config, enabled: false }
-      server = new DidWebServer(logger, mockDatabase, disabledConfig)
-
-      // Should complete without error when disabled
-      await server.start()
-    })
-
-    it('should handle enabled configuration without error', async () => {
-      server = new DidWebServer(logger, mockDatabase, config)
-
-      // Test completes without throwing - database errors are expected in test environment
-      try {
-        await server.start()
-        // If start() succeeds, that's fine too
-      } catch (error) {
-        // Expected errors in test environment are acceptable
-        expect(error).to.be.instanceOf(Error)
-      }
-    })
-  })
-
-  describe('upsertDid method', () => {
+  describe('upsertDid', () => {
     beforeEach(() => {
-      server = new DidWebServer(logger, mockDatabase, config)
+      server = new DidWebServer(logger)
+      // Manually set the database for testing - cast to test interface for type safety
+      ;(server as unknown as DidWebServerTestInterface).db = mockDatabase
     })
 
-    it('should call database upsert method', async () => {
+    it('should successfully upload DID document', async () => {
       await server.upsertDid(did)
-      const upsertStub = mockDatabase.upsert as sinon.SinonStub
-      expect(upsertStub.calledOnce).to.equal(true)
-      expect(upsertStub.calledWith('did_web', { did: did.id, document: did }, 'did')).to.equal(true)
+      expect(mockDatabase.upsert.calledOnceWith('did_web', { did: did.id, document: did }, 'did')).to.equal(true)
+    })
+
+    it('should throw error when database not initialized', async () => {
+      // Create a new server without setting the database
+      const serverWithoutDb = new DidWebServer(logger)
+      try {
+        await serverWithoutDb.upsertDid(did)
+        expect.fail('Should have thrown an error')
+      } catch (error) {
+        expect((error as Error).message).to.equal('Database not initialized')
+      }
     })
   })
 
-  describe('error handling', () => {
+  describe('createAndStart static factory', () => {
+    let startSpy: sinon.SinonSpy
+
     beforeEach(() => {
-      server = new DidWebServer(logger, mockDatabase, config)
+      // Spy on the start method
+      startSpy = sinon.stub(DidWebServer.prototype, 'start').resolves()
     })
 
-    it('should handle database not initialized for public methods', () => {
-      // Test that server can be created even without database
+    it('should create and start server without agent', async () => {
+      const server = await DidWebServer.createAndStart(logger)
+
       expect(server).to.be.instanceOf(DidWebServer)
+      expect(startSpy.calledOnce).to.equal(true)
+    })
+
+    it('should create and start server with agent', async () => {
+      // Create a minimal mock agent that satisfies the type requirements
+      const mockAgent = {} as unknown as Agent
+
+      const server = await DidWebServer.createAndStart(logger, mockAgent)
+
+      expect(server).to.be.instanceOf(DidWebServer)
+      expect(startSpy.calledOnce).to.equal(true)
+    })
+  })
+})
+
+describe('Database Setup', () => {
+  let server: DidWebServer
+  let mockClient: sinon.SinonStubbedInstance<Client>
+
+  beforeEach(() => {
+    // Create a stubbed pg Client
+    mockClient = sinon.createStubInstance(Client)
+
+    // Stub the Client constructor and prototype methods to avoid real database connections
+    sinon.stub(Client.prototype, 'connect').callsFake(() => mockClient.connect())
+    sinon.stub(Client.prototype, 'query').callsFake((...args) => mockClient.query(...args))
+    sinon.stub(Client.prototype, 'end').callsFake(() => mockClient.end())
+
+    server = new DidWebServer(logger)
+  })
+
+  afterEach(() => {
+    sinon.restore()
+  })
+
+  describe('PostgreSQL storage', () => {
+    beforeEach(() => {
+      // The test environment already has STORAGE_TYPE=postgres set
+    })
+
+    it('should create database when it does not exist', async () => {
+      mockClient.connect.resolves()
+      mockClient.query.onFirstCall().resolves({ rows: [] }) // Database doesn't exist
+      mockClient.query.onSecondCall().resolves({ rows: [] }) // CREATE DATABASE query
+      mockClient.end.resolves()
+
+      // Call the private method through type-safe interface
+      await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+
+      expect(mockClient.connect.calledOnce).to.equal(true)
+      expect(mockClient.query.calledTwice).to.equal(true)
+      expect(mockClient.query.firstCall.args[0]).to.equal('SELECT 1 FROM pg_database WHERE datname = $1')
+      expect(mockClient.query.firstCall.args[1]).to.deep.equal(['did-web-server'])
+      expect(mockClient.query.secondCall.args[0]).to.equal('CREATE DATABASE "did-web-server"')
+      expect(mockClient.end.calledOnce).to.equal(true)
+    })
+
+    it('should not create database when it already exists', async () => {
+      mockClient.connect.resolves()
+      mockClient.query.onFirstCall().resolves({ rows: [{ exists: 1 }] }) // Database exists
+      mockClient.end.resolves()
+
+      await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+
+      expect(mockClient.connect.calledOnce).to.equal(true)
+      expect(mockClient.query.calledOnce).to.equal(true)
+      expect(mockClient.query.firstCall.args[0]).to.equal('SELECT 1 FROM pg_database WHERE datname = $1')
+      expect(mockClient.end.calledOnce).to.equal(true)
+    })
+
+    it('should handle connection errors gracefully', async () => {
+      const connectionError = new Error('ECONNREFUSED: Connection refused')
+      mockClient.connect.rejects(connectionError)
+      mockClient.end.resolves()
+
+      try {
+        await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+        expect.fail('Should have thrown an error')
+      } catch (error) {
+        expect(error).to.equal(connectionError)
+        expect(mockClient.end.calledOnce).to.equal(true)
+      }
+    })
+
+    it('should handle authentication errors with specific message', async () => {
+      const authError = new Error('authentication failed for user "postgres"')
+      mockClient.connect.rejects(authError)
+      mockClient.end.resolves()
+
+      try {
+        await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+        expect.fail('Should have thrown an error')
+      } catch (error) {
+        expect(error).to.equal(authError)
+        expect(mockClient.end.calledOnce).to.equal(true)
+      }
+    })
+
+    it('should handle permission denied errors with specific message', async () => {
+      const permissionError = new Error('permission denied to create database')
+      mockClient.connect.resolves()
+      mockClient.query.onFirstCall().resolves({ rows: [] })
+      mockClient.query.onSecondCall().rejects(permissionError)
+      mockClient.end.resolves()
+
+      try {
+        await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+        expect.fail('Should have thrown an error')
+      } catch (error) {
+        expect(error).to.equal(permissionError)
+        expect(mockClient.end.calledOnce).to.equal(true)
+      }
+    })
+
+    it('should handle client.end() errors gracefully', async () => {
+      const endError = new Error('Connection already closed')
+      mockClient.connect.resolves()
+      mockClient.query.onFirstCall().resolves({ rows: [{ exists: 1 }] })
+      mockClient.end.rejects(endError)
+
+      // Should not throw even if end() fails
+      await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+
+      expect(mockClient.connect.calledOnce).to.equal(true)
+      expect(mockClient.query.calledOnce).to.equal(true)
+      expect(mockClient.end.calledOnce).to.equal(true)
     })
   })
 
-  describe('integration with loose coupling', () => {
-    it('should allow setting DID generator after construction', () => {
-      server = new DidWebServer(logger, mockDatabase, config)
-      const mockGenerator = sinon.stub().resolves(did)
-
-      // Should not throw when setting generator
-      expect(() => server.setDidGenerator(mockGenerator)).to.not.throw()
+  describe('SQLite storage', () => {
+    beforeEach(() => {
+      // Mock environment to return 'sqlite' for STORAGE_TYPE
+      const mockEnv = {
+        get: sinon.stub().callsFake((key: string) => {
+          if (key === 'STORAGE_TYPE') return 'sqlite'
+          // Return default test values for other keys
+          if (key === 'DID_WEB_DB_NAME') return 'did-web-server'
+          if (key === 'POSTGRES_HOST') return 'localhost'
+          if (key === 'POSTGRES_PORT') return 5432
+          if (key === 'POSTGRES_USERNAME') return 'postgres'
+          if (key === 'POSTGRES_PASSWORD') return 'postgres'
+          return undefined
+        }),
+      }
+      sinon.stub(container, 'resolve').returns(mockEnv)
     })
 
-    it('should work with different domain configurations', () => {
-      const customConfig = { ...config, didWebDomain: 'custom-domain.com' }
-      server = new DidWebServer(logger, mockDatabase, customConfig)
+    it('should handle SQLite storage without database creation', async () => {
+      // SQLite storage should not attempt any database operations
+      await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
 
-      const result = server.reqPathToDid('/did.json')
-      expect(result).to.equal('did:web:custom-domain.com')
-    })
-
-    it('should handle URL-encoded domains correctly', () => {
-      const encodedConfig = { ...config, didWebDomain: 'localhost%3A8443' }
-      server = new DidWebServer(logger, mockDatabase, encodedConfig)
-
-      const result = server.reqPathToDid('/users/alice/did.json')
-      expect(result).to.equal('did:web:localhost%3A8443:users:alice')
+      // Verify no PostgreSQL client methods were called
+      expect(mockClient.connect.called).to.equal(false)
+      expect(mockClient.query.called).to.equal(false)
+      expect(mockClient.end.called).to.equal(false)
     })
   })
 
-  describe('configuration validation', () => {
-    it('should accept minimal valid configuration', () => {
-      const minimalConfig: DidWebServerConfig = {
-        enabled: true,
-        port: 8443,
-        useDevCert: false,
-        certPath: '/cert.pem',
-        keyPath: '/key.pem',
-        didWebDomain: 'example.com',
-        serviceEndpoint: 'http://example.com:5002',
+  describe('Unsupported storage type', () => {
+    beforeEach(() => {
+      // Mock environment to return unsupported storage type
+      const mockEnv = {
+        get: sinon.stub().callsFake((key: string) => {
+          if (key === 'STORAGE_TYPE') return 'unsupported'
+          return undefined
+        }),
       }
-
-      expect(() => new DidWebServer(logger, mockDatabase, minimalConfig)).to.not.throw()
+      sinon.stub(container, 'resolve').returns(mockEnv)
     })
 
-    it('should work with development certificate configuration', () => {
-      const devConfig: DidWebServerConfig = {
-        ...config,
-        useDevCert: true,
-        certPath: '/dev/cert.pem',
-        keyPath: '/dev/key.pem',
+    it('should throw error for unsupported storage type', async () => {
+      try {
+        await (server as unknown as DidWebServerTestInterface).initialiseDatabase()
+        expect.fail('Should have thrown an error')
+      } catch (error) {
+        expect((error as Error).message).to.equal('Unsupported storage type: unsupported')
       }
-
-      expect(() => new DidWebServer(logger, mockDatabase, devConfig)).to.not.throw()
-    })
-
-    it('should accept disabled configuration without validation', () => {
-      const disabledConfig: DidWebServerConfig = {
-        enabled: false,
-        port: 0, // Invalid port, but should be ignored when disabled
-        useDevCert: false,
-        certPath: '',
-        keyPath: '',
-        didWebDomain: '', // Invalid domain, but should be ignored when disabled
-      }
-
-      expect(() => new DidWebServer(logger, mockDatabase, disabledConfig)).to.not.throw()
-    })
-
-    it('should throw error for missing domain when enabled', () => {
-      const invalidConfig: DidWebServerConfig = {
-        ...config,
-        didWebDomain: '',
-      }
-
-      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
-        'DID web domain is required when server is enabled'
-      )
-    })
-
-    it('should throw error for invalid port when enabled', () => {
-      const invalidConfig: DidWebServerConfig = {
-        ...config,
-        port: -1,
-      }
-
-      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
-        'Invalid port: -1. Must be a valid port number between 1 and 65535'
-      )
-    })
-
-    it('should throw error for missing cert path when using dev certs', () => {
-      const invalidConfig: DidWebServerConfig = {
-        ...config,
-        useDevCert: true,
-        certPath: '',
-      }
-
-      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
-        'Certificate path is required when using dev certificates'
-      )
-    })
-
-    it('should throw error for missing key path when using dev certs', () => {
-      const invalidConfig: DidWebServerConfig = {
-        ...config,
-        useDevCert: true,
-        keyPath: '',
-      }
-
-      expect(() => new DidWebServer(logger, mockDatabase, invalidConfig)).to.throw(
-        'Key path is required when using dev certificates'
-      )
     })
   })
 })

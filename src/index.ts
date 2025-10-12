@@ -12,7 +12,6 @@ import { setupAgent } from './agent.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
 import { setupServer } from './server.js'
-import { DidWebDocGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
 const env = container.resolve(Env)
@@ -70,58 +69,8 @@ const agent = await setupAgent({
   logger,
 })
 
-// Initialize database before creating DID:web server (if enabled and using postgres)
-if (env.get('DID_WEB_ENABLED') && env.get('STORAGE_TYPE') === 'postgres') {
-  try {
-    const { ensureDatabaseExists } = await import('./didweb/dbSetup.js')
-    await ensureDatabaseExists(
-      {
-        host: env.get('POSTGRES_HOST') as string,
-        port: env.get('POSTGRES_PORT') as number,
-        user: env.get('POSTGRES_USERNAME') as string,
-        password: env.get('POSTGRES_PASSWORD') as string,
-        targetDatabase: env.get('DID_WEB_DB_NAME') as string,
-      },
-      logger.logger
-    )
-  } catch (error) {
-    logger.logger.error(`Failed to initialize DID:web database: ${error}`)
-    throw error
-  }
-}
-
-// Create Database instance for DID:web server
-const { default: Database } = await import('./didweb/db.js')
-const didWebDatabase = new Database({
-  database: env.get('DID_WEB_DB_NAME') as string,
-  host: env.get('POSTGRES_HOST') as string,
-  port: env.get('POSTGRES_PORT') as number,
-  user: env.get('POSTGRES_USERNAME') as string,
-  password: env.get('POSTGRES_PASSWORD') as string,
-})
-
-// Create DID:web server with proper dependency injection
-const didWebServer = new DidWebServer(logger.logger, didWebDatabase, {
-  enabled: env.get('DID_WEB_ENABLED'),
-  port: env.get('DID_WEB_PORT'),
-  useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
-  certPath: env.get('DID_WEB_DEV_CERT_PATH'),
-  keyPath: env.get('DID_WEB_DEV_KEY_PATH'),
-  didWebDomain: env.get('DID_WEB_DOMAIN'),
-  serviceEndpoint: env.get('DID_WEB_SERVICE_ENDPOINT'),
-})
-
-// Provide DID generation capability to the server (loose coupling)
-if (env.get('DID_WEB_ENABLED')) {
-  const didWebGenerator = new DidWebDocGenerator(agent, logger.logger)
-  didWebServer.setDidGenerator(async (domain: string, serviceEndpoint?: string) => {
-    const result = await didWebGenerator.generateDidWebDocument(domain, serviceEndpoint || '')
-    return result.didDocument
-  })
-}
-
-// Start the DID:web server
-await didWebServer.start()
+// Initialize DID:web server with minimal coupling - controlled by DID_WEB_ENABLED environment variable
+await DidWebServer.createAndStart(logger.logger, agent)
 
 const socketServer = new WebSocket.Server({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
