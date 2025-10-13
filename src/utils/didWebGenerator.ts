@@ -104,7 +104,7 @@ export class DidWebDocGenerator {
     }
   }
 
-  private async extractKeyComponents<T extends KeyType.Ed25519 | KeyType.X25519>(jwk: JWK): Promise<KeyPairResult> {
+  private async extractKeyComponents(jwk: JWK): Promise<KeyPairResult> {
     const publicJwk = (await jwk.toPublic()).toObject()
     const privateKeyB64Url = jwk.toObject(true).d!
 
@@ -115,7 +115,7 @@ export class DidWebDocGenerator {
     return {
       publicKeyJwk: {
         kty: publicJwk.kty,
-        crv: publicJwk.crv as T,
+        crv: publicJwk.crv as KeyType.Ed25519 | KeyType.X25519,
         x: publicJwk.x,
       },
       privateKeyB64Url,

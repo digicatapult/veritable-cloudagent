@@ -2,7 +2,7 @@ import { Agent, Buffer, Key, KeyType, TypedArrayEncoder } from '@credo-ts/core'
 import { expect } from 'chai'
 import { after, before, describe, it } from 'mocha'
 import request from 'supertest'
-import { getTestAgent } from '../unit/utils/helpers'
+import { getTestAgent } from '../unit/utils/helpers.js'
 
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 
