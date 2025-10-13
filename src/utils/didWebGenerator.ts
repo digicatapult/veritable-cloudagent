@@ -33,8 +33,8 @@ export class DidWebDocGenerator {
     const signingJwk = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
     const encryptionJwk = await JWK.generate('ECDH-ES', { crv: 'X25519', use: 'enc', kid: 'owner' })
 
-    const signingKeyPair = await this.extractKeyComponents(signingJwk, 'Ed25519', KeyType.Ed25519)
-    const encryptionKeyPair = await this.extractKeyComponents(encryptionJwk, 'X25519', KeyType.X25519)
+    const signingKeyPair = await this.extractKeyComponents(signingJwk)
+    const encryptionKeyPair = await this.extractKeyComponents(encryptionJwk)
 
     // Assemble the DID:web document
     const didWebDocument: DIDDocument = {
@@ -104,22 +104,18 @@ export class DidWebDocGenerator {
     }
   }
 
-  private async extractKeyComponents(
-    jwk: JWK,
-    curve: string,
-    keyType: KeyType.Ed25519 | KeyType.X25519
-  ): Promise<KeyPairResult> {
+  private async extractKeyComponents<T extends KeyType.Ed25519 | KeyType.X25519>(jwk: JWK): Promise<KeyPairResult> {
     const publicJwk = (await jwk.toPublic()).toObject()
     const privateKeyB64Url = jwk.toObject(true).d!
 
-    if (!publicJwk.crv || !publicJwk.kty || !publicJwk.x) {
-      throw new Error(`JWK public key is missing required property for ${curve}`)
+    if (!publicJwk.x) {
+      throw new Error(`JWK public key is missing required property for ${publicJwk.kty}`)
     }
 
     return {
       publicKeyJwk: {
         kty: publicJwk.kty,
-        crv: publicJwk.crv as typeof keyType,
+        crv: publicJwk.crv as T,
         x: publicJwk.x,
       },
       privateKeyB64Url,
@@ -168,7 +164,6 @@ export class DidWebDocGenerator {
    */
   public async isDidWebAlreadyImported(did: string): Promise<boolean> {
     this.logger.info(`Checking if ${did} is already imported in agent`)
-    return false
 
     const importedDids = await this.agent.dids.getCreatedDids()
     return importedDids.some((d) => d.did === did)

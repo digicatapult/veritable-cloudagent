@@ -808,7 +808,7 @@ node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.jso
 Explicit DID (if already known):
 
 ```bash
-node --experimental-strip-types scripts/register-schema.ts makeAuthorisation \
+node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json \
   --issuer did:web:bob%3A8443 \
   --base-url http://localhost:3001
 ```
