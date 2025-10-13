@@ -8,6 +8,7 @@ import makerAuthorisationSchema from '../../scripts/schemas/makeAuthorisation.js
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const SCRIPT_PATH = path.resolve(process.cwd(), 'scripts', 'register-schema.ts')
 const SCHEMA_FILENAME = 'makeAuthorisation.json'
+const BOB_IPFS_ORIGIN = 'http://ipfs1:5001'
 
 // Alice DID (issuer / MoD)
 const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
@@ -44,7 +45,6 @@ describe('MoD makeAuthorisation schema (script-driven)', function () {
   })
 
   it('Maker (Bob) can resolve the schema via IPFS', async function () {
-    const BOB_IPFS_ORIGIN = 'http://ipfs1:5001'
     const cid = schemaId.split('ipfs://')[1]
 
     const url = `${BOB_IPFS_ORIGIN}/api/v0/cat?arg=${cid}`
