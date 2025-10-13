@@ -104,6 +104,7 @@
     "rimraf": "^6.0.1",
     "sinon": "^21.0.0",
     "supertest": "^7.1.4",
+    "tsx": "^4.20.6",
     "typescript": "~5.9.3"
   },
   "engines": {
@@ -118,5 +119,12 @@
       "@credo-ts/node": "0.5.17"
     },
     "ref-napi": "npm:@2060.io/ref-napi"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "bugs": {
+    "url": "https://github.com/digicatapult/veritable-cloudagent/issues"
   }
 }

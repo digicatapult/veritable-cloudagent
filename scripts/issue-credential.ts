@@ -2,6 +2,7 @@
 
 // Get credential definiton and schema
 // Propose a credential to maker
+import { AutoAcceptCredential } from '@credo-ts/core'
 import z from 'zod'
 import type { OfferCredentialOptions } from '../src/controllers/types.js'
 
@@ -98,6 +99,10 @@ async function main() {
     method: 'GET',
     headers: { 'content-type': 'application/json' },
   })
+  if (!connections.ok) {
+    const text = await connections.text()
+    throw new Error(`Failed getting connections: ${connections.status} ${text}`)
+  }
   const connectionsJson = await connections.json()
   const parsedConnections = connectionParser.parse(connectionsJson)
   log(`Found ${parsedConnections.length} connections`)
@@ -114,6 +119,7 @@ async function main() {
   const offerCredentialBody: OfferCredentialOptions = {
     connectionId: connectionId,
     protocolVersion: 'v2',
+    autoAcceptCredential: AutoAcceptCredential.Always,
     credentialFormats: {
       anoncreds: {
         credentialDefinitionId: credDefId,
@@ -201,16 +207,20 @@ async function main() {
   }
 
   //propose a credential
-  try {
-    const proposeCredRes = await fetch(`${baseUrl}/v1/credentials/offer-credential`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(offerCredentialBody),
-    })
-  } catch (error) {
-    log('Error during credential proposal:', error instanceof Error ? error.message : String(error))
-    throw error
+
+  log('Proposing credential to maker with oem_did', oemDid)
+  const proposeCredRes = await fetch(`${baseUrl}/v1/credentials/offer-credential`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(offerCredentialBody),
+  })
+
+  if (!proposeCredRes.ok) {
+    const text = await proposeCredRes.text()
+    throw new Error(`Failed proposing credential: ${proposeCredRes.status} ${text}`)
   }
+
+  log('Credential offer sent to maker. Awaiting acceptance...')
 }
 
 main().catch((e) => process.stderr.write((e as Error).stack + '\n') && process.exit(1))
