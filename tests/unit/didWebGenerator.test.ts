@@ -15,6 +15,11 @@ describe('didWebGenerator', function () {
     logger = new PinoLogger('silent').logger
   })
 
+  after(async () => {
+    await aliceAgent.shutdown()
+    await aliceAgent.wallet.delete()
+  })
+
   it('should make a new instance of DidWebDocGenerator', function () {
     const didWebDocGenerator = new DidWebDocGenerator(aliceAgent, logger)
     expect(didWebDocGenerator).to.be.an.instanceof(DidWebDocGenerator)

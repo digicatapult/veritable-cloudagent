@@ -9,7 +9,6 @@ export interface DidWebGenerationResult {
   privateSigningKey: string
   privateEncryptionKey: string
   publicEncryptionKey: string
-  // /privateKey: string
 }
 
 interface KeyPairResult {
