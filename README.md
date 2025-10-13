@@ -836,6 +836,7 @@ bash scripts/connection-setup.sh
 ```
 
 In a different terminal start up a server that listens for credentialEvents emitted by Bob.
+(Make sure you have `tsx` installed.)
 
 ```bash
 node bob-listener.js
@@ -846,3 +847,5 @@ Then in your previous terminal you will issue credential from Alice to Bob. Bob 
 ```bash
 node --experimental-strip-types scripts/issue-credential.ts
 ```
+
+You can then watch in the progression in the terminal window where your listener is running.

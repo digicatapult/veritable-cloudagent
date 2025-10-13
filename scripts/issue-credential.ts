@@ -30,11 +30,7 @@ const connectionParser = z.array(
   })
 )
 
-async function getschemaAndCredentialDefinition(
-  baseUrl: string,
-  issuerId: string,
-  log: (msg: string, extra?: unknown) => void
-) {
+async function getschemaAndCredentialDefinition(baseUrl: string, log: (msg: string, extra?: unknown) => void) {
   try {
     log('Fetching schemas from', `${baseUrl}/v1/schemas`)
     const res = await fetch(`${baseUrl}/v1/schemas?createdLocally=true`, {
@@ -75,7 +71,7 @@ async function getschemaAndCredentialDefinition(
     }
 
     log(`credDef ${parsedCredDef[0].id} found for schema ${schemaId}`)
-    return { parsedSchema: parsedSchema[0], credDefId: parsedCredDef[0].id }
+    return parsedCredDef[0].id
   } catch (error) {
     log('Error during credential setup:', error instanceof Error ? error.message : String(error))
     throw error
@@ -90,11 +86,10 @@ async function main() {
   // we are alice atm and are connected to both bob and charlie
   const oemDid = 'did:web:charlie%3A8443'
   const makerDid = 'did:web:bob%3A8443'
-  const modDid = 'did:web:alice%3A8443'
   const baseUrl = 'http://localhost:3000'
 
-  const { parsedSchema, credDefId } = await getschemaAndCredentialDefinition(baseUrl, oemDid, log)
-  // get connectionId for bob
+  const credDefId = await getschemaAndCredentialDefinition(baseUrl, log)
+  // get connectionId for bob on alice
   const connections = await fetch(`${baseUrl}/v1/connections`, {
     method: 'GET',
     headers: { 'content-type': 'application/json' },
@@ -206,9 +201,9 @@ async function main() {
     },
   }
 
-  //propose a credential
+  // Offer a credential
 
-  log('Proposing credential to maker with oem_did', oemDid)
+  log('Offering credential to maker with oem_did', oemDid)
   const proposeCredRes = await fetch(`${baseUrl}/v1/credentials/offer-credential`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -217,7 +212,7 @@ async function main() {
 
   if (!proposeCredRes.ok) {
     const text = await proposeCredRes.text()
-    throw new Error(`Failed proposing credential: ${proposeCredRes.status} ${text}`)
+    throw new Error(`Failed offering credential: ${proposeCredRes.status} ${text}`)
   }
 
   log('Credential offer sent to maker. Awaiting acceptance...')
