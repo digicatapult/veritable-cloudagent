@@ -1,5 +1,5 @@
 {
-  "name": "mod_make_authorisation",
+  "name": "make_authorisation",
   "version": "1.0.0",
   "attrNames": [
     "request_id",

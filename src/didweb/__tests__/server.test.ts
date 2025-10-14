@@ -1,14 +1,14 @@
 import { expect } from 'chai'
+import { DIDDocument } from 'did-resolver'
 import sinon from 'sinon'
 import { DidWebServer, DidWebServerConfig } from '../../didweb/server.js'
-import { DidWebDocument } from '../../utils/didWebGenerator.js'
 import PinoLogger from '../../utils/logger.js'
 import Database from '../db.js'
 
 const didWebDomain = 'test.com'
 const did = {
   id: `did:web:${didWebDomain}`,
-} as DidWebDocument
+} as DIDDocument
 const logger = new PinoLogger('silent').logger
 const dbMock = {
   upsert: sinon.stub().callsFake(() => Promise.resolve()),

@@ -1,10 +1,10 @@
 import cors from 'cors'
+import { DIDDocument } from 'did-resolver'
 import express from 'express'
 import fs from 'fs'
 import type { Server } from 'http'
 import https from 'https'
 import { Logger } from 'pino'
-import { DidWebDocument } from '../utils/didWebGenerator.js'
 import { createRequestLogger } from '../utils/logger.js'
 import Database from './db.js'
 import { errorHandler, NotFoundError } from './error.js'
@@ -68,7 +68,7 @@ export class DidWebServer {
     res.json(record.document)
   }
 
-  public async upsertDid(document: DidWebDocument): Promise<void> {
+  public async upsertDid(document: DIDDocument): Promise<void> {
     this.logger.info(`Uploading did to server: ${document.id}`)
     await this.db.upsert('did_web', { did: document.id, document }, 'did')
   }
