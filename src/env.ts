@@ -125,8 +125,8 @@ export const envConfig = {
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
   DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
-  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'alice.pem' }),
-  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'alice-key.pem' }),
+  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'alice+1.pem' }),
+  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'alice+1-key.pem' }),
   DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
   DID_WEB_DOMAIN: envalid.str({ default: '', devDefault: 'localhost%3A8443' }),
 }
