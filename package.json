@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.15.14",
+  "version": "0.15.15",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -71,7 +71,7 @@
     "tsyringe": "^4.10.0",
     "undici": "^7.16.0",
     "ws": "^8.18.3",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -83,12 +83,12 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.18.8",
+    "@types/node": "^22.18.10",
     "@types/sinon": "^17.0.4",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
-    "@typescript-eslint/parser": "^8.45.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.0",
+    "@typescript-eslint/parser": "^8.46.0",
     "chai": "^6.2.0",
     "concurrently": "^9.2.1",
     "depcheck": "^1.4.7",
@@ -98,7 +98,7 @@
     "globals": "^16.4.0",
     "mocha": "^11.7.4",
     "patch-package": "^8.0.1",
-    "pino-pretty": "13.1.1",
+    "pino-pretty": "13.1.2",
     "prettier": "^3.6.2",
     "prettier-plugin-organize-imports": "^4.3.0",
     "rimraf": "^6.0.1",
