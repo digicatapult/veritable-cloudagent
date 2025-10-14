@@ -151,8 +151,8 @@ async function main() {
   }
 
   // Output (stdout) schemaId first line, credential definition (if any) second line.
-  process.stdout.write(`${schemaId}\n`)
-  if (credDefId) process.stdout.write(`${credDefId}\n`)
+  process.stdout.write(` Schema id: ${schemaId}\n`)
+  if (credDefId) process.stdout.write(`Credential definition: ${credDefId}\n`)
 }
 
 main().catch((e) => process.stderr.write((e as Error).stack + '\n') && process.exit(1))

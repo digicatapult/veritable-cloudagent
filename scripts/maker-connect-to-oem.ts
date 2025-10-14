@@ -17,13 +17,7 @@ const credentialParser = z.object({
 })
 
 function printUsageAndExit(code: number): never {
-  process.stderr.write(
-    'Usage: register-schema <schemaFileName> [--issuer <did>] [--base-url <url>]\n' +
-      'Examples:\n' +
-      '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation --issuer did:key:abc --base-url http://localhost:3000\n' +
-      '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation --base-url http://localhost:3000\n' +
-      'If --issuer is omitted, DID will be did:web:alice%3A8443\n'
-  )
+  process.stderr.write(`Usage: maker-connect-to-oem --credential-id <credentialId> [--base-url <url>]\n`)
   process.exit(code)
 }
 function parseArgs(argv: string[]): ParsedArgs {
@@ -59,7 +53,6 @@ async function main() {
     printUsageAndExit(1)
   }
   const log = (msg: string, extra?: unknown) => {
-    // use stderr so that any stdout piping (e.g. capturing id) is clean
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
   // retrieve credential offer
@@ -76,9 +69,15 @@ async function main() {
   const credential = await credentialResponse.json()
   const parsedCredential = credentialParser.parse(credential) // validate structure
   if (parsedCredential.state !== 'done' || parsedCredential.role !== 'holder') {
-    throw new Error(
-      `Credential ${credentialId} is in ${parsedCredential.state} state and holder role: ${JSON.stringify(parsedCredential)}`
-    )
+    let errorMsg = `Credential ${credentialId} is invalid:`
+    if (parsedCredential.state !== 'done') {
+      errorMsg += ` state is '${parsedCredential.state}' (expected 'done').`
+    }
+    if (parsedCredential.role !== 'holder') {
+      errorMsg += ` role is '${parsedCredential.role}' (expected 'holder').`
+    }
+    errorMsg += ` Full credential: ${JSON.stringify(parsedCredential)}`
+    throw new Error(errorMsg)
   }
   log('Retrieved issued credential', parsedCredential)
   const oemDid = parsedCredential.credentialAttributes.find((a) => a.name === 'oem_did')?.value

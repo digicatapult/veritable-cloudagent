@@ -1,94 +1,74 @@
-// This script issues a credential to maker(Bob) with (Charlie's) oem's did
+// This script issues a credential to maker(Bob) with (Charlie's)oem's did
 
-// Get credential definiton and schema
-// Propose a credential to maker
+// Offer a credential to maker
 import { AutoAcceptCredential } from '@credo-ts/core'
 import z from 'zod'
 import type { OfferCredentialOptions } from '../src/controllers/types.js'
 
-const schemaParser = z.array(
-  z.object({
-    id: z.string(),
-    issuerId: z.string(),
-    name: z.string(),
-    version: z.string(),
-    attrNames: z.array(z.string()),
-  })
-)
-const credentialParser = z.array(
-  z.object({
-    id: z.string(),
-    schemaId: z.string(),
-    tag: z.string(),
-    issuerId: z.string(),
-  })
-)
 const connectionParser = z.array(
   z.object({
     id: z.string(),
     invitationDid: z.string(),
   })
 )
+interface ParsedArgs {
+  credDefId: string
+  oemDid: string
+  makerDid: string
+  baseUrl: string
+}
+function printUsageAndExit(code: number): never {
+  process.stderr.write(
+    'Usage: issue-credential --oem <oemDid> --maker <makerDid> --cred-def-id <credDefId> [--base-url <url>]\n'
+  )
+  process.exit(code)
+}
 
-async function getschemaAndCredentialDefinition(baseUrl: string, log: (msg: string, extra?: unknown) => void) {
-  try {
-    log('Fetching schemas from', `${baseUrl}/v1/schemas`)
-    const res = await fetch(`${baseUrl}/v1/schemas?createdLocally=true`, {
-      method: 'GET',
-      headers: { 'content-type': 'application/json' },
-    })
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch schemas: ${res.status} ${res.statusText}`)
-    }
-
-    const jsonRes = await res.json()
-    const parsedSchema = schemaParser.parse(jsonRes)
-
-    if (parsedSchema.length === 0) {
-      throw new Error('No schemas found')
-    }
-
-    const schemaId = parsedSchema[0].id
-    log(`${schemaId} schemas found`)
-
-    // Get credential definition for schema
-    log(`Fetching credential definitions for schema ${schemaId}`)
-    const credDef = await fetch(`${baseUrl}/v1/credential-definitions?createdLocally=true&schemaId=${schemaId}`, {
-      method: 'GET',
-      headers: { 'content-type': 'application/json' },
-    })
-
-    if (!credDef.ok) {
-      throw new Error(`Failed to fetch credential definitions: ${credDef.status} ${credDef.statusText}`)
-    }
-
-    const credDefRes = await credDef.json()
-    const parsedCredDef = credentialParser.parse(credDefRes)
-
-    if (parsedCredDef.length === 0) {
-      throw new Error(`No credential definitions found for schema ${schemaId}`)
-    }
-
-    log(`credDef ${parsedCredDef[0].id} found for schema ${schemaId}`)
-    return parsedCredDef[0].id
-  } catch (error) {
-    log('Error during credential setup:', error instanceof Error ? error.message : String(error))
-    throw error
+function parseArgs(argv: string[]): ParsedArgs {
+  const args = argv.slice(2)
+  const parsed: ParsedArgs = {
+    credDefId: '',
+    baseUrl: 'http://localhost:3000',
+    oemDid: 'did:web:charlie%3A8443',
+    makerDid: 'did:web:bob%3A8443',
   }
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i]
+    if (a === '--oem' || a === '-o') {
+      parsed.oemDid = args[++i]
+      continue
+    }
+    if (a === '--maker' || a === '-m') {
+      parsed.makerDid = args[++i]
+      continue
+    }
+    if (a === '--cred-def-id' || a === '-c') {
+      parsed.credDefId = args[++i]
+      continue
+    }
+    if (a === '--base-url' || a === '-b') {
+      parsed.baseUrl = args[++i]
+      continue
+    }
+    if (a === '--help' || a === '-h') {
+      printUsageAndExit(0)
+    }
+
+    process.stderr.write(`Unknown or duplicate argument: ${a}\n`)
+    printUsageAndExit(1)
+  }
+  return parsed
 }
 
 async function main() {
+  const { credDefId, oemDid, makerDid, baseUrl } = parseArgs(process.argv)
   const log = (msg: string, extra?: unknown) => {
-    // use stderr so that any stdout piping (e.g. capturing id) is clean
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
-  // we are alice atm and are connected to both bob and charlie
-  const oemDid = 'did:web:charlie%3A8443'
-  const makerDid = 'did:web:bob%3A8443'
-  const baseUrl = 'http://localhost:3000'
-
-  const credDefId = await getschemaAndCredentialDefinition(baseUrl, log)
+  if (credDefId.length === 0) {
+    process.stderr.write('--cred-def-id is required\n')
+    printUsageAndExit(1)
+  }
   // get connectionId for bob on alice
   const connections = await fetch(`${baseUrl}/v1/connections`, {
     method: 'GET',
@@ -202,7 +182,6 @@ async function main() {
   }
 
   // Offer a credential
-
   log('Offering credential to maker with oem_did', oemDid)
   const proposeCredRes = await fetch(`${baseUrl}/v1/credentials/offer-credential`, {
     method: 'POST',
