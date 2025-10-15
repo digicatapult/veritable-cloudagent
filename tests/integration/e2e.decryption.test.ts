@@ -11,7 +11,7 @@ describe('Encrypt and decrypt - ECDH-ES', function () {
   let publicEncryptionKeyBuffer: Buffer
   let jwe: string
   const alice = request(ALICE_BASE_URL)
-  const plainText = 'plaintext'
+  const file = Buffer.from('someFile')
 
   before(async function () {
     agent = await getTestAgent('DID REST Agent Test Alice', 3999)
@@ -45,7 +45,7 @@ describe('Encrypt and decrypt - ECDH-ES', function () {
     jwe = await agent.context.wallet.directEncryptCompactJweEcdhEs({
       recipientKey,
       encryptionAlgorithm: 'A256GCM',
-      data: TypedArrayEncoder.fromString(plainText),
+      data: file,
       header: {},
     })
   })
@@ -64,7 +64,7 @@ describe('Encrypt and decrypt - ECDH-ES', function () {
       .expect('Content-Type', /json/)
       .expect(200)
 
-    expect(response.body).to.equal(plainText)
+    expect(Buffer.from(response.body, 'base64')).to.deep.equal(file)
   })
 
   it('should 500 - unknown public key', async function () {

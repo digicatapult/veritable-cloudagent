@@ -16,7 +16,7 @@ app.use(express.json({ type: '*/*' }))
 // Handle credential events, in our demo this is the credential sent from Alice(MoD) to Bob(Maker)
 app.post('/credentials', (req, res) => {
   const cred = req.body || {}
-  const id = cred.id || cred.credentialId || cred.recordId
+  const id = cred.id
   const state = String(cred.state || '').toLowerCase()
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (!TRIGGER_STATES.includes(state)) return res.status(204).end()
