@@ -61,6 +61,12 @@ wait_connection_completed() {
 
 complete_connection(){
   local api="$1"
+  # poll until there is at least one connection
+  while true; do
+    num_conns="$(curl -fsS "$api/v1/connections" | jq 'length')"
+    if [ "$num_conns" -ge 1 ]; then break; fi
+    sleep "$POLL_INTERVAL_SECS"
+  done
   # get the 1st connection as there should only be one
   conn_id="$(curl -fsS "$api/v1/connections" | jq -r '.[0].id')"
   log "First connection id: $conn_id"

@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.15.16",
+  "version": "0.15.17",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -118,5 +118,9 @@
       "@credo-ts/node": "0.5.17"
     },
     "ref-napi": "npm:@2060.io/ref-napi"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
   }
 }

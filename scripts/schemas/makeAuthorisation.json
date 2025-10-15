@@ -19,6 +19,7 @@
     "tdp_format",
     "permitted_use",
     "caveats",
-    "revocation_reference"
+    "revocation_reference",
+    "oem_did"
   ]
 }

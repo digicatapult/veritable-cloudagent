@@ -182,8 +182,8 @@ The env `DID_WEB_ENABLED` needs to be set to `true`.
 
 Then run:
 
-```
-bash scripts/connection-setup.sh
+```bash
+scripts/connection-setup.sh
 ```
 
 #### Starting Own Server
@@ -812,3 +812,44 @@ node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.jso
   --issuer did:web:bob%3A8443 \
   --base-url http://localhost:3001
 ```
+
+## Demoing for MOD
+
+In docker-compose-testnet.yml add `WEBHOOK_URL=http://host.docker.internal:3003` for Bob's cloudagent and `WEBHOOK_URL=http://host.docker.internal:3004` for Charlie's.
+
+Bring up testnet, have the certs etc ready
+
+```bash
+docker compose -f docker-compose-testnet.yml up --build -d
+```
+
+Connect peers
+
+```bash
+bash scripts/connection-setup.sh
+```
+
+Register schema
+
+```bash
+node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json
+```
+
+In a different terminal start up a server that listens for credentialEvents emitted by Bob and in another one Charlie's listener.
+(Make sure you have `tsx` installed.)
+
+```bash
+node bob-listener.js
+```
+
+```bash
+node charlie-listener.js
+```
+
+Then in your previous terminal you will issue credential from Alice to Bob. Bob will resolve the did that is present and will automatically connect to Charlie based on the did.
+
+```bash
+node --experimental-strip-types scripts/issue-credential.ts --cred-def-id < Paste cred def ID from schema registration >
+```
+
+You can then watch in the progression in the terminal window where your listener is running.
