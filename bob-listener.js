@@ -25,9 +25,6 @@ app.post('/credentials', (req, res) => {
     stdio: 'inherit',
     env: { ...process.env, CREDENTIAL_RECORD_ID: String(id) },
   })
-  child.on('exit', (code, signal) => {
-    console.log('child exited', { code, signal }) // eslint-disable-line no-console
-  })
   return res.status(202).end()
 })
 

@@ -1,3 +1,4 @@
+import { AutoAcceptProof } from '@credo-ts/core'
 import z from 'zod'
 import type { ProposeProofOptions } from '../src/controllers/types.js'
 
@@ -166,7 +167,7 @@ async function main() {
         },
       },
     },
-    autoAcceptProof: 'contentApproved',
+    autoAcceptProof: AutoAcceptProof.ContentApproved,
   }
 
   log('Proposing proof to OEM with proposal:', JSON.stringify(proofProposal, null, 2))
