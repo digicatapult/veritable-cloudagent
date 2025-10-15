@@ -57,6 +57,8 @@ async function main() {
   }
   // retrieve credential offer
   log(`Retrieving issued credential ${credentialId} baseURL ${baseUrl}`)
+  await new Promise((resolve) => setTimeout(resolve, 2000))
+
   const credentialResponse = await fetch(`${baseUrl}/v1/credentials/${credentialId}`, {
     method: 'GET',
     headers: { accept: 'application/json' },

@@ -815,7 +815,7 @@ node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.jso
 
 ## Demoing for MOD
 
-In docker-compose-testnet.yml add `WEBHOOK_URL=http://host.docker.internal:3003` for Bob's cloudagent.
+In docker-compose-testnet.yml add `WEBHOOK_URL=http://host.docker.internal:3003` for Bob's cloudagent and `WEBHOOK_URL=http://host.docker.internal:3004` for Charlie's.
 
 Bring up testnet, have the certs etc ready
 
@@ -835,11 +835,15 @@ Register schema
 node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json
 ```
 
-In a different terminal start up a server that listens for credentialEvents emitted by Bob.
+In a different terminal start up a server that listens for credentialEvents emitted by Bob and in another one Charlie's listener.
 (Make sure you have `tsx` installed.)
 
 ```bash
 node bob-listener.js
+```
+
+```bash
+node charlie-listener.js
 ```
 
 Then in your previous terminal you will issue credential from Alice to Bob. Bob will resolve the did that is present and will automatically connect to Charlie based on the did.
