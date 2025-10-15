@@ -71,6 +71,7 @@ async function main() {
   if (parsed.state !== 'completed') {
     throw new Error(`Connection ${connectionId} not completed yet, state: ${parsed.state}`)
   }
+  log('============================================================================')
   log(`Connection ${connectionId} request accepted`)
 }
 
