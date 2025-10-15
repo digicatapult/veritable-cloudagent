@@ -21,7 +21,7 @@ app.post('/credentials', (req, res) => {
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (!TRIGGER_STATES.includes(state)) return res.status(204).end()
 
-  const child = spawn('npx', ['tsx', AUTO_CONNECT_TO_OEM_SCRIPT_PATH, '--credential-id', String(id)], {
+  spawn('npx', ['tsx', AUTO_CONNECT_TO_OEM_SCRIPT_PATH, '--credential-id', String(id)], {
     stdio: 'inherit',
     env: { ...process.env, CREDENTIAL_RECORD_ID: String(id) },
   })

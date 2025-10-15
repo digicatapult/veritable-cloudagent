@@ -198,7 +198,9 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   // Register inbound transports
   for (const inboundTransport of inboundTransports) {
     const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.registerInboundTransport(new InboundTransport({ port: inboundTransport.port }))
+    agent.registerInboundTransport(
+      new InboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
+    )
   }
 
   await agent.initialize()
