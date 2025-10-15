@@ -40,7 +40,7 @@ describe('WalletController', () => {
       const response = await request(app).post(`/v1/wallet/decrypt`).send(params)
 
       expect(response.statusCode).to.equal(200)
-      expect(response.body).to.equal(decryptResult.data.toString())
+      expect(response.body).to.equal(decryptResult.data.toString('base64'))
     })
   })
 
