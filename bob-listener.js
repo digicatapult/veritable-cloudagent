@@ -24,10 +24,11 @@ app.post('/credentials', (req, res) => {
   })
   child.on('exit', (code, signal) => {
     console.log('child exited', { code, signal }) // eslint-disable-line no-console
+    server.close(() => process.exit(0))
   })
   return res.status(202).end()
 })
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`HTTP webhook listening on http://0.0.0.0:${PORT}`) // eslint-disable-line no-console
 })
