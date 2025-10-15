@@ -2,7 +2,9 @@ import express from 'express'
 import { spawn } from 'node:child_process'
 
 const PORT = process.env.PORT || 3003
-const SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/maker-connect-to-oem.ts'
+const AUTO_CONNECT_TO_OEM_SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/maker-connect-to-oem.ts'
+const PROPOSE_PROOF_SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/maker-propose-proof-to-oem.ts'
+const ACCEPT_PROOF_SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/maker-accept-proof-from-oem.ts'
 const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential-issued')
   .split(',')
   .map((s) => s.trim().toLowerCase())
@@ -11,6 +13,7 @@ const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential
 const app = express()
 app.use(express.json({ type: '*/*' }))
 
+// Handle credential events, in our demo this is the credential sent from Alice(MoD) to Bob(Maker)
 app.post('/credentials', (req, res) => {
   const cred = req.body || {}
   const id = cred.id || cred.credentialId || cred.recordId
@@ -18,9 +21,44 @@ app.post('/credentials', (req, res) => {
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (!TRIGGER_STATES.includes(state)) return res.status(204).end()
 
-  const child = spawn('npx', ['tsx', SCRIPT_PATH, '--credential-id', String(id)], {
+  const child = spawn('npx', ['tsx', AUTO_CONNECT_TO_OEM_SCRIPT_PATH, '--credential-id', String(id)], {
     stdio: 'inherit',
     env: { ...process.env, CREDENTIAL_RECORD_ID: String(id) },
+  })
+  child.on('exit', (code, signal) => {
+    console.log('child exited', { code, signal }) // eslint-disable-line no-console
+  })
+  return res.status(202).end()
+})
+
+// Handle connection events, in our demo this is the connection completed between Bob(Maker) and Charlie(OEM)
+app.post('/connections', (req, res) => {
+  const conn = req.body || {}
+  const id = conn.id || conn.connectionId || conn.recordId
+  const state = String(conn.state || '').toLowerCase()
+  if (!id) return res.status(400).json({ error: 'missing id' })
+  if (state !== 'completed') return res.status(204).end()
+
+  const child = spawn('npx', ['tsx', PROPOSE_PROOF_SCRIPT_PATH, '--connection-id', String(id)], {
+    stdio: 'inherit',
+    env: { ...process.env, CONNECTION_RECORD_ID: String(id) },
+  })
+  child.on('exit', (code, signal) => {
+    console.log('child exited', { code, signal }) // eslint-disable-line no-console
+  })
+  return res.status(202).end()
+})
+
+app.post('/proofs', (req, res) => {
+  const proof = req.body || {}
+  const id = proof.id || proof.proofId || proof.recordId
+  const state = String(proof.state || '').toLowerCase()
+  if (!id) return res.status(400).json({ error: 'missing id' })
+  if (!TRIGGER_STATES.includes(state)) return res.status(204).end()
+
+  const child = spawn('npx', ['tsx', ACCEPT_PROOF_SCRIPT_PATH, '--proof-id', String(id)], {
+    stdio: 'inherit',
+    env: { ...process.env, PROOF_RECORD_ID: String(id) },
   })
   child.on('exit', (code, signal) => {
     console.log('child exited', { code, signal }) // eslint-disable-line no-console
