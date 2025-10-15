@@ -1,9 +1,9 @@
 import express from 'express'
 import { spawn } from 'node:child_process'
 
-const PORT = process.env.PORT || 3003
-const SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/maker-connect-to-oem.ts'
-const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential-issued')
+const PORT = process.env.PORT || 3004
+const SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/oem-accept-connection.ts'
+const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'request-received')
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean)
@@ -11,16 +11,15 @@ const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential
 const app = express()
 app.use(express.json({ type: '*/*' }))
 
-app.post('/credentials', (req, res) => {
-  const cred = req.body || {}
-  const id = cred.id
-  const state = String(cred.state || '').toLowerCase()
+app.post('/connections', (req, res) => {
+  const conn = req.body || {}
+  const id = conn.connectionRecord.id
+  const state = String(conn.connectionRecord.state || '').toLowerCase()
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (!TRIGGER_STATES.includes(state)) return res.status(204).end()
-
-  const child = spawn('npx', ['tsx', SCRIPT_PATH, '--credential-id', String(id)], {
+  const child = spawn('npx', ['tsx', SCRIPT_PATH, '--connection-id', String(id)], {
     stdio: 'inherit',
-    env: { ...process.env, CREDENTIAL_RECORD_ID: String(id) },
+    env: { ...process.env, CONNECTION_RECORD_ID: String(id) },
   })
   child.on('exit', (code, signal) => {
     console.log('child exited', { code, signal }) // eslint-disable-line no-console
