@@ -2,7 +2,6 @@ import z from 'zod'
 
 const connectionParser = z.object({
   id: z.string(),
-  invitationDid: z.string(),
   state: z.string(),
 })
 
@@ -55,7 +54,9 @@ async function main() {
       `Failed to update connection ${connectionId}: ${connectionResponse.status} ${connectionResponse.statusText}`
     )
   }
-  log('Checked connection status')
+  log('Checking connection status')
+  await new Promise((resolve) => setTimeout(resolve, 2000))
+
   const connectionFinalRes = await fetch(`${baseUrl}/v1/connections/${connectionId}`, {
     method: 'GET',
     headers: { accept: 'application/json' },
