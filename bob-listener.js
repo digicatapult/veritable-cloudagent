@@ -2,8 +2,8 @@ import express from 'express'
 import { spawn } from 'node:child_process'
 
 const PORT = process.env.PORT || 3003
-const SCRIPT_PATH = process.env.SCRIPT_PATH || './scripts/maker-connect-to-oem.ts'
-const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential-issued')
+const SCRIPT_PATH = './scripts/maker-connect-to-oem.ts'
+const TRIGGER_STATES = 'offer-received,credential-issued'
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean)
