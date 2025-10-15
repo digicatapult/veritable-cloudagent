@@ -21,7 +21,7 @@ export class WalletController extends Controller {
    * JWE decryption using ECDH-ES and A256GCM.
    * Public key must be a base64 encoded X25519 public key and correspond to a private key in the wallet.
    * @param request
-   * @returns plaintext data of the JWE
+   * @returns decrypted data of the JWE as a base64 encoded string
    */
   @Post('/decrypt')
   @Response<BadRequest['message']>(400)
@@ -49,6 +49,6 @@ export class WalletController extends Controller {
       recipientKey,
     })
 
-    return decrypt.data.toString()
+    return decrypt.data.toString('base64')
   }
 }
