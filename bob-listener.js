@@ -71,16 +71,22 @@ app.post('/proofs', (req, res) => {
   const id = proof.id || proof.proofId || proof.recordId
   const state = String(proof.state || '').toLowerCase()
   if (!id) return res.status(400).json({ error: 'missing id' })
+  if (state === 'done') {
+    server.close(() => {
+      console.log('Server closed') // eslint-disable-line no-console
+    })
+    return res.status(202).end()
+  }
   if (state !== 'request-received') return res.status(204).end()
 
   const child = spawn('npx', ['tsx', ACCEPT_PROOF_SCRIPT_PATH, '--proof-id', String(id)], {
     stdio: 'inherit',
     env: { ...process.env, PROOF_RECORD_ID: String(id) },
   })
-  child.on('exit', () => {
-    server.close(() => {
-      console.log('Server closed') // eslint-disable-line no-console
-    })
+  child.on('exit', (code) => {
+    if (code !== 0) {
+      console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
+    }
   })
   return res.status(202).end()
 })
