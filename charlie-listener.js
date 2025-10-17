@@ -28,12 +28,19 @@ app.post('/connections', (req, res) => {
 })
 
 app.post('/proofs', (req, res) => {
-  // Just acknowledge receipt of proof events
   const proof = req.body || {}
   console.log('Received proof event', JSON.stringify(proof, null, 2)) // eslint-disable-line no-console
-  return res.status(204).end()
+  const id = proof.id || proof.proofId || proof.recordId
+  const state = String(proof.state || '').toLowerCase()
+  if (!id) return res.status(400).json({ error: 'missing id' })
+  if (state === 'done') {
+    server.close(() => {
+      console.log('Server closed') // eslint-disable-line no-console
+    })
+  }
+  return res.status(202).end()
 })
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`HTTP webhook listening on http://0.0.0.0:${PORT}`) // eslint-disable-line no-console
 })

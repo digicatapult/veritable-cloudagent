@@ -77,18 +77,19 @@ app.post('/proofs', (req, res) => {
     })
     return res.status(202).end()
   }
-  if (state !== 'request-received') return res.status(204).end()
-
-  const child = spawn('npx', ['tsx', ACCEPT_PROOF_SCRIPT_PATH, '--proof-id', String(id)], {
-    stdio: 'inherit',
-    env: { ...process.env, PROOF_RECORD_ID: String(id) },
-  })
-  child.on('exit', (code) => {
-    if (code !== 0) {
-      console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
-    }
-  })
-  return res.status(202).end()
+  if (state === 'request-received') {
+    const child = spawn('npx', ['tsx', ACCEPT_PROOF_SCRIPT_PATH, '--proof-id', String(id)], {
+      stdio: 'inherit',
+      env: { ...process.env, PROOF_RECORD_ID: String(id) },
+    })
+    child.on('exit', (code) => {
+      if (code !== 0) {
+        console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
+      }
+    })
+    return res.status(202).end()
+  }
+  return res.status(204).end()
 })
 
 const server = app.listen(PORT, '0.0.0.0', () => {
