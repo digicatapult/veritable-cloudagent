@@ -104,7 +104,7 @@ async function main() {
     }
 
     // Try to find OEM DID from credential attributes
-    const attributes = parsedCredential.credentialAttributes || []
+    const attributes = parsedCredential.credentialAttributes
     const oemDid = attributes.find((a) => a.name === 'oem_did')?.value
 
     if (oemDid) {
