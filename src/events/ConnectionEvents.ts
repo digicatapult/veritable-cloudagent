@@ -11,14 +11,12 @@ import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
   const eventHandler = async (event: ConnectionStateChangedEvent | ConnectionDidRotatedEvent) => {
-    console.log(`Connection event: ${event.type} ${event.payload}`) // eslint-disable-line no-console
     const body = event.payload
 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
       for (const webhookUrl of config.webhookUrl) {
         sendWebhookEvent(`${webhookUrl}/connections`, body, agent.config.logger)
-        console.log(`Sent connection event to webhook: ${webhookUrl}/connections`) // eslint-disable-line no-console
       }
     }
 

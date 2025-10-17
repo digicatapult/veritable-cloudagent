@@ -122,7 +122,7 @@ export const envConfig = {
     default: '',
     devDefault: 'http://localhost:5002',
   }),
-  DID_WEB_ENABLED: envalid.bool({ default: true }),
+  DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
   DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
   DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'alice+1.pem' }),
