@@ -104,7 +104,6 @@ services:
       - DID_WEB_DOMAIN=bob%3A8443
       - DID_WEB_SERVICE_ENDPOINT=http://bob:5002
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
-      - WEBHOOK_URL=http://host.docker.internal:3003
     ports:
       #- '5102:5002'
       #- '5103:5003'
@@ -158,7 +157,6 @@ services:
       - DID_WEB_DOMAIN=charlie%3A8443
       - DID_WEB_SERVICE_ENDPOINT=http://charlie:5002
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
-      - WEBHOOK_URL=http://host.docker.internal:3004
     ports:
       #- '5202:5002'
       #- '5203:5003'

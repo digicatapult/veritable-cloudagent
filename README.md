@@ -852,4 +852,24 @@ Then in your previous terminal you will issue credential from Alice to Bob. Bob 
 node --experimental-strip-types scripts/issue-credential.ts --cred-def-id < Paste cred def ID from schema registration >
 ```
 
-You can then watch in the progression in the terminal window where your listener is running.
+You can then watch in the progression in the terminal window where your listeners are running.
+
+### Scripts run by the listeners
+
+The following scripts are run by the listeners
+
+```bash
+npx tsx scripts/maker-connects-to-oem.ts --credential-id < credential ID >
+```
+
+```bash
+npx tsx scripts/oem-accept-connection.ts --connection-id < connection ID >
+```
+
+```bash
+npx tsx scripts/maker-propose-proof-to-oem.ts --credential-id < credential ID > --connection-id < connection ID >
+```
+
+```bash
+npx tsx scripts/maker-accept-proof-from-oem.ts --proof-id < proof ID >
+```

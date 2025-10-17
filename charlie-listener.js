@@ -7,6 +7,7 @@ const TRIGGER_STATES = 'request-received'
   .split(',')
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean)
+const { log } = console
 
 const app = express()
 app.use(express.json({ type: '*/*' }))
@@ -22,25 +23,25 @@ app.post('/connections', (req, res) => {
     env: { ...process.env, CONNECTION_RECORD_ID: String(id) },
   })
   child.on('exit', (code, signal) => {
-    console.log('child exited', { code, signal }) // eslint-disable-line no-console
+    log('child exited', { code, signal })
   })
   return res.status(202).end()
 })
 
 app.post('/proofs', (req, res) => {
   const proof = req.body || {}
-  console.log('Received proof event', JSON.stringify(proof, null, 2)) // eslint-disable-line no-console
+  log('Received proof event', JSON.stringify(proof, null, 2))
   const id = proof.id || proof.proofId || proof.recordId
   const state = String(proof.state || '').toLowerCase()
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (state === 'done') {
     server.close(() => {
-      console.log('Server closed') // eslint-disable-line no-console
+      log('Server closed')
     })
   }
   return res.status(202).end()
 })
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`HTTP webhook listening on http://0.0.0.0:${PORT}`) // eslint-disable-line no-console
+  log(`HTTP webhook listening on http://0.0.0.0:${PORT}`)
 })

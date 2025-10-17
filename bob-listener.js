@@ -10,6 +10,7 @@ const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean)
 let credentialRecordId = ''
+const { log, error } = console
 
 const app = express()
 app.use(express.json({ type: '*/*' }))
@@ -28,7 +29,7 @@ app.post('/credentials', (req, res) => {
   })
   child.on('exit', (code) => {
     if (code !== 0) {
-      console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
+      error(`Child process exited with code ${code}`)
     }
   })
   return res.status(202).end()
@@ -41,7 +42,7 @@ app.post('/connections', (req, res) => {
   if (!connectionId) return res.status(400).json({ error: 'missing id' })
   const state = String(conn.state || '').toLowerCase()
   if (state !== 'completed') return res.status(204).end()
-  console.log(`Using credential record id: ${credentialRecordId}`) // eslint-disable-line no-console
+  log(`Using credential record id: ${credentialRecordId}`)
   const child = spawn(
     'npx',
     [
@@ -59,7 +60,7 @@ app.post('/connections', (req, res) => {
   )
   child.on('exit', (code) => {
     if (code !== 0) {
-      console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
+      error(`Child process exited with code ${code}`)
     }
   })
   return res.status(202).end()
@@ -67,13 +68,13 @@ app.post('/connections', (req, res) => {
 
 app.post('/proofs', (req, res) => {
   const proof = req.body || {}
-  console.log('Received proof event', JSON.stringify(proof, null, 2)) // eslint-disable-line no-console
-  const id = proof.id || proof.proofId || proof.recordId
+  log('Received proof event', JSON.stringify(proof, null, 2))
+  const id = proof.id
   const state = String(proof.state || '').toLowerCase()
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (state === 'done') {
     server.close(() => {
-      console.log('Server closed') // eslint-disable-line no-console
+      log('Server closed')
     })
     return res.status(202).end()
   }
@@ -84,7 +85,7 @@ app.post('/proofs', (req, res) => {
     })
     child.on('exit', (code) => {
       if (code !== 0) {
-        console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
+        error(`Child process exited with code ${code}`)
       }
     })
     return res.status(202).end()
@@ -93,5 +94,5 @@ app.post('/proofs', (req, res) => {
 })
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`HTTP webhook listening on http://0.0.0.0:${PORT}`) // eslint-disable-line no-console
+  log(`HTTP webhook listening on http://0.0.0.0:${PORT}`)
 })
