@@ -4,6 +4,7 @@ import type { ProposeProofOptions } from '../src/controllers/types.js'
 
 interface ParsedArgs {
   credentialId: string
+  connectionId?: string
   baseUrl?: string
 }
 
@@ -29,20 +30,27 @@ const connectionParser = z.array(
 )
 
 function printUsageAndExit(code: number): never {
-  process.stderr.write(`Usage: propose-proof-to-oem --credential-id <credentialId> [--base-url <url>]\n`)
+  process.stderr.write(
+    `Usage: maker-propose-proof-to-oem --credential-id <credentialId> [--connection-id <connectionId>] [--base-url <url>]\n`
+  )
   process.exit(code)
 }
 
 function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
-    baseUrl: 'http://localhost:3001', // this is executed on Bob's side
+    baseUrl: 'http://localhost:3001', // Bob's agent
     credentialId: '',
   }
+
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
     if (a === '--credential-id' || a === '-c') {
       parsed.credentialId = args[++i]
+      continue
+    }
+    if (a === '--connection-id') {
+      parsed.connectionId = args[++i]
       continue
     }
     if (a === '--base-url' || a === '-b') {
@@ -53,14 +61,14 @@ function parseArgs(argv: string[]): ParsedArgs {
       printUsageAndExit(0)
     }
 
-    process.stderr.write(`Unknown or duplicate argument: ${a}\n`)
+    process.stderr.write(`Unknown argument: ${a}\n`)
     printUsageAndExit(1)
   }
   return parsed
 }
 
 async function main() {
-  const { credentialId, baseUrl } = parseArgs(process.argv)
+  const { credentialId, connectionId, baseUrl } = parseArgs(process.argv)
   if (!credentialId || credentialId.length === 0) {
     process.stderr.write('--credential-id is required\n')
     printUsageAndExit(1)
@@ -70,107 +78,113 @@ async function main() {
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
 
-  // Retrieve credential to get OEM DID
-  log(`Retrieving issued credential ${credentialId} from ${baseUrl}`)
-  const credentialResponse = await fetch(`${baseUrl}/v1/credentials/${credentialId}`, {
-    method: 'GET',
-    headers: { accept: 'application/json' },
-  })
+  let targetConnectionId = connectionId
 
-  if (!credentialResponse.ok) {
-    throw new Error(
-      `Failed to retrieve credential ${credentialId}: ${credentialResponse.status} ${credentialResponse.statusText}`
-    )
+  // If connection ID not provided, find it from connections
+  if (!targetConnectionId) {
+    log(`Retrieving credential ${credentialId} to find OEM connection...`)
+    const credentialResponse = await fetch(`${baseUrl}/v1/credentials/${credentialId}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!credentialResponse.ok) {
+      throw new Error(
+        `Failed to retrieve credential ${credentialId}: ${credentialResponse.status} ${credentialResponse.statusText}`
+      )
+    }
+
+    const credential = await credentialResponse.json()
+    const parsedCredential = credentialParser.parse(credential)
+
+    if (parsedCredential.state !== 'done' || parsedCredential.role !== 'holder') {
+      throw new Error(
+        `Credential ${credentialId} is not in correct state (expected: done/holder, got: ${parsedCredential.state}/${parsedCredential.role})`
+      )
+    }
+
+    // Try to find OEM DID from credential attributes
+    const attributes = parsedCredential.credentialAttributes || []
+    const oemDid = attributes.find((a) => a.name === 'oem_did')?.value
+
+    if (oemDid) {
+      log('Found OEM DID:', oemDid)
+    } else {
+      log(
+        'Warning: Could not find oem_did in credential. Available attributes:',
+        attributes.map((a) => a.name)
+      )
+    }
+
+    // Find connection to Charlie (OEM)
+    log('Looking for connection to OEM...')
+    const connectionsResponse = await fetch(`${baseUrl}/v1/connections`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!connectionsResponse.ok) {
+      throw new Error(`Failed to retrieve connections: ${connectionsResponse.status} ${connectionsResponse.statusText}`)
+    }
+
+    const connections = await connectionsResponse.json()
+    const parsedConnections = connectionParser.parse(connections)
+
+    let oemConnection
+    if (oemDid) {
+      // Find connection by matching DID
+      oemConnection = parsedConnections.find((conn) => conn.theirDid === oemDid && conn.state === 'completed')
+    } else {
+      // Fallback: use most recent completed connection
+      const completedConnections = parsedConnections.filter((conn) => conn.state === 'completed')
+      oemConnection = completedConnections[completedConnections.length - 1]
+    }
+    if (!oemConnection) {
+      const availableConnections = parsedConnections.map((c) => ({ id: c.id, state: c.state, theirDid: c.theirDid }))
+      throw new Error(
+        `No completed connection found${oemDid ? ` for OEM DID ${oemDid}` : ''}. Available: ${JSON.stringify(availableConnections)}`
+      )
+    }
+
+    targetConnectionId = oemConnection.id
+    log('Found connection to OEM:', { connectionId: targetConnectionId, state: oemConnection.state })
   }
 
-  const credential = await credentialResponse.json()
-  const parsedCredential = credentialParser.parse(credential)
-
-  if (parsedCredential.state !== 'done' || parsedCredential.role !== 'holder') {
-    throw new Error(`Credential ${credentialId} is not in correct state for proof proposal`)
-  }
-
-  const oemDid = parsedCredential.credentialAttributes.find((a) => a.name === 'oem_did')?.value
-  if (!oemDid) {
-    throw new Error(`Credential ${credentialId} does not have oem_did attribute`)
-  }
-
-  log('Found OEM DID:', oemDid)
-
-  // Find connection to Charlie (OEM) based on the DID
-  log('Looking for connection to OEM...')
-  const connectionsResponse = await fetch(`${baseUrl}/v1/connections`, {
-    method: 'GET',
-    headers: { accept: 'application/json' },
-  })
-
-  if (!connectionsResponse.ok) {
-    throw new Error(`Failed to retrieve connections: ${connectionsResponse.status} ${connectionsResponse.statusText}`)
-  }
-
-  const connections = await connectionsResponse.json()
-  const parsedConnections = connectionParser.parse(connections)
-
-  // Find connection where the other party's DID matches the OEM DID
-  const oemConnection = parsedConnections.find((conn) => conn.theirDid === oemDid && conn.state === 'completed')
-
-  if (!oemConnection) {
-    throw new Error(`No completed connection found for OEM DID ${oemDid}`)
-  }
-
-  log('Found connection to OEM:', { connectionId: oemConnection.id, state: oemConnection.state })
-
-  // Get credential definition ID from the credential
-  const credDefId = parsedCredential.credentialAttributes.find((a) => a.name === 'cred_def_id')?.value
-  if (!credDefId) {
-    // If not in attributes, we need to get it from the credential metadata
-    log('Warning: Could not find credential definition ID in attributes, using a default proof request')
-  }
-
-  // Propose proof to Charlie (OEM)
+  // Create proof proposal using the correct AnonCredsProposeProofFormat
   const proofProposal: ProposeProofOptions = {
-    connectionId: oemConnection.id,
+    connectionId: targetConnectionId,
     protocolVersion: 'v2',
     proofFormats: {
       anoncreds: {
         name: 'make-authorisation-proof-proposal',
         version: '1.0',
-        requested_attributes: {
-          request_id: {
+        attributes: [
+          {
             name: 'request_id',
-            restrictions: credDefId ? [{ cred_def_id: credDefId }] : undefined,
           },
-          requested_part_number: {
+          {
             name: 'requested_part_number',
-            restrictions: credDefId ? [{ cred_def_id: credDefId }] : undefined,
           },
-          authorising_body: {
+          {
             name: 'authorising_body',
-            restrictions: credDefId ? [{ cred_def_id: credDefId }] : undefined,
           },
-          authorisation_scope: {
+          {
             name: 'authorisation_scope',
-            restrictions: credDefId ? [{ cred_def_id: credDefId }] : undefined,
           },
-          security_classification: {
+          {
             name: 'security_classification',
-            restrictions: credDefId ? [{ cred_def_id: credDefId }] : undefined,
           },
-        },
-        requested_predicates: {
-          valid_authorisation: {
-            name: 'authorisation_expiry_date',
-            p_type: '>=',
-            p_value: parseInt(new Date().toISOString().slice(0, 10).replace(/-/g, '')), // Today's date as YYYYMMDD
-            restrictions: credDefId ? [{ cred_def_id: credDefId }] : undefined,
+          {
+            name: 'oem_did',
           },
-        },
+        ],
       },
     },
     autoAcceptProof: AutoAcceptProof.ContentApproved,
   }
 
-  log('Proposing proof to OEM with proposal:', JSON.stringify(proofProposal, null, 2))
+  log('Proposing proof to OEM...')
+  log('Proof proposal structure:', JSON.stringify(proofProposal, null, 2))
 
   const proofResponse = await fetch(`${baseUrl}/v1/proofs/propose-proof`, {
     method: 'POST',
@@ -189,8 +203,7 @@ async function main() {
   log('Proof proposal sent successfully!')
   log('Proof record:', { id: proofRecord.id, state: proofRecord.state, threadId: proofRecord.threadId })
 
-  // Output the proof record ID for potential scripting use
+  // Output the proof record ID for scripting
   process.stdout.write(`${proofRecord.id}\n`)
 }
-
 main().catch((e) => process.stderr.write((e as Error).stack + '\n') && process.exit(1))
