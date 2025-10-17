@@ -77,14 +77,14 @@ app.post('/proofs', (req, res) => {
     stdio: 'inherit',
     env: { ...process.env, PROOF_RECORD_ID: String(id) },
   })
-  child.on('exit', (code) => {
-    if (code !== 0) {
-      console.error(`Child process exited with code ${code}`) // eslint-disable-line no-console
-    }
+  child.on('exit', () => {
+    server.close(() => {
+      console.log('Server closed') // eslint-disable-line no-console
+    })
   })
   return res.status(202).end()
 })
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`HTTP webhook listening on http://0.0.0.0:${PORT}`) // eslint-disable-line no-console
 })
