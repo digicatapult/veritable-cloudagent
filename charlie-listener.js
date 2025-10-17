@@ -31,7 +31,7 @@ app.post('/connections', (req, res) => {
 app.post('/proofs', (req, res) => {
   const proof = req.body || {}
   log('Received proof event', JSON.stringify(proof, null, 2))
-  const id = proof.id || proof.proofId || proof.recordId
+  const id = proof.id
   const state = String(proof.state || '').toLowerCase()
   if (!id) return res.status(400).json({ error: 'missing id' })
   if (state === 'done') {
