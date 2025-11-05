@@ -17,7 +17,7 @@ RUN npm run build
 
 
 # Node_Modules stage
-FROM node:lts-bookworm AS modules
+FROM node:22-bookworm AS modules
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
