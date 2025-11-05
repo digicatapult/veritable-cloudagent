@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.15.23",
+  "version": "0.15.24",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -75,15 +75,15 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.38.0",
+    "@eslint/js": "^9.39.0",
     "@swc-node/register": "^1.11.1",
     "@swc/cli": "^0.7.8",
     "@swc/core": "^1.13.5",
     "@types/chai": "^5.2.3",
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.4",
+    "@types/express": "^5.0.5",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.18.12",
+    "@types/node": "^22.18.13",
     "@types/sinon": "^17.0.4",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
@@ -92,22 +92,23 @@
     "chai": "^6.2.0",
     "concurrently": "^9.2.1",
     "depcheck": "^1.4.7",
-    "eslint": "^9.38.0",
+    "eslint": "^9.39.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "globals": "^16.4.0",
+    "globals": "^16.5.0",
     "mocha": "^11.7.4",
     "patch-package": "^8.0.1",
     "pino-pretty": "13.1.2",
     "prettier": "^3.6.2",
     "prettier-plugin-organize-imports": "^4.3.0",
-    "rimraf": "^6.0.1",
+    "rimraf": "^6.1.0",
     "sinon": "^21.0.0",
     "supertest": "^7.1.4",
     "typescript": "~5.9.3"
   },
   "engines": {
-    "node": ">= 20"
+    "node": "^22.x.x",
+    "npm": "^10.x.x"
   },
   "overrides": {
     "@2060.io/credo-ts-didcomm-media-sharing": {
