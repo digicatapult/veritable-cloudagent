@@ -39,6 +39,12 @@ jobs:
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
           echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
 
+  trufflehog:
+    uses: digicatapult/shared-workflows/.github/workflows/scan-secrets.yml@feature/add_trufflehog_scans
+    with:
+      base: ""
+      extra_args: "--results=verified,unknown --log-level=3"
+
   static-checks:
     name: Run Static Analysis Checks
     strategy:
