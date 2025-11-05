@@ -42,7 +42,7 @@ COPY scripts ./scripts
 
 
 # Production stage
-FROM node:lts-bookworm-slim AS production
+FROM node:22-bookworm-slim AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
