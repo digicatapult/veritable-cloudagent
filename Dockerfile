@@ -1,14 +1,13 @@
 # docker build . -t veritable-cloudagent
 
 # Build stage
-FROM node:22-bookworm AS build
+FROM node:24-bookworm AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install -g npm@10.x.x
 RUN npm ci
 
 COPY tsoa.json tsconfig.json .swcrc ./
@@ -17,18 +16,14 @@ RUN npm run build
 
 
 # Node_Modules stage
-FROM node:22-bookworm AS modules
+FROM node:24-bookworm AS modules
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
-COPY patches ./patches
-RUN npm install -g npm@10.x.x
-RUN npm ci --include=dev
-RUN npx patch-package || true
-RUN npm prune --omit=dev
+RUN npm ci --omit=dev
 
 # Test stage
 FROM build AS test
@@ -42,7 +37,7 @@ COPY scripts ./scripts
 
 
 # Production stage
-FROM node:22-bookworm-slim AS production
+FROM node:24-bookworm-slim AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
