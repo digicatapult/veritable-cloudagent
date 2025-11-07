@@ -1,7 +1,7 @@
 # docker build . -t veritable-cloudagent
 
 # Build stage
-FROM node:22-bookworm AS build
+FROM node:24-bookworm AS build
 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
@@ -17,7 +17,7 @@ RUN npm run build
 
 
 # Node_Modules stage
-FROM node:22-bookworm AS modules
+FROM node:24-bookworm AS modules
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
@@ -42,7 +42,7 @@ COPY scripts ./scripts
 
 
 # Production stage
-FROM node:22-bookworm-slim AS production
+FROM node:24-bookworm-slim AS production
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
