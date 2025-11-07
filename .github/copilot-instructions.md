@@ -2,11 +2,11 @@
 
 ## Repository Summary
 - **Purpose:** **Credo TS (formerly Aries Framework JavaScript)** based REST API for Self-Sovereign Identity (SSI). Provides credential issuance, proof verification, DIDComm messaging, and supply chain trust network onboarding. Built on Hyperledger Aries protocols with AnonCreds support.
-- **Core Technology:** **Credo TS v0.5.17** - TypeScript framework for SSI agents, DIDComm protocols, credential exchange, and proof verification. Uses Aries Askar for secure storage and Hyperledger AnonCreds for privacy-preserving credentials.
+- **Core Technology:** **Credo TS v0.5.18** - TypeScript framework for SSI agents, DIDComm protocols, credential exchange, and proof verification. Uses Aries Askar for secure storage and Hyperledger AnonCreds for privacy-preserving credentials.
 - **Architecture:** REST API wrapper around Credo TS Agent, with OpenAPI/TSOA for spec generation, IPFS integration for schema storage, and WebSocket/webhook event streaming.
 - **Type:** Node.js service, TypeScript, Dockerized, with REST API endpoints.
 - **Size:** Medium-large, ~20 top-level folders, extensive source, test, and infra files.
-- **Languages/Frameworks:** TypeScript, Node.js (>=20), **Credo TS** (https://credo.js.org/guides/getting-started), TSOA, Express, Aries Askar, Hyperledger AnonCreds, Docker, Mocha, ESLint, Prettier.
+- **Languages/Frameworks:** TypeScript, Node.js (>=24), **Credo TS** (https://credo.js.org/guides/getting-started), TSOA, Express, Aries Askar, Hyperledger AnonCreds, Docker, Mocha, ESLint, Prettier.
 
 ## Build, Test, and Validation Instructions
 - **Always run `npm install` before building.** If `npm i` fails due to `node-gyp`:
@@ -48,6 +48,8 @@
   - **Other DID Methods:** USE_DID_KEY_IN_PROTOCOLS, USE_DID_SOV_PREFIX_WHERE_ALLOWED
   - **Integrations:** WEBHOOK_URL, IPFS_ORIGIN (schema storage), VERIFIED_DRPC_OPTIONS_* (proof verification)
   - **Database:** POSTGRES_HOST/PORT/USERNAME/PASSWORD (when STORAGE_TYPE=postgres)
+- **Dependency Overrides:**
+  - **node-addon-api 8.5.0**: Required for Node 24 compatibility. Native modules (specifically `@2060.io/ref-napi` used by `@2060.io/credo-ts-didcomm-media-sharing`) depend on older node-addon-api versions incompatible with Node 24's V8 engine. Override forces compatible version.
 
 ## Project Layout & Key Files
 - **Root Files:**
@@ -149,7 +151,7 @@
 You are reviewing as a **critical software engineering peer**. Read the PR description, the diff, and repository docs/configs. Think step‑by‑step, cite file paths/lines, and propose concrete fixes or commits. Assume a human will validate before merge.
 
 ### Repository guard‑rails & constraints
-- **Language/stack standards:** TypeScript, Node.js (>=20), **Credo TS v0.5.17**, TSOA, Aries Askar, Hyperledger AnonCreds. See `/README.md`, `/package.json`.
+- **Language/stack standards:** TypeScript, Node.js (>=24), **Credo TS v0.5.18**, TSOA, Aries Askar, Hyperledger AnonCreds. See `/README.md`, `/package.json`.
 - **Credo TS Framework:** Follow established patterns for agent modules, protocol handlers, event listeners. Validate against Credo TS breaking changes.
 - **Style/lint rules:** enforced by CI (`npm run lint`, ESLint, Prettier, TypeScript `npm run check`). Treat violations as issues.
 - **SSI Security baseline:** Wallet key management, DIDComm message validation, credential verification flows, proof timeouts. Standard OWASP + SSI-specific threats.

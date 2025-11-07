@@ -47,8 +47,8 @@ Note that the proof options must be set through envs due to the fact that a DRPC
 
 - postgres:16.3+
 - xcode utilities (node-gyp)
-- npm 10.0.0+
-- node 20.0.0+
+- npm 11.0.0+
+- node 24.0.0+
 
 ## Getting started
 
