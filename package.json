@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.16.5",
+  "version": "0.16.6",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -83,7 +83,7 @@
     "@types/express": "^5.0.5",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.1",
-    "@types/sinon": "^17.0.4",
+    "@types/sinon": "^21.0.0",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
     "@typescript-eslint/eslint-plugin": "^8.47.0",
