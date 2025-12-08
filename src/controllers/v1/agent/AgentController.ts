@@ -1,6 +1,6 @@
 import { Agent } from '@credo-ts/core'
+import { Controller, Get, Request, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
-import { Controller, Get, Request, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'

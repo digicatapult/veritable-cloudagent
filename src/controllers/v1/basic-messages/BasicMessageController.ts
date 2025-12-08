@@ -1,6 +1,6 @@
 import { type BasicMessageRecord, type BasicMessageStorageProps, Agent, RecordNotFoundError } from '@credo-ts/core'
+import { Body, Controller, Example, Get, Path, Post, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
-import { Body, Controller, Example, Get, Path, Post, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'

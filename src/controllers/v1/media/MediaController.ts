@@ -1,6 +1,6 @@
 import { Agent } from '@credo-ts/core'
+import { Body, Controller, Example, Hidden, Post, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
-import { Body, Controller, Example, Hidden, Post, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'

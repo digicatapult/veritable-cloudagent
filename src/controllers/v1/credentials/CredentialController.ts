@@ -6,8 +6,21 @@ import {
   RecordNotFoundError,
   type SendCredentialProblemReportOptions,
 } from '@credo-ts/core'
+import {
+  Body,
+  Controller,
+  Delete,
+  Example,
+  Get,
+  Path,
+  Post,
+  Query,
+  Request,
+  Response,
+  Route,
+  Tags,
+} from '@tsoa/runtime'
 import express from 'express'
-import { Body, Controller, Delete, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from 'tsoa'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'

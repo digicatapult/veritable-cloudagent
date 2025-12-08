@@ -1,5 +1,5 @@
+import { Controller, Get, Hidden, Request, Route, SuccessResponse } from '@tsoa/runtime'
 import express from 'express'
-import { Controller, Get, Hidden, Request, Route, SuccessResponse } from 'tsoa'
 import { injectable } from 'tsyringe'
 import version from '../utils/version.js'
 

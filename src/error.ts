@@ -1,7 +1,7 @@
 import { Logger } from '@credo-ts/core'
+import { ValidateError } from '@tsoa/runtime'
 import { Request as ExRequest, Response as ExResponse, NextFunction } from 'express'
 import { isHttpError } from 'http-errors'
-import { ValidateError } from 'tsoa'
 
 export class HttpResponse extends Error {
   public code: number
