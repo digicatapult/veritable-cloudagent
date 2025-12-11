@@ -1,7 +1,9 @@
+import type { AnonCredsCredentialInfo, AnonCredsGetCredentialsForProofRequestOptions } from '@credo-ts/anoncreds'
 import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
   CreateProofRequestOptions,
+  ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
 } from '../../src/controllers/types.js'
@@ -17,8 +19,10 @@ import {
   ProofRole,
   ProofState,
   type Agent,
+  type ProofFormatPayload,
   type ProofStateChangedEvent,
 } from '@credo-ts/core'
+
 import request from 'supertest'
 import WebSocket from 'ws'
 
@@ -329,6 +333,77 @@ describe('ProofController', () => {
       expect(
         acceptProofStub.calledWithMatch({
           proofRecordId: testProofResponse.id,
+        })
+      ).equals(true)
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
+    test('should accept proof request with provided proofFormats', async () => {
+      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsStub.resolves({
+        proofFormats: {
+          anoncreds: {
+            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
+            output: {
+              attributes: {
+                attr1: [
+                  {
+                    credentialId: 'cred-1',
+                    revealed: true,
+                    credentialInfo: {
+                      credentialId: 'cred-1',
+                      attributes: {},
+                      schemaId: 'schema-id',
+                      credentialDefinitionId: 'cred-def-id',
+                      revocationRegistryId: null,
+                      credentialRevocationId: null,
+                      methodName: 'method',
+                    } as unknown as AnonCredsCredentialInfo,
+                  },
+                ],
+              },
+              predicates: {},
+            },
+          },
+        },
+      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+
+      const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
+
+      const proofFormats = {
+        anoncreds: {
+          attributes: {
+            attr1: { credentialId: 'cred-1', revealed: true },
+          },
+          predicates: {},
+        },
+      }
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({ proofFormats })
+
+      expect(
+        acceptProofStub.calledWithMatch({
+          proofRecordId: testProofResponse.id,
+          // We expect the hydrated format here
+          proofFormats: {
+            anoncreds: {
+              attributes: {
+                attr1: {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: { credentialId: 'cred-1' },
+                },
+              },
+              predicates: {},
+              selfAttestedAttributes: {},
+            },
+          },
         })
       ).equals(true)
       expect(response.statusCode).to.be.equal(200)

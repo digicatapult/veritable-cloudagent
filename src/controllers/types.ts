@@ -101,7 +101,7 @@ type CredentialProtocols = [V2CredentialProtocol<[AnonCredsCredentialFormatServi
 type CredentialFormats = [AnonCredsCredentialFormat]
 
 type ProofProtocols = [V2ProofProtocol<[AnonCredsProofFormatService]>]
-type ProofFormats = [AnonCredsProofFormat]
+export type ProofFormats = [AnonCredsProofFormat]
 
 interface PrivateKey {
   keyType: KeyType
@@ -257,12 +257,31 @@ export interface AcceptProofProposalOptions {
   comment?: string
 }
 
+export interface SimpleProofFormats {
+  anoncreds?: {
+    attributes?: Record<
+      string,
+      {
+        credentialId: string
+        revealed: boolean
+      }
+    >
+    predicates?: Record<
+      string,
+      {
+        credentialId: string
+      }
+    >
+  }
+}
+
 export interface AcceptProofRequestOptions {
   useReturnRoute?: boolean
   goalCode?: string
   willConfirm?: boolean
   autoAcceptProof?: AutoAcceptProof
   comment?: string
+  proofFormats?: ProofFormatPayload<ProofFormats, 'acceptRequest'> | SimpleProofFormats
 }
 
 export interface AnonCredsProofRequestRestrictionOptions {

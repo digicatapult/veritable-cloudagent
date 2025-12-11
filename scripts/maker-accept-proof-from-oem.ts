@@ -5,6 +5,7 @@ import type { AcceptProofRequestOptions } from '../src/controllers/types.js'
 interface ParsedArgs {
   proofId: string
   baseUrl?: string
+  credentialId?: string
 }
 
 const proofParser = z.object({
@@ -13,11 +14,12 @@ const proofParser = z.object({
   role: z.string(),
   connectionId: z.string(),
   threadId: z.string().optional(),
+  requestMessage: z.any().optional(),
 })
 
 function printUsageAndExit(code: number): never {
   process.stderr.write(
-    `Usage: maker-accept-proof-from-oem --proof-id <proofId> [--base-url <url>]\n` +
+    `Usage: maker-accept-proof-from-oem --proof-id <proofId> [--base-url <url>] [--credential-id <id>]\n` +
       `Examples:\n` +
       `  npx tsx scripts/maker-accept-proof-from-oem.ts --proof-id abc-123\n`
   )
@@ -41,6 +43,10 @@ function parseArgs(argv: string[]): ParsedArgs {
       parsed.baseUrl = args[++i]
       continue
     }
+    if (a === '--credential-id' || a === '-c') {
+      parsed.credentialId = args[++i]
+      continue
+    }
     if (a === '--help' || a === '-h') {
       printUsageAndExit(0)
     }
@@ -52,7 +58,7 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { proofId, baseUrl } = parseArgs(process.argv)
+  const { proofId, baseUrl, credentialId } = parseArgs(process.argv)
   if (!proofId || proofId.length === 0) {
     process.stderr.write('--proof-id is required\n')
     printUsageAndExit(1)
@@ -92,12 +98,41 @@ async function main() {
     throw new Error(`Proof ${proofId} has incorrect role (expected: prover, got: ${parsedProof.role})`)
   }
 
+  let proofFormats: Record<string, unknown> | undefined
+
+  if (credentialId) {
+    log(`Constructing proofFormats for credential ${credentialId}`)
+    const requestMessage = parsedProof.requestMessage
+    const requestedAttributes =
+      requestMessage?.['anoncreds']?.['requested_attributes'] || requestMessage?.['indy']?.['requested_attributes']
+
+    if (requestedAttributes) {
+      const attributes: Record<string, unknown> = {}
+      for (const key of Object.keys(requestedAttributes)) {
+        attributes[key] = {
+          credentialId,
+          revealed: true,
+        }
+      }
+      proofFormats = {
+        anoncreds: {
+          attributes,
+          predicates: {},
+        },
+      }
+      log('Constructed proofFormats:', proofFormats)
+    } else {
+      log('Warning: Could not find requested_attributes in proof request message, skipping proofFormats construction')
+    }
+  }
+
   // Accept the proof request - Bob will automatically select and present credentials
   const acceptProofRequest: AcceptProofRequestOptions = {
     useReturnRoute: true,
     willConfirm: true,
     autoAcceptProof: AutoAcceptProof.ContentApproved,
     comment: 'Accepting proof request from OEM',
+    proofFormats,
   }
 
   log('Accepting proof request from OEM...')

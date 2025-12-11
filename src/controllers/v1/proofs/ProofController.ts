@@ -1,4 +1,4 @@
-import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, RecordNotFoundError, type ProofExchangeRecordProps, type ProofFormatPayload } from '@credo-ts/core'
 import {
   Body,
   Controller,
@@ -17,15 +17,17 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
   AcceptProofRequestOptions,
   CreateProofRequestOptions,
+  ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
+  SimpleProofFormats,
   UUID,
 } from '../../types.js'
 
@@ -245,16 +247,85 @@ export class ProofController extends Controller {
     body: AcceptProofRequestOptions
   ) {
     try {
-      req.log.info('retrieving credentials for %s proof', proofRecordId)
-      const retrievedCredentials = await this.agent.proofs.selectCredentialsForRequest({
-        proofRecordId,
-      })
+      let formatsToAccept: ProofFormatPayload<ProofFormats, 'acceptRequest'>
 
-      req.log.info('credentials found and accepting proof request %j', retrievedCredentials)
+      if (!body.proofFormats) {
+        req.log.info('retrieving credentials for %s proof', proofRecordId)
+        const retrievedCredentials = await this.agent.proofs.selectCredentialsForRequest({
+          proofRecordId,
+        })
+        formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
+        req.log.info('credentials found %j', retrievedCredentials)
+      } else if (this.isSimpleProofFormats(body.proofFormats)) {
+        const anoncreds = body.proofFormats.anoncreds
+
+        if (!anoncreds?.attributes) {
+          throw new BadRequest('Invalid simplified proof formats: missing attributes')
+        }
+
+        req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
+
+        const availableCredentials = await this.agent.proofs.getCredentialsForRequest({
+          proofRecordId,
+        })
+
+        const availableAnonCreds = (
+          availableCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'>
+        ).anoncreds
+
+        if (!availableAnonCreds) {
+          throw new NotFoundError('Could not hydrate proof formats: no available credentials found')
+        }
+
+        const hydratedProofFormats: ProofFormatPayload<ProofFormats, 'acceptRequest'> = {
+          anoncreds: {
+            attributes: {},
+            predicates: {},
+            selfAttestedAttributes: {},
+          },
+        }
+
+        // Hydrate attributes
+        for (const [key, value] of Object.entries(anoncreds.attributes)) {
+          const simpleAttr = value
+          const matches = availableAnonCreds.output.attributes?.[key]
+          if (matches) {
+            const match = matches.find((m) => m.credentialId === simpleAttr.credentialId)
+            if (match && hydratedProofFormats.anoncreds?.attributes) {
+              hydratedProofFormats.anoncreds.attributes[key] = {
+                ...match,
+                revealed: simpleAttr.revealed,
+              }
+            }
+          }
+        }
+
+        // Hydrate predicates
+        if (anoncreds.predicates) {
+          for (const [key, value] of Object.entries(anoncreds.predicates)) {
+            const simplePred = value
+
+            const matches = availableAnonCreds.output.predicates?.[key]
+            if (matches) {
+              const match = matches.find((m) => m.credentialId === simplePred.credentialId)
+              if (match && hydratedProofFormats.anoncreds?.predicates) {
+                hydratedProofFormats.anoncreds.predicates[key] = match
+              }
+            }
+          }
+        }
+
+        formatsToAccept = hydratedProofFormats
+      } else {
+        formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
+        req.log.info('using provided proof formats for %s proof', proofRecordId)
+      }
+
+      req.log.info('accepting proof request with formats %j', formatsToAccept)
       const proof = await this.agent.proofs.acceptRequest({
         proofRecordId,
-        proofFormats: retrievedCredentials.proofFormats,
         ...body,
+        proofFormats: formatsToAccept,
       })
 
       req.log.debug('success, returning proof %j', proof.toJSON())
@@ -291,5 +362,20 @@ export class ProofController extends Controller {
       }
       throw error
     }
+  }
+
+  private isSimpleProofFormats(formats: AcceptProofRequestOptions['proofFormats']): formats is SimpleProofFormats {
+    if (!formats || !('anoncreds' in formats)) return false
+
+    const anoncreds = (formats as { anoncreds: unknown }).anoncreds as {
+      attributes?: Record<string, unknown>
+    }
+    if (!anoncreds?.attributes) return false
+
+    const values = Object.values(anoncreds.attributes)
+    if (values.length === 0) return false
+
+    const firstAttr = values[0] as { credentialInfo?: unknown }
+    return !firstAttr.credentialInfo
   }
 }
