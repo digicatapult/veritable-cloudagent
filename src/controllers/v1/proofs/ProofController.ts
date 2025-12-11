@@ -391,7 +391,25 @@ export class ProofController extends Controller {
         req.log.info('using provided proof formats for %s proof', proofRecordId)
       }
 
-      req.log.info('accepting proof request with formats %j', formatsToAccept)
+      // Log only non-sensitive metadata about the proof formats
+      let attrCount = 0
+      let predCount = 0
+      if (formatsToAccept?.anoncreds) {
+        if (formatsToAccept.anoncreds.attributes) {
+          attrCount = Object.keys(formatsToAccept.anoncreds.attributes).length
+        }
+        if (formatsToAccept.anoncreds.predicates) {
+          predCount = Object.keys(formatsToAccept.anoncreds.predicates).length
+        }
+      }
+      req.log.info(
+        'accepting proof request for %s with %d attributes and %d predicates',
+        proofRecordId,
+        attrCount,
+        predCount
+      )
+      // Optionally log full formats at debug level for troubleshooting
+      req.log.debug('accepting proof request with formats %j', formatsToAccept)
       const proof = await this.agent.proofs.acceptRequest({
         proofRecordId,
         ...body,
