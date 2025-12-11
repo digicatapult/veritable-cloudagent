@@ -259,10 +259,39 @@ export class ProofController extends Controller {
       } else if (this.isSimpleProofFormats(body.proofFormats)) {
         const anoncreds = body.proofFormats.anoncreds
 
-        if (!anoncreds?.attributes) {
-          throw new BadRequest('Invalid simplified proof formats: missing attributes')
+        // Enhanced validation: must have at least one attribute or predicate, and correct structure
+        const hasAttributes = anoncreds?.attributes && Object.keys(anoncreds.attributes).length > 0
+        const hasPredicates = anoncreds?.predicates && Object.keys(anoncreds.predicates).length > 0
+        if (!hasAttributes && !hasPredicates) {
+          throw new BadRequest('Invalid simplified proof formats: must have at least one attribute or predicate')
         }
-
+        // Validate attributes structure
+        if (hasAttributes) {
+          for (const [key, attr] of Object.entries(anoncreds.attributes)) {
+            if (
+              typeof attr !== 'object' ||
+              typeof attr.credentialId !== 'string' ||
+              typeof attr.revealed !== 'boolean'
+            ) {
+              throw new BadRequest(
+                `Invalid attribute '${key}': must have 'credentialId' (string) and 'revealed' (boolean)`
+              )
+            }
+          }
+        }
+        // Validate predicates structure
+        if (hasPredicates) {
+          for (const [key, pred] of Object.entries(anoncreds.predicates)) {
+            if (
+              typeof pred !== 'object' ||
+              typeof pred.credentialId !== 'string'
+            ) {
+              throw new BadRequest(
+                `Invalid predicate '${key}': must have 'credentialId' (string)`
+              )
+            }
+          }
+        }
         req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
 
         const availableCredentials = await this.agent.proofs.getCredentialsForRequest({
