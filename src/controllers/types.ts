@@ -250,7 +250,9 @@ export interface ProposeProofOptions {
 }
 
 export interface AcceptProofProposalOptions {
-  proofFormats?: ProofFormatPayload<ProofFormats, 'acceptProposal'>
+  proofFormats?: {
+    anoncreds?: AnonCredsRequestProofFormatOptions
+  }
   goalCode?: string
   willConfirm?: boolean
   autoAcceptProof?: AutoAcceptProof
