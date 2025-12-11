@@ -1,13 +1,13 @@
 # Run stack and integration tests with:
 #
-# export NODE_EXTRA_CA_CERTS="$PWD/rootCA.pem" &&
+# export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" &&
 # docker compose \
 #   -f docker-compose-testnet.yml \
 #   -f docker-compose-integration-tests.yml \
 #   up --build --exit-code-from integration-tests
 #
 # Or as a one-liner:
-# export NODE_EXTRA_CA_CERTS="$PWD/rootCA.pem" && docker compose -f docker-compose-testnet.yml -f docker-compose-integration-tests.yml up --build --exit-code-from integration-tests
+# export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" && docker compose -f docker-compose-testnet.yml -f docker-compose-integration-tests.yml up --build --exit-code-from integration-tests
 #
 
 services:
@@ -26,6 +26,7 @@ services:
         condition: service_healthy
     environment:
       - NODE_ENV=test
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
       - ALICE_BASE_URL=http://alice:3000
       - ALICE_WS_PORT=5003
       - ALICE_DID
