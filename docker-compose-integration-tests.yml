@@ -1,9 +1,13 @@
 # Run stack and integration tests with:
 #
+# export NODE_EXTRA_CA_CERTS="$PWD/rootCA.pem" &&
 # docker compose \
 #   -f docker-compose-testnet.yml \
 #   -f docker-compose-integration-tests.yml \
 #   up --build --exit-code-from integration-tests
+#
+# Or as a one-liner:
+# export NODE_EXTRA_CA_CERTS="$PWD/rootCA.pem" && docker compose -f docker-compose-testnet.yml -f docker-compose-integration-tests.yml up --build --exit-code-from integration-tests
 #
 
 services:
