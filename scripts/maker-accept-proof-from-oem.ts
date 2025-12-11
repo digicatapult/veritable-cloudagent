@@ -101,6 +101,23 @@ async function main() {
   let proofFormats: Record<string, unknown> | undefined
 
   if (credentialId) {
+    // Pre-flight check: Verify credential exists in wallet
+    log(`Verifying credential ${credentialId} exists in wallet...`)
+    const credentialResponse = await fetch(`${baseUrl}/v1/credentials/${credentialId}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!credentialResponse.ok) {
+      if (credentialResponse.status === 404) {
+        throw new Error(`Credential ${credentialId} not found in wallet. Please check the ID and try again.`)
+      }
+      throw new Error(
+        `Failed to verify credential ${credentialId}: ${credentialResponse.status} ${credentialResponse.statusText}`
+      )
+    }
+    log(`Credential ${credentialId} verified successfully`)
+
     log(`Constructing proofFormats for credential ${credentialId}`)
     const requestMessage = parsedProof.requestMessage
     const requestedAttributes =
