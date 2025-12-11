@@ -585,6 +585,76 @@ describe('ProofController', () => {
       )
     })
 
+    test('should not allow revealing attribute if credential has revealed=false', async () => {
+      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsStub.resolves({
+        proofFormats: {
+          anoncreds: {
+            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
+            output: {
+              attributes: {
+                attr1: [
+                  {
+                    credentialId: 'cred-1',
+                    revealed: false,
+                    credentialInfo: {
+                      credentialId: 'cred-1',
+                      attributes: {},
+                      schemaId: 'schema-id',
+                      credentialDefinitionId: 'cred-def-id',
+                      revocationRegistryId: null,
+                      credentialRevocationId: null,
+                      methodName: 'method',
+                    } as unknown as AnonCredsCredentialInfo,
+                  },
+                ],
+              },
+              predicates: {},
+            },
+          },
+        },
+      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+
+      const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
+
+      const proofFormats = {
+        anoncreds: {
+          attributes: {
+            attr1: { credentialId: 'cred-1', revealed: true },
+          },
+          predicates: {},
+        },
+      }
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({ proofFormats })
+
+      expect(
+        acceptProofStub.calledWithMatch({
+          proofRecordId: testProofResponse.id,
+          proofFormats: {
+            anoncreds: {
+              attributes: {
+                attr1: {
+                  credentialId: 'cred-1',
+                  revealed: false,
+                  credentialInfo: { credentialId: 'cred-1' },
+                },
+              },
+              predicates: {},
+              selfAttestedAttributes: {},
+            },
+          },
+        })
+      ).equals(true)
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
     test('should return 404 when predicate credentialId not found in available credentials', async () => {
       const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)

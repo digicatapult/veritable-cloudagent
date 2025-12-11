@@ -276,15 +276,11 @@ export class ProofController extends Controller {
         ).anoncreds
 
         if (!availableAnonCreds) {
-          req.log.debug(
+          req.log.error(
             'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
             proofRecordId,
             anoncreds.attributes ?? {},
             anoncreds.predicates ?? {}
-          )
-          req.log.error(
-            'Could not hydrate proof formats: no available credentials found for proofRecordId=%s',
-            proofRecordId
           )
           throw new NotFoundError(
             `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
