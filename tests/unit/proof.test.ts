@@ -933,6 +933,7 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(422)
+      expect(acceptProofStub.called).to.equal(false)
     })
 
     test('should reject simplified format with extra keys in attributes (security check)', async () => {
@@ -957,6 +958,7 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(422)
+      expect(acceptProofStub.called).to.equal(false)
     })
 
     test('should reject simplified format with credentialInfo in predicates (security check)', async () => {
@@ -980,6 +982,7 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(422)
+      expect(acceptProofStub.called).to.equal(false)
     })
 
     test('should give 404 not found when proof request is not found', async () => {
