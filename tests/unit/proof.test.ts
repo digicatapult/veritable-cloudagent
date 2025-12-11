@@ -708,7 +708,7 @@ describe('ProofController', () => {
       expect(response.body).to.include('nonExistentPred')
     })
 
-    test('should return 500 when format has empty attributes (treated as invalid full format)', async () => {
+    test('should return 400 when format has empty attributes (treated as invalid full format)', async () => {
       const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
       acceptProofStub.rejects(new Error('Invalid proof format'))
 
@@ -725,7 +725,7 @@ describe('ProofController', () => {
 
       // Empty attributes/predicates is not recognized as simplified format
       // and is treated as full format, which fails at acceptRequest validation
-      expect(response.statusCode).to.be.equal(500)
+      expect(response.statusCode).to.be.equal(400)
     })
 
     test('should return 422 when attribute is missing credentialId', async () => {

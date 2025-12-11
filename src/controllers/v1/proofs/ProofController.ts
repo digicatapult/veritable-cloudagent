@@ -240,6 +240,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
+  @Response<BadRequest['message']>(400)
   public async acceptRequest(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -259,34 +260,10 @@ export class ProofController extends Controller {
       } else if (this.isSimpleProofFormats(body.proofFormats)) {
         const anoncreds = body.proofFormats.anoncreds
 
-        // Enhanced validation: must have at least one attribute or predicate, and correct structure
-        const hasAttributes = anoncreds?.attributes && Object.keys(anoncreds.attributes).length > 0
-        const hasPredicates = anoncreds?.predicates && Object.keys(anoncreds.predicates).length > 0
-        if (!hasAttributes && !hasPredicates) {
-          throw new BadRequest('Invalid simplified proof formats: must have at least one attribute or predicate')
+        if (!anoncreds) {
+          throw new BadRequest('Invalid simplified proof formats: missing anoncreds')
         }
-        // Validate attributes structure
-        if (anoncreds?.attributes) {
-          for (const [key, attr] of Object.entries(anoncreds.attributes)) {
-            if (
-              typeof attr !== 'object' ||
-              typeof attr.credentialId !== 'string' ||
-              typeof attr.revealed !== 'boolean'
-            ) {
-              throw new BadRequest(
-                `Invalid attribute '${key}': must have 'credentialId' (string) and 'revealed' (boolean)`
-              )
-            }
-          }
-        }
-        // Validate predicates structure
-        if (anoncreds?.predicates) {
-          for (const [key, pred] of Object.entries(anoncreds.predicates)) {
-            if (typeof pred !== 'object' || typeof pred.credentialId !== 'string') {
-              throw new BadRequest(`Invalid predicate '${key}': must have 'credentialId' (string)`)
-            }
-          }
-        }
+
         req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
 
         const availableCredentials = await this.agent.proofs.getCredentialsForRequest({
@@ -389,6 +366,16 @@ export class ProofController extends Controller {
         }
         formatsToAccept = hydratedProofFormats
       } else {
+        // Added validation for empty formats
+        const anoncreds = (body.proofFormats as any).anoncreds
+        if (
+          anoncreds &&
+          (!anoncreds.attributes || Object.keys(anoncreds.attributes).length === 0) &&
+          (!anoncreds.predicates || Object.keys(anoncreds.predicates).length === 0)
+        ) {
+          throw new BadRequest('Invalid proof formats: must have at least one attribute or predicate')
+        }
+
         formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         req.log.info('using provided proof formats for %s proof', proofRecordId)
       }
@@ -455,44 +442,39 @@ export class ProofController extends Controller {
   }
 
   private redactProofFormats(formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>): Record<string, unknown> {
-    // Deep copy to avoid modifying original object
-    const redacted = JSON.parse(JSON.stringify(formats)) as {
-      anoncreds?: {
-        attributes?: Record<string, { credentialInfo?: unknown; value?: unknown }>
-        predicates?: Record<string, { credentialInfo?: unknown }>
-      }
-    } & Record<string, unknown>
+    const anoncreds = formats.anoncreds
+    if (!anoncreds) return formats as Record<string, unknown>
 
-    if (redacted.anoncreds) {
-      if (redacted.anoncreds.attributes) {
-        for (const key in redacted.anoncreds.attributes) {
-          const attr = redacted.anoncreds.attributes[key]
-          if (attr && typeof attr === 'object') {
-            // Remove sensitive credential info
-            if ('credentialInfo' in attr) {
-              attr.credentialInfo = '[REDACTED]'
+    const attributes = anoncreds.attributes
+      ? Object.fromEntries(
+          Object.entries(anoncreds.attributes).map(([key, value]) => {
+            if (value && typeof value === 'object') {
+              return [key, { ...value, credentialInfo: '[REDACTED]', value: '[REDACTED]' }]
             }
-            // Remove raw values if present
-            if ('value' in attr) {
-              attr.value = '[REDACTED]'
-            }
-          }
-        }
-      }
+            return [key, value]
+          })
+        )
+      : undefined
 
-      if (redacted.anoncreds.predicates) {
-        for (const key in redacted.anoncreds.predicates) {
-          const pred = redacted.anoncreds.predicates[key]
-          if (pred && typeof pred === 'object') {
-            if ('credentialInfo' in pred) {
-              pred.credentialInfo = '[REDACTED]'
+    const predicates = anoncreds.predicates
+      ? Object.fromEntries(
+          Object.entries(anoncreds.predicates).map(([key, value]) => {
+            if (value && typeof value === 'object') {
+              return [key, { ...value, credentialInfo: '[REDACTED]' }]
             }
-          }
-        }
-      }
-    }
+            return [key, value]
+          })
+        )
+      : undefined
 
-    return redacted
+    return {
+      ...formats,
+      anoncreds: {
+        ...anoncreds,
+        attributes,
+        predicates,
+      },
+    } as Record<string, unknown>
   }
 
   private isSimpleProofFormats(formats: AcceptProofRequestOptions['proofFormats']): formats is SimpleProofFormats {
