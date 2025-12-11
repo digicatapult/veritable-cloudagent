@@ -82,7 +82,8 @@ The `ProofController` employs a three-path logic flow to handle proof acceptance
               "credentialId": "credential-123",
               "revealed": true
             }
-          }
+          },
+          "predicates": {}
         }
       }
     }
