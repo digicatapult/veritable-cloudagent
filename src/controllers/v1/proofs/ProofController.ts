@@ -315,6 +315,38 @@ export class ProofController extends Controller {
           }
         }
 
+        // Validation: ensure all requested attributes and predicates were hydrated
+        const missingAttributes: Array<{ name: string; credentialId: string }> = []
+        for (const [key, value] of Object.entries(anoncreds.attributes)) {
+          const hydrated = hydratedProofFormats.anoncreds?.attributes?.[key]
+          if (!hydrated || hydrated.credentialId !== value.credentialId) {
+            missingAttributes.push({ name: key, credentialId: value.credentialId })
+          }
+        }
+        const missingPredicates: Array<{ name: string; credentialId: string }> = []
+        if (anoncreds.predicates) {
+          for (const [key, value] of Object.entries(anoncreds.predicates)) {
+            const hydrated = hydratedProofFormats.anoncreds?.predicates?.[key]
+            if (!hydrated || hydrated.credentialId !== value.credentialId) {
+              missingPredicates.push({ name: key, credentialId: value.credentialId })
+            }
+          }
+        }
+        if (missingAttributes.length > 0 || missingPredicates.length > 0) {
+          const details = [
+            missingAttributes.length > 0
+              ? `attributes: ${missingAttributes.map((a) => `${a.name} (credId: ${a.credentialId})`).join(', ')}`
+              : '',
+            missingPredicates.length > 0
+              ? `predicates: ${missingPredicates.map((p) => `${p.name} (credId: ${p.credentialId})`).join(', ')}`
+              : '',
+          ]
+            .filter(Boolean)
+            .join('; ')
+          throw new NotFoundError(
+            `Could not hydrate proof formats: no matching credentials found for requested ${details}`
+          )
+        }
         formatsToAccept = hydratedProofFormats
       } else {
         formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
