@@ -366,8 +366,10 @@ export class ProofController extends Controller {
         }
         formatsToAccept = hydratedProofFormats
       } else {
+        formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
+        const anoncreds = formatsToAccept.anoncreds
+
         // Added validation for empty formats
-        const anoncreds = (body.proofFormats as any).anoncreds
         if (
           anoncreds &&
           (!anoncreds.attributes || Object.keys(anoncreds.attributes).length === 0) &&
@@ -376,7 +378,6 @@ export class ProofController extends Controller {
           throw new BadRequest('Invalid proof formats: must have at least one attribute or predicate')
         }
 
-        formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         req.log.info('using provided proof formats for %s proof', proofRecordId)
       }
 
