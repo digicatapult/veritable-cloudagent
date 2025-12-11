@@ -255,7 +255,7 @@ export class ProofController extends Controller {
           proofRecordId,
         })
         formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
-        req.log.info('credentials found %j', retrievedCredentials)
+        req.log.info('credentials found (redacted) %j', this.redactProofFormats(retrievedCredentials.proofFormats))
       } else if (this.isSimpleProofFormats(body.proofFormats)) {
         const anoncreds = body.proofFormats.anoncreds
 
