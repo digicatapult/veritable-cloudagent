@@ -401,13 +401,46 @@ export class ProofController extends Controller {
 
     const anoncreds = (formats as { anoncreds: unknown }).anoncreds as {
       attributes?: Record<string, unknown>
+      predicates?: Record<string, unknown>
     }
     if (!anoncreds?.attributes) return false
 
-    const values = Object.values(anoncreds.attributes)
-    if (values.length === 0) return false
+    // Check all attributes have only credentialId and revealed, and no credentialInfo
+    const attrValues = Object.values(anoncreds.attributes)
+    if (attrValues.length === 0) return false
+    for (const attr of attrValues) {
+      if (
+        typeof attr !== 'object' ||
+        attr === null ||
+        // Should only have credentialId and revealed keys
+        !('credentialId' in attr) ||
+        !('revealed' in attr) ||
+        Object.keys(attr).some(
+          (key) => key !== 'credentialId' && key !== 'revealed'
+        ) ||
+        // Should not have credentialInfo, even as undefined or null
+        'credentialInfo' in attr
+      ) {
+        return false
+      }
+    }
 
-    const firstAttr = values[0] as { credentialInfo?: unknown }
-    return !firstAttr.credentialInfo
+    // If predicates are present, check all have only credentialId and no credentialInfo
+    if (anoncreds.predicates) {
+      const predValues = Object.values(anoncreds.predicates)
+      for (const pred of predValues) {
+        if (
+          typeof pred !== 'object' ||
+          pred === null ||
+          !('credentialId' in pred) ||
+          Object.keys(pred).some((key) => key !== 'credentialId') ||
+          'credentialInfo' in pred
+        ) {
+          return false
+        }
+      }
+    }
+
+    return true
   }
 }
