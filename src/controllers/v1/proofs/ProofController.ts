@@ -299,11 +299,10 @@ export class ProofController extends Controller {
 
         if (!availableAnonCreds) {
           req.log.debug(
-            'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j. Available credentials: %j',
+            'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
             proofRecordId,
             anoncreds?.attributes ?? {},
-            anoncreds?.predicates ?? {},
-            availableCredentials?.proofFormats ?? {}
+            anoncreds?.predicates ?? {}
           )
           req.log.error(
             'Could not hydrate proof formats: no available credentials found for proofRecordId=%s',
@@ -412,7 +411,7 @@ export class ProofController extends Controller {
         predCount
       )
       // Optionally log full formats at debug level for troubleshooting
-      req.log.debug('accepting proof request with formats %j', formatsToAccept)
+      req.log.debug('accepting proof request with formats %j', this.redactProofFormats(formatsToAccept))
       const proof = await this.agent.proofs.acceptRequest({
         proofRecordId,
         ...body,
@@ -453,6 +452,47 @@ export class ProofController extends Controller {
       }
       throw error
     }
+  }
+
+  private redactProofFormats(formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>): Record<string, unknown> {
+    // Deep copy to avoid modifying original object
+    const redacted = JSON.parse(JSON.stringify(formats)) as {
+      anoncreds?: {
+        attributes?: Record<string, { credentialInfo?: unknown; value?: unknown }>
+        predicates?: Record<string, { credentialInfo?: unknown }>
+      }
+    } & Record<string, unknown>
+
+    if (redacted.anoncreds) {
+      if (redacted.anoncreds.attributes) {
+        for (const key in redacted.anoncreds.attributes) {
+          const attr = redacted.anoncreds.attributes[key]
+          if (attr && typeof attr === 'object') {
+            // Remove sensitive credential info
+            if ('credentialInfo' in attr) {
+              attr.credentialInfo = '[REDACTED]'
+            }
+            // Remove raw values if present
+            if ('value' in attr) {
+              attr.value = '[REDACTED]'
+            }
+          }
+        }
+      }
+
+      if (redacted.anoncreds.predicates) {
+        for (const key in redacted.anoncreds.predicates) {
+          const pred = redacted.anoncreds.predicates[key]
+          if (pred && typeof pred === 'object') {
+            if ('credentialInfo' in pred) {
+              pred.credentialInfo = '[REDACTED]'
+            }
+          }
+        }
+      }
+    }
+
+    return redacted
   }
 
   private isSimpleProofFormats(formats: AcceptProofRequestOptions['proofFormats']): formats is SimpleProofFormats {
