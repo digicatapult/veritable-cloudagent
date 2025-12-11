@@ -213,7 +213,7 @@ The following lifecycle commands can be run using `npm`
 
 ## Environment variables
 
-The Envs are defined under `src > env.ts` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
+The Envs are defined under `src > env.ts` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them comma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 
 | variable                                    | required | default                                                                                                                                                                                                | description                                                                                                                        |
 | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
