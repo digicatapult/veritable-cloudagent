@@ -458,9 +458,9 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no matching credentials found')
-      expect(response.body).to.include('attr1')
-      expect(response.body).to.include('cred-not-found')
+      expect(response.body).to.include(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+      )
     })
 
     test('should return 404 when requested attribute name not in the proof request', async () => {
@@ -511,8 +511,9 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no matching credentials found')
-      expect(response.body).to.include('nonExistentAttr')
+      expect(response.body).to.include(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+      )
     })
 
     test('should return 404 when multiple attributes with some matching and some not matching', async () => {
@@ -579,9 +580,9 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no matching credentials found')
-      expect(response.body).to.include('attr2')
-      expect(response.body).to.include('cred-wrong')
+      expect(response.body).to.include(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+      )
     })
 
     test('should return 404 when predicate credentialId not found in available credentials', async () => {
@@ -649,9 +650,9 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no matching credentials found')
-      expect(response.body).to.include('pred1')
-      expect(response.body).to.include('cred-not-found')
+      expect(response.body).to.include(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+      )
     })
 
     test('should return 404 when requested predicate name not in the proof request', async () => {
@@ -704,8 +705,9 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no matching credentials found')
-      expect(response.body).to.include('nonExistentPred')
+      expect(response.body).to.include(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+      )
     })
 
     test('should return 400 when format has empty attributes (treated as invalid full format)', async () => {

@@ -241,6 +241,7 @@ export class ProofController extends Controller {
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   @Response<BadRequest['message']>(400)
+  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
   public async acceptRequest(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -278,8 +279,8 @@ export class ProofController extends Controller {
           req.log.debug(
             'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
             proofRecordId,
-            anoncreds?.attributes ?? {},
-            anoncreds?.predicates ?? {}
+            anoncreds.attributes ?? {},
+            anoncreds.predicates ?? {}
           )
           req.log.error(
             'Could not hydrate proof formats: no available credentials found for proofRecordId=%s',
@@ -308,7 +309,7 @@ export class ProofController extends Controller {
               if (match && hydratedProofFormats.anoncreds?.attributes) {
                 hydratedProofFormats.anoncreds.attributes[key] = {
                   ...match,
-                  revealed: simpleAttr.revealed,
+                  revealed: match.revealed && simpleAttr.revealed,
                 }
               }
             }
@@ -360,8 +361,9 @@ export class ProofController extends Controller {
           ]
             .filter(Boolean)
             .join('; ')
+          req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
           throw new NotFoundError(
-            `Could not hydrate proof formats: no matching credentials found for requested ${details}`
+            'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
           )
         }
         formatsToAccept = hydratedProofFormats
