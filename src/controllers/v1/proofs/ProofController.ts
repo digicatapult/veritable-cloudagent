@@ -266,7 +266,7 @@ export class ProofController extends Controller {
           throw new BadRequest('Invalid simplified proof formats: must have at least one attribute or predicate')
         }
         // Validate attributes structure
-        if (hasAttributes) {
+        if (anoncreds?.attributes) {
           for (const [key, attr] of Object.entries(anoncreds.attributes)) {
             if (
               typeof attr !== 'object' ||
@@ -280,15 +280,10 @@ export class ProofController extends Controller {
           }
         }
         // Validate predicates structure
-        if (hasPredicates) {
+        if (anoncreds?.predicates) {
           for (const [key, pred] of Object.entries(anoncreds.predicates)) {
-            if (
-              typeof pred !== 'object' ||
-              typeof pred.credentialId !== 'string'
-            ) {
-              throw new BadRequest(
-                `Invalid predicate '${key}': must have 'credentialId' (string)`
-              )
+            if (typeof pred !== 'object' || typeof pred.credentialId !== 'string') {
+              throw new BadRequest(`Invalid predicate '${key}': must have 'credentialId' (string)`)
             }
           }
         }
@@ -303,15 +298,19 @@ export class ProofController extends Controller {
         ).anoncreds
 
         if (!availableAnonCreds) {
-          req.log.error(
+          req.log.debug(
             'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j. Available credentials: %j',
             proofRecordId,
             anoncreds?.attributes ?? {},
             anoncreds?.predicates ?? {},
             availableCredentials?.proofFormats ?? {}
           )
+          req.log.error(
+            'Could not hydrate proof formats: no available credentials found for proofRecordId=%s',
+            proofRecordId
+          )
           throw new NotFoundError(
-            `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}. Requested attributes: ${JSON.stringify(anoncreds?.attributes ?? {})}, predicates: ${JSON.stringify(anoncreds?.predicates ?? {})}. Available credentials: ${JSON.stringify(availableCredentials?.proofFormats ?? {})}`
+            `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
           )
         }
 
@@ -324,15 +323,17 @@ export class ProofController extends Controller {
         }
 
         // Hydrate attributes
-        for (const [key, value] of Object.entries(anoncreds.attributes)) {
-          const simpleAttr = value
-          const matches = availableAnonCreds.output.attributes?.[key]
-          if (matches) {
-            const match = matches.find((m) => m.credentialId === simpleAttr.credentialId)
-            if (match && hydratedProofFormats.anoncreds?.attributes) {
-              hydratedProofFormats.anoncreds.attributes[key] = {
-                ...match,
-                revealed: simpleAttr.revealed,
+        if (anoncreds.attributes) {
+          for (const [key, value] of Object.entries(anoncreds.attributes)) {
+            const simpleAttr = value
+            const matches = availableAnonCreds.output.attributes?.[key]
+            if (matches) {
+              const match = matches.find((m) => m.credentialId === simpleAttr.credentialId)
+              if (match && hydratedProofFormats.anoncreds?.attributes) {
+                hydratedProofFormats.anoncreds.attributes[key] = {
+                  ...match,
+                  revealed: simpleAttr.revealed,
+                }
               }
             }
           }
@@ -355,10 +356,12 @@ export class ProofController extends Controller {
 
         // Validation: ensure all requested attributes and predicates were hydrated
         const missingAttributes: Array<{ name: string; credentialId: string }> = []
-        for (const [key, value] of Object.entries(anoncreds.attributes)) {
-          const hydrated = hydratedProofFormats.anoncreds?.attributes?.[key]
-          if (!hydrated || hydrated.credentialId !== value.credentialId) {
-            missingAttributes.push({ name: key, credentialId: value.credentialId })
+        if (anoncreds.attributes) {
+          for (const [key, value] of Object.entries(anoncreds.attributes)) {
+            const hydrated = hydratedProofFormats.anoncreds?.attributes?.[key]
+            if (!hydrated || hydrated.credentialId !== value.credentialId) {
+              missingAttributes.push({ name: key, credentialId: value.credentialId })
+            }
           }
         }
         const missingPredicates: Array<{ name: string; credentialId: string }> = []
@@ -459,30 +462,34 @@ export class ProofController extends Controller {
       attributes?: Record<string, unknown>
       predicates?: Record<string, unknown>
     }
-    if (!anoncreds?.attributes) return false
 
-    // Check all attributes have only credentialId and revealed, and no credentialInfo
-    const attrValues = Object.values(anoncreds.attributes)
-    if (attrValues.length === 0) return false
-    for (const attr of attrValues) {
-      if (
-        typeof attr !== 'object' ||
-        attr === null ||
-        // Should only have credentialId and revealed keys
-        !('credentialId' in attr) ||
-        !('revealed' in attr) ||
-        Object.keys(attr).some(
-          (key) => key !== 'credentialId' && key !== 'revealed'
-        ) ||
-        // Should not have credentialInfo, even as undefined or null
-        'credentialInfo' in attr
-      ) {
-        return false
+    // Check if at least one of attributes or predicates exists and is non-empty
+    const hasAttributes = anoncreds?.attributes && Object.keys(anoncreds.attributes).length > 0
+    const hasPredicates = anoncreds?.predicates && Object.keys(anoncreds.predicates).length > 0
+
+    if (!hasAttributes && !hasPredicates) return false
+
+    // Validate attributes if present
+    if (hasAttributes && anoncreds.attributes) {
+      const attrValues = Object.values(anoncreds.attributes)
+      for (const attr of attrValues) {
+        if (
+          typeof attr !== 'object' ||
+          attr === null ||
+          // Should only have credentialId and revealed keys
+          !('credentialId' in attr) ||
+          !('revealed' in attr) ||
+          Object.keys(attr).some((key) => key !== 'credentialId' && key !== 'revealed') ||
+          // Should not have credentialInfo, even as undefined or null
+          'credentialInfo' in attr
+        ) {
+          return false
+        }
       }
     }
 
     // If predicates are present, check all have only credentialId and no credentialInfo
-    if (anoncreds.predicates) {
+    if (hasPredicates && anoncreds.predicates) {
       const predValues = Object.values(anoncreds.predicates)
       for (const pred of predValues) {
         if (
