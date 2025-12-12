@@ -116,9 +116,9 @@ The `did:web` server maps any `GET` request ending in `did.json` to a `did:web` 
 
 Port numbers are allowed in `DID_WEB_DOMAIN` but `:` [must be encoded](https://w3c-ccg.github.io/did-method-web/#method-specific-identifier) e.g. `localhost%3A8443`.
 
-### Using Docker (Easiest)
+## Using Docker (Easiest)
 
-#### Single Agent + IPFS Node
+### Single Agent + IPFS Node
 
 The following command will spin up the infrastructure (`IPFS` node, `Postgres` database, `testnet` network) for local testing and development purposes:
 
