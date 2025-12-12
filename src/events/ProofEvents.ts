@@ -1,4 +1,4 @@
-import { type Agent, type ProofStateChangedEvent, ProofEventTypes } from '@credo-ts/core'
+import { type Agent, type ProofStateChangedEvent, ProofEventTypes, ProofState } from '@credo-ts/core'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
@@ -7,7 +7,19 @@ import { sendWebhookEvent } from './WebhookEvent.js'
 export const proofEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
     const record = event.payload.proofRecord
-    const body = record.toJSON()
+    const body = record.toJSON() as Record<string, unknown>
+
+    // Enrich payload with proposal message if proof is done and verified
+    if (record.state === ProofState.Done && record.isVerified) {
+      try {
+        const proposalMessage = await agent.proofs.findProposalMessage(record.id)
+        if (proposalMessage) {
+          body.proposalMessage = proposalMessage.toJSON()
+        }
+      } catch (error) {
+        agent.config.logger.error(`Error retrieving proposal message for proof ${record.id}`, { cause: error })
+      }
+    }
 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {

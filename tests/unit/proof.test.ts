@@ -959,8 +959,7 @@ describe('ProofController', () => {
 
       // Verify that acceptRequest was called with the hydrated formats containing the same credential info
       const callArgs = acceptProofStub.firstCall.args[0]
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hydratedFormats = (callArgs.proofFormats as any)?.anoncreds
+      const hydratedFormats = (callArgs.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>)?.anoncreds
       expect(hydratedFormats?.attributes?.attr1.credentialId).to.equal(sharedCredentialId)
       expect(hydratedFormats?.predicates?.pred1.credentialId).to.equal(sharedCredentialId)
     })

@@ -416,6 +416,34 @@ export class ProofController extends Controller {
   }
 
   /**
+   * Retrieve the proposal message associated with a proof record
+   *
+   * @param proofRecordId
+   * @returns Record<string, unknown>
+   */
+  @Get('/:proofRecordId/proposal-message')
+  @Response<NotFoundError['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getProposalMessage(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
+    req.log.debug('getting proposal message for proof record %s', proofRecordId)
+    try {
+      const message = await this.agent.proofs.findProposalMessage(proofRecordId)
+
+      if (!message) {
+        throw new NotFoundError('proposal message not found for this proof record')
+      }
+
+      req.log.info('proposal message found %j', message.toJSON())
+      return message.toJSON()
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError('proof record not found')
+      }
+      throw error
+    }
+  }
+
+  /**
    * Accept a presentation as prover by sending an accept presentation message
    * to the connection associated with the proof record.
    *
