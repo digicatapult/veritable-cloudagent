@@ -489,7 +489,7 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(400)
       expect(response.body).to.include(
-        "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be unrevealed (Zero-Knowledge Proof)."
+        "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden (Zero-Knowledge Proof)."
       )
     })
 
