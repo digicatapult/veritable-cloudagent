@@ -264,13 +264,32 @@ export interface SimpleProofFormats {
     attributes?: Record<
       string,
       {
+        /**
+         * The ID of the credential to use for this attribute.
+         * NOTE: This object must contain EXACTLY 'credentialId' and 'revealed' keys.
+         * Additional properties are not allowed and will cause validation failure.
+         *
+         * TO EXTEND: If adding new properties, you MUST update the validation logic
+         * in `ProofController.ts` (isSimpleProofFormats method) to accept the new key count.
+         */
         credentialId: string
+        /**
+         * Whether to reveal the attribute value.
+         */
         revealed: boolean
       }
     >
     predicates?: Record<
       string,
       {
+        /**
+         * The ID of the credential to use for this predicate.
+         * NOTE: This object must contain EXACTLY 'credentialId' key.
+         * Additional properties are not allowed and will cause validation failure.
+         *
+         * TO EXTEND: If adding new properties, you MUST update the validation logic
+         * in `ProofController.ts` (isSimpleProofFormats method) to accept the new key count.
+         */
         credentialId: string
       }
     >
