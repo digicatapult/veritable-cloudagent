@@ -259,9 +259,9 @@ export class ProofController extends Controller {
         formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         req.log.info('credentials found (redacted) %j', this.redactProofFormats(retrievedCredentials.proofFormats))
       } else if (this.isSimpleProofFormats(body.proofFormats)) {
-        const anoncreds = body.proofFormats.anoncreds
+        const requestedAnonCreds = body.proofFormats.anoncreds
 
-        if (!anoncreds) {
+        if (!requestedAnonCreds) {
           throw new BadRequest('Invalid simplified proof formats: missing anoncreds')
         }
 
@@ -279,8 +279,8 @@ export class ProofController extends Controller {
           req.log.error(
             'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
             proofRecordId,
-            anoncreds.attributes ?? {},
-            anoncreds.predicates ?? {}
+            requestedAnonCreds.attributes ?? {},
+            requestedAnonCreds.predicates ?? {}
           )
           throw new NotFoundError(
             `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
@@ -296,8 +296,8 @@ export class ProofController extends Controller {
         }
 
         // Hydrate attributes
-        if (anoncreds.attributes) {
-          for (const [key, value] of Object.entries(anoncreds.attributes)) {
+        if (requestedAnonCreds.attributes) {
+          for (const [key, value] of Object.entries(requestedAnonCreds.attributes)) {
             const simpleAttr = value
             const matches = availableAnonCreds.output.attributes?.[key]
             if (matches) {
@@ -313,8 +313,8 @@ export class ProofController extends Controller {
         }
 
         // Hydrate predicates
-        if (anoncreds.predicates) {
-          for (const [key, value] of Object.entries(anoncreds.predicates)) {
+        if (requestedAnonCreds.predicates) {
+          for (const [key, value] of Object.entries(requestedAnonCreds.predicates)) {
             const simplePred = value
 
             const matches = availableAnonCreds.output.predicates?.[key]
@@ -329,8 +329,8 @@ export class ProofController extends Controller {
 
         // Validation: ensure all requested attributes and predicates were hydrated
         const missingAttributes: Array<{ name: string; credentialId: string }> = []
-        if (anoncreds.attributes) {
-          for (const [key, value] of Object.entries(anoncreds.attributes)) {
+        if (requestedAnonCreds.attributes) {
+          for (const [key, value] of Object.entries(requestedAnonCreds.attributes)) {
             const hydrated = hydratedProofFormats.anoncreds?.attributes?.[key]
             if (!hydrated || hydrated.credentialId !== value.credentialId) {
               missingAttributes.push({ name: key, credentialId: value.credentialId })
@@ -338,8 +338,8 @@ export class ProofController extends Controller {
           }
         }
         const missingPredicates: Array<{ name: string; credentialId: string }> = []
-        if (anoncreds.predicates) {
-          for (const [key, value] of Object.entries(anoncreds.predicates)) {
+        if (requestedAnonCreds.predicates) {
+          for (const [key, value] of Object.entries(requestedAnonCreds.predicates)) {
             const hydrated = hydratedProofFormats.anoncreds?.predicates?.[key]
             if (!hydrated || hydrated.credentialId !== value.credentialId) {
               missingPredicates.push({ name: key, credentialId: value.credentialId })
@@ -365,13 +365,13 @@ export class ProofController extends Controller {
         formatsToAccept = hydratedProofFormats
       } else {
         formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
-        const anoncreds = formatsToAccept.anoncreds
+        const fullFormatAnonCreds = formatsToAccept.anoncreds
 
         // Added validation for empty formats
         if (
-          anoncreds &&
-          (!anoncreds.attributes || Object.keys(anoncreds.attributes).length === 0) &&
-          (!anoncreds.predicates || Object.keys(anoncreds.predicates).length === 0)
+          fullFormatAnonCreds &&
+          (!fullFormatAnonCreds.attributes || Object.keys(fullFormatAnonCreds.attributes).length === 0) &&
+          (!fullFormatAnonCreds.predicates || Object.keys(fullFormatAnonCreds.predicates).length === 0)
         ) {
           throw new BadRequest('Invalid proof formats: must have at least one attribute or predicate')
         }
