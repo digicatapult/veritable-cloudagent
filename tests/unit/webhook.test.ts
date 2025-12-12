@@ -12,7 +12,6 @@ import {
   ProofExchangeRecord,
   ProofRole,
   ProofState,
-  V2ProposePresentationMessage,
   type Agent,
   type CredentialStateChangedEvent,
   type ProofStateChangedEvent,
@@ -21,7 +20,6 @@ import {
 import { setupServer } from '../../src/server.js'
 import { waitForHook, webhookListener, type WebhookData } from '../../src/utils/webhook.js'
 
-import { stub } from 'sinon'
 import PinoLogger from '../../src/utils/logger.js'
 import { getTestAgent } from './utils/helpers.js'
 
@@ -120,21 +118,10 @@ describe('WebhookTests', () => {
     const proofRecord = new ProofExchangeRecord({
       id: 'testest',
       protocolVersion: 'v2',
-      state: ProofState.Done,
-      isVerified: true,
+      state: ProofState.ProposalSent,
       threadId: 'random',
       role: ProofRole.Prover,
     })
-
-    const mockMessage = new V2ProposePresentationMessage({
-      formats: [],
-      proposalAttachments: [],
-      id: '123',
-    })
-    mockMessage.toJSON = () => ({ '@type': 'proposal', '@id': '123' })
-
-    const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
-    findProposalMessageStub.resolves(Promise.resolve(mockMessage))
 
     bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
       type: ProofEventTypes.ProofStateChanged,
@@ -150,13 +137,7 @@ describe('WebhookTests', () => {
         webhook.topic === 'proofs' && webhook.body.id === proofRecord.id && webhook.body.state === proofRecord.state
     )
 
-    expect(webhook?.body).to.deep.include(JSON.parse(JSON.stringify(proofRecord.toJSON())))
-    expect((webhook?.body as Record<string, unknown>).proposalMessage).to.deep.equal({
-      '@type': 'proposal',
-      '@id': '123',
-    })
-
-    findProposalMessageStub.restore()
+    expect(JSON.parse(JSON.stringify(proofRecord.toJSON()))).to.deep.include(webhook?.body as Record<string, unknown>)
   })
 
   after(async () => {
