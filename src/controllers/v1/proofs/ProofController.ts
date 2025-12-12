@@ -267,6 +267,7 @@ export class ProofController extends Controller {
 
         req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
 
+        // May need to limit the number of credentials fetched to avoid performance issues with large wallets.
         const availableCredentials = await this.agent.proofs.getCredentialsForRequest({
           proofRecordId,
         })
