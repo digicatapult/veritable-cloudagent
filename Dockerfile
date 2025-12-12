@@ -8,7 +8,6 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install -g npm@latest
 RUN npm ci
 
 COPY tsoa.json tsconfig.json .swcrc ./
@@ -24,7 +23,6 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install -g npm@latest
 RUN npm ci --omit=dev
 
 # Test stage
@@ -44,7 +42,6 @@ FROM node:24-bookworm-slim AS production
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-RUN npm install -g npm@latest
 RUN apt-get update && apt-get install -y curl openssl
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
