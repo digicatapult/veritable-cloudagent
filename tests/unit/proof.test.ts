@@ -120,6 +120,35 @@ describe('ProofController', () => {
     })
   })
 
+  describe('Get proposal message', () => {
+    test('should return proposal message', async () => {
+      const mockMessage = new V2ProposePresentationMessage({
+        formats: [],
+        proposalAttachments: [],
+        id: '123',
+      })
+      mockMessage.toJSON = () => ({ '@type': 'proposal', '@id': '123' })
+
+      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
+      findProposalMessageStub.resolves(Promise.resolve(mockMessage))
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/proposal-message`)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(findProposalMessageStub.calledWithMatch(testProof.id)).equals(true)
+      expect(response.body).to.deep.equal({ '@type': 'proposal', '@id': '123' })
+    })
+
+    test('should return 404 not found when proposal message not found', async () => {
+      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
+      findProposalMessageStub.resolves(Promise.resolve(null))
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/proposal-message`)
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
   describe('Delete proof by id', () => {
     test('should give 404 not found when proof is not found', async () => {
       const response = await request(app).delete('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa')
