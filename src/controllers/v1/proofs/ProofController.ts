@@ -433,7 +433,11 @@ export class ProofController extends Controller {
         throw new NotFoundError('proposal message not found for this proof record')
       }
 
-      req.log.info('proposal message found %j', message.toJSON())
+      // Log only non-sensitive metadata at info level
+      req.log.info('proposal message found: type=%s id=%s', message.type, message.id)
+      // Log full message at debug level if needed
+      req.log.debug('full proposal message: %j', message.toJSON())
+
       return message.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
