@@ -9,8 +9,8 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
     const record = event.payload.proofRecord
     const body = record.toJSON() as Record<string, unknown>
 
-    // Enrich payload with proposal message if proof is done and verified
-    if (record.state === ProofState.Done && record.isVerified) {
+    // Enrich payload with proposal message when proposal first received OR if proof is done and verified
+    if ((record.state === ProofState.Done && record.isVerified) || record.state === ProofState.ProposalReceived) {
       try {
         const proposalMessage = await agent.proofs.findProposalMessage(record.id)
         if (proposalMessage) {
