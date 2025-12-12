@@ -441,6 +441,110 @@ describe('ProofController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
+    test('should return 400 when prover tries to reveal an attribute that verifier wants proven in secret', async () => {
+      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsStub.resolves({
+        proofFormats: {
+          anoncreds: {
+            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
+            output: {
+              attributes: {
+                attr1: [
+                  {
+                    credentialId: 'cred-1',
+                    revealed: false, // Must be unrevealed
+                    credentialInfo: {
+                      credentialId: 'cred-1',
+                      attributes: {},
+                      schemaId: 'schema-id',
+                      credentialDefinitionId: 'cred-def-id',
+                      revocationRegistryId: null,
+                      credentialRevocationId: null,
+                      methodName: 'method',
+                    } as unknown as AnonCredsCredentialInfo,
+                  },
+                ],
+              },
+              predicates: {},
+            },
+          },
+        },
+      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+
+      const proofFormats = {
+        anoncreds: {
+          attributes: {
+            attr1: { credentialId: 'cred-1', revealed: true }, // Trying to reveal
+          },
+          predicates: {},
+        },
+      }
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({ proofFormats })
+
+      expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.include(
+        "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be unrevealed (Zero-Knowledge Proof)."
+      )
+    })
+
+    test('should return 400 when verifier requests plaintext for an attribute that prover wants to keep secret', async () => {
+      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsStub.resolves({
+        proofFormats: {
+          anoncreds: {
+            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
+            output: {
+              attributes: {
+                attr1: [
+                  {
+                    credentialId: 'cred-1',
+                    revealed: true, // Verifier wants reveal
+                    credentialInfo: {
+                      credentialId: 'cred-1',
+                      attributes: {},
+                      schemaId: 'schema-id',
+                      credentialDefinitionId: 'cred-def-id',
+                      revocationRegistryId: null,
+                      credentialRevocationId: null,
+                      methodName: 'method',
+                    } as unknown as AnonCredsCredentialInfo,
+                  },
+                ],
+              },
+              predicates: {},
+            },
+          },
+        },
+      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+
+      const proofFormats = {
+        anoncreds: {
+          attributes: {
+            attr1: { credentialId: 'cred-1', revealed: false }, // Prover wants secret
+          },
+          predicates: {},
+        },
+      }
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({ proofFormats })
+
+      expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.include(
+        "Attribute 'attr1' cannot be hidden. The proof request requires this attribute to be revealed."
+      )
+    })
+
     test('should return 404 when requested credentialId not found in available credentials', async () => {
       const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
@@ -547,7 +651,7 @@ describe('ProofController', () => {
       )
     })
 
-    test('should return 404 when multiple attributes with some matching and some not matching', async () => {
+    test('should return 404 when at least one requested credential is not found among available credentials', async () => {
       const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
@@ -614,76 +718,6 @@ describe('ProofController', () => {
       expect(response.body).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
       )
-    })
-
-    test('should not allow revealing attribute if credential has revealed=false', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
-      acceptProofStub.resolves(testProofResponse)
-
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
-      getCredentialsStub.resolves({
-        proofFormats: {
-          anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
-                    credentialId: 'cred-1',
-                    revealed: false,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
-            },
-          },
-        },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
-
-      const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
-
-      const proofFormats = {
-        anoncreds: {
-          attributes: {
-            attr1: { credentialId: 'cred-1', revealed: true },
-          },
-          predicates: {},
-        },
-      }
-
-      const response = await request(app)
-        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
-        .send({ proofFormats })
-
-      expect(
-        acceptProofStub.calledWithMatch({
-          proofRecordId: testProofResponse.id,
-          proofFormats: {
-            anoncreds: {
-              attributes: {
-                attr1: {
-                  credentialId: 'cred-1',
-                  revealed: false,
-                  credentialInfo: { credentialId: 'cred-1' },
-                },
-              },
-              predicates: {},
-              selfAttestedAttributes: {},
-            },
-          },
-        })
-      ).equals(true)
-      expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
     test('should return 404 when predicate credentialId not found in available credentials', async () => {

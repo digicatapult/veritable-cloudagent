@@ -304,6 +304,17 @@ export class ProofController extends Controller {
             if (matches) {
               const match = matches.find((m) => m.credentialId === simpleAttr.credentialId)
               if (match && hydratedProofFormats.anoncreds?.attributes) {
+                if (simpleAttr.revealed !== match.revealed) {
+                  if (simpleAttr.revealed) {
+                    throw new BadRequest(
+                      `Attribute '${key}' cannot be revealed. The proof request or credential requires this attribute to be hidden (Zero-Knowledge Proof).`
+                    )
+                  } else {
+                    throw new BadRequest(
+                      `Attribute '${key}' cannot be hidden. The proof request requires this attribute to be revealed.`
+                    )
+                  }
+                }
                 hydratedProofFormats.anoncreds.attributes[key] = {
                   ...match,
                   revealed: match.revealed && simpleAttr.revealed,
