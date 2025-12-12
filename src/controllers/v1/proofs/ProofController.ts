@@ -500,7 +500,7 @@ export class ProofController extends Controller {
           // Should only have credentialId and revealed keys
           !('credentialId' in attr) ||
           !('revealed' in attr) ||
-          Object.keys(attr).some((key) => key !== 'credentialId' && key !== 'revealed') ||
+          Object.keys(attr).length !== 2 ||
           // Should not have credentialInfo, even as undefined or null
           'credentialInfo' in attr
         ) {
@@ -517,7 +517,7 @@ export class ProofController extends Controller {
           typeof pred !== 'object' ||
           pred === null ||
           !('credentialId' in pred) ||
-          Object.keys(pred).some((key) => key !== 'credentialId') ||
+          Object.keys(pred).length !== 1 ||
           'credentialInfo' in pred
         ) {
           return false
