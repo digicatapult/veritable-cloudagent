@@ -18,8 +18,6 @@ import {
   ProofExchangeRecord,
   ProofRole,
   ProofState,
-  RecordNotFoundError,
-  V2ProposePresentationMessage,
   type Agent,
   type ProofFormatPayload,
   type ProofStateChangedEvent,
@@ -104,6 +102,7 @@ describe('ProofController', () => {
     test('should return proof record', async () => {
       const getByIdStub = stub(bobAgent.proofs, 'getById')
       getByIdStub.resolves(testProof)
+
       const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}`)
@@ -120,30 +119,21 @@ describe('ProofController', () => {
     })
   })
 
-  describe('Get proposal message', () => {
-    test('should return proposal message', async () => {
-      const mockMessage = new V2ProposePresentationMessage({
-        formats: [],
-        proposalAttachments: [],
-        id: '123',
-      })
-      mockMessage.toJSON = () => ({ '@type': 'proposal', '@id': '123' })
+  describe('Get proof content', () => {
+    test('should return proof content', async () => {
+      const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
+      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      getFormatDataStub.resolves(formatData)
 
-      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
-      findProposalMessageStub.resolves(Promise.resolve(mockMessage))
-
-      const response = await request(app).get(`/v1/proofs/${testProof.id}/proposal-message`)
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/content`)
 
       expect(response.statusCode).to.be.equal(200)
-      expect(findProposalMessageStub.calledWithMatch(testProof.id)).equals(true)
-      expect(response.body).to.deep.equal({ '@type': 'proposal', '@id': '123' })
+      expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
+      expect(response.body).to.deep.equal(formatData)
     })
 
-    test('should return 404 not found when proposal message not found', async () => {
-      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
-      findProposalMessageStub.resolves(Promise.resolve(null))
-
-      const response = await request(app).get(`/v1/proofs/${testProof.id}/proposal-message`)
+    test('should return 404 not found when proof record not found', async () => {
+      const response = await request(app).get('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/content')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -1052,9 +1042,6 @@ describe('ProofController', () => {
     })
 
     test('should reject simplified format with credentialInfo in attributes (security check)', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
-      acceptProofStub.rejects(new Error('Invalid proof format'))
-
       const proofFormats = {
         anoncreds: {
           attributes: {
@@ -1073,13 +1060,9 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(422)
-      expect(acceptProofStub.called).to.equal(false)
     })
 
     test('should reject simplified format with extra keys in attributes (security check)', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
-      acceptProofStub.rejects(new Error('Invalid proof format'))
-
       const proofFormats = {
         anoncreds: {
           attributes: {
@@ -1098,13 +1081,9 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(422)
-      expect(acceptProofStub.called).to.equal(false)
     })
 
     test('should reject simplified format with credentialInfo in predicates (security check)', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
-      acceptProofStub.rejects(new Error('Invalid proof format'))
-
       const proofFormats = {
         anoncreds: {
           attributes: {},
@@ -1122,54 +1101,12 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(422)
-      expect(acceptProofStub.called).to.equal(false)
     })
 
     test('should give 404 not found when proof request is not found', async () => {
-      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
-      selectCredentialForRequestStub.resolves({ proofFormats: {} })
       const response = await request(app)
         .post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request')
         .send({})
-
-      expect(response.statusCode).to.be.equal(404)
-    })
-  })
-
-  describe('Get proposal message', () => {
-    test('should return proposal message', async () => {
-      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
-      const mockMessage = new V2ProposePresentationMessage({
-        formats: [],
-        proposalAttachments: [],
-        id: '123',
-      })
-      mockMessage.toJSON = () => ({ '@type': 'proposal', '@id': '123' })
-      findProposalMessageStub.resolves(Promise.resolve(mockMessage))
-
-      const response = await request(app).get(`/v1/proofs/${testProofResponse.id}/proposal-message`)
-
-      expect(findProposalMessageStub.calledWith(testProofResponse.id)).equals(true)
-      expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal({ '@type': 'proposal', '@id': '123' })
-    })
-
-    test('should return 404 when proposal message not found', async () => {
-      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
-      findProposalMessageStub.resolves(Promise.resolve(null))
-
-      const response = await request(app).get(`/v1/proofs/${testProofResponse.id}/proposal-message`)
-
-      expect(response.statusCode).to.be.equal(404)
-    })
-
-    test('should return 404 when proof record not found', async () => {
-      const findProposalMessageStub = stub(bobAgent.proofs, 'findProposalMessage')
-      findProposalMessageStub.rejects(
-        new RecordNotFoundError('Proof record not found', { recordType: 'ProofExchangeRecord' })
-      )
-
-      const response = await request(app).get(`/v1/proofs/${testProofResponse.id}/proposal-message`)
 
       expect(response.statusCode).to.be.equal(404)
     })

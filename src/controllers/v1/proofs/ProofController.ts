@@ -88,6 +88,33 @@ export class ProofController extends Controller {
   }
 
   /**
+   * Retrieve the content (format data) of a proof record
+   *
+   * @param proofRecordId
+   * @returns Record<string, unknown>
+   */
+  @Get('/:proofRecordId/content')
+  @Response<NotFoundError['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getProofContent(
+    @Request() req: express.Request,
+    @Path('proofRecordId') proofRecordId: UUID
+  ): Promise<Record<string, unknown>> {
+    req.log.debug('getting proof content for %s', proofRecordId)
+    try {
+      const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+      req.log.info('proof content found for %s', proofRecordId)
+
+      return formatData
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError('proof record not found')
+      }
+      throw error
+    }
+  }
+
+  /**
    * Deletes a proof record in the proof repository.
    *
    * @param proofRecordId
@@ -232,6 +259,10 @@ export class ProofController extends Controller {
    * Accept a presentation request as prover by sending an accept request message
    * to the connection associated with the proof record.
    *
+   * If `proofFormats` is omitted, credentials will be auto-selected.
+   * If `proofFormats` is in simplified format, it will be hydrated with available credentials.
+   * Otherwise, the provided full proof formats will be used.
+   *
    * @param proofRecordId
    * @param request
    * @returns ProofExchangeRecordProps
@@ -265,116 +296,7 @@ export class ProofController extends Controller {
           throw new BadRequest('Invalid simplified proof formats: missing anoncreds')
         }
 
-        req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
-
-        // May need to limit the number of credentials fetched to avoid performance issues with large wallets.
-        const availableCredentials = await this.agent.proofs.getCredentialsForRequest({
-          proofRecordId,
-        })
-
-        const availableAnonCreds = (
-          availableCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'>
-        ).anoncreds
-
-        if (!availableAnonCreds) {
-          req.log.error(
-            'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
-            proofRecordId,
-            requestedAnonCreds.attributes ?? {},
-            requestedAnonCreds.predicates ?? {}
-          )
-          throw new NotFoundError(
-            `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
-          )
-        }
-
-        const hydratedProofFormats: ProofFormatPayload<ProofFormats, 'acceptRequest'> = {
-          anoncreds: {
-            attributes: {},
-            predicates: {},
-            selfAttestedAttributes: {},
-          },
-        }
-
-        // Hydrate attributes
-        if (requestedAnonCreds.attributes) {
-          for (const [key, value] of Object.entries(requestedAnonCreds.attributes)) {
-            const simpleAttr = value
-            const matches = availableAnonCreds.output.attributes?.[key]
-            if (matches) {
-              const match = matches.find((m) => m.credentialId === simpleAttr.credentialId)
-              if (match && hydratedProofFormats.anoncreds?.attributes) {
-                if (simpleAttr.revealed !== match.revealed) {
-                  if (simpleAttr.revealed) {
-                    throw new BadRequest(
-                      `Attribute '${key}' cannot be revealed. The proof request or credential requires this attribute to be hidden (Zero-Knowledge Proof).`
-                    )
-                  } else {
-                    throw new BadRequest(
-                      `Attribute '${key}' cannot be hidden. The proof request requires this attribute to be revealed.`
-                    )
-                  }
-                }
-                hydratedProofFormats.anoncreds.attributes[key] = {
-                  ...match,
-                  revealed: match.revealed && simpleAttr.revealed,
-                }
-              }
-            }
-          }
-        }
-
-        // Hydrate predicates
-        if (requestedAnonCreds.predicates) {
-          for (const [key, value] of Object.entries(requestedAnonCreds.predicates)) {
-            const simplePred = value
-
-            const matches = availableAnonCreds.output.predicates?.[key]
-            if (matches) {
-              const match = matches.find((m) => m.credentialId === simplePred.credentialId)
-              if (match && hydratedProofFormats.anoncreds?.predicates) {
-                hydratedProofFormats.anoncreds.predicates[key] = match
-              }
-            }
-          }
-        }
-
-        // Validation: ensure all requested attributes and predicates were hydrated
-        const missingAttributes: Array<{ name: string; credentialId: string }> = []
-        if (requestedAnonCreds.attributes) {
-          for (const [key, value] of Object.entries(requestedAnonCreds.attributes)) {
-            const hydrated = hydratedProofFormats.anoncreds?.attributes?.[key]
-            if (!hydrated || hydrated.credentialId !== value.credentialId) {
-              missingAttributes.push({ name: key, credentialId: value.credentialId })
-            }
-          }
-        }
-        const missingPredicates: Array<{ name: string; credentialId: string }> = []
-        if (requestedAnonCreds.predicates) {
-          for (const [key, value] of Object.entries(requestedAnonCreds.predicates)) {
-            const hydrated = hydratedProofFormats.anoncreds?.predicates?.[key]
-            if (!hydrated || hydrated.credentialId !== value.credentialId) {
-              missingPredicates.push({ name: key, credentialId: value.credentialId })
-            }
-          }
-        }
-        if (missingAttributes.length > 0 || missingPredicates.length > 0) {
-          const details = [
-            missingAttributes.length > 0
-              ? `attributes: ${missingAttributes.map((a) => `${a.name} (credId: ${a.credentialId})`).join(', ')}`
-              : '',
-            missingPredicates.length > 0
-              ? `predicates: ${missingPredicates.map((p) => `${p.name} (credId: ${p.credentialId})`).join(', ')}`
-              : '',
-          ]
-            .filter(Boolean)
-            .join('; ')
-          req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
-          throw new NotFoundError(
-            'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
-          )
-        }
-        formatsToAccept = hydratedProofFormats
+        formatsToAccept = await this.hydrateProofFormats(req, proofRecordId, requestedAnonCreds)
       } else {
         formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         const fullFormatAnonCreds = formatsToAccept.anoncreds
@@ -428,38 +350,6 @@ export class ProofController extends Controller {
   }
 
   /**
-   * Retrieve the proposal message associated with a proof record
-   *
-   * @param proofRecordId
-   * @returns Record<string, unknown>
-   */
-  @Get('/:proofRecordId/proposal-message')
-  @Response<NotFoundError['message']>(404)
-  @Response<HttpResponse>(500)
-  public async getProposalMessage(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
-    req.log.debug('getting proposal message for proof record %s', proofRecordId)
-    try {
-      const message = await this.agent.proofs.findProposalMessage(proofRecordId)
-
-      if (!message) {
-        throw new NotFoundError('proposal message not found for this proof record')
-      }
-
-      // Log only non-sensitive metadata at info level
-      req.log.info('proposal message found: type=%s id=%s', message.type, message.id)
-      // Log full message at debug level if needed
-      req.log.debug('full proposal message: %j', message.toJSON())
-
-      return message.toJSON()
-    } catch (error) {
-      if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('proof record not found')
-      }
-      throw error
-    }
-  }
-
-  /**
    * Accept a presentation as prover by sending an accept presentation message
    * to the connection associated with the proof record.
    *
@@ -482,6 +372,124 @@ export class ProofController extends Controller {
       }
       throw error
     }
+  }
+
+  private async hydrateProofFormats(
+    req: express.Request,
+    proofRecordId: UUID,
+    requestedAnonCreds: NonNullable<SimpleProofFormats['anoncreds']>
+  ): Promise<ProofFormatPayload<ProofFormats, 'acceptRequest'>> {
+    req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
+
+    // May need to limit the number of credentials fetched to avoid performance issues with large wallets.
+    const availableCredentials = await this.agent.proofs.getCredentialsForRequest({
+      proofRecordId,
+    })
+
+    const availableAnonCreds = (
+      availableCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'>
+    ).anoncreds
+
+    if (!availableAnonCreds) {
+      req.log.error(
+        'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
+        proofRecordId,
+        requestedAnonCreds.attributes ?? {},
+        requestedAnonCreds.predicates ?? {}
+      )
+      throw new NotFoundError(
+        `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
+      )
+    }
+
+    const hydratedProofFormats: ProofFormatPayload<ProofFormats, 'acceptRequest'> = {
+      anoncreds: {
+        attributes: {},
+        predicates: {},
+        selfAttestedAttributes: {},
+      },
+    }
+
+    // Hydrate attributes
+    if (requestedAnonCreds.attributes) {
+      for (const [key, value] of Object.entries(requestedAnonCreds.attributes)) {
+        const simpleAttr = value
+        const matches = availableAnonCreds.output.attributes?.[key]
+        if (matches) {
+          const match = matches.find((m) => m.credentialId === simpleAttr.credentialId)
+          if (match && hydratedProofFormats.anoncreds?.attributes) {
+            if (simpleAttr.revealed !== match.revealed) {
+              if (simpleAttr.revealed) {
+                throw new BadRequest(
+                  `Attribute '${key}' cannot be revealed. The proof request or credential requires this attribute to be hidden (Zero-Knowledge Proof).`
+                )
+              } else {
+                throw new BadRequest(
+                  `Attribute '${key}' cannot be hidden. The proof request requires this attribute to be revealed.`
+                )
+              }
+            }
+            hydratedProofFormats.anoncreds.attributes[key] = {
+              ...match,
+              revealed: match.revealed && simpleAttr.revealed,
+            }
+          }
+        }
+      }
+    }
+
+    // Hydrate predicates
+    if (requestedAnonCreds.predicates) {
+      for (const [key, value] of Object.entries(requestedAnonCreds.predicates)) {
+        const simplePred = value
+
+        const matches = availableAnonCreds.output.predicates?.[key]
+        if (matches) {
+          const match = matches.find((m) => m.credentialId === simplePred.credentialId)
+          if (match && hydratedProofFormats.anoncreds?.predicates) {
+            hydratedProofFormats.anoncreds.predicates[key] = match
+          }
+        }
+      }
+    }
+
+    // Validation: ensure all requested attributes and predicates were hydrated
+    const missingAttributes: Array<{ name: string; credentialId: string }> = []
+    if (requestedAnonCreds.attributes) {
+      for (const [key, value] of Object.entries(requestedAnonCreds.attributes)) {
+        const hydrated = hydratedProofFormats.anoncreds?.attributes?.[key]
+        if (!hydrated || hydrated.credentialId !== value.credentialId) {
+          missingAttributes.push({ name: key, credentialId: value.credentialId })
+        }
+      }
+    }
+    const missingPredicates: Array<{ name: string; credentialId: string }> = []
+    if (requestedAnonCreds.predicates) {
+      for (const [key, value] of Object.entries(requestedAnonCreds.predicates)) {
+        const hydrated = hydratedProofFormats.anoncreds?.predicates?.[key]
+        if (!hydrated || hydrated.credentialId !== value.credentialId) {
+          missingPredicates.push({ name: key, credentialId: value.credentialId })
+        }
+      }
+    }
+    if (missingAttributes.length > 0 || missingPredicates.length > 0) {
+      const details = [
+        missingAttributes.length > 0
+          ? `attributes: ${missingAttributes.map((a) => `${a.name} (credId: ${a.credentialId})`).join(', ')}`
+          : '',
+        missingPredicates.length > 0
+          ? `predicates: ${missingPredicates.map((p) => `${p.name} (credId: ${p.credentialId})`).join(', ')}`
+          : '',
+      ]
+        .filter(Boolean)
+        .join('; ')
+      req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
+      throw new NotFoundError(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+      )
+    }
+
+    return hydratedProofFormats
   }
 
   private redactProofFormats(formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>): Record<string, unknown> {
