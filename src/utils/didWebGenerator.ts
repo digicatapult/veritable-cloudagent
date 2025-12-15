@@ -1,23 +1,11 @@
-import { Agent, KeyType, TypedArrayEncoder } from '@credo-ts/core'
-import { DIDDocument } from 'did-resolver'
+import { Agent, DidDocument, getJwkFromKey, JsonTransformer, KeyType } from '@credo-ts/core'
+import { DIDDocument as ResolverDidDocument } from 'did-resolver'
 import { Logger } from 'pino'
-import { JWK } from 'ts-jose'
 
 export interface DidWebGenerationResult {
   did: string
-  didDocument: DIDDocument
-  privateSigningKey: string
-  privateEncryptionKey: string
+  didDocument: DidDocument
   publicEncryptionKey: string
-}
-
-interface KeyPairResult {
-  publicKeyJwk: {
-    kty: string
-    crv: KeyType.Ed25519 | KeyType.X25519
-    x: string
-  }
-  privateKeyB64Url: string
 }
 
 export class DidWebDocGenerator {
@@ -30,14 +18,15 @@ export class DidWebDocGenerator {
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
-    const signingJwk = await JWK.generate('EdDSA', { crv: 'Ed25519', use: 'sig', kid: 'owner' })
-    const encryptionJwk = await JWK.generate('ECDH-ES', { crv: 'X25519', use: 'enc', kid: 'owner' })
+    // Generate keys directly in the wallet
+    const signingKey = await this.agent.wallet.createKey({ keyType: KeyType.Ed25519 })
+    const encryptionKey = await this.agent.wallet.createKey({ keyType: KeyType.X25519 })
 
-    const signingKeyPair = await this.extractKeyComponents(signingJwk)
-    const encryptionKeyPair = await this.extractKeyComponents(encryptionJwk)
+    const signingKeyJwk = getJwkFromKey(signingKey)
+    const encryptionKeyJwk = getJwkFromKey(encryptionKey)
 
     // Assemble the DID:web document
-    const didWebDocument: DIDDocument = {
+    const didWebDocument: ResolverDidDocument = {
       '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
       id: didId,
       verificationMethod: [
@@ -45,7 +34,7 @@ export class DidWebDocGenerator {
           id: `${didId}#owner`,
           type: 'JsonWebKey2020',
           controller: didId,
-          publicKeyJwk: signingKeyPair.publicKeyJwk,
+          publicKeyJwk: { ...signingKeyJwk.toJson(), kid: 'owner' },
         },
       ],
       authentication: [`${didId}#owner`],
@@ -65,7 +54,7 @@ export class DidWebDocGenerator {
           id: `${didId}#encryption`,
           type: 'JsonWebKey2020',
           controller: didId,
-          publicKeyJwk: encryptionKeyPair.publicKeyJwk,
+          publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'owner' },
         },
       ],
     }
@@ -74,51 +63,23 @@ export class DidWebDocGenerator {
 
     return {
       did: didId,
-      didDocument: didWebDocument,
-      privateSigningKey: signingKeyPair.privateKeyB64Url,
-      privateEncryptionKey: encryptionKeyPair.privateKeyB64Url,
-      publicEncryptionKey: encryptionKeyPair.publicKeyJwk.x,
+      didDocument: JsonTransformer.fromJSON(didWebDocument, DidDocument),
+      publicEncryptionKey: encryptionKeyJwk.x!,
     }
   }
 
   async importDidWeb(result: DidWebGenerationResult): Promise<void> {
     try {
+      // Import the DID Document. Keys are already in the wallet, so we don't need to pass privateKeys.
       await this.agent.dids.import({
         did: result.did,
-        privateKeys: [
-          {
-            keyType: KeyType.Ed25519,
-            privateKey: TypedArrayEncoder.fromBase64(result.privateSigningKey),
-          },
-          {
-            keyType: KeyType.X25519,
-            privateKey: TypedArrayEncoder.fromBase64(result.privateEncryptionKey),
-          },
-        ],
+        didDocument: result.didDocument,
         overwrite: true,
       })
       this.logger.info(`Successfully registered DID:web ${result.did} with agent`)
     } catch (error) {
       this.logger.error(error, `Failed to register DID:web ${result.did}:`)
       throw error
-    }
-  }
-
-  private async extractKeyComponents(jwk: JWK): Promise<KeyPairResult> {
-    const publicJwk = (await jwk.toPublic()).toObject()
-    const privateKeyB64Url = jwk.toObject(true).d!
-
-    if (!publicJwk.x) {
-      throw new Error(`JWK public key is missing required property for ${publicJwk.kty}`)
-    }
-
-    return {
-      publicKeyJwk: {
-        kty: publicJwk.kty,
-        crv: publicJwk.crv as KeyType.Ed25519 | KeyType.X25519,
-        x: publicJwk.x,
-      },
-      privateKeyB64Url,
     }
   }
 
@@ -129,7 +90,7 @@ export class DidWebDocGenerator {
     didWebDomain: string,
     serviceEndpoint: string,
     didGenerationEnabled: boolean,
-    uploadDidToServer: (document: DIDDocument) => Promise<void>
+    uploadDidToServer: (document: ResolverDidDocument) => Promise<void>
   ): Promise<DidWebGenerationResult | void> {
     if (!didGenerationEnabled) {
       this.logger.debug('DID:web generation is disabled')
