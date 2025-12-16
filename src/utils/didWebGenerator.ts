@@ -61,25 +61,14 @@ export class DidWebDocGenerator {
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
 
+    if (!encryptionKeyJwk.x) {
+      throw new Error('Generated X25519 encryption key is missing required "x" property')
+    }
+
     return {
       did: didId,
       didDocument: JsonTransformer.fromJSON(didWebDocument, DidDocument),
-      publicEncryptionKey: encryptionKeyJwk.x!,
-    }
-  }
-
-  async importDidWeb(result: DidWebGenerationResult): Promise<void> {
-    try {
-      // Import the DID Document. Keys are already in the wallet, so we don't need to pass privateKeys.
-      await this.agent.dids.import({
-        did: result.did,
-        didDocument: result.didDocument,
-        overwrite: true,
-      })
-      this.logger.info(`Successfully registered DID:web ${result.did} with agent`)
-    } catch (error) {
-      this.logger.error(error, `Failed to register DID:web ${result.did}:`)
-      throw error
+      publicEncryptionKey: encryptionKeyJwk.x,
     }
   }
 
@@ -113,9 +102,16 @@ export class DidWebDocGenerator {
     try {
       const generated = await this.generateDidWebDocument(did, serviceEndpoint)
       await uploadDidToServer(generated.didDocument)
-      await this.importDidWeb(generated)
+
+      // Import the DID Document. Keys are already in the wallet, so we don't need to pass privateKeys.
+      await this.agent.dids.import({
+        did: generated.did,
+        didDocument: generated.didDocument,
+        overwrite: true,
+      })
+      this.logger.info(`Successfully registered DID:web ${generated.did} with agent`)
     } catch (error) {
-      this.logger.error(error, 'Failed to generate and register DID:web:')
+      this.logger.error(error, 'Failed to generate and register DID:web')
       throw error
     }
   }
@@ -126,7 +122,7 @@ export class DidWebDocGenerator {
   public async isDidWebAlreadyImported(did: string): Promise<boolean> {
     this.logger.info(`Checking if ${did} is already imported in agent`)
 
-    const importedDids = await this.agent.dids.getCreatedDids()
-    return importedDids.some((d) => d.did === did)
+    const importedDids = await this.agent.dids.getCreatedDids({ did })
+    return importedDids.length > 0
   }
 }
