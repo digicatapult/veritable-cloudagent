@@ -54,7 +54,7 @@ export class DidWebDocGenerator {
           id: `${didId}#encryption`,
           type: 'JsonWebKey2020',
           controller: didId,
-          publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'owner' },
+          publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'encryption' },
         },
       ],
     }
