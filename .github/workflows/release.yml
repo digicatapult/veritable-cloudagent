@@ -191,3 +191,17 @@ jobs:
           automatic_release_tag: latest
           prerelease: false
           title: Latest Release ${{ needs.check-version.outputs.version }}
+
+  generate-sbom-npm:
+    needs: [publish]
+    uses: digicatapult/shared-workflows/.github/workflows/generate-sbom-npm.yml@main
+    permissions:
+      contents: read
+    with:
+      additional_args: "--ignore-npm-errors"
+      enable_check_version: true
+      enable_dtrack_project: true
+      sbom_output_file: ${{ github.event.repository.name }}.cdx.json
+    secrets:
+      DTRACK_APIKEY: ${{ secrets.DTRACK_APIKEY }}
+      DTRACK_HOSTNAME: ${{ secrets.DTRACK_HOSTNAME }}
