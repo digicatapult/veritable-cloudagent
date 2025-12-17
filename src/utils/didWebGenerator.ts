@@ -1,5 +1,4 @@
 import { Agent, DidDocument, getJwkFromKey, JsonTransformer, KeyType } from '@credo-ts/core'
-import { DIDDocument as ResolverDidDocument } from 'did-resolver'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
@@ -26,38 +25,41 @@ export class DidWebDocGenerator {
     const encryptionKeyJwk = getJwkFromKey(encryptionKey)
 
     // Assemble the DID:web document
-    const didWebDocument: ResolverDidDocument = {
-      '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
-      id: didId,
-      verificationMethod: [
-        {
-          id: `${didId}#owner`,
-          type: 'JsonWebKey2020',
-          controller: didId,
-          publicKeyJwk: { ...signingKeyJwk.toJson(), kid: 'owner' },
-        },
-      ],
-      authentication: [`${didId}#owner`],
-      assertionMethod: [`${didId}#owner`],
-      service: [
-        {
-          id: `${didId}#did-communication`,
-          type: 'did-communication',
-          priority: 0,
-          recipientKeys: [`${didId}#owner`],
-          routingKeys: [],
-          serviceEndpoint: serviceEndpoint,
-        },
-      ],
-      keyAgreement: [
-        {
-          id: `${didId}#encryption`,
-          type: 'JsonWebKey2020',
-          controller: didId,
-          publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'encryption' },
-        },
-      ],
-    }
+    const didWebDocument: DidDocument = JsonTransformer.fromJSON(
+      {
+        '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
+        id: didId,
+        verificationMethod: [
+          {
+            id: `${didId}#owner`,
+            type: 'JsonWebKey2020',
+            controller: didId,
+            publicKeyJwk: { ...signingKeyJwk.toJson(), kid: 'owner' },
+          },
+        ],
+        authentication: [`${didId}#owner`],
+        assertionMethod: [`${didId}#owner`],
+        service: [
+          {
+            id: `${didId}#did-communication`,
+            type: 'did-communication',
+            priority: 0,
+            recipientKeys: [`${didId}#owner`],
+            routingKeys: [],
+            serviceEndpoint: serviceEndpoint,
+          },
+        ],
+        keyAgreement: [
+          {
+            id: `${didId}#encryption`,
+            type: 'JsonWebKey2020',
+            controller: didId,
+            publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'encryption' },
+          },
+        ],
+      },
+      DidDocument
+    )
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
 
@@ -67,7 +69,7 @@ export class DidWebDocGenerator {
 
     return {
       did: didId,
-      didDocument: JsonTransformer.fromJSON(didWebDocument, DidDocument),
+      didDocument: didWebDocument,
       publicEncryptionKey: encryptionKeyJwk.x,
     }
   }
@@ -79,7 +81,7 @@ export class DidWebDocGenerator {
     didWebDomain: string,
     serviceEndpoint: string,
     didGenerationEnabled: boolean,
-    uploadDidToServer: (document: ResolverDidDocument) => Promise<void>
+    uploadDidToServer: (document: DidDocument) => Promise<void>
   ): Promise<DidWebGenerationResult | void> {
     if (!didGenerationEnabled) {
       this.logger.debug('DID:web generation is disabled')
