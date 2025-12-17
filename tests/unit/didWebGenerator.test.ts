@@ -30,5 +30,19 @@ describe('didWebGenerator', function () {
     const generated = await didWebDocGenerator.generateDidWebDocument(did, 'http://localhost%3A5002')
     expect(generated.did).to.equal(did)
     expect(generated.didDocument.id).to.equal(did)
+
+    // Verify signing key (verificationMethod)
+    const verificationMethod = generated.didDocument.verificationMethod![0]
+    expect(verificationMethod.id).to.equal(`${did}#owner`)
+    expect(verificationMethod.publicKeyJwk!.kid).to.equal('owner')
+
+    // Verify encryption key (keyAgreement)
+    const keyAgreement = generated.didDocument.keyAgreement![0]
+    // keyAgreement can be a string or VerificationMethod, here it is defined as VerificationMethod in the generator
+    if (typeof keyAgreement === 'string') {
+      throw new Error('Expected keyAgreement to be an object')
+    }
+    expect(keyAgreement.id).to.equal(`${did}#encryption`)
+    expect(keyAgreement.publicKeyJwk!.kid).to.equal('encryption')
   })
 })
