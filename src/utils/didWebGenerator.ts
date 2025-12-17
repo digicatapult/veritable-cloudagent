@@ -25,7 +25,7 @@ export class DidWebDocGenerator {
     const encryptionKeyJwk = getJwkFromKey(encryptionKey)
 
     // Assemble the DID:web document
-    const didWebDocument: DidDocument = JsonTransformer.fromJSON(
+    const didDocument: DidDocument = JsonTransformer.fromJSON(
       {
         '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
         id: didId,
@@ -69,7 +69,7 @@ export class DidWebDocGenerator {
 
     return {
       did: didId,
-      didDocument: didWebDocument,
+      didDocument,
       publicEncryptionKey: encryptionKeyJwk.x,
     }
   }

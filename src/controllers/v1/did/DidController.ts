@@ -1,4 +1,4 @@
-import { Agent, CredoError, JsonTransformer, TypedArrayEncoder } from '@credo-ts/core'
+import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
@@ -75,7 +75,7 @@ export class DidController extends Controller {
     }
 
     req.log.debug('returning DID document %j', resolveResult.didDocument.toJSON())
-    return { ...resolveResult, didDocument: JsonTransformer.toJSON(resolveResult.didDocument) }
+    return { ...resolveResult, didDocument: resolveResult.didDocument.toJSON() }
   }
 
   /**

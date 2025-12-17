@@ -57,7 +57,7 @@ export const ConnectionRecordExample = {
 export const DidRecordExample = {
   didDocument: JsonTransformer.fromJSON(
     {
-      context: [
+      '@context': [
         'https://w3id.org/did/v1',
         'https://w3id.org/security/suites/ed25519-2018/v1',
         'https://w3id.org/security/suites/x25519-2019/v1',
@@ -91,6 +91,7 @@ export const DidRecordExample = {
           publicKeyBase58: 'FxfdY3DCQxVZddKGAtSjZdFW9bCCW7oRwZn1NFJ2Tbg2',
         },
       ],
+      service: undefined,
     },
     DidDocument
   ),
