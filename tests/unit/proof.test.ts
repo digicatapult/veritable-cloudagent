@@ -455,30 +455,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
 
@@ -526,30 +523,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: false, // Must be unrevealed
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: false, // Must be unrevealed
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -578,30 +572,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -630,30 +621,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true, // Verifier wants reveal
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true, // Verifier wants reveal
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -682,30 +670,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-different',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-different',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-different',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -735,30 +720,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -788,45 +770,42 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-                attr2: [
-                  {
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
+              attr2: [
+                {
+                  credentialId: 'cred-2',
+                  revealed: false,
+                  credentialInfo: {
                     credentialId: 'cred-2',
-                    revealed: false,
-                    credentialInfo: {
-                      credentialId: 'cred-2',
-                      attributes: {},
-                      schemaId: 'schema-id-2',
-                      credentialDefinitionId: 'cred-def-id-2',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id-2',
+                    credentialDefinitionId: 'cred-def-id-2',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -857,45 +836,42 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {
-                pred1: [
-                  {
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
+            },
+            predicates: {
+              pred1: [
+                {
+                  credentialId: 'cred-pred-1',
+                  credentialInfo: {
                     credentialId: 'cred-pred-1',
-                    credentialInfo: {
-                      credentialId: 'cred-pred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -927,30 +903,27 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: 'cred-1',
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: 'cred-1',
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: 'cred-1',
-                      attributes: {},
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {},
+                    attributes: {},
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
+            predicates: {},
           },
         },
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -1088,40 +1061,38 @@ describe('ProofController', () => {
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
-            output: {
-              attributes: {
-                attr1: [
-                  {
+            attributes: {
+              attr1: [
+                {
+                  credentialId: sharedCredentialId,
+                  revealed: true,
+                  credentialInfo: {
                     credentialId: sharedCredentialId,
-                    revealed: true,
-                    credentialInfo: {
-                      credentialId: sharedCredentialId,
-                      attributes: { attr1: 'value' },
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
-              predicates: {
-                pred1: [
-                  {
+                    attributes: { attr1: 'value' },
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
+            },
+            predicates: {
+              pred1: [
+                {
+                  credentialId: sharedCredentialId,
+                  credentialInfo: {
                     credentialId: sharedCredentialId,
-                    credentialInfo: {
-                      credentialId: sharedCredentialId,
-                      attributes: { attr1: 'value', pred1: 10 },
-                      schemaId: 'schema-id',
-                      credentialDefinitionId: 'cred-def-id',
-                      revocationRegistryId: null,
-                      credentialRevocationId: null,
-                      methodName: 'method',
-                    } as unknown as AnonCredsCredentialInfo,
-                  },
-                ],
-              },
+                    attributes: { attr1: 'value', pred1: 10 },
+                    schemaId: 'schema-id',
+                    credentialDefinitionId: 'cred-def-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'method',
+                  } as unknown as AnonCredsCredentialInfo,
+                },
+              ],
             },
           },
         },
