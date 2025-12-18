@@ -543,7 +543,7 @@ export class ProofController extends Controller {
 
       req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
       throw new NotFoundError(
-        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+        `Could not hydrate proof formats: no matching credentials found for requested ${details}`
       )
     }
   }

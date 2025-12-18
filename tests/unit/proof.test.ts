@@ -570,6 +570,58 @@ describe('ProofController', () => {
       )
     })
 
+    test('should return 404 when simplified proof format requests an attribute that is not available', async () => {
+      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsStub.resolves({
+        proofFormats: {
+          anoncreds: {
+            input: {} as unknown as AnonCredsGetCredentialsForProofRequestOptions,
+            output: {
+              attributes: {
+                attr1: [
+                  {
+                    credentialId: 'cred-1',
+                    revealed: true,
+                    credentialInfo: {
+                      credentialId: 'cred-1',
+                      attributes: {},
+                      schemaId: 'schema-id',
+                      credentialDefinitionId: 'cred-def-id',
+                      revocationRegistryId: null,
+                      credentialRevocationId: null,
+                      methodName: 'method',
+                    } as unknown as AnonCredsCredentialInfo,
+                  },
+                ],
+              },
+              predicates: {},
+            },
+          },
+        },
+      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+
+      const proofFormats = {
+        anoncreds: {
+          attributes: {
+            attr2: { credentialId: 'cred-2', revealed: true }, // Requesting unavailable attribute
+          },
+          predicates: {},
+        },
+      }
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({ proofFormats })
+
+      expect(response.statusCode).to.be.equal(404)
+      expect(response.body).to.include(
+        'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-2)'
+      )
+    })
+
     test('should return 400 when verifier requests plaintext for an attribute that prover wants to keep secret', async () => {
       const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
@@ -671,7 +723,7 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
       expect(response.body).to.include(
-        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+        'Could not hydrate proof formats: no matching credentials found for requested attributes: attr1 (credId: cred-not-found)'
       )
     })
 
@@ -724,7 +776,7 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
       expect(response.body).to.include(
-        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+        'Could not hydrate proof formats: no matching credentials found for requested attributes: nonExistentAttr (credId: cred-1)'
       )
     })
 
@@ -793,7 +845,7 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
       expect(response.body).to.include(
-        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+        'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-wrong)'
       )
     })
 
@@ -863,7 +915,7 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
       expect(response.body).to.include(
-        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+        'Could not hydrate proof formats: no matching credentials found for requested predicates: pred1 (credId: cred-not-found)'
       )
     })
 
@@ -918,7 +970,7 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(404)
       expect(response.body).to.be.a('string')
       expect(response.body).to.include(
-        'Could not hydrate proof formats: no matching credentials found for requested attributes or predicates'
+        'Could not hydrate proof formats: no matching credentials found for requested predicates: nonExistentPred (credId: cred-1)'
       )
     })
 

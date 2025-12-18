@@ -327,11 +327,35 @@ describe('Onboarding & Verification flow', function () {
       .expect(200)
     expect(response.body.id).to.be.equal(holderProofRequestId)
   })
-  it.skip('should let the Holder accept proof record', async function () {
+  it('should let the Holder accept proof record', async function () {
+    // 1. Fetch with includeContent
+    const proofRes = await holderClient
+      .get(`/v1/proofs/${holderProofRequestId}`)
+      .query({ includeContent: true })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    expect(proofRes.body.content).to.exist
+
+    // 2. Fetch simplified view
+    const contentRes = await holderClient
+      .get(`/v1/proofs/${holderProofRequestId}/content`)
+      .query({ view: 'simplified' })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    expect(contentRes.body).to.have.property('checkName')
+
+    // 3. Accept with simplified format
+    // Since we don't have the credential ID easily available without adding a new endpoint,
+    // we will rely on the auto-selection fallback by NOT providing proofFormats,
+    // but we verify that we can at least call the endpoint manually now that auto-accept is off.
+    // To test explicit selection fully, we would need the credential ID.
+    // For now, we test the manual acceptance flow which was previously skipped.
     const acceptProofBody = {
       useReturnRoute: true,
       willConfirm: true,
-      autoAcceptProof: 'always',
+      // autoAcceptProof: 'always', // Let the agent config handle it or override
     }
     const response = await holderClient
       .post(`/v1/proofs/${holderProofRequestId}/accept-request`)
