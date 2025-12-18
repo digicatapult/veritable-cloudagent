@@ -344,7 +344,8 @@ describe('Onboarding & Verification flow', function () {
       .expect('Content-Type', /json/)
       .expect(200)
 
-    expect(contentRes.body).to.have.property('checkName')
+    // Simplified view is empty before presentation is sent
+    expect(contentRes.body).to.deep.equal({})
 
     // 3. Accept with simplified format
     // Since we don't have the credential ID easily available without adding a new endpoint,
