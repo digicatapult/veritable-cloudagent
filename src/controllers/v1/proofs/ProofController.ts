@@ -420,7 +420,7 @@ export class ProofController extends Controller {
     req.log.info('available credentials for hydration %j', availableAnonCreds || {})
 
     if (!availableAnonCreds) {
-      req.log.error(
+      req.log.warn(
         'Could not hydrate proof formats: no available credentials found for proofRecordId=%s. Requested attributes: %j, predicates: %j.',
         proofRecordId,
         requestedAnonCreds.attributes ?? {},
