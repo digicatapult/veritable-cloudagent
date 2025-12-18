@@ -138,6 +138,14 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},mode=max
 
+  generate-sbom-npm:
+    needs: [build-docker]
+    uses: digicatapult/shared-workflows/.github/workflows/generate-sbom-npm.yml@main
+    permissions:
+      contents: read
+    with:
+      additional_args: "--ignore-npm-errors"
+
   integration-tests:
     name: 'Run integration tests'
     runs-on: ubuntu-latest
