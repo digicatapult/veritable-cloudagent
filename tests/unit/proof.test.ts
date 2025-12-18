@@ -1,8 +1,4 @@
-import type {
-  AnonCredsCredentialInfo,
-  AnonCredsGetCredentialsForProofRequestOptions,
-  AnonCredsProofRequest,
-} from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialInfo, AnonCredsProofRequest } from '@credo-ts/anoncreds'
 import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
