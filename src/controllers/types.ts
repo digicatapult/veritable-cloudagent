@@ -26,7 +26,6 @@ import type {
   V2CredentialProtocol,
   V2ProofProtocol,
 } from '@credo-ts/core'
-import type { DIDDocument } from 'did-resolver'
 
 /**
  * Stringified UUIDv4.
@@ -88,7 +87,7 @@ export interface AgentMessageType {
 
 export interface DidResolutionResultProps {
   didResolutionMetadata: DidResolutionMetadata
-  didDocument: DIDDocument | null
+  didDocument: DidDocument | null
   didDocumentMetadata: DidDocumentMetadata
 }
 
