@@ -93,7 +93,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=postgres
-      - AUTO_ACCEPT_CREDENTIALS=always
+      - AUTO_ACCEPT_CREDENTIALS=never
       - AUTO_ACCEPT_PROOFS=contentApproved
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true

@@ -415,9 +415,9 @@ export class ProofController extends Controller {
     req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
 
     const availableCredentials = await this.agent.proofs.getCredentialsForRequest({ proofRecordId })
-    const availableAnonCreds = (
-      availableCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'>
-    ).anoncreds
+    const availableAnonCreds = availableCredentials.proofFormats.anoncreds
+
+    req.log.info('available credentials for hydration %j', availableAnonCreds || {})
 
     if (!availableAnonCreds) {
       req.log.error(
@@ -431,14 +431,8 @@ export class ProofController extends Controller {
       )
     }
 
-    const hydratedAttributes = this.hydrateAttributes(
-      requestedAnonCreds.attributes,
-      availableAnonCreds.output.attributes
-    )
-    const hydratedPredicates = this.hydratePredicates(
-      requestedAnonCreds.predicates,
-      availableAnonCreds.output.predicates
-    )
+    const hydratedAttributes = this.hydrateAttributes(requestedAnonCreds.attributes, availableAnonCreds.attributes)
+    const hydratedPredicates = this.hydratePredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
 
     this.validateHydration(req, requestedAnonCreds, hydratedAttributes, hydratedPredicates)
 
