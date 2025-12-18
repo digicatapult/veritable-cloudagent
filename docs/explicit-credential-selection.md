@@ -90,3 +90,33 @@ The `ProofController` employs a three-path logic flow to handle proof acceptance
     ```
 
 4. **Bob's Agent** looks up `credential-123`, retrieves its full metadata, and generates a proof using that specific credential.
+
+## Retrieving Proof Context
+
+To construct the `accept-request` body, the client often needs to know what attributes are being requested and what credentials are available.
+
+### 1. Get Proof Record with Content
+
+To avoid making multiple calls, you can fetch the proof record along with its content (request and presentation data) in a single request.
+
+**Endpoint**: `GET /v1/proofs/{proofRecordId}?includeContent=true`
+
+**Response**:
+Returns the `ProofExchangeRecord` with an additional `content` property containing the raw proof format data.
+
+### 2. Get Simplified Proof Content
+
+The raw proof content can be complex to parse. You can request a simplified view that flattens the structure into simple key-value pairs.
+
+**Endpoint**: `GET /v1/proofs/{proofRecordId}/content?view=simplified`
+
+**Response**:
+
+```json
+{
+  "attribute_name_1": "value_1",
+  "attribute_name_2": "value_2"
+}
+```
+
+This is particularly useful for displaying the values of a received proof (Verifier role) or understanding what is being requested (Prover role) without navigating the deep AnonCreds structure.
