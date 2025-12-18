@@ -120,3 +120,46 @@ The raw proof content can be complex to parse. You can request a simplified view
 ```
 
 This is particularly useful for displaying the values of a received proof (Verifier role) or understanding what is being requested (Prover role) without navigating the deep AnonCreds structure.
+
+## Developer Experience
+
+While the simplified format is much cleaner than the raw format, constructing the nested JSON object can still be verbose. It is recommended to use a helper function in your client application to generate this structure.
+
+### Client-Side Helper Example (TypeScript)
+
+```typescript
+/**
+ * Helper to construct the simplified proof format payload.
+ * 
+ * @param selections A map where the key is the attribute name and the value is the credential ID to use.
+ * @returns The formatted payload ready for the API.
+ */
+function createSelection(selections: Record<string, string>) {
+  const attributes: Record<string, { credentialId: string; revealed: boolean }> = {};
+  
+  for (const [key, credId] of Object.entries(selections)) {
+    attributes[key] = { credentialId: credId, revealed: true };
+  }
+
+  return {
+    proofFormats: {
+      anoncreds: {
+        attributes
+      }
+    }
+  };
+}
+
+// Usage Example:
+// 1. User selects specific credentials for the requested attributes
+const userSelections = {
+  'name': 'credential-uuid-123',
+  'email': 'credential-uuid-456'
+};
+
+// 2. Generate the payload
+const payload = createSelection(userSelections);
+
+// 3. Send to API
+await client.acceptProofRequest(proofRecordId, payload);
+```
