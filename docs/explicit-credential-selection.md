@@ -127,6 +127,10 @@ While the simplified format is much cleaner than the raw format, constructing th
 
 ### Client-Side Helper Example (TypeScript)
 
+> **Important**: The `credentialId` used in the selection payload must be the **Wallet Credential ID** (the ID of the credential stored in the wallet), NOT the **Credential Exchange Record ID** (the ID of the record tracking the issuance process).
+>
+> In Credo-TS, you can access this via `credentialRecord.credentials[0].credentialRecordId`.
+
 ```typescript
 /**
  * Helper to construct the simplified proof format payload.
