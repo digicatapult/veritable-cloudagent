@@ -1,7 +1,12 @@
-import type { AnonCredsCredentialInfo, AnonCredsGetCredentialsForProofRequestOptions } from '@credo-ts/anoncreds'
+import type {
+  AnonCredsCredentialInfo,
+  AnonCredsGetCredentialsForProofRequestOptions,
+  AnonCredsProofRequest,
+} from '@credo-ts/anoncreds'
 import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
+  AnonCredsPresentation,
   CreateProofRequestOptions,
   ProofFormats,
   ProposeProofOptions,
@@ -19,6 +24,7 @@ import {
   ProofRole,
   ProofState,
   type Agent,
+  type GetProofFormatDataReturn,
   type ProofFormatPayload,
   type ProofStateChangedEvent,
 } from '@credo-ts/core'
@@ -112,6 +118,29 @@ describe('ProofController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
+    test('should return proof record with content when includeContent is true', async () => {
+      const getByIdStub = stub(bobAgent.proofs, 'getById')
+      getByIdStub.resolves(testProof)
+
+      const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
+      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      getFormatDataStub.resolves(formatData as unknown as GetProofFormatDataReturn)
+
+      const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}`).query({ includeContent: true })
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getByIdStub.calledWithMatch(testProof.id)).equals(true)
+      expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
+
+      const expectedBody = {
+        ...objectToJson(await getResult()),
+        content: formatData,
+      }
+      expect(response.body).to.deep.equal(expectedBody)
+    })
+
     test('should return 404 not found when proof record not found', async () => {
       const response = await request(app).get(`/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
 
@@ -123,13 +152,71 @@ describe('ProofController', () => {
     test('should return proof content', async () => {
       const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
       const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
-      getFormatDataStub.resolves(formatData)
+      getFormatDataStub.resolves(formatData as unknown as GetProofFormatDataReturn)
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}/content`)
 
       expect(response.statusCode).to.be.equal(200)
       expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
       expect(response.body).to.deep.equal(formatData)
+    })
+
+    test('should return simplified proof content when view is simplified', async () => {
+      const formatData: GetProofFormatDataReturn = {
+        request: {
+          anoncreds: {
+            name: 'proof-request',
+            version: '1.0',
+            nonce: '1234567890',
+            requested_attributes: {
+              attr1_referent: { name: 'name', restrictions: [] },
+              attr2_referent: { names: ['age', 'gender'], restrictions: [] },
+            },
+            requested_predicates: {},
+          } as unknown as AnonCredsProofRequest,
+        },
+        presentation: {
+          anoncreds: {
+            proof: {
+              proofs: [],
+              aggregated_proof: { c_hash: '', c_list: [] },
+            },
+            requested_proof: {
+              revealed_attrs: {
+                attr1_referent: { sub_proof_index: 0, raw: 'Alice', encoded: '123' },
+              },
+              revealed_attr_groups: {
+                attr2_referent: {
+                  sub_proof_index: 1,
+                  values: {
+                    age: { raw: '30', encoded: '30' },
+                    gender: { raw: 'Female', encoded: '456' },
+                  },
+                },
+              },
+              self_attested_attrs: {},
+              unrevealed_attrs: {},
+              predicates: {},
+            },
+            identifiers: [],
+          } as unknown as AnonCredsPresentation,
+        },
+      }
+
+      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      getFormatDataStub.resolves(formatData)
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/content`).query({ view: 'simplified' })
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
+
+      const expectedSimplified = {
+        name: 'Alice',
+        age: '30',
+        gender: 'Female',
+      }
+      expect(response.body).to.deep.equal(expectedSimplified)
     })
 
     test('should return 404 not found when proof record not found', async () => {
@@ -479,7 +566,7 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(400)
       expect(response.body).to.include(
-        "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden (Zero-Knowledge Proof)."
+        "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden."
       )
     })
 
@@ -531,7 +618,7 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(400)
       expect(response.body).to.include(
-        "Attribute 'attr1' cannot be hidden. The proof request requires this attribute to be revealed."
+        "Attribute 'attr1' cannot be hidden. The proof request or credential requires this attribute to be revealed."
       )
     })
 

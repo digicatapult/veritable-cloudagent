@@ -7,6 +7,12 @@ import { sendWebhookEvent } from './WebhookEvent.js'
 export const proofEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
     const record = event.payload.proofRecord
+
+    // Filter out events where state hasn't changed to reduce noise
+    if (event.payload.previousState === record.state) {
+      return
+    }
+
     const body = record.toJSON() as Record<string, unknown>
 
     // Only send webhook if webhook url is configured
