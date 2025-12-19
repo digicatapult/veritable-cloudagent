@@ -810,7 +810,7 @@ node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.jso
   --base-url http://localhost:3001
 ```
 
-## Demoing for MOD
+## Demoing
 
 In docker-compose-testnet.yml add `WEBHOOK_URL=http://host.docker.internal:3003` for Bob's cloudagent and `WEBHOOK_URL=http://host.docker.internal:3004` for Charlie's.
 
@@ -856,7 +856,7 @@ You can then watch in the progression in the terminal window where your listener
 The following scripts are run by the listeners
 
 ```bash
-npx tsx scripts/maker-connects-to-oem.ts --credential-id < credential ID >
+npx tsx scripts/maker-connect-to-oem.ts --credential-id < credential ID >
 ```
 
 ```bash
@@ -868,7 +868,7 @@ npx tsx scripts/maker-propose-proof-to-oem.ts --credential-id < credential ID > 
 ```
 
 ```bash
-npx tsx scripts/maker-accept-proof-from-oem.ts --proof-id < proof ID >
+npx tsx scripts/maker-respond-proof-request.ts --proof-id < proof ID >
 ```
 
 ## Explicit Credential Selection
