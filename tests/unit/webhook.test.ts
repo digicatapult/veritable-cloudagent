@@ -140,6 +140,79 @@ describe('WebhookTests', () => {
     expect(JSON.parse(JSON.stringify(proofRecord.toJSON()))).to.deep.include(webhook?.body as Record<string, unknown>)
   })
 
+  test('should NOT return a webhook event when proof state has NOT changed (noise reduction)', async () => {
+    const proofRecord = new ProofExchangeRecord({
+      id: 'noise-test',
+      protocolVersion: 'v2',
+      state: ProofState.RequestReceived,
+      threadId: 'noise-thread',
+      role: ProofRole.Prover,
+    })
+
+    // Emit event where previousState === state
+    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+      type: ProofEventTypes.ProofStateChanged,
+      payload: {
+        previousState: ProofState.RequestReceived,
+        proofRecord,
+      },
+    })
+
+    // Emit a marker event (Valid Proof Change) to ensure async processing is done
+    const markerProofRecord = new ProofExchangeRecord({
+      id: 'marker-proof',
+      protocolVersion: 'v2',
+      state: ProofState.PresentationSent,
+      threadId: 'marker-thread',
+      role: ProofRole.Prover,
+    })
+
+    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+      type: ProofEventTypes.ProofStateChanged,
+      payload: {
+        previousState: ProofState.RequestReceived,
+        proofRecord: markerProofRecord,
+      },
+    })
+
+    // Wait for the marker webhook
+    await waitForHook(webhooks, (webhook) => webhook.topic === 'proofs' && webhook.body.id === 'marker-proof')
+
+    // Check that the noise event was NOT received
+    const noiseWebhook = webhooks.find((w) => w.topic === 'proofs' && w.body.id === 'noise-test')
+    expect(noiseWebhook).to.equal(undefined)
+  })
+
+  test('should return a webhook event when proof state HAS changed (positive noise reduction test)', async () => {
+    const proofRecord = new ProofExchangeRecord({
+      id: 'valid-change-test',
+      protocolVersion: 'v2',
+      state: ProofState.PresentationSent,
+      threadId: 'valid-thread',
+      role: ProofRole.Prover,
+    })
+
+    // Emit event where previousState !== state
+    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+      type: ProofEventTypes.ProofStateChanged,
+      payload: {
+        previousState: ProofState.RequestReceived,
+        proofRecord,
+      },
+    })
+
+    const webhook = await waitForHook(
+      webhooks,
+      (webhook) =>
+        webhook.topic === 'proofs' &&
+        webhook.body.id === 'valid-change-test' &&
+        webhook.body.state === ProofState.PresentationSent
+    )
+
+    expect(webhook).to.not.equal(undefined)
+    expect(webhook?.body.id).to.equal('valid-change-test')
+  })
+
   after(async () => {
     await new Promise((r) => setTimeout(r, 2000))
     await aliceAgent.shutdown()

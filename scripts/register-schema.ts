@@ -30,17 +30,18 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 interface ParsedArgs {
-  schemaFileName?: string
+  schemaFileName: string
   issuerId: string
   baseUrl: string
 }
 
 function printUsageAndExit(code: number): never {
   process.stderr.write(
-    'Usage: register-schema <schemaFileName> [--issuer <did>] [--base-url <url>]\n' +
+    'Usage: register-schema [schemaFileName] [--issuer <did>] [--base-url <url>]\n' +
       'Examples:\n' +
       '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation.json --issuer did:key:abc --base-url http://localhost:3000\n' +
-      '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation.json --base-url http://localhost:3000\n' +
+      '  node --experimental-strip-types ./scripts/register-schema.ts --base-url http://localhost:3000\n' +
+      'If schemaFileName is omitted, defaults to makeAuthorisation.json\n' +
       'If --issuer is omitted, DID will be did:web:alice%3A8443\n'
   )
   process.exit(code)
@@ -48,7 +49,7 @@ function printUsageAndExit(code: number): never {
 
 function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
-  const parsed: ParsedArgs = {
+  const parsed: Partial<ParsedArgs> = {
     baseUrl: 'http://localhost:3000',
     issuerId: 'did:web:alice%3A8443',
   }
@@ -72,12 +73,17 @@ function parseArgs(argv: string[]): ParsedArgs {
     process.stderr.write(`Unknown or duplicate argument: ${a}\n`)
     printUsageAndExit(1)
   }
-  return parsed
+
+  return {
+    baseUrl: parsed.baseUrl!,
+    issuerId: parsed.issuerId!,
+    schemaFileName: parsed.schemaFileName || 'makeAuthorisation.json',
+  }
 }
 
 async function main() {
   const { schemaFileName, issuerId, baseUrl } = parseArgs(process.argv)
-  if (!schemaFileName) throw new Error('Schema filename argument required, e.g. `makeAuthorisation.json`')
+  // if (!schemaFileName) throw new Error('Schema filename argument required, e.g. `makeAuthorisation.json`')
 
   const schemaPath = path.join(__dirname, 'schemas', `${schemaFileName}`)
   if (!fs.existsSync(schemaPath)) throw new Error(`Schema definition not found: ${schemaPath}`)

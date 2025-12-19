@@ -1,4 +1,4 @@
-# docker compose -f docker-compose-testnet.yml up --build -d
+# export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem" && docker compose -f docker-compose-testnet.yml up --build -d
 
 ##################################################################################
 ## Docker-Compose for a 3-agent testnet + 3-node private IPFS cluster ############
@@ -93,8 +93,8 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=postgres
-      - AUTO_ACCEPT_CREDENTIALS=always
-      - AUTO_ACCEPT_PROOFS=always
+      - AUTO_ACCEPT_CREDENTIALS=never
+      - AUTO_ACCEPT_PROOFS=contentApproved
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
       - DID_WEB_PORT=8443

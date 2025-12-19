@@ -5,18 +5,19 @@ const connectionParser = z.object({
   state: z.string(),
 })
 
+const connectionsListParser = z.array(connectionParser)
+
 interface ParsedArgs {
-  connectionId: string
+  connectionId?: string
   baseUrl?: string
 }
 function printUsageAndExit(code: number): never {
-  process.stderr.write(`Usage: maker-connect-to-oem --connection-id <connectionId>\n`)
+  process.stderr.write(`Usage: maker-connect-to-oem [--connection-id <connectionId>]\n`)
   process.exit(code)
 }
 function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
-    connectionId: '',
     baseUrl: 'http://localhost:3002', // this is executed on Charlie's side
   }
   for (let i = 0; i < args.length; i++) {
@@ -40,11 +41,41 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { connectionId, baseUrl } = parseArgs(process.argv)
+  const { connectionId: argsConnectionId, baseUrl } = parseArgs(process.argv)
   const log = (msg: string, extra?: unknown) => {
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
-  log(`Retrieving connection record ${connectionId} baseURL ${baseUrl}`)
+
+  let connectionId = argsConnectionId
+
+  if (!connectionId) {
+    log(`Looking for pending connection requests at ${baseUrl}...`)
+    const connectionsResponse = await fetch(`${baseUrl}/v1/connections`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!connectionsResponse.ok) {
+      throw new Error(`Failed to retrieve connections: ${connectionsResponse.status} ${connectionsResponse.statusText}`)
+    }
+
+    const connections = await connectionsResponse.json()
+    const parsedConnections = connectionsListParser.parse(connections)
+
+    const pendingConnections = parsedConnections.filter((c) => c.state === 'request-received')
+
+    if (pendingConnections.length === 0) {
+      log('No pending connection requests found.')
+      process.exit(0)
+    }
+
+    // Pick the most recent one (last in the list usually, but could sort by date if available)
+    const targetConnection = pendingConnections[pendingConnections.length - 1]
+    connectionId = targetConnection.id
+    log(`Found pending connection request: ${connectionId}`)
+  }
+
+  log(`Accepting connection request ${connectionId} at ${baseUrl}`)
   const connectionResponse = await fetch(`${baseUrl}/v1/connections/${connectionId}/accept-request`, {
     method: 'POST',
     headers: { accept: 'application/json' },

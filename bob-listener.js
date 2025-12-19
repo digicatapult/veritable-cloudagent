@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process'
 const PORT = process.env.PORT || 3003
 const AUTO_CONNECT_TO_OEM_SCRIPT_PATH = './scripts/maker-connect-to-oem.ts'
 const PROPOSE_PROOF_SCRIPT_PATH = './scripts/maker-propose-proof-to-oem.ts'
-const ACCEPT_PROOF_SCRIPT_PATH = './scripts/maker-accept-proof-from-oem.ts'
+const ACCEPT_PROOF_SCRIPT_PATH = './scripts/maker-respond-proof-request.ts'
 const TRIGGER_STATES = (process.env.TRIGGER_STATES || 'offer-received,credential-issued')
   .split(',')
   .map((s) => s.trim().toLowerCase())
@@ -15,7 +15,7 @@ const { log, error } = console
 const app = express()
 app.use(express.json({ type: '*/*' }))
 
-// Handle credential events, in our demo this is the credential sent from Alice(MoD) to Bob(Maker)
+// Handle credential events, in our demo this is the credential sent from Alice(Requester) to Bob(Maker)
 app.post('/credentials', (req, res) => {
   const cred = req.body || {}
   credentialRecordId = cred.id
