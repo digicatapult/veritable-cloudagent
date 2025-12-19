@@ -12,14 +12,14 @@ const connectionParser = z.array(
   })
 )
 interface ParsedArgs {
-  credDefId: string
+  credDefId?: string
   oemDid: string
   makerDid: string
   baseUrl: string
 }
 function printUsageAndExit(code: number): never {
   process.stderr.write(
-    'Usage: issue-credential --oem <oemDid> --maker <makerDid> --cred-def-id <credDefId> [--base-url <url>]\n'
+    'Usage: issue-credential --oem <oemDid> --maker <makerDid> [--cred-def-id <credDefId>] [--base-url <url>]\n'
   )
   process.exit(code)
 }
@@ -27,7 +27,6 @@ function printUsageAndExit(code: number): never {
 function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
-    credDefId: '',
     baseUrl: 'http://localhost:3000',
     oemDid: 'did:web:charlie%3A8443',
     makerDid: 'did:web:bob%3A8443',
@@ -61,14 +60,42 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { credDefId, oemDid, makerDid, baseUrl } = parseArgs(process.argv)
+  const { credDefId: argsCredDefId, oemDid, makerDid, baseUrl } = parseArgs(process.argv)
   const log = (msg: string, extra?: unknown) => {
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
-  if (credDefId.length === 0) {
-    process.stderr.write('--cred-def-id is required\n')
-    printUsageAndExit(1)
+
+  let credDefId = argsCredDefId
+
+  if (!credDefId) {
+    log(`Looking for credential definitions at ${baseUrl}...`)
+    const credDefsResponse = await fetch(`${baseUrl}/v1/credential-definitions?createdLocally=true`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!credDefsResponse.ok) {
+      throw new Error(
+        `Failed to retrieve credential definitions: ${credDefsResponse.status} ${credDefsResponse.statusText}`
+      )
+    }
+
+    const credDefs = await credDefsResponse.json()
+
+    if (!Array.isArray(credDefs) || credDefs.length === 0) {
+      throw new Error('No credential definitions found on the agent.')
+    }
+
+    // Pick the most recent one (assuming the list is ordered or we just take the last one)
+    const targetCredDef = credDefs[credDefs.length - 1]
+    credDefId = targetCredDef.id
+    log(`Found credential definition: ${credDefId}`)
   }
+
+  if (!credDefId) {
+    throw new Error('Could not determine credential definition ID')
+  }
+
   // get connectionId for bob on alice
   const connections = await fetch(`${baseUrl}/v1/connections`, {
     method: 'GET',
@@ -195,6 +222,7 @@ async function main() {
   }
 
   log('Credential offer sent to maker. Awaiting acceptance...')
+  process.exit(0)
 }
 
 main().catch((e) => process.stderr.write((e as Error).stack + '\n') && process.exit(1))
