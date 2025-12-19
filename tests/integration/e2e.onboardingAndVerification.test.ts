@@ -191,6 +191,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow the Holder to accept the credential offered', async function () {
+    this.timeout(10000)
     const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
 
     const response = await holderClient
@@ -381,11 +382,17 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
-    const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
+    this.timeout(10000)
+    // We need to wait for the state to become 'done' as the Verifier processes the presentation asynchronously.
+    // This polling loop prevents race conditions where the test checks before the background process completes.
+    let result: ProofExchangeRecordProps | undefined
+    for (let i = 0; i < 10; i++) {
+      const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
+      result = response.body.find(({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier)
+      if (result && result.state === 'done') break
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
 
-    const result: ProofExchangeRecordProps = response.body.find(
-      ({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier
-    )
-    expect(result.state).to.be.equal('done')
+    expect(result?.state).to.be.equal('done')
   })
 })
