@@ -45,6 +45,7 @@ describe('MoD makeAuthorisation schema (script-driven)', function () {
   })
 
   it('Maker (Bob) can resolve the schema via IPFS', async function () {
+    this.timeout(10000)
     const cid = schemaId.split('ipfs://')[1]
 
     const url = `${BOB_IPFS_ORIGIN}/api/v0/cat?arg=${cid}`
