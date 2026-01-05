@@ -24,9 +24,9 @@ import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@cr
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { container } from 'tsyringe'
 
-import { MediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
+import { DidCommMediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
 import { AskarModule } from '@credo-ts/askar'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { ariesAskar } from '@hyperledger/aries-askar-shared'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
 import type { CredentialDefinitionId, DID } from './controllers/types.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
@@ -74,7 +74,7 @@ export interface RestAgentModules extends ModulesMap {
   anoncreds: AnonCredsModule
   drpc: DrpcModule
   verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
-  media: MediaSharingModule
+  media: DidCommMediaSharingModule
 }
 
 export type RestAgent<
@@ -85,7 +85,7 @@ export type RestAgent<
     anoncreds: AnonCredsModule
     drpc: DrpcModule
     verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
-    media: MediaSharingModule
+    media: DidCommMediaSharingModule
   },
 > = Agent<modules>
 
@@ -155,7 +155,7 @@ const getAgentModules = (options: {
         return rest
       })()
     ),
-    media: new MediaSharingModule(),
+    media: new DidCommMediaSharingModule(),
   }
 }
 
