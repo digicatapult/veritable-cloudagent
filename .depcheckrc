@@ -5,7 +5,6 @@
     "pino-pretty",
     "prettier-plugin-organize-imports",
     "rimraf",
-    "pg",
-    "@hyperledger/aries-askar-shared"
+    "pg"
   ]
 }
