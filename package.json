@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.16.19",
+  "version": "0.16.20",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -41,7 +41,7 @@
     "db:rollback": "npm run db:cmd -- migrate:rollback"
   },
   "dependencies": {
-    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.3",
+    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.6",
     "@credo-ts/anoncreds": "0.5.18",
     "@credo-ts/askar": "0.5.18",
     "@credo-ts/core": "0.5.18",
@@ -69,7 +69,7 @@
     "tsyringe": "^4.10.0",
     "undici": "^7.16.0",
     "ws": "^8.18.3",
-    "zod": "^4.2.0"
+    "zod": "^4.3.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -85,9 +85,9 @@
     "@types/sinon": "^21.0.0",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.50.0",
-    "chai": "^6.2.1",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.51.0",
+    "chai": "^6.2.2",
     "concurrently": "^9.2.1",
     "depcheck": "^1.4.7",
     "eslint": "^9.39.2",
@@ -99,7 +99,7 @@
     "prettier": "^3.7.4",
     "prettier-plugin-organize-imports": "^4.3.0",
     "rimraf": "^6.1.2",
-    "sinon": "^21.0.0",
+    "sinon": "^21.0.1",
     "supertest": "^7.1.4",
     "typescript": "~5.9.3"
   },
