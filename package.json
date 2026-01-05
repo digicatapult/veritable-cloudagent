@@ -41,14 +41,14 @@
     "db:rollback": "npm run db:cmd -- migrate:rollback"
   },
   "dependencies": {
-    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.6",
+    "@2060.io/credo-ts-didcomm-media-sharing": "^0.0.3",
     "@credo-ts/anoncreds": "0.5.18",
     "@credo-ts/askar": "0.5.18",
     "@credo-ts/core": "0.5.18",
     "@credo-ts/drpc": "0.5.18",
     "@credo-ts/node": "0.5.18",
     "@hyperledger/anoncreds-nodejs": "^0.3.3",
-    "@hyperledger/aries-askar-nodejs": "^0.2.3",
+    "@hyperledger/aries-askar-shared": "^0.2.3",
     "@tsoa/runtime": "^6.6.0",
     "@types/ws": "^8.18.1",
     "class-transformer": "^0.5.1",

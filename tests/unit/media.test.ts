@@ -5,9 +5,9 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import {
-  DidCommMediaSharingRecord,
-  DidCommMediaSharingRole,
-  DidCommMediaSharingState,
+  MediaSharingRecord,
+  MediaSharingRole,
+  MediaSharingState,
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
 
@@ -41,21 +41,21 @@ describe('MediaController', () => {
       const createStub = stub(agent.modules.media, 'create')
       const shareStub = stub(agent.modules.media, 'share')
 
-      const fakeRecord = new DidCommMediaSharingRecord({
+      const fakeRecord = new MediaSharingRecord({
         id: 'rec-123',
         createdAt: new Date(),
         connectionId: '52907745-7672-470e-a803-a2f8feb52944',
-        role: DidCommMediaSharingRole.Sender,
-        state: DidCommMediaSharingState.Init,
+        role: MediaSharingRole.Sender,
+        state: MediaSharingState.Init,
         items: [],
       })
       createStub.resolves(fakeRecord)
-      const sharedRecord = new DidCommMediaSharingRecord({
+      const sharedRecord = new MediaSharingRecord({
         id: 'rec-123',
         createdAt: new Date(),
         connectionId: '52907745-7672-470e-a803-a2f8feb52944',
-        role: DidCommMediaSharingRole.Sender,
-        state: DidCommMediaSharingState.MediaShared,
+        role: MediaSharingRole.Sender,
+        state: MediaSharingState.MediaShared,
         items: [],
       })
       shareStub.resolves(sharedRecord)

@@ -1,7 +1,4 @@
-import {
-  DidCommMediaSharingEventTypes,
-  type DidCommMediaSharingStateChangedEvent,
-} from '@2060.io/credo-ts-didcomm-media-sharing'
+import { MediaSharingEventTypes, type MediaSharingStateChangedEvent } from '@2060.io/credo-ts-didcomm-media-sharing'
 import type { Agent } from '@credo-ts/core'
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
@@ -9,7 +6,7 @@ import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const mediaSharingEvents = async (agent: Agent, config: ServerConfig) => {
   try {
-    agent.events.on<DidCommMediaSharingStateChangedEvent>(DidCommMediaSharingEventTypes.StateChanged, async (event) => {
+    agent.events.on<MediaSharingStateChangedEvent>(MediaSharingEventTypes.StateChanged, async (event) => {
       const record = event.payload.mediaSharingRecord
       const body = record?.toJSON?.() ?? record
 
