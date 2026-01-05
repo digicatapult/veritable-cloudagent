@@ -26,7 +26,7 @@ import { container } from 'tsyringe'
 
 import { MediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
 import { AskarModule } from '@credo-ts/askar'
-import { ariesAskar } from '@hyperledger/aries-askar-shared'
+import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
 import type { CredentialDefinitionId, DID } from './controllers/types.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'

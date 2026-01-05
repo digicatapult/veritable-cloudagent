@@ -48,6 +48,7 @@
     "@credo-ts/drpc": "0.5.18",
     "@credo-ts/node": "0.5.18",
     "@hyperledger/anoncreds-nodejs": "^0.3.3",
+    "@hyperledger/aries-askar-nodejs": "^0.2.3",
     "@hyperledger/aries-askar-shared": "^0.2.3",
     "@tsoa/runtime": "^6.6.0",
     "@types/ws": "^8.18.1",
