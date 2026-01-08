@@ -6,7 +6,9 @@ import type {
   AnonCredsProofFormat,
   AnonCredsProofFormatService,
   AnonCredsRequestedAttribute,
+  AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicate,
+  AnonCredsRequestedPredicateMatch,
   AnonCredsRequestProofFormat,
   AnonCredsSchema,
 } from '@credo-ts/anoncreds'
@@ -296,6 +298,15 @@ export interface SimpleProofFormats {
         credentialId: string
       }
     >
+  }
+}
+
+export interface MatchingCredentialsResponse {
+  proofFormats: {
+    anoncreds?: {
+      attributes?: Record<string, AnonCredsRequestedAttributeMatch[]>
+      predicates?: Record<string, AnonCredsRequestedPredicateMatch[]>
+    }
   }
 }
 

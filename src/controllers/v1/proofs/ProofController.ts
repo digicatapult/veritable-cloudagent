@@ -31,6 +31,7 @@ import type {
   AcceptProofRequestOptions,
   AnonCredsPresentation,
   CreateProofRequestOptions,
+  MatchingCredentialsResponse,
   ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
@@ -134,6 +135,38 @@ export class ProofController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('proof record not found')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Retrieve matching credentials for a proof request
+   *
+   * @param proofRecordId
+   * @returns MatchingCredentialsResponse
+   */
+  @Get('/:proofRecordId/credentials')
+  @Response<NotFoundError['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getMatchingCredentials(
+    @Request() req: express.Request,
+    @Path('proofRecordId') proofRecordId: UUID
+  ): Promise<MatchingCredentialsResponse> {
+    req.log.debug('getting matching credentials for proof record %s', proofRecordId)
+    try {
+      // Ensure proof exists
+      await this.agent.proofs.getById(proofRecordId)
+
+      const credentials = await this.agent.proofs.getCredentialsForRequest({
+        proofRecordId,
+      })
+
+      req.log.info('matching credentials found for %s', proofRecordId)
+      return credentials
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError(`Proof record with id ${proofRecordId} not found`)
       }
       throw error
     }
