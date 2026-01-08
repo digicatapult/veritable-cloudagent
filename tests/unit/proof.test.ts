@@ -4,6 +4,7 @@ import type {
   AcceptProofProposalOptions,
   AnonCredsPresentation,
   CreateProofRequestOptions,
+  MatchingCredentialsResponse,
   ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
@@ -217,6 +218,59 @@ describe('ProofController', () => {
 
     test('should return 404 not found when proof record not found', async () => {
       const response = await request(app).get('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/content')
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
+  describe('Get matching credentials for proof request', () => {
+    test('should return matching credentials', async () => {
+      const getByIdStub = stub(bobAgent.proofs, 'getById')
+      getByIdStub.resolves(testProof)
+
+      const credentials: MatchingCredentialsResponse = {
+        proofFormats: {
+          anoncreds: {
+            attributes: {
+              referent1: [
+                {
+                  credentialId: 'test-credential-id',
+                  revealed: true,
+                  credentialInfo: {
+                    schemaId: 'test-schema-id',
+                    credentialDefinitionId: 'test-cred-def-id',
+                    attributes: {
+                      name: 'Alice',
+                      age: '30',
+                    },
+                    credentialId: 'test-credential-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'anoncreds',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    linkSecretId: 'test-link-secret-id',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }
+
+      const getCredentialsForRequestStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsForRequestStub.resolves(credentials)
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/credentials`)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getByIdStub.calledWithMatch(testProof.id)).equals(true)
+      expect(getCredentialsForRequestStub.calledWithMatch({ proofRecordId: testProof.id })).equals(true)
+      expect(response.body).to.deep.equal(JSON.parse(JSON.stringify(credentials)))
+    })
+
+    test('should return 404 not found when proof record not found', async () => {
+      const response = await request(app).get('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/credentials')
 
       expect(response.statusCode).to.be.equal(404)
     })
