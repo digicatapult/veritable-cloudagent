@@ -351,12 +351,9 @@ describe('Onboarding & Verification flow', function () {
 
     // 3. Accept with simplified format
     // Fetch credentials to get the ID for explicit selection
-    const credentialsRes = await holderClient
-      .get('/v1/credentials')
-      .query({ state: 'done', connectionId: holderToIssuerConnectionRecordId })
-      .expect(200)
+    const credentialsRes = await holderClient.get(`/v1/proofs/${holderProofRequestId}/credentials`).expect(200)
 
-    const credentialId = credentialsRes.body[0].credentials[0].credentialRecordId
+    const credentialId = credentialsRes.body.proofFormats.anoncreds.attributes.name[0].credentialId
 
     const acceptProofBody = {
       useReturnRoute: true,
