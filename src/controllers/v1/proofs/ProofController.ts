@@ -155,9 +155,6 @@ export class ProofController extends Controller {
   ): Promise<MatchingCredentialsResponse> {
     req.log.debug('getting matching credentials for proof record %s', proofRecordId)
     try {
-      // Ensure proof exists
-      await this.agent.proofs.getById(proofRecordId)
-
       const credentials = await this.agent.proofs.getCredentialsForRequest({
         proofRecordId,
       })
@@ -166,7 +163,7 @@ export class ProofController extends Controller {
       return credentials
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`Proof record with id ${proofRecordId} not found`)
+        throw new NotFoundError(`No matching credentials found for proof record ${proofRecordId}`)
       }
       throw error
     }
