@@ -225,9 +225,6 @@ describe('ProofController', () => {
 
   describe('Get matching credentials for proof request', () => {
     test('should return matching credentials', async () => {
-      const getByIdStub = stub(bobAgent.proofs, 'getById')
-      getByIdStub.resolves(testProof)
-
       const credentials: MatchingCredentialsResponse = {
         proofFormats: {
           anoncreds: {
@@ -264,7 +261,6 @@ describe('ProofController', () => {
       const response = await request(app).get(`/v1/proofs/${testProof.id}/credentials`)
 
       expect(response.statusCode).to.be.equal(200)
-      expect(getByIdStub.calledWithMatch(testProof.id)).equals(true)
       expect(getCredentialsForRequestStub.calledWithMatch({ proofRecordId: testProof.id })).equals(true)
       expect(response.body).to.deep.equal(JSON.parse(JSON.stringify(credentials)))
     })
