@@ -67,9 +67,9 @@
     "swagger-ui-express": "^5.0.1",
     "tsoa": "^6.6.0",
     "tsyringe": "^4.10.0",
-    "undici": "^7.16.0",
-    "ws": "^8.18.3",
-    "zod": "^4.3.4"
+    "undici": "^7.18.0",
+    "ws": "^8.19.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -85,8 +85,8 @@
     "@types/sinon": "^21.0.0",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
-    "@typescript-eslint/eslint-plugin": "^8.51.0",
-    "@typescript-eslint/parser": "^8.51.0",
+    "@typescript-eslint/eslint-plugin": "^8.52.0",
+    "@typescript-eslint/parser": "^8.52.0",
     "chai": "^6.2.2",
     "concurrently": "^9.2.1",
     "depcheck": "^1.4.7",
