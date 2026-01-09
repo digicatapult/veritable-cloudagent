@@ -4,7 +4,7 @@ import makerAuthorisationSchema from '../../scripts/schemas/makeAuthorisation.js
 // This test validates the registration via API, then checks Bob (maker) can fetch the schema.
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const IPFS_GATEWAY = process.env.IPFS_GATEWAY ?? 'http://localhost:8080'
+const MAKER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 
 // Alice DID (issuer)
 const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
@@ -36,14 +36,13 @@ describe('Register makeAuthorisation schema', function () {
 
   it('Maker (Bob) can resolve the schema via IPFS', async function () {
     this.timeout(10000)
-    const cid = schemaId.split('ipfs://')[1]
 
-    const url = `${IPFS_GATEWAY}/ipfs/${cid}`
+    const url = `${MAKER_BASE_URL}/v1/schemas/${encodeURIComponent(schemaId)}`
 
     const res = await fetch(url)
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch from IPFS gateway: ${res.status}`)
+      throw new Error(`Failed to fetch from Bob (Maker) agent: ${res.status}`)
     }
 
     const schemaContent = await res.json()
