@@ -10,6 +10,11 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
 
     // Filter out events where state hasn't changed to reduce noise
     if (event.payload.previousState === record.state) {
+      agent.config.logger.debug?.(
+        `Filtered ProofStateChanged event with unchanged state '${record.state}' for proofRecord ${record.id} (previousState=${String(
+          event.payload.previousState
+        )})`
+      )
       return
     }
 
