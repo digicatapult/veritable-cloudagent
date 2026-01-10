@@ -156,7 +156,7 @@ export class ProofController extends Controller {
       return credentials
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`No matching credentials found for proof record ${proofRecordId}`)
+        throw new NotFoundError('proof record not found')
       }
       throw error
     }
@@ -376,14 +376,6 @@ export class ProofController extends Controller {
     }
   }
 
-  /**
-   * Hydrates simplified proof formats with actual credential data from the wallet.
-   *
-   * @param req Express request object for logging.
-   * @param proofRecordId The ID of the proof record.
-   * @param requestedAnonCreds The simplified AnonCreds proof request containing attribute and predicate requirements.
-   * @returns The fully hydrated proof formats ready for acceptance.
-   */
   /**
    * Simplifies the proof content by flattening the structure and extracting relevant attribute values.
    *

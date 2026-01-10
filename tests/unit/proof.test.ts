@@ -1,5 +1,5 @@
 import type { AnonCredsProofRequest } from '@credo-ts/anoncreds'
-import type { Server } from 'node:net'
+import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
   AnonCredsPresentation,
@@ -10,10 +10,19 @@ import type {
 } from '../../src/controllers/types.js'
 
 import { expect } from 'chai'
-import { afterEach, before, describe, test } from 'mocha'
+import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
 
-import { AgentMessage, ProofExchangeRecord, type Agent, type GetProofFormatDataReturn } from '@credo-ts/core'
+import {
+  AgentMessage,
+  ProofEventTypes,
+  ProofExchangeRecord,
+  ProofRole,
+  ProofState,
+  type Agent,
+  type GetProofFormatDataReturn,
+  type ProofStateChangedEvent,
+} from '@credo-ts/core'
 
 import request from 'supertest'
 import WebSocket from 'ws'
@@ -25,20 +34,24 @@ import {
   getTestProofResponse,
   getTestServer,
   objectToJson,
+  openWebSocket,
 } from './utils/helpers.js'
 
 describe('ProofController', () => {
+  let port: number
   let app: Server
   let socket: WebSocket | undefined
+  let aliceAgent: Agent
   let bobAgent: Agent
   let testMessage: AgentMessage
   let testProof: ProofExchangeRecord
   let testProofResponse: ProofExchangeRecord
 
   before(async () => {
-    await getTestAgent('Proof REST Agent Test Alice', 3032)
+    aliceAgent = await getTestAgent('Proof REST Agent Test Alice', 3032)
     bobAgent = await getTestAgent('Proof REST Agent Test Bob', 3912)
     app = await getTestServer(bobAgent)
+    port = (app.address() as AddressInfo).port
 
     testProof = getTestProof()
     testProofResponse = getTestProofResponse()
@@ -477,5 +490,92 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
+  })
+
+  describe('Accept proof presentation', () => {
+    test('should return proof record', async () => {
+      const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
+      acceptPresentationStub.resolves(testProof)
+      const getResult = (): Promise<ProofExchangeRecord> => acceptPresentationStub.firstCall.returnValue
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-presentation`)
+
+      expect(
+        acceptPresentationStub.calledWithMatch({
+          proofRecordId: testProof.id,
+        })
+      ).equals(true)
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+    })
+
+    test('should give 404 not found when proof is not found', async () => {
+      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-presentation')
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
+  describe('Proof WebSocket event', () => {
+    test('should return proof event sent from test agent to websocket client', async () => {
+      const now = new Date()
+
+      const proofRecord = new ProofExchangeRecord({
+        id: 'testest',
+        protocolVersion: 'v2',
+        state: ProofState.ProposalSent,
+        threadId: 'random',
+        createdAt: now,
+        role: ProofRole.Verifier,
+      })
+
+      // Start client and wait for it to be opened
+      socket = await openWebSocket(port)
+
+      // Start promise to listen for message
+      const waitForEvent = new Promise((resolve) =>
+        socket!.on('message', (data) => {
+          resolve(JSON.parse(data.toString()))
+        })
+      )
+
+      bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+        type: ProofEventTypes.ProofStateChanged,
+        payload: {
+          previousState: null,
+          proofRecord,
+        },
+      })
+
+      // Wait for event on WebSocket
+      const event = await waitForEvent
+      expect(event).to.deep.equal({
+        type: 'ProofStateChanged',
+        payload: {
+          previousState: null,
+          proofRecord: {
+            _tags: {},
+            metadata: {},
+            id: 'testest',
+            protocolVersion: 'v2',
+            createdAt: now.toISOString(),
+            state: 'proposal-sent',
+            threadId: 'random',
+            role: ProofRole.Verifier,
+          },
+        },
+        metadata: {
+          contextCorrelationId: 'default',
+        },
+      })
+    })
+  })
+
+  after(async () => {
+    await aliceAgent.shutdown()
+    await aliceAgent.wallet.delete()
+    await bobAgent.shutdown()
+    await bobAgent.wallet.delete()
+    if (socket) await closeWebSocket(socket)
+    app.close()
   })
 })

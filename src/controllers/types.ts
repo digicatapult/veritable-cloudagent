@@ -347,7 +347,7 @@ export interface AnonCredsCredentialDefinitionResponse extends AnonCredsCredenti
  */
 export interface AnonCredsPresentation extends Omit<AnonCredsProof, 'proof'> {
   proof: {
-    proofs: Record<string, unknown>
+    proofs: unknown[]
     aggregated_proof: {
       c_hash: string
       c_list: number[][]
