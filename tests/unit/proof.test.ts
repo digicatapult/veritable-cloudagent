@@ -1,30 +1,19 @@
-import type { AnonCredsCredentialInfo, AnonCredsProofRequest } from '@credo-ts/anoncreds'
-import type { AddressInfo, Server } from 'node:net'
+import type { AnonCredsProofRequest } from '@credo-ts/anoncreds'
+import type { Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
   AnonCredsPresentation,
   CreateProofRequestOptions,
   MatchingCredentialsResponse,
-  ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
 } from '../../src/controllers/types.js'
 
 import { expect } from 'chai'
-import { after, afterEach, before, describe, test } from 'mocha'
+import { afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
 
-import {
-  AgentMessage,
-  ProofEventTypes,
-  ProofExchangeRecord,
-  ProofRole,
-  ProofState,
-  type Agent,
-  type GetProofFormatDataReturn,
-  type ProofFormatPayload,
-  type ProofStateChangedEvent,
-} from '@credo-ts/core'
+import { AgentMessage, ProofExchangeRecord, type Agent, type GetProofFormatDataReturn } from '@credo-ts/core'
 
 import request from 'supertest'
 import WebSocket from 'ws'
@@ -36,24 +25,20 @@ import {
   getTestProofResponse,
   getTestServer,
   objectToJson,
-  openWebSocket,
 } from './utils/helpers.js'
 
 describe('ProofController', () => {
-  let port: number
   let app: Server
-  let socket: WebSocket
-  let aliceAgent: Agent
+  let socket: WebSocket | undefined
   let bobAgent: Agent
   let testMessage: AgentMessage
   let testProof: ProofExchangeRecord
   let testProofResponse: ProofExchangeRecord
 
   before(async () => {
-    aliceAgent = await getTestAgent('Proof REST Agent Test Alice', 3032)
+    await getTestAgent('Proof REST Agent Test Alice', 3032)
     bobAgent = await getTestAgent('Proof REST Agent Test Bob', 3912)
     app = await getTestServer(bobAgent)
-    port = (app.address() as AddressInfo).port
 
     testProof = getTestProof()
     testProofResponse = getTestProofResponse()
@@ -62,7 +47,7 @@ describe('ProofController', () => {
 
   afterEach(async () => {
     sinonRestore()
-    await closeWebSocket(socket)
+    if (socket) await closeWebSocket(socket)
   })
 
   describe('Get all proofs', () => {
@@ -492,6 +477,5 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
-
   })
 })

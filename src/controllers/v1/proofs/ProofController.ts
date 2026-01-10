@@ -1,10 +1,5 @@
-import type {
-  AnonCredsProofRequest,
-  AnonCredsRequestedAttribute,
-  AnonCredsRequestedAttributeMatch,
-  AnonCredsRequestedPredicateMatch,
-} from '@credo-ts/anoncreds'
-import { Agent, RecordNotFoundError, type ProofExchangeRecordProps, type ProofFormatPayload } from '@credo-ts/core'
+import type { AnonCredsProofRequest, AnonCredsRequestedAttribute } from '@credo-ts/anoncreds'
+import { Agent, RecordNotFoundError, type ProofExchangeRecordProps } from '@credo-ts/core'
 import {
   Body,
   Controller,
@@ -32,10 +27,8 @@ import type {
   AnonCredsPresentation,
   CreateProofRequestOptions,
   MatchingCredentialsResponse,
-  ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
-  SimpleProofFormats,
   UUID,
 } from '../../types.js'
 

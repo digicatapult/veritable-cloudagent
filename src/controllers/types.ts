@@ -266,6 +266,13 @@ export interface AcceptProofRequestOptions {
   comment?: string
 }
 
+export interface MatchingCredentialsResponse {
+  /**
+   * TSOA doesn't support the complex types from Credo-TS perfectly so we use Record<string, unknown>
+   */
+  proofFormats: Record<string, unknown>
+}
+
 export interface AnonCredsProofRequestRestrictionOptions {
   schema_id?: SchemaId
   schema_issuer_id?: DID
