@@ -8,7 +8,11 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
   agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
     const record = event.payload.proofRecord
 
-    // Filter out events where state hasn't changed to reduce noise
+    // Noise reduction: filter out events where the proof state hasn't changed.
+    // This assumes that repeated emissions of the same state are not semantically meaningful
+    // for our webhooks / WebSocket clients. If the underlying state machine ever starts
+    // emitting legitimate same-state transitions (e.g. retry logic), this filter will
+    // intentionally hide those from external consumers, but we still log them for debugging.
     if (event.payload.previousState === record.state) {
       agent.config.logger.debug?.(
         `Filtered ProofStateChanged event with unchanged state '${record.state}' for proofRecord ${record.id} (previousState=${String(
