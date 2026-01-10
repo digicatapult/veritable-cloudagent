@@ -1,30 +1,33 @@
 import z from 'zod'
 
 interface ParsedArgs {
-  credentialId: string
+  credentialId?: string
   baseUrl?: string
 }
 const credentialParser = z.object({
   id: z.string(),
   state: z.string(),
   role: z.string(),
-  credentialAttributes: z.array(
-    z.object({
-      name: z.string(),
-      value: z.string(),
-    })
-  ),
+  credentialAttributes: z
+    .array(
+      z.object({
+        name: z.string(),
+        value: z.string(),
+      })
+    )
+    .optional(),
 })
 
+const credentialsListParser = z.array(credentialParser)
+
 function printUsageAndExit(code: number): never {
-  process.stderr.write(`Usage: maker-connect-to-oem --credential-id <credentialId> [--base-url <url>]\n`)
+  process.stderr.write(`Usage: maker-connect-to-oem [--credential-id <credentialId>] [--base-url <url>]\n`)
   process.exit(code)
 }
 function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
     baseUrl: 'http://localhost:3001', // this is executed on Bob's side
-    credentialId: '',
   }
   for (let i = 0; i < args.length; i++) {
     const a = args[i]
@@ -47,14 +50,40 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { credentialId, baseUrl } = parseArgs(process.argv)
-  if (!credentialId || credentialId.length === 0) {
-    process.stderr.write('--credential-id is required\n')
-    printUsageAndExit(1)
-  }
+  const { credentialId: argsCredentialId, baseUrl } = parseArgs(process.argv)
   const log = (msg: string, extra?: unknown) => {
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
   }
+
+  let credentialId = argsCredentialId
+
+  if (!credentialId) {
+    log(`Looking for credentials at ${baseUrl}...`)
+    const credentialsResponse = await fetch(`${baseUrl}/v1/credentials`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!credentialsResponse.ok) {
+      throw new Error(`Failed to retrieve credentials: ${credentialsResponse.status} ${credentialsResponse.statusText}`)
+    }
+
+    const credentials = await credentialsResponse.json()
+    const parsedCredentials = credentialsListParser.parse(credentials)
+
+    // Filter for done/holder credentials
+    const validCredentials = parsedCredentials.filter((c) => c.state === 'done' && c.role === 'holder')
+
+    if (validCredentials.length === 0) {
+      throw new Error('No valid credentials found (state=done, role=holder)')
+    }
+
+    // Pick the most recent one
+    const targetCredential = validCredentials[validCredentials.length - 1]
+    credentialId = targetCredential.id
+    log(`Found credential: ${credentialId}`)
+  }
+
   // retrieve credential offer
   log(`Retrieving issued credential ${credentialId} baseURL ${baseUrl}`)
   await new Promise((resolve) => setTimeout(resolve, 2000))
@@ -82,7 +111,7 @@ async function main() {
     throw new Error(errorMsg)
   }
   log('Retrieved issued credential', parsedCredential)
-  const oemDid = parsedCredential.credentialAttributes.find((a) => a.name === 'oem_did')?.value
+  const oemDid = parsedCredential.credentialAttributes?.find((a) => a.name === 'oem_did')?.value
   if (!oemDid) {
     throw new Error(`Credential ${credentialId} does not have oem_did attribute`)
   }
