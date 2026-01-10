@@ -2,12 +2,17 @@ import type {
   AnonCredsCredentialDefinition,
   AnonCredsCredentialFormat,
   AnonCredsCredentialFormatService,
-  AnonCredsNonRevokedInterval,
-  AnonCredsPredicateType,
+  AnonCredsProof,
   AnonCredsProofFormat,
   AnonCredsProofFormatService,
+  AnonCredsRequestedAttribute,
+  AnonCredsRequestedAttributeMatch,
+  AnonCredsRequestedPredicate,
+  AnonCredsRequestedPredicateMatch,
+  AnonCredsRequestProofFormat,
   AnonCredsSchema,
 } from '@credo-ts/anoncreds'
+
 import type {
   AutoAcceptCredential,
   AutoAcceptProof,
@@ -101,7 +106,7 @@ type CredentialProtocols = [V2CredentialProtocol<[AnonCredsCredentialFormatServi
 type CredentialFormats = [AnonCredsCredentialFormat]
 
 type ProofProtocols = [V2ProofProtocol<[AnonCredsProofFormatService]>]
-type ProofFormats = [AnonCredsProofFormat]
+export type ProofFormats = [AnonCredsProofFormat]
 
 interface PrivateKey {
   keyType: KeyType
@@ -250,11 +255,59 @@ export interface ProposeProofOptions {
 }
 
 export interface AcceptProofProposalOptions {
-  proofFormats?: ProofFormatPayload<ProofFormats, 'acceptProposal'>
+  proofFormats?: {
+    anoncreds?: AnonCredsRequestProofFormatOptions
+  }
   goalCode?: string
   willConfirm?: boolean
   autoAcceptProof?: AutoAcceptProof
   comment?: string
+}
+
+export interface SimpleProofFormats {
+  anoncreds?: {
+    attributes?: Record<
+      string,
+      {
+        /**
+         * The ID of the credential to use for this attribute.
+         * NOTE: This object must contain EXACTLY 'credentialId' and 'revealed' keys.
+         * Additional properties are not allowed and will cause validation failure.
+         *
+         * TO EXTEND: If adding new properties, you MUST update the validation logic
+         * in `ProofController.ts` (isSimpleProofFormats method) to accept the new key count.
+         */
+        credentialId: string
+        /**
+         * Whether to reveal the attribute value.
+         */
+        revealed: boolean
+      }
+    >
+    predicates?: Record<
+      string,
+      {
+        /**
+         * The ID of the credential to use for this predicate.
+         * NOTE: This object must contain EXACTLY 'credentialId' key.
+         * Additional properties are not allowed and will cause validation failure.
+         *
+         * TO EXTEND: If adding new properties, you MUST update the validation logic
+         * in `ProofController.ts` (isSimpleProofFormats method) to accept the new key count.
+         */
+        credentialId: string
+      }
+    >
+  }
+}
+
+export interface MatchingCredentialsResponse {
+  proofFormats: {
+    anoncreds?: {
+      attributes?: Record<string, AnonCredsRequestedAttributeMatch[]>
+      predicates?: Record<string, AnonCredsRequestedPredicateMatch[]>
+    }
+  }
 }
 
 export interface AcceptProofRequestOptions {
@@ -263,6 +316,7 @@ export interface AcceptProofRequestOptions {
   willConfirm?: boolean
   autoAcceptProof?: AutoAcceptProof
   comment?: string
+  proofFormats?: ProofFormatPayload<ProofFormats, 'acceptRequest'> | SimpleProofFormats
 }
 
 export interface AnonCredsProofRequestRestrictionOptions {
@@ -283,24 +337,27 @@ export interface AnonCredsProofRequestRestrictionOptions {
   }
 }
 
-export interface AnonCredsRequestedAttributeOptions {
-  name?: string
-  names?: string[]
+/**
+ * Extends upstream type but overrides `restrictions` to use our API-friendly `AnonCredsProofRequestRestrictionOptions`.
+ */
+export interface AnonCredsRequestedAttributeOptions extends Omit<AnonCredsRequestedAttribute, 'restrictions'> {
   restrictions?: AnonCredsProofRequestRestrictionOptions[]
-  non_revoked?: AnonCredsNonRevokedInterval
-}
-export interface AnonCredsRequestedPredicateOptions {
-  name: string
-  p_type: AnonCredsPredicateType
-  p_value: number
-  restrictions?: AnonCredsProofRequestRestrictionOptions[]
-  non_revoked?: AnonCredsNonRevokedInterval
 }
 
-export interface AnonCredsRequestProofFormatOptions {
-  name: string
-  version: Version
-  non_revoked?: AnonCredsNonRevokedInterval
+/**
+ * Extends upstream type but overrides `restrictions` to use our API-friendly `AnonCredsProofRequestRestrictionOptions`.
+ */
+export interface AnonCredsRequestedPredicateOptions extends Omit<AnonCredsRequestedPredicate, 'restrictions'> {
+  restrictions?: AnonCredsProofRequestRestrictionOptions[]
+}
+
+/**
+ * Extends upstream type but overrides attributes/predicates to use our API-friendly Options types.
+ */
+export interface AnonCredsRequestProofFormatOptions extends Omit<
+  AnonCredsRequestProofFormat,
+  'requested_attributes' | 'requested_predicates'
+> {
   requested_attributes?: {
     [key: string]: AnonCredsRequestedAttributeOptions
   }
@@ -331,4 +388,19 @@ export interface AnonCredsSchemaResponse extends AnonCredsSchema {
 
 export interface AnonCredsCredentialDefinitionResponse extends AnonCredsCredentialDefinition {
   id: UUID
+}
+
+/**
+ * Extend the upstream type but narrow the 'proof' property for better DX.
+ * The upstream `AnonCredsProof` defines `proof` as `any`, so we override it here
+ * with a strict structure to help API consumers.
+ */
+export interface AnonCredsPresentation extends Omit<AnonCredsProof, 'proof'> {
+  proof: {
+    proofs: Record<string, unknown>
+    aggregated_proof: {
+      c_hash: string
+      c_list: number[][]
+    }
+  }
 }
