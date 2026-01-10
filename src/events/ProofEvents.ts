@@ -13,7 +13,7 @@ export const proofEvents = async (agent: Agent, config: ServerConfig) => {
       return
     }
 
-    const body = record.toJSON() as Record<string, unknown>
+    const body = record.toJSON()
 
     // Only send webhook if webhook url is configured
     if (config.webhookUrl) {
