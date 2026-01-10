@@ -348,7 +348,9 @@ export class ProofController extends Controller {
         const requestedAnonCreds = body.proofFormats.anoncreds
 
         if (!requestedAnonCreds) {
-          throw new BadRequest('Invalid simplified proof formats: missing anoncreds')
+          throw new BadRequest(
+            'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.'
+          )
         }
 
         formatsToAccept = await this.hydrateProofFormats(req, proofRecordId, requestedAnonCreds)
@@ -447,7 +449,9 @@ export class ProofController extends Controller {
     const availableCredentials = await this.agent.proofs.getCredentialsForRequest({ proofRecordId })
     const availableAnonCreds = availableCredentials.proofFormats.anoncreds
 
-    req.log.info('available credentials for hydration %j', availableAnonCreds || {})
+    const attrCount = Object.keys(availableAnonCreds?.attributes || {}).length
+    const predCount = Object.keys(availableAnonCreds?.predicates || {}).length
+    req.log.info('available credentials for hydration: %d attributes, %d predicates', attrCount, predCount)
 
     if (!availableAnonCreds) {
       req.log.warn(
@@ -497,7 +501,7 @@ export class ProofController extends Controller {
             `Attribute '${key}' cannot be ${value.revealed ? 'revealed' : 'hidden'}. The proof request or credential requires this attribute to be ${!value.revealed ? 'revealed' : 'hidden'}.`
           )
         }
-        hydrated[key] = { ...match, revealed: match.revealed && value.revealed }
+        hydrated[key] = { ...match, revealed: value.revealed }
       }
     }
     return hydrated
@@ -631,12 +635,16 @@ export class ProofController extends Controller {
 
     if (!hasAttributes && !hasPredicates) return false
 
+    const hasForbiddenKeys = (entry: unknown) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      ('credentialInfo' in (entry as object) || 'timestamp' in (entry as object))
+
     const isValidEntry = (entry: unknown, requiredKeys: string[]) =>
       typeof entry === 'object' &&
       entry !== null &&
       requiredKeys.every((k) => k in (entry as object)) &&
-      Object.keys(entry as object).length === requiredKeys.length &&
-      !('credentialInfo' in (entry as object))
+      !hasForbiddenKeys(entry)
 
     if (
       hasAttributes &&
@@ -665,7 +673,17 @@ export class ProofController extends Controller {
     const request = formatData.request?.anoncreds
     const presentation = formatData.presentation?.anoncreds
 
-    if (!request || !presentation) return {}
+    if (!request && !presentation) {
+      return { _state: 'missing-request-and-presentation' }
+    }
+
+    if (!request) {
+      return { _state: 'missing-request' }
+    }
+
+    if (!presentation) {
+      return { _state: 'missing-presentation' }
+    }
 
     const simplified: Record<string, unknown> = {}
     const { requested_attributes = {} } = request
