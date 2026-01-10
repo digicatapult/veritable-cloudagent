@@ -680,18 +680,9 @@ export class ProofController extends Controller {
     const request = formatData.request?.anoncreds
     const presentation = formatData.presentation?.anoncreds
 
-    if (!request && !presentation) {
+    if (!request || !presentation) {
       return {}
     }
-
-    if (!request) {
-      return {}
-    }
-
-    if (!presentation) {
-      return {}
-    }
-
     const simplified: Record<string, unknown> = {}
     const { requested_attributes = {} } = request
     const { revealed_attrs = {}, revealed_attr_groups = {} } = presentation.requested_proof || {}
