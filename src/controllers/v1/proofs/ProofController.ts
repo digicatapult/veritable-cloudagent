@@ -1,3 +1,4 @@
+import type { AnonCredsProofRequest, AnonCredsRequestedAttribute } from '@credo-ts/anoncreds'
 import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@credo-ts/core'
 import {
   Body,
@@ -23,6 +24,7 @@ import { ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
   AcceptProofRequestOptions,
+  AnonCredsPresentation,
   CreateProofRequestOptions,
   ProposeProofOptions,
   RequestProofOptions,
@@ -64,19 +66,64 @@ export class ProofController extends Controller {
    * Retrieve proof record by proof record id
    *
    * @param proofRecordId
+   * @param includeContent If true, includes the proof format data (request/presentation) in the response
    * @returns ProofExchangeRecordProps
    */
   @Get('/:proofRecordId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  public async getProofById(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
+  public async getProofById(
+    @Request() req: express.Request,
+    @Path('proofRecordId') proofRecordId: UUID,
+    @Query('includeContent') includeContent = false
+  ) {
     req.log.debug('getting proof record %s', proofRecordId)
     try {
       const proof = await this.agent.proofs.getById(proofRecordId)
       req.log.info('proof found %j', proof)
 
-      return proof.toJSON()
+      const result = proof.toJSON() as Record<string, unknown>
+
+      if (includeContent) {
+        const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+        result.content = formatData
+      }
+
+      return result
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError('proof record not found')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Retrieve the content (format data) of a proof record
+   *
+   * @param proofRecordId
+   * @param view If set to 'simplified', returns a flattened map of attribute names to values
+   * @returns Record<string, unknown>
+   */
+  @Get('/:proofRecordId/content')
+  @Response<NotFoundError['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getProofContent(
+    @Request() req: express.Request,
+    @Path('proofRecordId') proofRecordId: UUID,
+    @Query('view') view?: 'simplified'
+  ): Promise<Record<string, unknown>> {
+    req.log.debug('getting proof content for %s', proofRecordId)
+    try {
+      const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+      req.log.info('proof content found for %s', proofRecordId)
+
+      if (view === 'simplified') {
+        return this.simplifyProofContent(formatData)
+      }
+
+      return formatData
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('proof record not found')
@@ -291,5 +338,50 @@ export class ProofController extends Controller {
       }
       throw error
     }
+  }
+
+  /**
+   * Simplifies the proof content by flattening the structure and extracting relevant attribute values.
+   *
+   * @param formatData The raw proof format data containing request and presentation details.
+   * @returns A simplified record of attribute names and their revealed values.
+   */
+  private simplifyProofContent(formatData: {
+    request?: { anoncreds?: AnonCredsProofRequest }
+    presentation?: { anoncreds?: AnonCredsPresentation }
+  }): Record<string, unknown> {
+    const request = formatData.request?.anoncreds
+    const presentation = formatData.presentation?.anoncreds
+
+    if (!request && !presentation) {
+      return {}
+    }
+
+    if (!request) {
+      return {}
+    }
+
+    if (!presentation) {
+      return {}
+    }
+
+    const simplified: Record<string, unknown> = {}
+    const { requested_attributes = {} } = request
+    const { revealed_attrs = {}, revealed_attr_groups = {} } = presentation.requested_proof || {}
+
+    for (const [referent, reqAttr] of Object.entries(requested_attributes)) {
+      const { name, names } = reqAttr as AnonCredsRequestedAttribute
+
+      if (name && revealed_attrs[referent]) {
+        simplified[name] = revealed_attrs[referent].raw
+      } else if (names && revealed_attr_groups[referent]) {
+        const group = revealed_attr_groups[referent]
+        names.forEach((n) => {
+          if (group.values[n]) simplified[n] = group.values[n].raw
+        })
+      }
+    }
+
+    return simplified
   }
 }

@@ -4,6 +4,7 @@ import type {
   AnonCredsCredentialFormatService,
   AnonCredsNonRevokedInterval,
   AnonCredsPredicateType,
+  AnonCredsProof,
   AnonCredsProofFormat,
   AnonCredsProofFormatService,
   AnonCredsSchema,
@@ -331,4 +332,18 @@ export interface AnonCredsSchemaResponse extends AnonCredsSchema {
 
 export interface AnonCredsCredentialDefinitionResponse extends AnonCredsCredentialDefinition {
   id: UUID
+}
+
+/**
+ * The upstream `AnonCredsProof` defines `proof` as `any`, so we override it here
+ * with a structure that matches the AnonCreds reference implementation's presentation format.
+ */
+export interface AnonCredsPresentation extends Omit<AnonCredsProof, 'proof'> {
+  proof: {
+    proofs: Record<string, unknown>
+    aggregated_proof: {
+      c_hash: string
+      c_list: number[][]
+    }
+  }
 }
