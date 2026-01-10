@@ -640,11 +640,18 @@ export class ProofController extends Controller {
       entry !== null &&
       ('credentialInfo' in (entry as object) || 'timestamp' in (entry as object))
 
-    const isValidEntry = (entry: unknown, requiredKeys: string[]) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      requiredKeys.every((k) => k in (entry as object)) &&
-      !hasForbiddenKeys(entry)
+    const isValidEntry = (entry: unknown, requiredKeys: string[]) => {
+      if (typeof entry !== 'object' || entry === null) return false
+
+      const obj = entry as Record<string, unknown>
+      const keys = Object.keys(obj)
+
+      // Must contain all required keys, no forbidden keys, and no unexpected keys
+      const hasAllRequired = requiredKeys.every((k) => k in obj)
+      const onlyExpectedKeys = keys.every((k) => requiredKeys.includes(k))
+
+      return hasAllRequired && onlyExpectedKeys && !hasForbiddenKeys(entry)
+    }
 
     if (
       hasAttributes &&
@@ -674,15 +681,15 @@ export class ProofController extends Controller {
     const presentation = formatData.presentation?.anoncreds
 
     if (!request && !presentation) {
-      return { _state: 'missing-request-and-presentation' }
+      return {}
     }
 
     if (!request) {
-      return { _state: 'missing-request' }
+      return {}
     }
 
     if (!presentation) {
-      return { _state: 'missing-presentation' }
+      return {}
     }
 
     const simplified: Record<string, unknown> = {}
