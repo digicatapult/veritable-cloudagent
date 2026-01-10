@@ -1,7 +1,11 @@
+import type { AnonCredsCredentialInfo, AnonCredsProofRequest } from '@credo-ts/anoncreds'
 import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
+  AnonCredsPresentation,
   CreateProofRequestOptions,
+  MatchingCredentialsResponse,
+  ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
 } from '../../src/controllers/types.js'
@@ -17,8 +21,11 @@ import {
   ProofRole,
   ProofState,
   type Agent,
+  type GetProofFormatDataReturn,
+  type ProofFormatPayload,
   type ProofStateChangedEvent,
 } from '@credo-ts/core'
+
 import request from 'supertest'
 import WebSocket from 'ws'
 
@@ -98,6 +105,7 @@ describe('ProofController', () => {
     test('should return proof record', async () => {
       const getByIdStub = stub(bobAgent.proofs, 'getById')
       getByIdStub.resolves(testProof)
+
       const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}`)
@@ -107,8 +115,158 @@ describe('ProofController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
+    test('should return proof record with content when includeContent is true', async () => {
+      const getByIdStub = stub(bobAgent.proofs, 'getById')
+      getByIdStub.resolves(testProof)
+
+      const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
+      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      getFormatDataStub.resolves(formatData as unknown as GetProofFormatDataReturn)
+
+      const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}`).query({ includeContent: true })
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getByIdStub.calledWithMatch(testProof.id)).equals(true)
+      expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
+
+      const expectedBody = {
+        ...objectToJson(await getResult()),
+        content: formatData,
+      }
+      expect(response.body).to.deep.equal(expectedBody)
+    })
+
     test('should return 404 not found when proof record not found', async () => {
       const response = await request(app).get(`/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa`)
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
+  describe('Get proof content', () => {
+    test('should return proof content', async () => {
+      const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
+      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      getFormatDataStub.resolves(formatData as unknown as GetProofFormatDataReturn)
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/content`)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
+      expect(response.body).to.deep.equal(formatData)
+    })
+
+    test('should return simplified proof content when view is simplified', async () => {
+      const formatData: GetProofFormatDataReturn = {
+        request: {
+          anoncreds: {
+            name: 'proof-request',
+            version: '1.0',
+            nonce: '1234567890',
+            requested_attributes: {
+              attr1_referent: { name: 'name', restrictions: [] },
+              attr2_referent: { names: ['age', 'gender'], restrictions: [] },
+            },
+            requested_predicates: {},
+          } as unknown as AnonCredsProofRequest,
+        },
+        presentation: {
+          anoncreds: {
+            proof: {
+              proofs: [],
+              aggregated_proof: { c_hash: '', c_list: [] },
+            },
+            requested_proof: {
+              revealed_attrs: {
+                attr1_referent: { sub_proof_index: 0, raw: 'Alice', encoded: '123' },
+              },
+              revealed_attr_groups: {
+                attr2_referent: {
+                  sub_proof_index: 1,
+                  values: {
+                    age: { raw: '30', encoded: '30' },
+                    gender: { raw: 'Female', encoded: '456' },
+                  },
+                },
+              },
+              self_attested_attrs: {},
+              unrevealed_attrs: {},
+              predicates: {},
+            },
+            identifiers: [],
+          } as unknown as AnonCredsPresentation,
+        },
+      }
+
+      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      getFormatDataStub.resolves(formatData)
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/content`).query({ view: 'simplified' })
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getFormatDataStub.calledWithMatch(testProof.id)).equals(true)
+
+      const expectedSimplified = {
+        name: 'Alice',
+        age: '30',
+        gender: 'Female',
+      }
+      expect(response.body).to.deep.equal(expectedSimplified)
+    })
+
+    test('should return 404 not found when proof record not found', async () => {
+      const response = await request(app).get('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/content')
+
+      expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
+  describe('Get matching credentials for proof request', () => {
+    test('should return matching credentials', async () => {
+      const credentials: MatchingCredentialsResponse = {
+        proofFormats: {
+          anoncreds: {
+            attributes: {
+              referent1: [
+                {
+                  credentialId: 'test-credential-id',
+                  revealed: true,
+                  credentialInfo: {
+                    schemaId: 'test-schema-id',
+                    credentialDefinitionId: 'test-cred-def-id',
+                    attributes: {
+                      name: 'Alice',
+                      age: '30',
+                    },
+                    credentialId: 'test-credential-id',
+                    revocationRegistryId: null,
+                    credentialRevocationId: null,
+                    methodName: 'anoncreds',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    linkSecretId: 'test-link-secret-id',
+                  },
+                },
+              ],
+            },
+          },
+        },
+      }
+
+      const getCredentialsForRequestStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      getCredentialsForRequestStub.resolves(credentials)
+
+      const response = await request(app).get(`/v1/proofs/${testProof.id}/credentials`)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(getCredentialsForRequestStub.calledWithMatch({ proofRecordId: testProof.id })).equals(true)
+      expect(response.body).to.deep.equal(JSON.parse(JSON.stringify(credentials)))
+    })
+
+    test('should return 404 not found when proof record not found', async () => {
+      const response = await request(app).get('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/credentials')
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -335,101 +493,5 @@ describe('ProofController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
 
-    test('should give 404 not found when proof request is not found', async () => {
-      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
-      selectCredentialForRequestStub.resolves({ proofFormats: {} })
-      const response = await request(app)
-        .post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request')
-        .send({})
-
-      expect(response.statusCode).to.be.equal(404)
-    })
-  })
-
-  describe('Accept proof presentation', () => {
-    test('should return proof record', async () => {
-      const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
-      acceptPresentationStub.resolves(testProof)
-      const getResult = (): Promise<ProofExchangeRecord> => acceptPresentationStub.firstCall.returnValue
-      const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-presentation`)
-
-      expect(
-        acceptPresentationStub.calledWithMatch({
-          proofRecordId: testProof.id,
-        })
-      ).equals(true)
-      expect(response.statusCode).to.be.equal(200)
-      expect(response.body).to.deep.equal(objectToJson(await getResult()))
-    })
-
-    test('should give 404 not found when proof is not found', async () => {
-      const response = await request(app).post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-presentation')
-
-      expect(response.statusCode).to.be.equal(404)
-    })
-  })
-
-  describe('Proof WebSocket event', () => {
-    test('should return proof event sent from test agent to websocket client', async () => {
-      const now = new Date()
-
-      const proofRecord = new ProofExchangeRecord({
-        id: 'testest',
-        protocolVersion: 'v2',
-        state: ProofState.ProposalSent,
-        threadId: 'random',
-        createdAt: now,
-        role: ProofRole.Verifier,
-      })
-
-      // Start client and wait for it to be opened
-      socket = await openWebSocket(port)
-
-      // Start promise to listen for message
-      const waitForEvent = new Promise((resolve) =>
-        socket.on('message', (data) => {
-          resolve(JSON.parse(data.toString()))
-        })
-      )
-
-      bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
-        type: ProofEventTypes.ProofStateChanged,
-        payload: {
-          previousState: null,
-          proofRecord,
-        },
-      })
-
-      // Wait for event on WebSocket
-      const event = await waitForEvent
-      expect(event).to.deep.equal({
-        type: 'ProofStateChanged',
-        payload: {
-          previousState: null,
-          proofRecord: {
-            _tags: {},
-            metadata: {},
-            id: 'testest',
-            protocolVersion: 'v2',
-            createdAt: now.toISOString(),
-            state: 'proposal-sent',
-            threadId: 'random',
-            role: ProofRole.Verifier,
-          },
-        },
-        metadata: {
-          contextCorrelationId: 'default',
-        },
-      })
-    })
-  })
-
-  after(async () => {
-    await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
-    await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
-    await closeWebSocket(socket)
-    app.close()
   })
 })

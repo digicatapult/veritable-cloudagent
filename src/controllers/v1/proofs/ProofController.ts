@@ -1,5 +1,10 @@
-import type { AnonCredsProofRequest, AnonCredsRequestedAttribute } from '@credo-ts/anoncreds'
-import { type ProofExchangeRecordProps, Agent, RecordNotFoundError } from '@credo-ts/core'
+import type {
+  AnonCredsProofRequest,
+  AnonCredsRequestedAttribute,
+  AnonCredsRequestedAttributeMatch,
+  AnonCredsRequestedPredicateMatch,
+} from '@credo-ts/anoncreds'
+import { Agent, RecordNotFoundError, type ProofExchangeRecordProps, type ProofFormatPayload } from '@credo-ts/core'
 import {
   Body,
   Controller,
@@ -18,7 +23,7 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
@@ -26,8 +31,11 @@ import type {
   AcceptProofRequestOptions,
   AnonCredsPresentation,
   CreateProofRequestOptions,
+  MatchingCredentialsResponse,
+  ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
+  SimpleProofFormats,
   UUID,
 } from '../../types.js'
 
@@ -127,6 +135,35 @@ export class ProofController extends Controller {
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('proof record not found')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Retrieve matching credentials for a proof request
+   *
+   * @param proofRecordId
+   * @returns MatchingCredentialsResponse
+   */
+  @Get('/:proofRecordId/credentials')
+  @Response<NotFoundError['message']>(404)
+  @Response<HttpResponse>(500)
+  public async getMatchingCredentials(
+    @Request() req: express.Request,
+    @Path('proofRecordId') proofRecordId: UUID
+  ): Promise<MatchingCredentialsResponse> {
+    req.log.debug('getting matching credentials for proof record %s', proofRecordId)
+    try {
+      const credentials = await this.agent.proofs.getCredentialsForRequest({
+        proofRecordId,
+      })
+
+      req.log.info('matching credentials found for %s', proofRecordId)
+      return credentials
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError(`No matching credentials found for proof record ${proofRecordId}`)
       }
       throw error
     }
@@ -277,6 +314,10 @@ export class ProofController extends Controller {
    * Accept a presentation request as prover by sending an accept request message
    * to the connection associated with the proof record.
    *
+   * If `proofFormats` is omitted, credentials will be auto-selected.
+   * If `proofFormats` is in simplified format, it will be hydrated with available credentials.
+   * Otherwise, the provided full proof formats will be used.
+   *
    * @param proofRecordId
    * @param request
    * @returns ProofExchangeRecordProps
@@ -285,6 +326,8 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
+  @Response<BadRequest['message']>(400)
+  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
   public async acceptRequest(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -341,6 +384,14 @@ export class ProofController extends Controller {
   }
 
   /**
+   * Hydrates simplified proof formats with actual credential data from the wallet.
+   *
+   * @param req Express request object for logging.
+   * @param proofRecordId The ID of the proof record.
+   * @param requestedAnonCreds The simplified AnonCreds proof request containing attribute and predicate requirements.
+   * @returns The fully hydrated proof formats ready for acceptance.
+   */
+  /**
    * Simplifies the proof content by flattening the structure and extracting relevant attribute values.
    *
    * @param formatData The raw proof format data containing request and presentation details.
@@ -353,18 +404,9 @@ export class ProofController extends Controller {
     const request = formatData.request?.anoncreds
     const presentation = formatData.presentation?.anoncreds
 
-    if (!request && !presentation) {
+    if (!request || !presentation) {
       return {}
     }
-
-    if (!request) {
-      return {}
-    }
-
-    if (!presentation) {
-      return {}
-    }
-
     const simplified: Record<string, unknown> = {}
     const { requested_attributes = {} } = request
     const { revealed_attrs = {}, revealed_attr_groups = {} } = presentation.requested_proof || {}
