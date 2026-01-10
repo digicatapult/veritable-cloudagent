@@ -83,7 +83,6 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 async function main() {
   const { schemaFileName, issuerId, baseUrl } = parseArgs(process.argv)
-  // if (!schemaFileName) throw new Error('Schema filename argument required, e.g. `makeAuthorisation.json`')
 
   const schemaPath = path.join(__dirname, 'schemas', `${schemaFileName}`)
   if (!fs.existsSync(schemaPath)) throw new Error(`Schema definition not found: ${schemaPath}`)
