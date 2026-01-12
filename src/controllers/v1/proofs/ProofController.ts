@@ -30,7 +30,6 @@ import { ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
   AcceptProofRequestOptions,
-  AnonCredsPresentation,
   CreateProofRequestOptions,
   MatchingCredentialsResponse,
   ProofFormats,
