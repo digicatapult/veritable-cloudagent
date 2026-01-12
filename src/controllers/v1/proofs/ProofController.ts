@@ -1,9 +1,3 @@
-import type {
-  AnonCredsProofRequest,
-  AnonCredsRequestedAttribute,
-  AnonCredsRequestedAttributeMatch,
-  AnonCredsRequestedPredicateMatch,
-} from '@credo-ts/anoncreds'
 import { Agent, RecordNotFoundError, type ProofExchangeRecordProps, type ProofFormatPayload } from '@credo-ts/core'
 import {
   Body,
@@ -21,10 +15,17 @@ import {
 } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
-
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { transformProofFormat } from '../../../utils/proofs.js'
+import {
+  getMissingCredentials,
+  hydrateAttributes,
+  hydratePredicates,
+  isSimpleProofFormats,
+  redactProofFormats,
+  simplifyProofContent,
+  transformProofFormat,
+} from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
   AcceptProofProposalOptions,
@@ -128,7 +129,7 @@ export class ProofController extends Controller {
       req.log.info('proof content found for %s', proofRecordId)
 
       if (view === 'simplified') {
-        return this.simplifyProofContent(formatData)
+        return simplifyProofContent(formatData)
       }
 
       return formatData
@@ -343,12 +344,14 @@ export class ProofController extends Controller {
           proofRecordId,
         })
         formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
-        req.log.info('credentials found (redacted) %j', this.redactProofFormats(retrievedCredentials.proofFormats))
-      } else if (this.isSimpleProofFormats(body.proofFormats)) {
+        req.log.info('credentials found (redacted) %j', redactProofFormats(retrievedCredentials.proofFormats))
+      } else if (isSimpleProofFormats(body.proofFormats)) {
         const requestedAnonCreds = body.proofFormats.anoncreds
 
         if (!requestedAnonCreds) {
-          throw new BadRequest('Invalid simplified proof formats: missing anoncreds')
+          throw new BadRequest(
+            'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.'
+          )
         }
 
         formatsToAccept = await this.hydrateProofFormats(req, proofRecordId, requestedAnonCreds)
@@ -386,7 +389,7 @@ export class ProofController extends Controller {
         predCount
       )
       // Optionally log full formats at debug level for troubleshooting
-      req.log.debug('accepting proof request with formats %j', this.redactProofFormats(formatsToAccept))
+      req.log.debug('accepting proof request with formats %j', redactProofFormats(formatsToAccept))
       const proof = await this.agent.proofs.acceptRequest({
         proofRecordId,
         ...body,
@@ -447,7 +450,9 @@ export class ProofController extends Controller {
     const availableCredentials = await this.agent.proofs.getCredentialsForRequest({ proofRecordId })
     const availableAnonCreds = availableCredentials.proofFormats.anoncreds
 
-    req.log.info('available credentials for hydration %j', availableAnonCreds || {})
+    const attrCount = Object.keys(availableAnonCreds?.attributes || {}).length
+    const predCount = Object.keys(availableAnonCreds?.predicates || {}).length
+    req.log.info('available credentials for hydration: %d attributes, %d predicates', attrCount, predCount)
 
     if (!availableAnonCreds) {
       req.log.warn(
@@ -461,101 +466,17 @@ export class ProofController extends Controller {
       )
     }
 
-    const hydratedAttributes = this.hydrateAttributes(requestedAnonCreds.attributes, availableAnonCreds.attributes)
-    const hydratedPredicates = this.hydratePredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
-
-    this.validateHydration(req, requestedAnonCreds, hydratedAttributes, hydratedPredicates)
-
-    return {
-      anoncreds: {
-        attributes: hydratedAttributes,
-        predicates: hydratedPredicates,
-        selfAttestedAttributes: {},
-      },
+    const { hydrated: hydratedAttributes, errors: attrErrors } = hydrateAttributes(
+      requestedAnonCreds.attributes,
+      availableAnonCreds.attributes
+    )
+    if (attrErrors.length > 0) {
+      throw new BadRequest(attrErrors.join('; '))
     }
-  }
+    const hydratedPredicates = hydratePredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
 
-  /**
-   * Hydrates requested attributes with matching credentials from the available set.
-   *
-   * @param requested Map of requested attributes with credential IDs and revealed status.
-   * @param available Map of available credentials for each attribute.
-   * @returns A map of hydrated attributes.
-   */
-  private hydrateAttributes(
-    requested: Record<string, { credentialId: string; revealed: boolean }> | undefined,
-    available: Record<string, AnonCredsRequestedAttributeMatch[]> | undefined
-  ): Record<string, AnonCredsRequestedAttributeMatch> {
-    const hydrated: Record<string, AnonCredsRequestedAttributeMatch> = {}
-    if (!requested || !available) return hydrated
-
-    for (const [key, value] of Object.entries(requested)) {
-      const match = available[key]?.find((m) => m.credentialId === value.credentialId)
-      if (match) {
-        if (value.revealed !== match.revealed) {
-          throw new BadRequest(
-            `Attribute '${key}' cannot be ${value.revealed ? 'revealed' : 'hidden'}. The proof request or credential requires this attribute to be ${!value.revealed ? 'revealed' : 'hidden'}.`
-          )
-        }
-        hydrated[key] = { ...match, revealed: match.revealed && value.revealed }
-      }
-    }
-    return hydrated
-  }
-
-  /**
-   * Hydrates requested predicates with matching credentials from the available set.
-   *
-   * @param requested Map of requested predicates with credential IDs.
-   * @param available Map of available credentials for each predicate.
-   * @returns A map of hydrated predicates.
-   */
-  private hydratePredicates(
-    requested: Record<string, { credentialId: string }> | undefined,
-    available: Record<string, AnonCredsRequestedPredicateMatch[]> | undefined
-  ): Record<string, AnonCredsRequestedPredicateMatch> {
-    const hydrated: Record<string, AnonCredsRequestedPredicateMatch> = {}
-    if (!requested || !available) return hydrated
-
-    for (const [key, value] of Object.entries(requested)) {
-      const match = available[key]?.find((m) => m.credentialId === value.credentialId)
-      if (match) {
-        hydrated[key] = match
-      }
-    }
-    return hydrated
-  }
-
-  /**
-   * Validates that all requested attributes and predicates have been successfully hydrated.
-   * Throws a NotFoundError if any items are missing.
-   *
-   * @param req Express request object for logging.
-   * @param requested The original requested items.
-   * @param hydratedAttrs The hydrated attributes map.
-   * @param hydratedPreds The hydrated predicates map.
-   */
-  private validateHydration(
-    req: express.Request,
-    requested: NonNullable<SimpleProofFormats['anoncreds']>,
-    hydratedAttrs: Record<string, AnonCredsRequestedAttributeMatch>,
-    hydratedPreds: Record<string, AnonCredsRequestedPredicateMatch>
-  ) {
-    const getMissing = (
-      reqItems: Record<string, { credentialId: string }> | undefined,
-      hydratedItems: Record<string, { credentialId: string }>
-    ) => {
-      if (!reqItems) return []
-      return Object.entries(reqItems)
-        .filter(([key, value]) => {
-          const hydrated = hydratedItems[key]
-          return !hydrated || hydrated.credentialId !== value.credentialId
-        })
-        .map(([name, value]) => ({ name, credentialId: value.credentialId }))
-    }
-
-    const missingAttributes = getMissing(requested.attributes, hydratedAttrs)
-    const missingPredicates = getMissing(requested.predicates, hydratedPreds)
+    const missingAttributes = getMissingCredentials(requestedAnonCreds.attributes, hydratedAttributes)
+    const missingPredicates = getMissingCredentials(requestedAnonCreds.predicates, hydratedPredicates)
 
     if (missingAttributes.length > 0 || missingPredicates.length > 0) {
       const formatDetails = (items: typeof missingAttributes, type: string) =>
@@ -568,122 +489,23 @@ export class ProofController extends Controller {
       req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
       throw new NotFoundError(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
     }
-  }
-
-  /**
-   * Redacts sensitive information from proof formats for logging purposes.
-   *
-   * @param formats The proof formats to redact.
-   * @returns A redacted copy of the proof formats.
-   */
-  private redactProofFormats(formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>): Record<string, unknown> {
-    const anoncreds = formats.anoncreds
-    if (!anoncreds) return formats as Record<string, unknown>
-
-    const attributes = anoncreds.attributes
-      ? Object.fromEntries(
-          Object.entries(anoncreds.attributes).map(([key, value]) => {
-            if (value && typeof value === 'object') {
-              return [key, { ...value, credentialInfo: '[REDACTED]', value: '[REDACTED]' }]
-            }
-            return [key, value]
-          })
-        )
-      : undefined
-
-    const predicates = anoncreds.predicates
-      ? Object.fromEntries(
-          Object.entries(anoncreds.predicates).map(([key, value]) => {
-            if (value && typeof value === 'object') {
-              return [key, { ...value, credentialInfo: '[REDACTED]' }]
-            }
-            return [key, value]
-          })
-        )
-      : undefined
 
     return {
-      ...formats,
       anoncreds: {
-        ...anoncreds,
-        attributes,
-        predicates,
+        attributes: hydratedAttributes,
+        predicates: hydratedPredicates,
+        selfAttestedAttributes: {},
       },
-    } as Record<string, unknown>
+    }
   }
 
   /**
-   * Checks if the provided proof formats match the simplified format structure.
+   * Validates that all requested attributes and predicates have been successfully hydrated.
+   * Throws a NotFoundError if any items are missing.
    *
-   * @param formats The proof formats to check.
-   * @returns True if the formats match the SimpleProofFormats structure, false otherwise.
+   * @param req Express request object for logging.
+   * @param requested The original requested items.
+   * @param hydratedAttrs The hydrated attributes map.
+   * @param hydratedPreds The hydrated predicates map.
    */
-  private isSimpleProofFormats(formats: AcceptProofRequestOptions['proofFormats']): formats is SimpleProofFormats {
-    if (!formats || !('anoncreds' in formats)) return false
-
-    const anoncreds = (formats as { anoncreds: unknown }).anoncreds as {
-      attributes?: Record<string, unknown>
-      predicates?: Record<string, unknown>
-    }
-
-    const hasAttributes = !!anoncreds?.attributes && Object.keys(anoncreds.attributes).length > 0
-    const hasPredicates = !!anoncreds?.predicates && Object.keys(anoncreds.predicates).length > 0
-
-    if (!hasAttributes && !hasPredicates) return false
-
-    const isValidEntry = (entry: unknown, requiredKeys: string[]) =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      requiredKeys.every((k) => k in (entry as object)) &&
-      Object.keys(entry as object).length === requiredKeys.length &&
-      !('credentialInfo' in (entry as object))
-
-    if (
-      hasAttributes &&
-      !Object.values(anoncreds.attributes!).every((a) => isValidEntry(a, ['credentialId', 'revealed']))
-    ) {
-      return false
-    }
-
-    if (hasPredicates && !Object.values(anoncreds.predicates!).every((p) => isValidEntry(p, ['credentialId']))) {
-      return false
-    }
-
-    return true
-  }
-
-  /**
-   * Simplifies the proof content by flattening the structure and extracting relevant attribute values.
-   *
-   * @param formatData The raw proof format data containing request and presentation details.
-   * @returns A simplified record of attribute names and their revealed values.
-   */
-  private simplifyProofContent(formatData: {
-    request?: { anoncreds?: AnonCredsProofRequest }
-    presentation?: { anoncreds?: AnonCredsPresentation }
-  }): Record<string, unknown> {
-    const request = formatData.request?.anoncreds
-    const presentation = formatData.presentation?.anoncreds
-
-    if (!request || !presentation) return {}
-
-    const simplified: Record<string, unknown> = {}
-    const { requested_attributes = {} } = request
-    const { revealed_attrs = {}, revealed_attr_groups = {} } = presentation.requested_proof || {}
-
-    for (const [referent, reqAttr] of Object.entries(requested_attributes)) {
-      const { name, names } = reqAttr as AnonCredsRequestedAttribute
-
-      if (name && revealed_attrs[referent]) {
-        simplified[name] = revealed_attrs[referent].raw
-      } else if (names && revealed_attr_groups[referent]) {
-        const group = revealed_attr_groups[referent]
-        names.forEach((n) => {
-          if (group.values[n]) simplified[n] = group.values[n].raw
-        })
-      }
-    }
-
-    return simplified
-  }
 }

@@ -104,7 +104,35 @@ To avoid making multiple calls, you can fetch the proof record along with its co
 **Response**:
 Returns the `ProofExchangeRecord` with an additional `content` property containing the raw proof format data.
 
-### 2. Get Simplified Proof Content
+### 2. Get Matching Credentials
+
+Before accepting a proof request, you may want to know which credentials in your wallet satisfy the request requirements.
+
+**Endpoint**: `GET /v1/proofs/{proofRecordId}/credentials`
+
+**Response**:
+Returns a `MatchingCredentialsResponse` containing the proof formats with matching credentials from the wallet.
+
+```json
+{
+  "proofFormats": {
+    "anoncreds": {
+      "attributes": {
+        "attribute_referent_1": [
+          {
+            "credentialId": "credential-id-1",
+            "revealed": true,
+             "credentialInfo": { ... }
+          }
+        ]
+      },
+      "predicates": { ... }
+    }
+  }
+}
+```
+
+### 3. Get Simplified Proof Content
 
 The raw proof content can be complex to parse. You can request a simplified view that flattens the structure into simple key-value pairs.
 
