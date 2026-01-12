@@ -91,7 +91,10 @@ jobs:
             up --exit-code-from integration-tests
 
   build-docker:
-    needs: [unit-tests, integration-tests]
+    needs:
+      - static-checks
+      - unit-tests
+      - integration-tests
     uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
     permissions:
       packages: write
@@ -100,7 +103,8 @@ jobs:
       actions: read
 
   generate-sbom-npm:
-    needs: [build-docker]
+    needs:
+      - build-docker
     uses: digicatapult/shared-workflows/.github/workflows/generate-sbom-npm.yml@main
     permissions:
       contents: read
