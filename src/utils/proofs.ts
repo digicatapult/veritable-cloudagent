@@ -1,8 +1,20 @@
-import type { AnonCredsProofRequestRestriction, AnonCredsRequestProofFormat } from '@credo-ts/anoncreds'
+import type {
+  AnonCredsProofRequest,
+  AnonCredsProofRequestRestriction,
+  AnonCredsRequestProofFormat,
+  AnonCredsRequestedAttribute,
+  AnonCredsRequestedAttributeMatch,
+  AnonCredsRequestedPredicateMatch,
+} from '@credo-ts/anoncreds'
+import type { ProofFormatPayload } from '@credo-ts/core'
 
 import type {
+  AcceptProofRequestOptions,
+  AnonCredsPresentation,
   AnonCredsProofRequestRestrictionOptions,
   AnonCredsRequestProofFormatOptions,
+  ProofFormats,
+  SimpleProofFormats,
 } from '../controllers/types.js'
 import { maybeMapValues } from './helpers.js'
 
@@ -70,4 +82,211 @@ export const transformProofFormat = (
       requested_predicates
     ),
   }
+}
+
+/**
+ * Checks if the provided proof formats match the simplified format structure.
+ *
+ * @param formats The proof formats to check.
+ * @returns True if the formats match the SimpleProofFormats structure, false otherwise.
+ */
+export const isSimpleProofFormats = (
+  formats: AcceptProofRequestOptions['proofFormats']
+): formats is SimpleProofFormats => {
+  if (!formats || !('anoncreds' in formats)) return false
+
+  const anoncreds = (formats as { anoncreds: unknown }).anoncreds as {
+    attributes?: Record<string, unknown>
+    predicates?: Record<string, unknown>
+  }
+
+  const hasAttributes = !!anoncreds?.attributes && Object.keys(anoncreds.attributes).length > 0
+  const hasPredicates = !!anoncreds?.predicates && Object.keys(anoncreds.predicates).length > 0
+
+  if (!hasAttributes && !hasPredicates) return false
+
+  const hasForbiddenKeys = (entry: unknown) =>
+    typeof entry === 'object' &&
+    entry !== null &&
+    ('credentialInfo' in (entry as object) || 'timestamp' in (entry as object))
+
+  const isValidEntry = (entry: unknown, requiredKeys: string[]) => {
+    if (typeof entry !== 'object' || entry === null) return false
+
+    const obj = entry as Record<string, unknown>
+    const keys = Object.keys(obj)
+
+    // Must contain all required keys, no forbidden keys, and no unexpected keys
+    const hasAllRequired = requiredKeys.every((k) => k in obj)
+    const onlyExpectedKeys = keys.every((k) => requiredKeys.includes(k))
+
+    return hasAllRequired && onlyExpectedKeys && !hasForbiddenKeys(entry)
+  }
+
+  if (
+    hasAttributes &&
+    !Object.values(anoncreds.attributes!).every((a) => isValidEntry(a, ['credentialId', 'revealed']))
+  ) {
+    return false
+  }
+
+  if (hasPredicates && !Object.values(anoncreds.predicates!).every((p) => isValidEntry(p, ['credentialId']))) {
+    return false
+  }
+
+  return true
+}
+
+/**
+ * Redacts sensitive information from proof formats for logging purposes.
+ *
+ * @param formats The proof formats to redact.
+ * @returns A redacted copy of the proof formats.
+ */
+export const redactProofFormats = (
+  formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>
+): Record<string, unknown> => {
+  const anoncreds = formats.anoncreds
+  if (!anoncreds) return formats as Record<string, unknown>
+
+  const attributes = anoncreds.attributes
+    ? Object.fromEntries(
+        Object.entries(anoncreds.attributes).map(([key, value]) => {
+          if (value && typeof value === 'object') {
+            return [key, { ...value, credentialInfo: '[REDACTED]', value: '[REDACTED]' }]
+          }
+          return [key, value]
+        })
+      )
+    : undefined
+
+  const predicates = anoncreds.predicates
+    ? Object.fromEntries(
+        Object.entries(anoncreds.predicates).map(([key, value]) => {
+          if (value && typeof value === 'object') {
+            return [key, { ...value, credentialInfo: '[REDACTED]' }]
+          }
+          return [key, value]
+        })
+      )
+    : undefined
+
+  return {
+    ...formats,
+    anoncreds: {
+      ...anoncreds,
+      attributes,
+      predicates,
+    },
+  } as Record<string, unknown>
+}
+
+/**
+ * Simplifies the proof content by flattening the structure and extracting relevant attribute values.
+ *
+ * @param formatData The raw proof format data containing request and presentation details.
+ * @returns A simplified record of attribute names and their revealed values.
+ */
+export const simplifyProofContent = (formatData: {
+  request?: { anoncreds?: AnonCredsProofRequest }
+  presentation?: { anoncreds?: AnonCredsPresentation }
+}): Record<string, unknown> => {
+  const request = formatData.request?.anoncreds
+  const presentation = formatData.presentation?.anoncreds
+
+  if (!request || !presentation) {
+    return {}
+  }
+  const simplified: Record<string, unknown> = {}
+  const { requested_attributes = {} } = request
+  const { revealed_attrs = {}, revealed_attr_groups = {} } = presentation.requested_proof || {}
+
+  for (const [referent, reqAttr] of Object.entries(requested_attributes)) {
+    const { name, names } = reqAttr as AnonCredsRequestedAttribute
+
+    if (name && revealed_attrs[referent]) {
+      simplified[name] = revealed_attrs[referent].raw
+    } else if (names && revealed_attr_groups[referent]) {
+      const group = revealed_attr_groups[referent]
+      names.forEach((n) => {
+        if (group.values[n]) simplified[n] = group.values[n].raw
+      })
+    }
+  }
+
+  return simplified
+}
+
+/**
+ * Hydrates requested attributes with matching credentials from the available set.
+ *
+ * @param requested Map of requested attributes with credential IDs and revealed status.
+ * @param available Map of available credentials for each attribute.
+ * @returns A map of hydrated attributes.
+ */
+export const hydrateAttributes = (
+  requested: Record<string, { credentialId: string; revealed: boolean }> | undefined,
+  available: Record<string, AnonCredsRequestedAttributeMatch[]> | undefined
+): { hydrated: Record<string, AnonCredsRequestedAttributeMatch>; errors: string[] } => {
+  const hydrated: Record<string, AnonCredsRequestedAttributeMatch> = {}
+  const errors: string[] = []
+  if (!requested || !available) return { hydrated, errors }
+
+  for (const [key, value] of Object.entries(requested)) {
+    const match = available[key]?.find((m) => m.credentialId === value.credentialId)
+    if (match) {
+      if (value.revealed !== match.revealed) {
+        errors.push(
+          `Attribute '${key}' cannot be ${value.revealed ? 'revealed' : 'hidden'}. The proof request or credential requires this attribute to be ${!value.revealed ? 'revealed' : 'hidden'}.`
+        )
+      } else {
+        hydrated[key] = { ...match, revealed: value.revealed }
+      }
+    }
+  }
+  return { hydrated, errors }
+}
+
+/**
+ * Hydrates requested predicates with matching credentials from the available set.
+ *
+ * @param requested Map of requested predicates with credential IDs.
+ * @param available Map of available credentials for each predicate.
+ * @returns A map of hydrated predicates.
+ */
+export const hydratePredicates = (
+  requested: Record<string, { credentialId: string }> | undefined,
+  available: Record<string, AnonCredsRequestedPredicateMatch[]> | undefined
+): Record<string, AnonCredsRequestedPredicateMatch> => {
+  const hydrated: Record<string, AnonCredsRequestedPredicateMatch> = {}
+  if (!requested || !available) return hydrated
+
+  for (const [key, value] of Object.entries(requested)) {
+    const match = available[key]?.find((m) => m.credentialId === value.credentialId)
+    if (match) {
+      hydrated[key] = match
+    }
+  }
+  return hydrated
+}
+
+/**
+ * Identifies credentials that were requested but not found in the hydrated set.
+ *
+ * @param requested Map of requested items with credential IDs.
+ * @param hydrated Map of hydrated items.
+ * @returns A list of missing credentials.
+ */
+export const getMissingCredentials = (
+  requested: Record<string, { credentialId: string }> | undefined,
+  hydrated: Record<string, { credentialId: string }>
+): { name: string; credentialId: string }[] => {
+  if (!requested) return []
+  return Object.entries(requested)
+    .filter(([key, value]) => {
+      const h = hydrated[key]
+      return !h || h.credentialId !== value.credentialId
+    })
+
+    .map(([name, value]) => ({ name, credentialId: value.credentialId }))
 }
