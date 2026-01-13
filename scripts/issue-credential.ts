@@ -221,7 +221,7 @@ async function main() {
     throw new Error(`Failed offering credential: ${proposeCredRes.status} ${text}`)
   }
 
-  log('Credential offer sent to maker. Awaiting acceptance...')
+  log('Credential offer sent to maker.')
   process.exit(0)
 }
 
