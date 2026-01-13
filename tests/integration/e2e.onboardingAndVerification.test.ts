@@ -1,4 +1,4 @@
-import { ProofExchangeRecordProps } from '@credo-ts/core'
+import type { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
 import { afterEach, beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
@@ -178,7 +178,7 @@ describe('Onboarding & Verification flow', function () {
     issuerCredentialRecordId = response.body.id
   })
 
-  it.skip('should allow the Holder to fetch a record of the credential offered', async function () {
+  it('should allow the Holder to fetch a record of the credential offered', async function () {
     const response = await holderClient
       .get('/v1/credentials')
       .query({ connectionId: holderToIssuerConnectionRecordId })
@@ -190,7 +190,8 @@ describe('Onboarding & Verification flow', function () {
     holderCredentialRecordId = response.body[0].id
   })
 
-  it.skip('should allow the Holder to accept the credential offered', async function () {
+  it('should allow the Holder to accept the credential offered', async function () {
+    this.timeout(10000)
     const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
 
     const response = await holderClient
@@ -285,7 +286,7 @@ describe('Onboarding & Verification flow', function () {
 
           requested_attributes: {
             name: {
-              name: 'checkName',
+              names: ['checkName', 'companyName', 'companiesHouseNumber', 'issueDate', 'expiryDate'],
               restrictions: [
                 {
                   cred_def_id: credentialDefinitionId,
@@ -320,18 +321,53 @@ describe('Onboarding & Verification flow', function () {
     }
   })
 
-  it('should let the Holder see specific proof reques', async function () {
+  it('should let the Holder see specific proof requests', async function () {
     const response = await holderClient
       .get(`/v1/proofs/${holderProofRequestId}`)
       .expect('Content-Type', /json/)
       .expect(200)
     expect(response.body.id).to.be.equal(holderProofRequestId)
   })
-  it.skip('should let the Holder accept proof record', async function () {
+
+  it('should let the Holder accept proof record', async function () {
+    // 1. Fetch with includeContent
+    const proofRes = await holderClient
+      .get(`/v1/proofs/${holderProofRequestId}`)
+      .query({ includeContent: true })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    expect(proofRes.body.content).to.not.equal(undefined)
+
+    // 2. Fetch simplified view
+    const contentRes = await holderClient
+      .get(`/v1/proofs/${holderProofRequestId}/content`)
+      .query({ view: 'simplified' })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    // Simplified view is empty before presentation is sent
+    expect(contentRes.body).to.deep.equal({})
+
+    // 3. Accept with simplified format
+    // Fetch credentials to get the ID for explicit selection
+    const credentialsRes = await holderClient.get(`/v1/proofs/${holderProofRequestId}/credentials`).expect(200)
+
+    const credentialId = credentialsRes.body.proofFormats.anoncreds.attributes.name[0].credentialId
+
     const acceptProofBody = {
       useReturnRoute: true,
       willConfirm: true,
-      autoAcceptProof: 'always',
+      proofFormats: {
+        anoncreds: {
+          attributes: {
+            name: {
+              credentialId: credentialId,
+              revealed: true,
+            },
+          },
+        },
+      },
     }
     const response = await holderClient
       .post(`/v1/proofs/${holderProofRequestId}/accept-request`)
@@ -341,12 +377,19 @@ describe('Onboarding & Verification flow', function () {
 
     expect(response.body.state).to.be.equal('presentation-sent')
   })
-  it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
-    const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
 
-    const result: ProofExchangeRecordProps = response.body.find(
-      ({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier
-    )
-    expect(result.state).to.be.equal('done')
+  it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
+    this.timeout(10000)
+    // We need to wait for the state to become 'done' as the Verifier processes the presentation asynchronously.
+    // This polling loop prevents race conditions where the test checks before the background process completes.
+    let result: ProofExchangeRecordProps | undefined
+    for (let i = 0; i < 10; i++) {
+      const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
+      result = response.body.find(({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier)
+      if (result && result.state === 'done') break
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
+
+    expect(result?.state).to.be.equal('done')
   })
 })
