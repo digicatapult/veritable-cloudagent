@@ -40,7 +40,7 @@ function printUsageAndExit(code: number): never {
     'Usage: register-schema [schemaFileName] [--issuer <did>] [--base-url <url>]\n' +
       'Examples:\n' +
       '  node --experimental-strip-types ./scripts/register-schema.ts makeAuthorisation.json --issuer did:key:abc --base-url http://localhost:3000\n' +
-      '  node --experimental-strip-types ./scripts/register-schema.ts --base-url http://localhost:3000\n' +
+      '  node --experimental-strip-types ./scripts/register-schema.ts --issuer did:key:abc --base-url http://localhost:3000\n' +
       'If schemaFileName is omitted, defaults to makeAuthorisation.json\n' +
       'If --issuer is omitted, DID will be did:web:alice%3A8443\n'
   )
