@@ -11,7 +11,7 @@ jobs:
   tests:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
     with:
-      coverage: true
+      coverage: false
       docker_compose_file: ''
       pre_test_command: 'npm run build'
       tests: '["test:unit"]'
