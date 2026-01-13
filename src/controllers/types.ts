@@ -33,6 +33,135 @@ import type {
 } from '@credo-ts/core'
 
 /**
+ * Recursive JSON types for TSOA compatibility.
+ * Defined locally to avoid TSOA errors with imported specific types.
+ *
+ * NOTE: The extensive type and interface definitions in this file (specifically explicitly
+ * recursive types like ApiJsonObject) are required to satisfy TSOA's schema generation.
+ * TSOA struggles with generic 'Record<string, any>' or complex union types imported
+ * from @credo-ts/core, often throwing 'Index Type' or 'Reference' errors during spec generation.
+ * By defining strict, self-contained recursive structures here, we ensure Swagger/OpenAPI
+ * specs are generated correctly.
+ */
+export type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonArray | undefined
+export type ApiJsonArray = Array<ApiJsonValue>
+export interface ApiJsonObject {
+  [key: string]: ApiJsonValue
+}
+
+export type GenericRecord = ApiJsonObject
+
+// --- W3C / JSON-LD Types ---
+
+export interface W3cCredential extends ApiJsonObject {
+  '@context': string[] | GenericRecord
+  id?: string
+  type: string[]
+  issuer: string | { id: string; [key: string]: ApiJsonValue }
+  issuanceDate: string
+  expirationDate?: string
+  credentialSubject: GenericRecord | GenericRecord[]
+  proof?: GenericRecord
+}
+
+export interface JsonLdCredentialDetailFormat {
+  credential: W3cCredential
+  options: {
+    proofPurpose: string
+    proofType: string
+    created?: string
+    domain?: string
+    challenge?: string
+  }
+}
+
+export interface JsonLdAcceptRequestFormat {
+  verificationMethod?: string
+}
+
+export interface JsonLdCredentialFormat {
+  formatKey: 'jsonld'
+  credentialRecordType: 'w3c'
+  credentialFormats: {
+    createProposal: JsonLdCredentialDetailFormat
+    // TSOA friendly empty object replacement
+    acceptProposal: Record<string, never>
+    createOffer: JsonLdCredentialDetailFormat
+    acceptOffer: Record<string, never>
+    createRequest: JsonLdCredentialDetailFormat
+    acceptRequest: JsonLdAcceptRequestFormat
+  }
+  formatData: {
+    proposal: GenericRecord
+    offer: GenericRecord
+    request: GenericRecord
+    credential: GenericRecord
+  }
+}
+
+// --- Presentation Exchange Types ---
+
+export interface PexSchema extends ApiJsonObject {
+  uri: string
+}
+
+export interface InputDescriptorV1 extends ApiJsonObject {
+  id: string
+  schema: PexSchema[]
+  name?: string
+  purpose?: string
+  group?: string[]
+}
+
+export interface PresentationDefinitionV1 extends ApiJsonObject {
+  id: string
+  input_descriptors: InputDescriptorV1[]
+  name?: string
+  purpose?: string
+  format?: GenericRecord
+}
+
+export interface PresentationExchangeCreateProposal {
+  presentationDefinition: PresentationDefinitionV1
+}
+
+export interface PresentationExchangeAcceptProposal {
+  options?: {
+    challenge?: string
+    domain?: string
+  }
+}
+
+export interface PresentationExchangeCreateRequest {
+  presentationDefinition: PresentationDefinitionV1
+  options?: {
+    challenge?: string
+    domain?: string
+  }
+}
+
+export interface PresentationExchangeAcceptRequest {
+  credentials?: Record<string, unknown[]>
+}
+
+export interface DifPresentationExchangeProofFormat {
+  formatKey: 'presentationExchange'
+  proofFormats: {
+    createProposal: PresentationExchangeCreateProposal
+    acceptProposal: PresentationExchangeAcceptProposal
+    createRequest: PresentationExchangeCreateRequest
+    acceptRequest: PresentationExchangeAcceptRequest
+    getCredentialsForRequest: { input: GenericRecord; output: GenericRecord }
+    selectCredentialsForRequest: { input: GenericRecord; output: GenericRecord }
+  }
+  formatData: {
+    proposal: GenericRecord
+    request: GenericRecord
+    presentation: GenericRecord
+  }
+}
+
+/**
  * Stringified UUIDv4.
  * @pattern [0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}
  * @example "52907745-7672-470e-a803-a2f8feb52944"
@@ -118,10 +247,10 @@ export interface ProofRequestMessageResponse {
 }
 
 type CredentialProtocols = [V2CredentialProtocol<[AnonCredsCredentialFormatService]>]
-type CredentialFormats = [AnonCredsCredentialFormat]
+type CredentialFormats = [AnonCredsCredentialFormat, JsonLdCredentialFormat]
 
 type ProofProtocols = [V2ProofProtocol<[AnonCredsProofFormatService]>]
-export type ProofFormats = [AnonCredsProofFormat]
+export type ProofFormats = [AnonCredsProofFormat, DifPresentationExchangeProofFormat]
 
 interface PrivateKey {
   keyType: KeyType
@@ -174,18 +303,14 @@ export type DidCreateResult = DidOperationStateWait | DidOperationStateActionBas
 
 export interface ProposeCredentialOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: {
-    [key in CredentialFormats[number] as key['formatKey']]?: CredentialFormats[number]['credentialFormats']['createProposal']
-  }
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   connectionId: UUID
 }
 
 export interface AcceptCredentialProposalOptions {
-  credentialFormats?: {
-    [key in CredentialFormats[number] as key['formatKey']]?: CredentialFormats[number]['credentialFormats']['acceptProposal']
-  }
+  credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }
@@ -384,7 +509,8 @@ export interface AnonCredsRequestProofFormatOptions extends Omit<
 export interface CreateProofRequestOptions {
   protocolVersion: ProofsProtocolVersionType<ProofProtocols>
   proofFormats: {
-    [key in ProofFormats[number] as key['formatKey']]?: AnonCredsRequestProofFormatOptions
+    anoncreds?: AnonCredsRequestProofFormatOptions
+    presentationExchange?: PresentationExchangeCreateRequest
   }
   goalCode?: string
   parentThreadId?: UUID
