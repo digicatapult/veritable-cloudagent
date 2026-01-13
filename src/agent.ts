@@ -11,12 +11,16 @@ import {
   AutoAcceptProof,
   ConnectionsModule,
   CredentialsModule,
+  DidsModule,
   HttpOutboundTransport,
+  KeyDidResolver,
   MediatorModule,
   ModulesMap,
+  PeerDidResolver,
   ProofsModule,
   V2CredentialProtocol,
   V2ProofProtocol,
+  WebDidResolver,
   WsOutboundTransport,
 } from '@credo-ts/core'
 import { DrpcModule } from '@credo-ts/drpc'
@@ -69,6 +73,7 @@ export type AriesRestConfig = {
 
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
+  dids: DidsModule
   proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
   credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
   anoncreds: AnonCredsModule
@@ -80,6 +85,7 @@ export interface RestAgentModules extends ModulesMap {
 export type RestAgent<
   modules extends RestAgentModules = {
     connections: ConnectionsModule
+    dids: DidsModule
     proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
     credentials: CredentialsModule<[V2CredentialProtocol]>
     anoncreds: AnonCredsModule
@@ -102,6 +108,9 @@ const getAgentModules = (options: {
   return {
     connections: new ConnectionsModule({
       autoAcceptConnections: options.autoAcceptConnections,
+    }),
+    dids: new DidsModule({
+      resolvers: [new WebDidResolver(), new PeerDidResolver(), new KeyDidResolver()],
     }),
     proofs: new ProofsModule({
       autoAcceptProofs: options.autoAcceptProofs,

@@ -1,5 +1,4 @@
 import { Agent, DidDocument, getJwkFromKey, JsonTransformer, KeyType } from '@credo-ts/core'
-import { DIDDocument as ResolverDidDocument } from 'did-resolver'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
@@ -26,7 +25,7 @@ export class DidWebDocGenerator {
     const encryptionKeyJwk = getJwkFromKey(encryptionKey)
 
     // Assemble the DID:web document
-    const didWebDocument: ResolverDidDocument = {
+    const didWebDocument = {
       '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
       id: didId,
       verificationMethod: [
@@ -79,7 +78,7 @@ export class DidWebDocGenerator {
     didWebDomain: string,
     serviceEndpoint: string,
     didGenerationEnabled: boolean,
-    uploadDidToServer: (document: ResolverDidDocument) => Promise<void>
+    uploadDidToServer: (document: DidDocument) => Promise<void>
   ): Promise<DidWebGenerationResult | void> {
     if (!didGenerationEnabled) {
       this.logger.debug('DID:web generation is disabled')
