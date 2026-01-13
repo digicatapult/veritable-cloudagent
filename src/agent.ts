@@ -12,6 +12,7 @@ import {
   ConnectionsModule,
   CredentialsModule,
   DidsModule,
+  DifPresentationExchangeProofFormatService,
   HttpOutboundTransport,
   JsonLdCredentialFormatService,
   KeyDidResolver,
@@ -76,7 +77,7 @@ export type AriesRestConfig = {
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
   dids: DidsModule
-  proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]>
   credentials: CredentialsModule<
     [V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>]
   >
@@ -91,7 +92,7 @@ export type RestAgent<
   modules extends RestAgentModules = {
     connections: ConnectionsModule
     dids: DidsModule
-    proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+    proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]>
     credentials: CredentialsModule<
       [V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>]
     >
@@ -124,7 +125,7 @@ const getAgentModules = (options: {
       autoAcceptProofs: options.autoAcceptProofs,
       proofProtocols: [
         new V2ProofProtocol({
-          proofFormats: [new AnonCredsProofFormatService()],
+          proofFormats: [new AnonCredsProofFormatService(), new DifPresentationExchangeProofFormatService()],
         }),
       ],
     }),
