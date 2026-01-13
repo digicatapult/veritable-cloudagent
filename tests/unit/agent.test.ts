@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { after, before, describe, test } from 'mocha'
 
-import type { Agent } from '@credo-ts/core'
+import { Agent } from '@credo-ts/core'
 import type { Server } from 'node:net'
 
 import request from 'supertest'
@@ -36,6 +36,17 @@ describe('AgentController', () => {
       const response = await request(app).get('/health')
 
       expect(response.body).to.have.property('version')
+    })
+  })
+
+  describe('Agent Modules', () => {
+    test('should have AnonCreds module registered', () => {
+      expect(agent.modules).to.have.property('anoncreds')
+    })
+
+    test('should have W3C credentials module registered', () => {
+      // W3cCredentialsModule is a core module in BaseAgent, so it is available directly on agent instance
+      expect(agent).to.have.property('w3cCredentials')
     })
   })
 
