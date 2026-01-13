@@ -49,6 +49,18 @@ export interface MediaItemRequest {
   metadata?: Record<string, unknown>
 }
 
+export interface CredentialAttribute {
+  name: string
+  value: string
+  mimeType?: string
+}
+
+export interface CredentialFormatData {
+  proposalAttributes?: CredentialAttribute[]
+  offerAttributes?: CredentialAttribute[]
+  requestAttributes?: CredentialAttribute[]
+}
+
 export interface MediaShareRequest {
   connectionId: UUID
   description?: string

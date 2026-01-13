@@ -31,6 +31,7 @@ import type {
   AcceptCredentialProposalOptions,
   AcceptCredentialRequestOptions,
   CreateOfferOptions,
+  CredentialFormatData,
   OfferCredentialOptions,
   ProposeCredentialOptions,
   UUID,
@@ -103,14 +104,14 @@ export class CredentialController extends Controller {
    * @param credentialRecordId
    * @returns GetCredentialFormatDataReturn
    */
-  @Example<Awaited<ReturnType<RestAgent['credentials']['getFormatData']>>>(CredentialFormatDataExample)
+  @Example<CredentialFormatData>(CredentialFormatDataExample)
   @Get('/:credentialRecordId/format-data')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async getCredentialFormatDataById(
     @Request() req: express.Request,
     @Path('credentialRecordId') credentialRecordId: UUID
-  ) {
+  ): Promise<CredentialFormatData> {
     try {
       req.log.info('getting format data for %s', credentialRecordId)
       const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
