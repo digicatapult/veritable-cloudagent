@@ -12,14 +12,7 @@ jobs:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
     with:
       coverage: true
-      npm_build_command: >
-        sudo apt-get update &&
-        sudo apt-get install -y libnss3-tools mkcert &&
-        mkcert -install &&
-        mkcert alice localhost &&
-        mkcert bob localhost &&
-        mkcert charlie localhost &&
-        echo "NODE_EXTRA_CA_CERTS=$(mkcert -CAROOT)/rootCA.pem" >> $GITHUB_ENV
+      docker_compose_file: ''
       pre_test_command: 'npm run build'
       tests: '["test:unit"]'
 
