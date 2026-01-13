@@ -10,141 +10,25 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-# Make sure we're not running multiple release steps at the same time as this can give issues with determining the next npm version to release.
-# Ideally we only add this to the 'release' job so it doesn't limit PR runs, but github can't guarantee the job order in that case:
-# "When concurrency is specified at the job level, order is not guaranteed for jobs or runs that queue within 5 minutes of each other."
 concurrency:
   group: credo-ts-${{ github.ref }}-${{ github.repository }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
-  repo_ids:
-    runs-on: ubuntu-latest
-    outputs:
-      repo_name: ${{ steps.repo_ids.outputs.REPO_NAME }}
-      org_name: ${{ steps.repo_ids.outputs.ORG_NAME }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Get repository identifiers
-        id: repo_ids
-        run: |
-          REPO_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
-          ORG_NAME=$(echo "${{ github.event.repository.owner.name }}" | tr '[:upper:]' '[:lower:]')
-          echo $REPO_NAME
-          echo $ORG_NAME
-          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
-          echo "ORG_NAME=$ORG_NAME" >> $GITHUB_OUTPUT
-
   static-checks:
-    name: Run Static Analysis Checks
-    strategy:
-      fail-fast: false
-      matrix:
-        command: [lint, depcheck, check]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24.x
-      - name: Cache Node.js modules
-        uses: actions/cache@v5
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-      - name: Install Packages
-        run: npm install # maybe this should be changed to npm ci
-      - name: ${{ matrix.command }}
-        run: npm run ${{ matrix.command }}
-
-  tests:
-    name: Run tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 24.x
-
-      - name: Cache Node.js modules
-        uses: actions/cache@v5
-        with:
-          path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
-          key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.OS }}-node-
-            ${{ runner.OS }}-
-
-      - name: Install Packages
-        run: npm install # maybe this should be changed to npm ci
-
-      - name: Build the TypeScript OpenAPI with tsoa
-        run: npm run build
-
-      - name: Run tests
-        run: npm run test:unit
-
-  check-version:
-    name: 'Check version'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Check version
-        id: get_version
-        uses: digicatapult/check-version@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  build-docker:
-    name: 'Build docker image'
-    runs-on: ubuntu-latest
-    steps:
-      - name: 'Login to GitHub Container Registry'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: actions/checkout@v6
-
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: all
-
-      - name: Setup Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          buildkitd-flags: '--debug'
-
-      - name: Build image
-        uses: docker/build-push-action@v6
-        with:
-          builder: ${{ steps.buildx.outputs.name }}
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64, linux/arm64
-          push: false
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},mode=max
-
-  generate-sbom-npm:
-    needs: [build-docker]
-    uses: digicatapult/shared-workflows/.github/workflows/generate-sbom-npm.yml@main
-    permissions:
-      contents: read
+    uses: digicatapult/shared-workflows/.github/workflows/static-checks-npm.yml@main
     with:
-      additional_args: "--ignore-npm-errors"
+      enable_semgrep_action: true
+      enable_trufflehog_action: true
+      trufflehog_extra_args: '--results=verified,unknown --log-level=2'
+
+  unit-tests:
+    uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
+    with:
+      coverage: true
+      docker_compose_file: ''
+      pre_test_command: 'npm run build'
+      tests: '["test:unit"]'
 
   integration-tests:
     name: 'Run integration tests'
@@ -198,3 +82,24 @@ jobs:
             -f docker-compose-testnet.yml \
             -f docker-compose-integration-tests.yml \
             up --exit-code-from integration-tests
+
+  build-docker:
+    needs:
+      - static-checks
+      - unit-tests
+      - integration-tests
+    uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
+    permissions:
+      packages: write
+      contents: write
+      security-events: write
+      actions: read
+
+  generate-sbom-npm:
+    needs:
+      - build-docker
+    uses: digicatapult/shared-workflows/.github/workflows/generate-sbom-npm.yml@main
+    permissions:
+      contents: read
+    with:
+      additional_args: "--ignore-npm-errors"
