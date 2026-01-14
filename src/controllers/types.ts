@@ -43,10 +43,14 @@ import type {
  * By defining strict, self-contained recursive structures here, we ensure Swagger/OpenAPI
  * specs are generated correctly.
  */
-export type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonArray | undefined
+
+// Strict index structure
+export type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonArray
 export type ApiJsonArray = Array<ApiJsonValue>
+
+// Allow undefined in the object structure to support optional properties for W3C credentials
 export interface ApiJsonObject {
-  [key: string]: ApiJsonValue
+  [key: string]: ApiJsonValue | undefined
 }
 
 export type GenericRecord = ApiJsonObject
