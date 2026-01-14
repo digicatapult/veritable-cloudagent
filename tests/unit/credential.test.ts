@@ -1,7 +1,11 @@
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
-import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types.js'
+import type {
+  AcceptCredentialProposalOptions,
+  OfferCredentialOptions,
+  ProposeCredentialOptions,
+} from '../../src/controllers/types.js'
 
 import type { AddressInfo, Server } from 'node:net'
 
@@ -235,6 +239,44 @@ describe('CredentialController', () => {
       const response = await request(app).post('/v1/credentials/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-offer')
 
       expect(response.statusCode).to.be.equal(404)
+    })
+
+    test('should support jsonld format in proposal', async () => {
+      const proposeCredentialStub = stub(bobAgent.credentials, 'proposeCredential')
+      proposeCredentialStub.resolves(testCredential)
+
+      const proposalRequestJsonLd: ProposeCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: ['VerifiableCredential'],
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/propose-credential`).send(proposalRequestJsonLd)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        proposeCredentialStub.calledWithMatch({
+          credentialFormats: {
+            jsonld: proposalRequestJsonLd.credentialFormats?.jsonld,
+          },
+        })
+      ).equals(true)
     })
   })
 
@@ -594,6 +636,46 @@ describe('CredentialController', () => {
         .send({ credentialRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
+    })
+
+    test('should support jsonld format in offer', async () => {
+      const findByIdStub = stub(bobAgent.connections, 'findById')
+      findByIdStub.resolves(connection)
+      const offerCredentialStub = stub(bobAgent.credentials, 'offerCredential')
+      offerCredentialStub.resolves(testCredential)
+
+      const offerRequestJsonLd: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: ['VerifiableCredential'],
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/offer-credential`).send(offerRequestJsonLd)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        offerCredentialStub.calledWithMatch({
+          credentialFormats: {
+            jsonld: offerRequestJsonLd.credentialFormats?.jsonld,
+          },
+        })
+      ).equals(true)
     })
   })
 

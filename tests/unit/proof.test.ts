@@ -471,6 +471,40 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
     })
+
+    test('should pass through presentation exchange proof format', async () => {
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+
+      const requestWithPex: RequestProofOptions = {
+        connectionId: 'aaaaaaaa-aaaa-4aaa-aaaa-000000000000',
+        protocolVersion: 'v2',
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'test-id',
+              input_descriptors: [],
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/proofs/request-proof`).send(requestWithPex)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        requestProofStub.calledWithMatch({
+          proofFormats: {
+            presentationExchange: {
+              presentationDefinition: {
+                id: 'test-id',
+                input_descriptors: [],
+              },
+            },
+          },
+        })
+      ).equals(true)
+    })
   })
 
   describe('Accept proof request', () => {
