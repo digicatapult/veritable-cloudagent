@@ -13,6 +13,7 @@ import type {
   AnonCredsPresentation,
   AnonCredsProofRequestRestrictionOptions,
   AnonCredsRequestProofFormatOptions,
+  PresentationExchangeCreateRequest,
   ProofFormats,
   SimpleProofFormats,
 } from '../controllers/types.js'
@@ -81,6 +82,16 @@ export const transformProofFormat = (
       }),
       requested_predicates
     ),
+  }
+}
+
+export const transformProofFormats = (proofFormats: {
+  anoncreds?: AnonCredsRequestProofFormatOptions
+  presentationExchange?: PresentationExchangeCreateRequest
+}) => {
+  return {
+    ...(proofFormats.anoncreds ? { anoncreds: transformProofFormat(proofFormats.anoncreds) } : {}),
+    ...(proofFormats.presentationExchange ? { presentationExchange: proofFormats.presentationExchange } : {}),
   }
 }
 

@@ -31,7 +31,7 @@ import {
   isSimpleProofFormats,
   redactProofFormats,
   simplifyProofContent,
-  transformProofFormat,
+  transformProofFormats,
 } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
@@ -271,10 +271,7 @@ export class ProofController extends Controller {
     const { proofFormats, ...rest } = request
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
     const { message, proofRecord } = await this.agent.proofs.createRequest({
-      proofFormats: {
-        ...(proofFormats.anoncreds ? { anoncreds: transformProofFormat(proofFormats.anoncreds) } : {}),
-        ...(proofFormats.presentationExchange ? { presentationExchange: proofFormats.presentationExchange } : {}),
-      },
+      proofFormats: transformProofFormats(proofFormats),
       ...rest,
     } as unknown as InternalCreateProofRequestOptions)
 
@@ -302,10 +299,7 @@ export class ProofController extends Controller {
       req.log.info('requesting proof for %s connection %j', connectionId, body)
       const proof = await this.agent.proofs.requestProof({
         connectionId,
-        proofFormats: {
-          ...(proofFormats.anoncreds ? { anoncreds: transformProofFormat(proofFormats.anoncreds) } : {}),
-          ...(proofFormats.presentationExchange ? { presentationExchange: proofFormats.presentationExchange } : {}),
-        },
+        proofFormats: transformProofFormats(proofFormats),
         ...rest,
       } as unknown as InternalRequestProofOptions)
 
