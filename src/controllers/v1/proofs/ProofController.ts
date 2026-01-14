@@ -243,8 +243,8 @@ export class ProofController extends Controller {
     try {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
       const proof = await this.agent.proofs.acceptProposal({
-        ...(proposal as unknown as InternalAcceptProofProposalOptions),
         proofRecordId,
+        ...(proposal as unknown as Omit<InternalAcceptProofProposalOptions, 'proofRecordId'>),
       })
 
       return proof.toJSON()
