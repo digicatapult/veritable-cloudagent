@@ -2,7 +2,7 @@
 
 This agent supports a hybrid identity architecture, enabling the issuance and verification of credentials using two distinct formats:
 
-1. **AnonCreds** (Anonymous Credentials): Advanced privacy features like Zero-Knowledge Proofs (ZKPs) and selective disclosure. typically requires a ledger like Indy or Cheqd.
+1. **AnonCreds** (Anonymous Credentials): Advanced privacy features like Zero-Knowledge Proofs (ZKPs) and selective disclosure. Typically requires a ledger like Indy or Cheqd.
 2. **W3C Credentials** (Verifiable Credentials): Flexible, interoperable, and widely supported standard using JSON-LD or JWT formats. Can be used with ledger-agnostic methods like `did:key` or `did:web`.
 
 ## Supported DID Methods
