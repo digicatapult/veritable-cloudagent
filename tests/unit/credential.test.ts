@@ -5,7 +5,7 @@ import type {
   AcceptCredentialProposalOptions,
   OfferCredentialOptions,
   ProposeCredentialOptions,
-} from '../../src/controllers/types.js'
+} from '../../src/controllers/types/index.js'
 
 import type { AddressInfo, Server } from 'node:net'
 

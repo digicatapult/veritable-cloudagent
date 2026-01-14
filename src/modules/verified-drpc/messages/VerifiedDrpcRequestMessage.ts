@@ -1,7 +1,7 @@
 import { AgentMessage, IsValidMessageType, parseMessageType } from '@credo-ts/core'
 import { Expose } from 'class-transformer'
 
-import type { UUID } from '../../../controllers/types.js'
+import type { UUID } from '../../../controllers/types/common.js'
 import { IsValidVerifiedDrpcRequest } from '../models/index.js'
 
 export interface VerifiedDrpcRequestObject {

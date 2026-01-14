@@ -41,7 +41,7 @@ import type {
   ReceiveInvitationByUrlProps,
   ReceiveInvitationProps,
   UUID,
-} from '../../types.js'
+} from '../../types/index.js'
 
 @Tags('Out Of Band')
 @Route('/v1/oob')

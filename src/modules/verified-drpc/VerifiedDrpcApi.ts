@@ -18,7 +18,7 @@ import {
   injectable,
 } from '@credo-ts/core'
 
-import type { UUID } from '../../controllers/types.js'
+import type { UUID } from '../../controllers/types/index.js'
 import { NotFoundError } from '../../error.js'
 import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
