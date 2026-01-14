@@ -8,12 +8,15 @@ const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
 
 // Using a known did:key for signatures (matches existing test key for consistency)
-const ISSUER_DID = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
+// const ISSUER_DID = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
 
 describe('W3C Credentials E2E Flow', function () {
   const issuerClient = request(ISSUER_BASE_URL) // Alice
   const holderClient = request(HOLDER_BASE_URL) // Bob
   const verifierClient = request(VERIFIER_BASE_URL)
+
+  let ISSUER_DID: string
+  let HOLDER_DID: string
 
   let issuerToHolderOobRecordId: UUID
   let verifierToHolderOobRecordId: UUID
@@ -31,6 +34,27 @@ describe('W3C Credentials E2E Flow', function () {
 
   let holderProofRequestId: UUID
   let verifierProofRecordId: UUID
+  let verifierThreadId: string
+
+  before(async function () {
+    // Create Issuer DID
+    const issuerResponse = await issuerClient.post('/v1/dids/create').send({
+      method: 'key',
+      options: {
+        keyType: 'ed25519',
+      },
+    })
+    ISSUER_DID = issuerResponse.body.did
+
+    // Create Holder DID
+    const holderResponse = await holderClient.post('/v1/dids/create').send({
+      method: 'key',
+      options: {
+        keyType: 'ed25519',
+      },
+    })
+    HOLDER_DID = holderResponse.body.did
+  })
 
   beforeEach(function (done) {
     setTimeout(function () {
@@ -106,16 +130,14 @@ describe('W3C Credentials E2E Flow', function () {
       credentialFormats: {
         jsonld: {
           credential: {
-            '@context': ['https://www.w3.org/2018/credentials/v1', 'https://www.w3.org/2018/credentials/examples/v1'],
-            type: ['VerifiableCredential', 'UniversityDegreeCredential'],
+            '@context': ['https://www.w3.org/2018/credentials/v1', 'http://schema.org/'],
+            type: ['VerifiableCredential', 'Person'],
             issuer: ISSUER_DID,
             issuanceDate: new Date().toISOString(),
             credentialSubject: {
-              id: 'did:example:123', // Placeholder for Holder DID
-              degree: {
-                type: 'BachelorDegree',
-                name: 'Bachelor of Science and Arts',
-              },
+              id: HOLDER_DID, // Holder DID
+              givenName: 'Alice',
+              familyName: 'Doe',
             },
           },
           options: {
@@ -173,7 +195,29 @@ describe('W3C Credentials E2E Flow', function () {
     expect(response.body).to.have.property('state', 'request-sent')
   })
 
-  it('should wait for credential to be issued (done state)', async function () {
+  it('should allow the Holder to accept the issued credential', async function () {
+    // Wait for Holder to receive credential
+    let received = false
+    for (let i = 0; i < 20; i++) {
+      const response = await holderClient.get(`/v1/credentials/${holderCredentialRecordId}`)
+      if (response.body.state === 'credential-received') {
+        received = true
+        break
+      }
+      await new Promise((r) => setTimeout(r, 500))
+    }
+    expect(received).to.equal(true, 'Holder should have reached state credential-received')
+
+    // Explicitly accept the credential (storage)
+    const response = await holderClient
+      .post(`/v1/credentials/${holderCredentialRecordId}/accept-credential`)
+      .send({})
+      .expect(200)
+
+    expect(response.body.state).to.equal('done')
+  })
+
+  it('should confirm the credential has been issued (done state)', async function () {
     let holderDone = false
     let issuerDone = false
 
@@ -202,7 +246,7 @@ describe('W3C Credentials E2E Flow', function () {
 
   // --- 3. Connection: Verifier <-> Holder ---
 
-  it.skip('should allow a Verifier to create an OOB invitation', async function () {
+  it('should allow a Verifier to create an OOB invitation', async function () {
     const createInvitationPayload = {
       handshake: true,
       handshakeProtocols: ['https://didcomm.org/connections/1.x'],
@@ -219,7 +263,7 @@ describe('W3C Credentials E2E Flow', function () {
     verifierToHolderOobRecordId = response.body.outOfBandRecord.id
   })
 
-  it.skip("should allow a Holder to accept Verifier's invitation", async function () {
+  it("should allow a Holder to accept Verifier's invitation", async function () {
     const acceptInvitationPayload = { invitationUrl: verifierToHolderInvitationUrl }
 
     const response = await holderClient
@@ -231,7 +275,7 @@ describe('W3C Credentials E2E Flow', function () {
     holderToVerifierConnectionRecordId = response.body.connectionRecord.id
   })
 
-  it.skip('should create a connection record on the Verifier', async function () {
+  it('should create a connection record on the Verifier', async function () {
     let connected = false
     for (let i = 0; i < 10; i++) {
       const response = await verifierClient.get('/v1/connections').query({ outOfBandId: verifierToHolderOobRecordId })
@@ -247,7 +291,7 @@ describe('W3C Credentials E2E Flow', function () {
 
   // --- 4. W3C Proof Verification (Presentation Exchange) ---
 
-  it.skip('should let Verifier request W3C proof (Presentation Exchange)', async function () {
+  it('should let Verifier request W3C proof (Presentation Exchange)', async function () {
     const requestProofPayload = {
       connectionId: verifierToHolderConnectionRecordId,
       protocolVersion: 'v2',
@@ -255,19 +299,19 @@ describe('W3C Credentials E2E Flow', function () {
         presentationExchange: {
           presentationDefinition: {
             id: '32f54163-7166-48f1-93d8-ff217bdb0653',
-            name: 'University Degree Request',
-            purpose: 'We need to verify your university degree',
+            name: 'Person Identity Request',
+            purpose: 'We need to verify your identity',
             input_descriptors: [
               {
-                id: 'degree_credential',
-                name: 'Degree Credential',
+                id: 'person_credential',
+                name: 'Person Credential',
                 constraints: {
                   fields: [
                     {
-                      path: ['$.type'],
+                      path: ['$.credentialSubject.givenName'],
                       filter: {
                         type: 'string',
-                        pattern: 'UniversityDegreeCredential',
+                        pattern: 'Alice',
                       },
                     },
                   ],
@@ -287,14 +331,18 @@ describe('W3C Credentials E2E Flow', function () {
 
     expect(response.body).to.have.property('state', 'request-sent')
     verifierProofRecordId = response.body.id
+    verifierThreadId = response.body.threadId
   })
 
-  it.skip('should allow Holder to receive proof request', async function () {
+  it('should allow Holder to receive proof request', async function () {
     let received = false
     for (let i = 0; i < 10; i++) {
       const response = await holderClient.get('/v1/proofs').query({ connectionId: holderToVerifierConnectionRecordId })
 
-      const record = response.body.find((r: { state: string; id: UUID }) => r.state === 'request-received')
+      const record = response.body.find(
+        (r: { state: string; id: UUID; threadId: string }) =>
+          r.state === 'request-received' && r.threadId === verifierThreadId
+      )
       if (record) {
         holderProofRequestId = record.id
         received = true
@@ -305,7 +353,7 @@ describe('W3C Credentials E2E Flow', function () {
     expect(received).to.equal(true)
   })
 
-  it.skip('should allow Holder to accept proof request', async function () {
+  it('should allow Holder to accept proof request', async function () {
     const acceptPayload = {
       proofFormats: {
         presentationExchange: {
@@ -321,7 +369,8 @@ describe('W3C Credentials E2E Flow', function () {
       .expect(200)
   })
 
-  it.skip('should complete W3C verification (Verifier verified)', async function () {
+  it('should complete W3C verification (Verifier verified)', async function () {
+    this.timeout(30000)
     let success = false
     for (let i = 0; i < 30; i++) {
       const response = await verifierClient.get(`/v1/proofs/${verifierProofRecordId}`)

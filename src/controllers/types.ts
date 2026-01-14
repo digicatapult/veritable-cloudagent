@@ -101,28 +101,39 @@ export interface JsonLdCredentialFormat {
 
 // --- Presentation Exchange Types ---
 
-export interface PexSchema extends ApiJsonObject {
-  uri: string
+export interface PexField extends ApiJsonObject {
+  path: string[]
+  id?: string
+  purpose?: string
+  name?: string
+  filter?: ApiJsonObject
+  predicate?: 'required' | 'preferred'
 }
 
-export interface InputDescriptorV1 extends ApiJsonObject {
+export interface PexConstraints extends ApiJsonObject {
+  fields?: PexField[]
+  limit_disclosure?: 'required' | 'preferred'
+}
+
+export interface InputDescriptorV2 extends ApiJsonObject {
   id: string
-  schema: PexSchema[]
   name?: string
   purpose?: string
   group?: string[]
+  constraints?: PexConstraints
 }
 
-export interface PresentationDefinitionV1 extends ApiJsonObject {
+export interface PresentationDefinitionV2 extends ApiJsonObject {
   id: string
-  input_descriptors: InputDescriptorV1[]
+  input_descriptors: InputDescriptorV2[]
   name?: string
   purpose?: string
   format?: GenericRecord
+  submission_requirements?: ApiJsonArray
 }
 
 export interface PresentationExchangeCreateProposal {
-  presentationDefinition: PresentationDefinitionV1
+  presentationDefinition: PresentationDefinitionV2
 }
 
 export interface PresentationExchangeAcceptProposal {
@@ -133,7 +144,7 @@ export interface PresentationExchangeAcceptProposal {
 }
 
 export interface PresentationExchangeCreateRequest {
-  presentationDefinition: PresentationDefinitionV1
+  presentationDefinition: PresentationDefinitionV2
   options?: {
     challenge?: string
     domain?: string
