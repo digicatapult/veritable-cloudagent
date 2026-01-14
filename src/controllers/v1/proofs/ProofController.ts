@@ -210,7 +210,8 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
-      const proof = await this.agent.proofs.proposeProof(proposal as unknown as InternalProposeProofOptions)
+      // Safe cast: Local TSOA types match internal Agent types structurally
+      const proof = await this.agent.proofs.proposeProof(proposal as InternalProposeProofOptions)
       req.log.info('proof proposal created %j', proof.toJSON())
 
       return proof.toJSON()
@@ -244,7 +245,8 @@ export class ProofController extends Controller {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
       const proof = await this.agent.proofs.acceptProposal({
         proofRecordId,
-        ...(proposal as unknown as Omit<InternalAcceptProofProposalOptions, 'proofRecordId'>),
+        // Safe cast: Local TSOA types match internal Agent types structurally
+        ...(proposal as Omit<InternalAcceptProofProposalOptions, 'proofRecordId'>),
       })
 
       return proof.toJSON()
@@ -272,8 +274,9 @@ export class ProofController extends Controller {
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
     const { message, proofRecord } = await this.agent.proofs.createRequest({
       proofFormats: transformProofFormats(proofFormats),
+      // Safe cast: Local TSOA types match internal Agent types structurally
       ...rest,
-    } as unknown as InternalCreateProofRequestOptions)
+    } as InternalCreateProofRequestOptions)
 
     req.log.info('returning proof record %j', { proofRecord, message })
 
@@ -299,9 +302,10 @@ export class ProofController extends Controller {
       req.log.info('requesting proof for %s connection %j', connectionId, body)
       const proof = await this.agent.proofs.requestProof({
         connectionId,
+        // Safe cast: Local TSOA types match internal Agent types structurally
         proofFormats: transformProofFormats(proofFormats),
         ...rest,
-      } as unknown as InternalRequestProofOptions)
+      } as InternalRequestProofOptions)
 
       req.log.info('success, returning proof %j', proof.toJSON())
       return proof.toJSON()
@@ -393,10 +397,11 @@ export class ProofController extends Controller {
       // Optionally log full formats at debug level for troubleshooting
       req.log.debug('accepting proof request with formats %j', redactProofFormats(formatsToAccept))
       const proof = await this.agent.proofs.acceptRequest({
+        // Safe cast: Local TSOA types match internal Agent types structurally
         proofRecordId,
         ...body,
         proofFormats: formatsToAccept,
-      } as unknown as InternalAcceptProofRequestOptions)
+      } as InternalAcceptProofRequestOptions)
 
       req.log.debug('success, returning proof %j', proof.toJSON())
 

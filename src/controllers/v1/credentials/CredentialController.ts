@@ -247,9 +247,8 @@ export class CredentialController extends Controller {
     }
 
     try {
-      const credential = await this.agent.credentials.offerCredential(
-        options as unknown as InternalOfferCredentialOptions
-      )
+      // Safe cast: Local TSOA types match internal Agent types structurally
+      const credential = await this.agent.credentials.offerCredential(options as InternalOfferCredentialOptions)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
