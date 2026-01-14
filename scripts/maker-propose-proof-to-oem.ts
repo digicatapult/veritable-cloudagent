@@ -3,7 +3,7 @@ import z from 'zod'
 import type { ProposeProofOptions } from '../src/controllers/types.js'
 
 interface ParsedArgs {
-  credentialId: string
+  credentialId?: string
   connectionId?: string
   baseUrl?: string
 }
@@ -20,6 +20,8 @@ const credentialParser = z.object({
   ),
 })
 
+const credentialsListParser = z.array(credentialParser)
+
 const connectionParser = z.array(
   z.object({
     id: z.string(),
@@ -31,7 +33,7 @@ const connectionParser = z.array(
 
 function printUsageAndExit(code: number): never {
   process.stderr.write(
-    `Usage: maker-propose-proof-to-oem --credential-id <credentialId> [--connection-id <connectionId>] [--base-url <url>]\n`
+    `Usage: maker-propose-proof-to-oem [--credential-id <credentialId>] [--connection-id <connectionId>] [--base-url <url>]\n`
   )
   process.exit(code)
 }
@@ -40,7 +42,6 @@ function parseArgs(argv: string[]): ParsedArgs {
   const args = argv.slice(2)
   const parsed: ParsedArgs = {
     baseUrl: 'http://localhost:3001', // Bob's agent
-    credentialId: '',
   }
 
   for (let i = 0; i < args.length; i++) {
@@ -68,14 +69,39 @@ function parseArgs(argv: string[]): ParsedArgs {
 }
 
 async function main() {
-  const { credentialId, connectionId, baseUrl } = parseArgs(process.argv)
-  if (!credentialId || credentialId.length === 0) {
-    process.stderr.write('--credential-id is required\n')
-    printUsageAndExit(1)
-  }
-
+  const { credentialId: argsCredentialId, connectionId, baseUrl } = parseArgs(process.argv)
   const log = (msg: string, extra?: unknown) => {
     process.stderr.write(`${msg}${extra ? ' ' + JSON.stringify(extra) : ''}\n`)
+  }
+
+  let credentialId = argsCredentialId
+
+  if (!credentialId) {
+    log(`Looking for existing credentials at ${baseUrl}...`)
+    const credentialsResponse = await fetch(`${baseUrl}/v1/credentials`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (!credentialsResponse.ok) {
+      throw new Error(`Failed to retrieve credentials: ${credentialsResponse.status} ${credentialsResponse.statusText}`)
+    }
+
+    const credentials = await credentialsResponse.json()
+    const parsedCredentials = credentialsListParser.parse(credentials)
+
+    // Filter for done/holder credentials
+    const validCredentials = parsedCredentials.filter((c) => c.state === 'done' && c.role === 'holder')
+
+    if (validCredentials.length === 0) {
+      log('No valid credentials found.')
+      process.exit(0)
+    }
+
+    // Pick the most recent one
+    const targetCredential = validCredentials[validCredentials.length - 1]
+    credentialId = targetCredential.id
+    log(`Found credential: ${credentialId}`)
   }
 
   let targetConnectionId = connectionId
@@ -132,13 +158,23 @@ async function main() {
 
     let oemConnection
     if (oemDid) {
-      // Find connection by matching DID
-      oemConnection = parsedConnections.find((conn) => conn.theirDid === oemDid && conn.state === 'completed')
-    } else {
+      // Find connection by matching DID or invitation DID
+      oemConnection = parsedConnections.find(
+        (conn) => (conn.theirDid === oemDid || conn.invitationDid === oemDid) && conn.state === 'completed'
+      )
+    }
+
+    if (!oemConnection) {
       // Fallback: use most recent completed connection
       const completedConnections = parsedConnections.filter((conn) => conn.state === 'completed')
-      oemConnection = completedConnections[completedConnections.length - 1]
+      if (completedConnections.length > 0) {
+        oemConnection = completedConnections[completedConnections.length - 1]
+        log(
+          `Warning: Could not match connection by DID ${oemDid}, using most recent completed connection ${oemConnection.id}`
+        )
+      }
     }
+
     if (!oemConnection) {
       const availableConnections = parsedConnections.map((c) => ({ id: c.id, state: c.state, theirDid: c.theirDid }))
       throw new Error(
@@ -180,7 +216,7 @@ async function main() {
         ],
       },
     },
-    autoAcceptProof: AutoAcceptProof.ContentApproved,
+    autoAcceptProof: AutoAcceptProof.Never,
   }
 
   log('Proposing proof to OEM...')
@@ -202,6 +238,25 @@ async function main() {
   const proofRecord = await proofResponse.json()
   log('Proof proposal sent successfully!')
   log('Proof record:', { id: proofRecord.id, state: proofRecord.state, threadId: proofRecord.threadId })
+
+  // Wait for OEM to respond with a proof request
+  log('Waiting for OEM to respond with proof request...')
+  const maxRetries = 20
+  for (let i = 0; i < maxRetries; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const checkResponse = await fetch(`${baseUrl}/v1/proofs/${proofRecord.id}`, {
+      method: 'GET',
+      headers: { accept: 'application/json' },
+    })
+
+    if (checkResponse.ok) {
+      const checkProof = await checkResponse.json()
+      if (checkProof.state === 'request-received') {
+        log('OEM has responded with a proof request!')
+        break
+      }
+    }
+  }
 
   // Output the proof record ID for scripting
   process.stdout.write(`${proofRecord.id}\n`)

@@ -10,10 +10,11 @@ The project aims to enable supply chains to share insights and data across multi
 - [Development Mode](#development-mode)
 - [Environment Variables](#environment-variables)
 - [Testing](#testing)
-- [WebSocket and webhooks](#webSocket-and-webhooks)
+- [WebSocket and webhooks](#websocket-and-webhooks)
 - [Verified DRPC](#verified-drpc)
 - [Schema Definition](#schema-definition)
 - [Demoing credential issuance and verification](#demoing-credential-issuance-and-verification)
+- [Explicit Credential Selection](#explicit-credential-selection)
 
 ## Attribution
 
@@ -23,11 +24,11 @@ Thanks for all the hard work to everybody who contributed to the [project](https
 
 In case `npm i` fails on MacOS with references to `node-gyp`, please ensure XCode is installed via the App Store and accept the licence via `sudo xcodebuild -license accept`. Before executing `npm i`, delete your node_modules directory (if it was created) in case it has some old references `rm -rf ./node_modules`.
 
-#### DRPC Config
+### DRPC Config
 
 The RPC client can be configured through Envs, and follows the following format:
 
-```
+```json
 {
   ...,
   "verifiedDrpcOptions": {
@@ -52,7 +53,7 @@ Note that the proof options must be set through envs due to the fact that a DRPC
 
 ## Getting started
 
-The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (http://localhost:3000/swagger) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. http://localhost:3000/api-docs).
+The REST API provides an OpenAPI schema that can easily be viewed using the SwaggerUI (<http://localhost:3000/swagger>) that is provided with the server. The OpenAPI spec can be viewed on the `/api-docs` endpoint (e.g. <http://localhost:3000/api-docs>).
 
 Bellow you will find commands for starting up the containers in docker (see the [Using Docker](#using-docker-easiest) section).
 
@@ -67,7 +68,7 @@ This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Sinc
 - Install [mkcert](https://github.com/FiloSottile/mkcert#installation).
 - Run the following commands at root:
 
-```
+```bash
 mkcert -install
 mkcert alice localhost
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
@@ -115,17 +116,19 @@ The `did:web` server maps any `GET` request ending in `did.json` to a `did:web` 
 
 Port numbers are allowed in `DID_WEB_DOMAIN` but `:` [must be encoded](https://w3c-ccg.github.io/did-method-web/#method-specific-identifier) e.g. `localhost%3A8443`.
 
-#### Single Agent + IPFS Node
+## Using Docker (Easiest)
+
+### Single Agent + IPFS Node
 
 The following command will spin up the infrastructure (`IPFS` node, `Postgres` database, `testnet` network) for local testing and development purposes:
 
-```sh
+```bash
 docker compose -f docker-compose.yml up --build -d
 ```
 
 Next begin the local agent for development with:
 
-```sh
+```bash
 npm run dev
 ```
 
@@ -133,7 +136,7 @@ The agent API is now accessible via a `Swagger` (OpenAPI) interface on port `300
 
 If you wish to also start the agent (`Alice`) within docker, run the following command:
 
-```sh
+```bash
 docker compose -f docker-compose.yml up --build -d --scale alice=1
 ```
 
@@ -141,7 +144,7 @@ docker compose -f docker-compose.yml up --build -d --scale alice=1
 
 The following command will create a containerised private network consisting of 3 agents (`Alice`, `Bob` and `Charlie`) and a 3-node private IPFS cluster.
 
-```sh
+```bash
 docker compose -f docker-compose-testnet.yml up --build -d
 ```
 
@@ -161,7 +164,7 @@ Network name: `testnet`
 You can also run a script to set up a demo state where the Alice is connected to both Bob and Charlie.
 In order to run the script please make a file called `.connection.env` with the content:
 
-```
+```text
 # Agent API bases
 ALICE_API=http://localhost:3000
 BOB_API=http://localhost:3001
@@ -210,7 +213,7 @@ The following lifecycle commands can be run using `npm`
 
 ## Environment variables
 
-The Envs are defined under `src > env.ts ` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them coma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
+The Envs are defined under `src > env.ts` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them comma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
 
 | variable                                    | required | default                                                                                                                                                                                                | description                                                                                                                        |
 | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -229,11 +232,11 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 | AUTO_ACCEPT_PROOFS                          | N        | "never"                                                                                                                                                                                                | Allows for proofs to be automatically accepted upon being received                                                                 |
 | AUTO_UPDATE_STORAGE_ON_STARTUP              | N        | true                                                                                                                                                                                                   | Updates storage on startup                                                                                                         |
 | BACKUP_BEFORE_STORAGE_UPDATE                | N        | false                                                                                                                                                                                                  | Creates a backup before the storage update                                                                                         |
-| CONNECTION_IMAGE_URL                        | N        | "https://image.com/image.png"                                                                                                                                                                          | Url for connection image                                                                                                           |
+| CONNECTION_IMAGE_URL                        | N        | "<https://image.com/image.png>"                                                                                                                                                                          | Url for connection image                                                                                                           |
 | WEBHOOK_URL                                 | Y        | ['https://my-webhook-server']                                                                                                                                                                          | An array of webhook urls                                                                                                           |
 | ADMIN_PORT                                  | N        | 3000                                                                                                                                                                                                   | The port for the app                                                                                                               |
 | ADMIN_PING_INTERVAL_MS                      | N        | 10000                                                                                                                                                                                                  | The time interval in ms on which to perform WebSocket ping checks                                                                  |
-| IPFS_ORIGIN                                 | Y        | "http://ipfs0:5001"                                                                                                                                                                                    | The IPFS url endpoint                                                                                                              |
+| IPFS_ORIGIN                                 | Y        | "<http://ipfs0:5001>"                                                                                                                                                                                    | The IPFS url endpoint                                                                                                              |
 | PERSONA_TITLE                               | N        | "Veritable Cloudagent"                                                                                                                                                                                 | Tab name which you can see in your browser                                                                                         |
 | PERSONA_COLOR                               | N        | "white"                                                                                                                                                                                                | Defines the background colour of swagger documentation                                                                             |
 | STORAGE_TYPE                                | Y        | "postgres"                                                                                                                                                                                             | The type of storage to be used by the app                                                                                          |
@@ -258,15 +261,15 @@ The Envs are defined under `src > env.ts ` They are used to start up a container
 
 Unit tests and integration tests are defined in the top-level `tests` directory.
 
-#### Unit
+### Unit
 
 Unit tests can be run with `npm run test:unit`.
 
-#### Integration
+### Integration
 
 Integration tests require certificates for each persona + setting an env for the path to the root CA:
 
-```
+```bash
 mkcert -install
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 mkcert alice localhost
@@ -278,7 +281,7 @@ Then the testnet orchestration can be deployed.
 
 **If the testnet is already running locally:** (through the command `docker compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
 
-```
+```bash
 docker build --target test -t veritable-cloudagent-integration-tests . && \
 docker run -it \
   --network=testnet \
@@ -290,7 +293,7 @@ docker run -it \
 
 **If the testnet is not already running:** The entire stack can be run with integration tests using the following command:
 
-```
+```bash
 docker compose \
   -f docker-compose-testnet.yml \
   -f docker-compose-integration-tests.yml \
@@ -339,9 +342,9 @@ The `startServer` method will create and start a WebSocket server on the default
 
 However, the `setupServer` method does not automatically create a socketServer, if one is not provided in the config options.
 
-In case of an event, we will send the event to the webhookUrls with the topic of the event added to the url (http://test.com/{topic}).
+In case of an event, we will send the event to the webhookUrls with the topic of the event added to the url (<http://test.com/{topic}>).
 
-So in this case when a connection event is triggered, it will be sent to: http://test.com/connections
+So in this case when a connection event is triggered, it will be sent to: <http://test.com/connections>
 
 The payload of the webhook contains the serialized record related to the topic of the event. For the `connections` topic this will be a `ConnectionRecord`, for the `credentials` topic it will be a `CredentialRecord`, and so on.
 
@@ -361,7 +364,7 @@ Verified DRPC request and responses are exposed through the `/verified-drpc/` RE
 
 The repo contains 'schema' folder with a schema body json which can be imported into ts files like so:
 
-```
+```ts
 import _schema from './schema/schemaAttributes.json'
 const schema = _schema as AnonCredsSchema
 ```
@@ -377,7 +380,7 @@ The attributes are:
 
 The schema definition can be posted to `/schemas` to register it. Upon a successful call a response is returned with an 'id' property which refers to this schema and can be used to refer to the schema when creating a new credential definition like so:
 
-```
+```json
 {
   "tag": "myTestDefinition",
   "schemaId": "ipfs://example",
@@ -404,7 +407,7 @@ docker compose -f docker-compose-testnet.yml up --build -d
 | Bob     | **Holder**   | [localhost:3001](http://localhost:3001) |
 | Charlie | **Verifier** | [localhost:3002](http://localhost:3002) |
 
-#### OOB connection
+### OOB connection
 
 Before any communication between two agents, an out of band connection must be established. First establish a connection between Alice and Bob by POSTing with Alice to `http://localhost:3000/oob/create-invitation`.
 
@@ -497,8 +500,7 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 }
 ```
 
-<details>
-  <summary>Example of an issued credential</summary>
+### Example of an issued credential
 
 ```json
 {
@@ -566,14 +568,12 @@ Using this credential ID `POST http://localhost:3001/credentials/{credentialReco
 }
 ```
 
-</details>
-
-#### Verification
+### Verification
 
 Setup an out of band connection between Charlie and Bob. This can be acomplished via Implicit invitation.
 In order to use the implicit invitation we need a public DID hosted ‘somewhere on the internet’ for now we are using a DID doc hosted on github pages. To host a DID doc on your github:
 
-For our DID doc above we will need to generate a key-pair. This could be done through https://mkjwk.org/ - setting parameters to `key type: OKP`, Ed25519 and you can see in the DID doc below we will be using the public portion of the key.
+For our DID doc above we will need to generate a key-pair. This could be done through <https://mkjwk.org/> - setting parameters to `key type: OKP`, Ed25519 and you can see in the DID doc below we will be using the public portion of the key.
 
 Example key-pair will look like this:
 
@@ -588,9 +588,9 @@ Example key-pair will look like this:
 
 #### Publishing a web:did
 
-1.  create public repo called `YOUR_USERNAME.github.io`
-2.  in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
-3.  body to include in your did.json:
+1. create public repo called `YOUR_USERNAME.github.io`
+2. in the repo you just created create folder `dids` in `dids` folder then create folder `1` in there create `did.json`
+3. body to include in your did.json:
 
     ```json
     {
@@ -624,7 +624,7 @@ Example key-pair will look like this:
     }
     ```
 
-4.  you can view your DID in your browser like so: https://your_username.github.io/dids/1/did.json
+4. you can view your DID in your browser like so: <https://your_username.github.io/dids/1/did.json>
 
 #### Implicit Invitation
 
@@ -694,8 +694,7 @@ The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proo
 }
 ```
 
-<details>
-  <summary>Example of a verified proof on Charlie</summary>
+### Example of a verified proof on Charlie
 
 ```json
 [
@@ -751,9 +750,7 @@ The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proo
 ]
 ```
 
-</details>
-
-#### Registering Anoncred Schemas
+## Registering Anoncred Schemas
 
 This project ships with a registration helper script that:
 
@@ -761,11 +758,11 @@ This project ships with a registration helper script that:
 2. Automatically (by default) registers or reuses a credential definition for that schema
 3. Prints the IDs to stdout (first line = schemaId, second line = credentialDefinitionId)
 
-##### Script Location
+### Script Location
 
 `scripts/register-schema.ts`
 
-##### JSON Schema Definition Layout
+### JSON Schema Definition Layout
 
 Each schema JSON file MUST contain at minimum:
 
@@ -779,7 +776,7 @@ Each schema JSON file MUST contain at minimum:
 
 The `issuerId` is NOT stored in the JSON file – it is injected at runtime.
 
-##### Command Line Flags
+### Command Line Flags
 
 | Flag               | Alias | Required | Default                 | Description                             |
 | ------------------ | ----- | -------- | ----------------------- | --------------------------------------- |
@@ -788,16 +785,16 @@ The `issuerId` is NOT stored in the JSON file – it is injected at runtime.
 | `--base-url <url>` | `-b`  | No       | `http://localhost:3000` | REST base URL for the cloudagent        |
 | `--help`           | `-h`  | No       | –                       | Show usage                              |
 
-##### Output Format
+### Output Format
 
 Stdout lines:
 
-```
+```bash
 <schemaId>
 <credentialDefinitionId>
 ```
 
-##### Examples
+### Examples
 
 Register the default Make Authorisation schema for Alice:
 
@@ -813,7 +810,7 @@ node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.jso
   --base-url http://localhost:3001
 ```
 
-## Demoing for MOD
+## Demoing
 
 In docker-compose-testnet.yml add `WEBHOOK_URL=http://host.docker.internal:3003` for Bob's cloudagent and `WEBHOOK_URL=http://host.docker.internal:3004` for Charlie's.
 
@@ -859,7 +856,7 @@ You can then watch in the progression in the terminal window where your listener
 The following scripts are run by the listeners
 
 ```bash
-npx tsx scripts/maker-connects-to-oem.ts --credential-id < credential ID >
+npx tsx scripts/maker-connect-to-oem.ts --credential-id < credential ID >
 ```
 
 ```bash
@@ -871,5 +868,11 @@ npx tsx scripts/maker-propose-proof-to-oem.ts --credential-id < credential ID > 
 ```
 
 ```bash
-npx tsx scripts/maker-accept-proof-from-oem.ts --proof-id < proof ID >
+npx tsx scripts/maker-respond-proof-request.ts --proof-id < proof ID >
 ```
+
+## Explicit Credential Selection
+
+When responding to proof requests, you can explicitly select which credentials to use. This is useful when multiple credentials satisfy the request criteria.
+
+See [Explicit Credential Selection Documentation](docs/explicit-credential-selection.md) for details on the API and usage.
