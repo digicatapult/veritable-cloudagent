@@ -25,7 +25,7 @@
   "scripts": {
     "depcheck": "depcheck",
     "lint": "eslint .",
-    "lint:fix": "npm run lint -- --fix",
+    "lint:fix": "eslint . --fix",
     "check": "npm run tsoa:build && tsc --noEmit",
     "clean": "rimraf -rf ./build",
     "build": "npm run clean && npm run tsoa:build && swc ./src -d ./build --strip-leading-paths --copy-files",
