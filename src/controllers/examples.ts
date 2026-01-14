@@ -208,14 +208,14 @@ export const CredentialExchangeRecordExample: CredentialExchangeRecordProps = {
 export const CredentialFormatDataExample = {
   proposalAttributes: [
     {
-      mimeType: 'text/plain',
+      'mime-type': 'text/plain',
       name: 'attr1',
       value: 'value',
     },
   ],
   offerAttributes: [
     {
-      mimeType: 'text/plain',
+      'mime-type': 'text/plain',
       name: 'attr1',
       value: 'value',
     },

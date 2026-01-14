@@ -196,7 +196,7 @@ export interface MediaItemRequest {
 export interface CredentialAttribute {
   name: string
   value: string
-  mimeType?: string
+  'mime-type'?: string
 }
 
 export interface CredentialFormatData {
