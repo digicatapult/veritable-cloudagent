@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { after, before, describe, test } from 'mocha'
 
-import { Agent } from '@credo-ts/core'
+import type { Agent } from '@credo-ts/core'
 import type { Server } from 'node:net'
 
 import request from 'supertest'

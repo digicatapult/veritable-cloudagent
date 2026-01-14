@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { beforeEach, describe, it } from 'mocha'
+import { before, beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { UUID } from '../../src/controllers/types.js'
 

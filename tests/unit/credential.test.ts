@@ -276,7 +276,7 @@ describe('CredentialController', () => {
             jsonld: proposalRequestJsonLd.credentialFormats?.jsonld,
           },
         })
-      ).equals(true)
+      ).to.equal(true)
     })
   })
 
@@ -675,7 +675,7 @@ describe('CredentialController', () => {
             jsonld: offerRequestJsonLd.credentialFormats?.jsonld,
           },
         })
-      ).equals(true)
+      ).to.equal(true)
     })
   })
 

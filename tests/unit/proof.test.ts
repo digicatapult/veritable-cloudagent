@@ -503,7 +503,7 @@ describe('ProofController', () => {
             },
           },
         })
-      ).equals(true)
+      ).to.equal(true)
     })
   })
 
