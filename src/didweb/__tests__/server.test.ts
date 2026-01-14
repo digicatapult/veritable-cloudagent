@@ -1,14 +1,22 @@
+import { DidDocument } from '@credo-ts/core'
 import { expect } from 'chai'
-import { DIDDocument } from 'did-resolver'
 import sinon from 'sinon'
 import { DidWebServer, DidWebServerConfig } from '../../didweb/server.js'
 import PinoLogger from '../../utils/logger.js'
 import Database from '../db.js'
 
 const didWebDomain = 'test.com'
-const did = {
+const did = new DidDocument({
   id: `did:web:${didWebDomain}`,
-} as DIDDocument
+  context: ['https://www.w3.org/ns/did/v1'],
+  verificationMethod: [],
+  authentication: [],
+  assertionMethod: [],
+  keyAgreement: [],
+  capabilityInvocation: [],
+  capabilityDelegation: [],
+  service: [],
+})
 const logger = new PinoLogger('silent').logger
 const dbMock = {
   upsert: sinon.stub().callsFake(() => Promise.resolve()),
@@ -28,7 +36,7 @@ describe('did:web server', () => {
     it('insert valid DID', async () => {
       const spy = dbMock.upsert
       await server.upsertDid(did)
-      expect(spy.firstCall.args).to.deep.equal(['did_web', { did: did.id, document: did }, 'did'])
+      expect(spy.firstCall.args).to.deep.equal(['did_web', { did: did.id, document: did.toJSON() }, 'did'])
     })
   })
 

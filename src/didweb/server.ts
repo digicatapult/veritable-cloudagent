@@ -1,5 +1,5 @@
+import { DidDocument } from '@credo-ts/core'
 import cors from 'cors'
-import { DIDDocument } from 'did-resolver'
 import express from 'express'
 import fs from 'fs'
 import type { Server } from 'http'
@@ -68,9 +68,9 @@ export class DidWebServer {
     res.json(record.document)
   }
 
-  public async upsertDid(document: DIDDocument): Promise<void> {
+  public async upsertDid(document: DidDocument): Promise<void> {
     this.logger.info(`Uploading did to server: ${document.id}`)
-    await this.db.upsert('did_web', { did: document.id, document }, 'did')
+    await this.db.upsert('did_web', { did: document.id, document: document.toJSON() }, 'did')
   }
 
   async start(): Promise<void> {
