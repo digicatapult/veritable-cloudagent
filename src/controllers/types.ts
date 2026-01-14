@@ -60,7 +60,7 @@ export type GenericRecord = ApiJsonObject
 /**
  * enforce the first element is a string
  * Note: TSOA 6.x doesn't support variadic tuples ([string, ...rest[]]) so we fallback to array
- * TODO: Revisit when TSOA 7.x is released
+ * TODO: Revisit when TSOA 7.x is released which supports variadic tuples
  */
 export type JsonLdContext = (string | GenericRecord)[]
 
