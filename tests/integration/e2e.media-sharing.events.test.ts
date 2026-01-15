@@ -71,7 +71,7 @@ describe('Media Sharing Events (WS)', function () {
 
   it('Alice fetches her connection', async function () {
     let body: { id: string }[] = []
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 10; i++) {
       const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
       body = res.body
       if (body.length > 0 && body[0].id) break
