@@ -18,6 +18,15 @@ In several places, we use type assertions (`as InternalType`) to bypass strict t
 * **Remediation:** Implement Zod schemas or dedicated type guard functions that validate the structure at runtime before casting, or valid mappings.
 * **Resolution:** We have decided to rely on structural type compatibility. The local types defined in `src/controllers/types.ts` are designed to mirror the Credo-TS internal types (although they are slightly looser, e.g. allowing `null`). We use direct type assertions (e.g. `options as InternalOptions`) to map these types.
 
+## TSOA Compatibility for Generic Outputs
+
+We explicitly cast Credo-TS return objects (which use complex generics) to `GenericRecord` (recursive `ApiJsonObject`) in utility helpers.
+
+* **Location:** `src/utils/credentials.ts` (`transformToCredentialFormatData`).
+* **Reason:** TSOA cannot generate OpenAPI specs from external library types that utilize complex generics, unions, or intersections not defined within the local project scope. It requires locally defined, explicitly recursive interfaces (like `ApiJsonObject`).
+* **Technique:** We use a helper function to perform a controlled cast (`obj as GenericRecord`) after strictly typing the input from the agent.
+* **Risk:** The compilation safety ensures we receive the correct type from Credo-TS, but the cast erases the deep structure validation for the return value. If we try to return a type that is `not` JSON-compatible (e.g. a class instance or Function), TSOA might fail at runtime during serialization.
+
 ## Loose W3C Context Definitions
 
 While we have tightened `W3cCredential` to require a tuple for `@context`, other parts of the system might still use looser definitions.
