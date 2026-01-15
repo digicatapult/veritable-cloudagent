@@ -247,7 +247,6 @@ export class CredentialController extends Controller {
     }
 
     try {
-      // Safe cast: Local TSOA types match internal Agent types structurally
       const credential = await this.agent.credentials.offerCredential(options as InternalOfferCredentialOptions)
       return credential.toJSON()
     } catch (error) {
