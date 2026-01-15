@@ -8,8 +8,6 @@ const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 // End-to-end test: A (Alice) shares media with B (Bob), and Bob can see the record
 // and download the file from the provided URL (mocked).
 describe('Media Sharing A→B', function () {
-  this.retries(10)
-
   const alice = request(ALICE_BASE_URL)
   const bob = request(BOB_BASE_URL)
 
@@ -41,9 +39,15 @@ describe('Media Sharing A→B', function () {
   })
 
   it('Alice sees her connection', async function () {
-    const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
-    expect(res.body).to.be.an('array').that.has.length(1)
-    aliceConnectionId = res.body[0].id
+    let body: { id: string }[] = []
+    for (let i = 0; i < 20; i++) {
+      const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
+      body = res.body
+      if (body.length > 0 && body[0].id) break
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
+    expect(body).to.be.an('array').that.has.length(1)
+    aliceConnectionId = body[0].id
   })
 
   it('Alice shares media to Bob', async function () {

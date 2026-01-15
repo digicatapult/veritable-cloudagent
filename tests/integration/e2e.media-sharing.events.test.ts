@@ -14,7 +14,6 @@ const logger = new PinoLogger('trace')
 // Assumes media-sharing module forwards events on topic 'media-sharing' via WebSocket
 
 describe('Media Sharing Events (WS)', function () {
-  this.retries(5)
   this.timeout(20000)
 
   const alice = request(ALICE_BASE_URL)
@@ -71,9 +70,15 @@ describe('Media Sharing Events (WS)', function () {
   })
 
   it('Alice fetches her connection', async function () {
-    const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
-    expect(res.body).to.be.an('array').that.has.length(1)
-    aliceConnectionId = res.body[0].id
+    let body: { id: string }[] = []
+    for (let i = 0; i < 20; i++) {
+      const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
+      body = res.body
+      if (body.length > 0 && body[0].id) break
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
+    expect(body).to.be.an('array').that.has.length(1)
+    aliceConnectionId = body[0].id
   })
 
   it('Alice shares media to Bob and receives events', async function () {
