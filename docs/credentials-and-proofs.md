@@ -188,3 +188,33 @@ AnonCreds allows for requesting specific attributes or predicates (e.g., `age >=
 When an agent receives a proof request, it must select which credentials to present to satisfy the request. The agent supports an advanced mechanism for explicitly selecting credentials when multiple options are available.
 
 For detailed documentation on how to control creating proofs with specific credentials, see [Explicit Credential Selection](./explicit-credential-selection.md).
+
+---
+
+## Developer Notes: Type Safety & Internal Casts
+
+In the controller layer (`src/controllers/`), you will notice a pattern of casting request bodies to "Internal" types before passing them to the agent methods.
+
+Example:
+
+```typescript
+type InternalAcceptCredentialOfferOptions = Parameters<RestAgent['credentials']['acceptOffer']>[0]
+
+// ...
+
+const credential = await this.agent.credentials.acceptOffer({
+  ...(options as InternalAcceptCredentialOfferOptions),
+  credentialRecordId: credentialRecordId,
+})
+```
+
+### Why is this necessary?
+
+The codebase bridges two distinct type systems:
+
+1. **Rest API Types (TSOA):** Defined in `src/controllers/types.ts`. These are "Plain Old JavaScript Objects" (POJOs) optimized for generating clean OpenAPI/Swagger documentation. They explicitly list fields for supported protocols (like `anoncreds` and `w3c` in `credentialFormats`).
+2. **Internal Framework Types (Credo-TS):** Defined dynamically throughout `@credo-ts/core`. These types often rely on complex TypeScript generics to support extensible modules (e.g., `CredentialFormatPayload<CredentialFormats[], 'acceptOffer'>`).
+
+While the API type and the internal type are structurally compatible (they hold the same data), the TypeScript compiler cannot easily verify that the explicit TSOA object satisfies the complex generic constraints of the extensible agent modules.
+
+The cast `options as InternalOptions` acts as a verified bridge. It confirms to the compiler that the API input conforms to the internal module requirements without circumventing type safety (which using `as unknown` would do). This ensures we can support polymorphic endpoints—handling both AnonCreds and W3C formats simultaneously—while maintaining strict compilation checks.
