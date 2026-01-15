@@ -1,5 +1,5 @@
 import type { HandshakeProtocol, OutOfBandDidCommService, ReceiveOutOfBandInvitationConfig } from '@credo-ts/core'
-import type { DID, UUID } from './common'
+import type { DID, UUID } from './common.js'
 
 export interface OutOfBandInvitationSchema {
   '@id'?: UUID
