@@ -1,4 +1,4 @@
-import type { UUID } from './common'
+import type { UUID } from './common.js'
 
 export interface AgentInfo {
   label: string
