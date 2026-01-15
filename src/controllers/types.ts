@@ -274,7 +274,7 @@ export interface SimpleProofFormats {
          * Additional properties are not allowed and will cause validation failure.
          *
          * TO EXTEND: If adding new properties, you MUST update the validation logic
-         * in `src/utils/proofs.ts` (isSimpleProofFormats method) to accept the new key count.
+         * in `src/utils/proofs.ts` (isSimpleAnonCredsProofFormats method) to accept the new key count.
          */
         credentialId: string
         /**
@@ -292,7 +292,7 @@ export interface SimpleProofFormats {
          * Additional properties are not allowed and will cause validation failure.
          *
          * TO EXTEND: If adding new properties, you MUST update the validation logic
-         * in `src/utils/proofs.ts` (isSimpleProofFormats method) to accept the new key count.
+         * in `src/utils/proofs.ts` (isSimpleAnonCredsProofFormats method) to accept the new key count.
          */
         credentialId: string
       }
