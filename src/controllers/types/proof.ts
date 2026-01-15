@@ -5,9 +5,9 @@ import type {
   ProofFormatPayload,
   ProofsProtocolVersionType,
 } from '@credo-ts/core'
-import type { AnonCredsRequestProofFormatOptions } from './anoncreds'
-import type { UUID } from './common'
-import type { ProofFormats, ProofProtocols } from './protocols'
+import type { AnonCredsRequestProofFormatOptions } from './anoncreds.js'
+import type { UUID } from './common.js'
+import type { ProofFormats, ProofProtocols } from './protocols.js'
 
 export interface ProofRequestMessageResponse {
   message: string
