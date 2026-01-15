@@ -19,7 +19,7 @@ import type {
 } from '../controllers/types.js'
 import { maybeMapValues } from './helpers.js'
 
-export const transformAttributeMarkers = (attributes?: { [key: string]: boolean }) => {
+export const transformAnonCredsAttributeMarkers = (attributes?: { [key: string]: boolean }) => {
   if (!attributes) {
     return undefined
   }
@@ -33,7 +33,7 @@ export const transformAttributeMarkers = (attributes?: { [key: string]: boolean 
   )
 }
 
-export const transformAttributeValues = (attributeValues?: { [key in string]: string }) => {
+export const transformAnonCredsAttributeValues = (attributeValues?: { [key in string]: string }) => {
   if (!attributeValues) {
     return undefined
   }
@@ -47,17 +47,17 @@ export const transformAttributeValues = (attributeValues?: { [key in string]: st
   )
 }
 
-export const transformRestriction = ({
+export const transformAnonCredsRestriction = ({
   attributeValues,
   attributeMarkers,
   ...others
 }: AnonCredsProofRequestRestrictionOptions): AnonCredsProofRequestRestriction => ({
-  ...transformAttributeMarkers(attributeMarkers),
-  ...transformAttributeValues(attributeValues),
+  ...transformAnonCredsAttributeMarkers(attributeMarkers),
+  ...transformAnonCredsAttributeValues(attributeValues),
   ...others,
 })
 
-export const transformProofFormat = (
+export const transformAnonCredsProofFormat = (
   proofFormat?: AnonCredsRequestProofFormatOptions
 ): AnonCredsRequestProofFormat | undefined => {
   if (!proofFormat) {
@@ -70,14 +70,14 @@ export const transformProofFormat = (
     ...rest,
     requested_attributes: maybeMapValues(
       ({ restrictions, ...other }) => ({
-        restrictions: restrictions?.map(transformRestriction),
+        restrictions: restrictions?.map(transformAnonCredsRestriction),
         ...other,
       }),
       requested_attributes
     ),
     requested_predicates: maybeMapValues(
       ({ restrictions, ...other }) => ({
-        restrictions: restrictions?.map(transformRestriction),
+        restrictions: restrictions?.map(transformAnonCredsRestriction),
         ...other,
       }),
       requested_predicates
@@ -90,7 +90,7 @@ export const transformProofFormats = (proofFormats: {
   presentationExchange?: PresentationExchangeCreateRequest
 }) => {
   return {
-    ...(proofFormats.anoncreds ? { anoncreds: transformProofFormat(proofFormats.anoncreds) } : {}),
+    ...(proofFormats.anoncreds ? { anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds) } : {}),
     ...(proofFormats.presentationExchange ? { presentationExchange: proofFormats.presentationExchange } : {}),
   }
 }
@@ -101,7 +101,7 @@ export const transformProofFormats = (proofFormats: {
  * @param formats The proof formats to check.
  * @returns True if the formats match the SimpleProofFormats structure, false otherwise.
  */
-export const isSimpleProofFormats = (
+export const isSimpleAnonCredsProofFormats = (
   formats: AcceptProofRequestOptions['proofFormats']
 ): formats is SimpleProofFormats => {
   if (!formats || !('anoncreds' in formats)) return false
@@ -198,7 +198,7 @@ export const redactProofFormats = (
  * @param formatData The raw proof format data containing request and presentation details.
  * @returns A simplified record of attribute names and their revealed values.
  */
-export const simplifyProofContent = (formatData: {
+export const simplifyAnonCredsProofContent = (formatData: {
   request?: { anoncreds?: AnonCredsProofRequest }
   presentation?: { anoncreds?: AnonCredsPresentation }
 }): Record<string, unknown> => {
@@ -235,7 +235,7 @@ export const simplifyProofContent = (formatData: {
  * @param available Map of available credentials for each attribute.
  * @returns A map of hydrated attributes.
  */
-export const hydrateAttributes = (
+export const hydrateAnonCredsAttributes = (
   requested: Record<string, { credentialId: string; revealed: boolean }> | undefined,
   available: Record<string, AnonCredsRequestedAttributeMatch[]> | undefined
 ): { hydrated: Record<string, AnonCredsRequestedAttributeMatch>; errors: string[] } => {
@@ -265,7 +265,7 @@ export const hydrateAttributes = (
  * @param available Map of available credentials for each predicate.
  * @returns A map of hydrated predicates.
  */
-export const hydratePredicates = (
+export const hydrateAnonCredsPredicates = (
   requested: Record<string, { credentialId: string }> | undefined,
   available: Record<string, AnonCredsRequestedPredicateMatch[]> | undefined
 ): Record<string, AnonCredsRequestedPredicateMatch> => {
@@ -288,7 +288,7 @@ export const hydratePredicates = (
  * @param hydrated Map of hydrated items.
  * @returns A list of missing credentials.
  */
-export const getMissingCredentials = (
+export const getMissingAnonCredsCredentials = (
   requested: Record<string, { credentialId: string }> | undefined,
   hydrated: Record<string, { credentialId: string }>
 ): { name: string; credentialId: string }[] => {

@@ -31,6 +31,8 @@ type InternalProposeCredentialOptions = Parameters<RestAgent['credentials']['pro
 type InternalAcceptCredentialProposalOptions = Parameters<RestAgent['credentials']['acceptProposal']>[0]
 type InternalCreateOfferOptions = Parameters<RestAgent['credentials']['createOffer']>[0]
 type InternalOfferCredentialOptions = Parameters<RestAgent['credentials']['offerCredential']>[0]
+type InternalAcceptCredentialOfferOptions = Parameters<RestAgent['credentials']['acceptOffer']>[0]
+type InternalAcceptCredentialRequestOptions = Parameters<RestAgent['credentials']['acceptRequest']>[0]
 
 import type {
   AcceptCredentialOfferOptions,
@@ -165,9 +167,7 @@ export class CredentialController extends Controller {
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
     try {
       req.log.info('proposing credential to %s', options.connectionId)
-      const credential = await this.agent.credentials.proposeCredential(
-        options as unknown as InternalProposeCredentialOptions
-      )
+      const credential = await this.agent.credentials.proposeCredential(options as InternalProposeCredentialOptions)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -197,7 +197,7 @@ export class CredentialController extends Controller {
     try {
       req.log.debug('accepting credential proposal for %s', credentialRecordId)
       const credential = await this.agent.credentials.acceptProposal({
-        ...(options as unknown as InternalAcceptCredentialProposalOptions),
+        ...(options as InternalAcceptCredentialProposalOptions),
         credentialRecordId: credentialRecordId,
       })
       return credential.toJSON()
@@ -219,7 +219,7 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
-    const offer = await this.agent.credentials.createOffer(options as unknown as InternalCreateOfferOptions)
+    const offer = await this.agent.credentials.createOffer(options as InternalCreateOfferOptions)
     req.log.info('credential offer has been created %j', offer)
 
     return {
@@ -278,7 +278,7 @@ export class CredentialController extends Controller {
   ) {
     try {
       const credential = await this.agent.credentials.acceptOffer({
-        ...options,
+        ...(options as InternalAcceptCredentialOfferOptions),
         credentialRecordId: credentialRecordId,
       })
       req.log.debug('returning credential %j', credential.toJSON())
@@ -311,7 +311,7 @@ export class CredentialController extends Controller {
   ) {
     try {
       const credential = await this.agent.credentials.acceptRequest({
-        ...options,
+        ...(options as InternalAcceptCredentialRequestOptions),
         credentialRecordId: credentialRecordId,
       })
       req.log.debug('returning credential %j', credential.toJSON())
