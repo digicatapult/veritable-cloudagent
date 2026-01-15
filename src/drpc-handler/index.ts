@@ -5,7 +5,7 @@ import type { VerifiedDrpcRecord, VerifiedDrpcResponse } from '../modules/verifi
 
 import { DrpcRequestObject, DrpcResponse, DrpcResponseObject } from '@credo-ts/drpc'
 import { RestAgent } from '../agent.js'
-import type { UUID } from '../controllers/types.js'
+import type { UUID } from '../controllers/types/index.js'
 import { NotFoundError } from '../error.js'
 import PinoLogger from '../utils/logger.js'
 

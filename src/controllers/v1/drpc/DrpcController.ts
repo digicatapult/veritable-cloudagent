@@ -6,7 +6,7 @@ import { injectable, singleton } from 'tsyringe'
 import { z } from 'zod'
 
 import { BadGatewayError, GatewayTimeout, NotFoundError } from '../../../error.js'
-import type { UUID } from '../../types.js'
+import type { UUID } from '../../types/index.js'
 
 import { RestAgent } from '../../../agent.js'
 import DrpcReceiveHandler from '../../../drpc-handler/index.js'

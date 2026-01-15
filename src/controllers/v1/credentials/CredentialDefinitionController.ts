@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { CredentialDefinitionExample } from '../../examples.js'
-import type { AnonCredsCredentialDefinitionResponse, CredentialDefinitionId, DID, SchemaId } from '../../types.js'
+import type { AnonCredsCredentialDefinitionResponse, CredentialDefinitionId, DID, SchemaId } from '../../types/index.js'
 
 @Tags('Credential Definitions')
 @Route('/v1/credential-definitions')

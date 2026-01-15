@@ -7,7 +7,7 @@ import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules
 import { RestAgent } from '../../../agent.js'
 import { GatewayTimeout, NotFoundError } from '../../../error.js'
 import { transformProofFormat } from '../../../utils/proofs.js'
-import type { CreateProofRequestOptions, UUID } from '../../types.js'
+import type { CreateProofRequestOptions, UUID } from '../../types/index.js'
 
 interface VerifiedDrpcRequestOptions {
   drpcRequest: VerifiedDrpcRequest

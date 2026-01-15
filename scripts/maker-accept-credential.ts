@@ -1,6 +1,6 @@
 import { AutoAcceptCredential } from '@credo-ts/core'
 import z from 'zod'
-import type { AcceptCredentialOfferOptions } from '../src/controllers/types.js'
+import type { AcceptCredentialOfferOptions } from '../src/controllers/types/index.js'
 
 interface ParsedArgs {
   baseUrl: string
