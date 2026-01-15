@@ -210,10 +210,10 @@ export interface CredentialFormatData {
   proposalAttributes?: CredentialAttribute[]
   offerAttributes?: CredentialAttribute[]
   requestAttributes?: CredentialAttribute[]
-  proposal?: Record<string, unknown>
-  offer?: Record<string, unknown>
-  request?: Record<string, unknown>
-  credential?: Record<string, unknown>
+  proposal?: GenericRecord
+  offer?: GenericRecord
+  request?: GenericRecord
+  credential?: GenericRecord
 }
 
 export interface MediaShareRequest {

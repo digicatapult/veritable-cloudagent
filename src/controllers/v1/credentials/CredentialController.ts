@@ -25,6 +25,7 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
+import { transformToCredentialFormatData } from '../../../utils/credentials.js'
 import { CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 
 type InternalProposeCredentialOptions = Parameters<RestAgent['credentials']['proposeCredential']>[0]
@@ -110,7 +111,7 @@ export class CredentialController extends Controller {
    * Retrieve format-data for a credential by credential record id
    *
    * @param credentialRecordId
-   * @returns GetCredentialFormatDataReturn
+   * @returns CredentialFormatData
    */
   @Example<CredentialFormatData>(CredentialFormatDataExample)
   @Get('/:credentialRecordId/format-data')
@@ -123,7 +124,8 @@ export class CredentialController extends Controller {
     try {
       req.log.info('getting format data for %s', credentialRecordId)
       const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
-      return formatData
+
+      return transformToCredentialFormatData(formatData)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('format data not found')
