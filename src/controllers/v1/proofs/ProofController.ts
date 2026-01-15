@@ -243,8 +243,9 @@ export class ProofController extends Controller {
     try {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
       const proof = await this.agent.proofs.acceptProposal({
+        ...(proposal as InternalAcceptProofProposalOptions),
+        // Path parameter takes precedence over body property to ensure URL authority
         proofRecordId,
-        ...(proposal as Omit<InternalAcceptProofProposalOptions, 'proofRecordId'>),
       })
 
       return proof.toJSON()
@@ -393,8 +394,9 @@ export class ProofController extends Controller {
       // Optionally log full formats at debug level for troubleshooting
       req.log.debug('accepting proof request with formats %j', redactProofFormats(formatsToAccept))
       const proof = await this.agent.proofs.acceptRequest({
-        proofRecordId,
         ...body,
+        // Path parameter takes precedence over body property to ensure URL authority
+        proofRecordId,
         proofFormats: formatsToAccept,
       } as InternalAcceptProofRequestOptions)
 
