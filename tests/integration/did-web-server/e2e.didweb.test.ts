@@ -12,7 +12,7 @@ const httpsAgent = new Agent({
   },
 })
 
-describe('DID:web health', function () {
+describe('DID:web server', function () {
   agents.forEach((baseUrl) => {
     it(`should return ok for ${baseUrl} DID:web health endpoint`, async function () {
       const res = await fetch(`${baseUrl}/health`, { dispatcher: httpsAgent })
@@ -20,9 +20,7 @@ describe('DID:web health', function () {
       expect(body).to.have.property('status', 'ok')
     })
   })
-})
 
-describe('get did:web', function () {
   agents.forEach((baseUrl, index) => {
     it(`should return test DID from ${baseUrl}`, async function () {
       const res = await fetch(`${baseUrl}/did.json`, { dispatcher: httpsAgent })
