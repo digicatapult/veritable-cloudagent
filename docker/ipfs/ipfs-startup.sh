@@ -1,6 +1,14 @@
 #!/bin/sh
 set -ex
 
+# Ensure swarm key is in place in the data directory
+if [ -f /usr/local/share/ipfs/swarm.key ]; then
+    echo "Copying swarm.key to data directory..."
+    cp /usr/local/share/ipfs/swarm.key /data/ipfs/swarm.key
+    # Try to set ownership, but don't fail if we can't (e.g. if not root)
+    chown ipfs:ipfs /data/ipfs/swarm.key || true
+fi
+
 # Force DHT routing for private network
 ipfs config Routing.Type dht
 
