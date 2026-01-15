@@ -7,7 +7,7 @@ const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
 
-describe.skip('W3C Credentials E2E Flow', function () {
+describe('W3C Credentials E2E Flow', function () {
   const issuerClient = request(ISSUER_BASE_URL) // Alice
   const holderClient = request(HOLDER_BASE_URL) // Bob
   const verifierClient = request(VERIFIER_BASE_URL)
