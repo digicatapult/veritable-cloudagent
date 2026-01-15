@@ -6,7 +6,7 @@ import type {
   AnonCredsRequestProofFormat,
   AnonCredsSchema,
 } from '@credo-ts/anoncreds'
-import type { CredentialDefinitionId, DID, SchemaId, UUID, Version } from './common'
+import type { CredentialDefinitionId, DID, SchemaId, UUID, Version } from './common.js'
 
 export interface AnonCredsProofRequestRestrictionOptions {
   schema_id?: SchemaId
