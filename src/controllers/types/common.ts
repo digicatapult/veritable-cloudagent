@@ -1,5 +1,3 @@
-import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata } from '@credo-ts/core'
-
 /**
  * Stringified UUIDv4.
  * @pattern [0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}
@@ -28,9 +26,3 @@ export type CredentialDefinitionId = string
  * @example "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
  */
 export type SchemaId = string
-
-export interface DidResolutionResultProps {
-  didResolutionMetadata: DidResolutionMetadata
-  didDocument: DidDocument | null
-  didDocumentMetadata: DidDocumentMetadata
-}

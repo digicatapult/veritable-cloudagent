@@ -1,5 +1,11 @@
-import type { DidDocument, KeyType } from '@credo-ts/core'
+import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata, KeyType } from '@credo-ts/core'
 import type { DID } from './common'
+
+export interface DidResolutionResultProps {
+  didResolutionMetadata: DidResolutionMetadata
+  didDocument: DidDocument | null
+  didDocumentMetadata: DidDocumentMetadata
+}
 
 interface PrivateKey {
   keyType: KeyType
