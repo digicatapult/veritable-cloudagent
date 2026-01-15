@@ -1,5 +1,5 @@
 import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata, KeyType } from '@credo-ts/core'
-import type { DID } from './common'
+import type { DID } from './common.js'
 
 export interface DidResolutionResultProps {
   didResolutionMetadata: DidResolutionMetadata
