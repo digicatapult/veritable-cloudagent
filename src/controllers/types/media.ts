@@ -1,4 +1,4 @@
-import type { UUID } from './common'
+import type { UUID } from './common.js'
 
 // Media Sharing
 export interface MediaItemRequest {
