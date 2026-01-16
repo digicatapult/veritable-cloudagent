@@ -16,7 +16,7 @@ import type {
   PresentationExchangeCreateRequest,
   ProofFormats,
   SimpleProofFormats,
-} from '../controllers/types.js'
+} from '../controllers/types/index.js'
 import { maybeMapValues } from './helpers.js'
 
 export const transformAnonCredsAttributeMarkers = (attributes?: { [key: string]: boolean }) => {

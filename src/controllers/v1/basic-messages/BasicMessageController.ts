@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
 import { BasicMessageRecordExample } from '../../examples.js'
-import type { UUID } from '../../types.js'
+import type { UUID } from '../../types/index.js'
 
 @Tags('Basic Messages')
 @Route('/v1/basic-messages')

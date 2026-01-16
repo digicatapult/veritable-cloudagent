@@ -1,5 +1,5 @@
 import { RestAgent } from '../agent.js'
-import { CredentialFormatData, GenericRecord } from '../controllers/types.js'
+import { CredentialFormatData, GenericRecord } from '../controllers/types/index.js'
 
 type GetCredentialFormatDataReturn = Awaited<ReturnType<RestAgent['credentials']['getFormatData']>>
 

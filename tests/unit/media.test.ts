@@ -14,7 +14,7 @@ import {
 import { getTestAgent, getTestServer, objectToJson } from './utils/helpers.js'
 
 import type { RestAgent } from '../../src/agent.js'
-import type { MediaShareRequest } from '../../src/controllers/types.js'
+import type { MediaShareRequest } from '../../src/controllers/types/index.js'
 
 /**
  * Unit tests for MediaController POST /v1/media/share

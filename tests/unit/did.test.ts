@@ -7,7 +7,7 @@ import request from 'supertest'
 
 import { KeyType, type Agent, type DidCreateResult, type DidRecord } from '@credo-ts/core'
 
-import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types.js'
+import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types/index.js'
 import { getTestAgent, getTestDidCreate, getTestDidDocument, getTestServer, objectToJson } from './utils/helpers.js'
 
 describe('DidController', () => {
