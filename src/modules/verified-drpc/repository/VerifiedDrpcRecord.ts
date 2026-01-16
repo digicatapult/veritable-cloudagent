@@ -1,5 +1,5 @@
 import { type RecordTags, type TagsBase, BaseRecord, CredoError, utils } from '@credo-ts/core'
-import type { UUID } from '../../../controllers/types.js'
+import type { UUID } from '../../../controllers/types/index.js'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../messages/index.js'
 import type { VerifiedDrpcRole, VerifiedDrpcState } from '../models/index.js'
 

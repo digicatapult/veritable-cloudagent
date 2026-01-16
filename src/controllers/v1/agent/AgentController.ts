@@ -4,7 +4,7 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import type { AgentInfo } from '../../types.js'
+import type { AgentInfo } from '../../types/index.js'
 @Tags('Agent')
 @Route('/v1/agent')
 @injectable()

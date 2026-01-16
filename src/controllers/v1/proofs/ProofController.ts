@@ -37,7 +37,7 @@ import type {
   RequestProofOptions,
   SimpleProofFormats,
   UUID,
-} from '../../types.js'
+} from '../../types/index.js'
 
 @Tags('Proofs')
 @Route('/v1/proofs')

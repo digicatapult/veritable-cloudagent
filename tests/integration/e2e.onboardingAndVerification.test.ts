@@ -2,7 +2,7 @@ import type { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
 import { afterEach, beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
-import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types.js'
+import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'

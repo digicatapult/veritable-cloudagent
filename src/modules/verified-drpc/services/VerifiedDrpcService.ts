@@ -14,7 +14,7 @@ import {
   type Query,
 } from '@credo-ts/core'
 
-import type { UUID } from '../../../controllers/types.js'
+import type { UUID } from '../../../controllers/types/index.js'
 import { BadRequest, NotFoundError } from '../../../error.js'
 import {
   VerifiedDrpcRequestEventTypes,

@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto'
 import type { Request as ExRequest, Response as ExResponse } from 'express'
 import pino, { LevelWithSilent, Logger } from 'pino'
 import { pinoHttp } from 'pino-http'
-import type { UUID } from '../controllers/types.js'
+import type { UUID } from '../controllers/types/index.js'
 
 const tsLogLevelMap = {
   silent: CredoLogLevel.off,

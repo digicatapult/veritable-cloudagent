@@ -34,7 +34,7 @@ import type {
   OfferCredentialOptions,
   ProposeCredentialOptions,
   UUID,
-} from '../../types.js'
+} from '../../types/index.js'
 
 @Tags('Credentials')
 @Route('/v1/credentials')

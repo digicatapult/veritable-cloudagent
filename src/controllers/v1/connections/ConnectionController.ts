@@ -27,7 +27,7 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import { ConnectionRecordExample } from '../../examples.js'
-import type { DID, UUID } from '../../types.js'
+import type { DID, UUID } from '../../types/index.js'
 
 @Tags('Connections')
 @Route('/v1/connections')

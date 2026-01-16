@@ -6,7 +6,7 @@ import { injectable } from 'tsyringe'
 import { SharedMediaItem } from '@2060.io/credo-ts-didcomm-media-sharing'
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
-import type { MediaItemRequest, MediaShareRequest } from '../../types.js'
+import type { MediaItemRequest, MediaShareRequest } from '../../types/index.js'
 
 @Tags('Media')
 @Route('/v1/media')
