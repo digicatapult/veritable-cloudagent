@@ -40,6 +40,10 @@ export type SchemaId = string
  * from @credo-ts/core, often throwing 'Index Type' or 'Reference' errors during spec generation.
  * By defining strict, self-contained recursive structures here, we ensure Swagger/OpenAPI
  * specs are generated correctly.
+ *
+ * NOTE: This may be revisited once TSOA supports OpenAPI 3.1 (likely in v7.x), which includes
+ * support for variadic tuples and usage of 'prefixItems' for array validation, potentially
+ * solving the recursion limitations.
  */
 export type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonArray | undefined
 export type ApiJsonArray = Array<ApiJsonValue>

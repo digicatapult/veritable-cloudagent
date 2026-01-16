@@ -407,7 +407,6 @@ describe('Onboarding & Verification flow', function () {
     for (let i = 0; i < 10; i++) {
       const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
       result = response.body.find(({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier)
-
       if (result && result.state === 'done') break
       await new Promise((resolve) => setTimeout(resolve, 500))
     }
