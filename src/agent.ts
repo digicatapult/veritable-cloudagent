@@ -69,7 +69,9 @@ export type AriesRestConfig = {
   autoAcceptProofs?: AutoAcceptProof
   ipfsOrigin: string
 
-  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<
+    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+  >
 
   logger: PinoLogger
 }
@@ -84,7 +86,9 @@ export interface RestAgentModules extends ModulesMap {
   anoncreds: AnonCredsModule
   w3cCredentials: W3cCredentialsModule
   drpc: DrpcModule
-  verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  verifiedDrpc: VerifiedDrpcModule<
+    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+  >
   media: MediaSharingModule
 }
 
@@ -99,7 +103,9 @@ export type RestAgent<
     anoncreds: AnonCredsModule
     w3cCredentials: W3cCredentialsModule
     drpc: DrpcModule
-    verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+    verifiedDrpc: VerifiedDrpcModule<
+      [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+    >
     media: MediaSharingModule
   },
 > = Agent<modules>
@@ -111,7 +117,7 @@ const getAgentModules = (options: {
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
   verifiedDrpcOptions: { credDefId?: CredentialDefinitionId; issuerDid?: DID } & VerifiedDrpcModuleConfigOptions<
-    [V2ProofProtocol<[AnonCredsProofFormatService]>]
+    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
   >
 }): RestAgentModules => {
   return {
