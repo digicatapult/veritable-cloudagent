@@ -3,7 +3,7 @@
  */
 import type { AutoAcceptCredential, CredentialFormatPayload, CredentialProtocolVersionType } from '@credo-ts/core'
 import type { UUID } from './common.js'
-import type { CredentialFormats, CredentialProtocols } from './protocols'
+import type { CredentialFormats, CredentialProtocols } from './protocols.js'
 
 export interface CredentialAttribute {
   name: string
