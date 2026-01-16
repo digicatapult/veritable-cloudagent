@@ -6,7 +6,7 @@ if [ -f /usr/local/share/ipfs/swarm.key ]; then
     echo "Copying swarm.key to data directory..."
     cp /usr/local/share/ipfs/swarm.key /data/ipfs/swarm.key
     # Try to set ownership, but don't fail if we can't (e.g. if not root)
-    chown ipfs:ipfs /data/ipfs/swarm.key || true
+    chown ipfs:ipfs /data/ipfs/swarm.key || echo "Warning: could not set ownership of /data/ipfs/swarm.key (insufficient privileges or missing user 'ipfs'?)" >&2
 fi
 
 # Force DHT routing for private network
