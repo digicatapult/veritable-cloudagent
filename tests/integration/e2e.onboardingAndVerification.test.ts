@@ -111,14 +111,20 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should create a connection record on the Issuer', async function () {
-    const response = await issuerClient
-      .get('/v1/connections')
-      .query({ outOfBandId: issuerToHolderOobRecordId })
-      .expect('Content-Type', /json/)
-      .expect(200)
+    let body: { id: string }[] = []
+    for (let i = 0; i < 10; i++) {
+      const response = await issuerClient
+        .get('/v1/connections')
+        .query({ outOfBandId: issuerToHolderOobRecordId })
+        .expect('Content-Type', /json/)
+        .expect(200)
+      body = response.body
+      if (body.length > 0) break
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
 
-    expect(response.body).to.be.an('array').that.has.length(1)
-    issuerToHolderConnectionRecordId = response.body[0].id
+    expect(body).to.be.an('array').that.has.length(1)
+    issuerToHolderConnectionRecordId = body[0].id
   })
 
   it('should allow an Issuer to offer credentials to a Holder', async function () {
@@ -167,7 +173,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow the Holder to fetch a record of the credential offered', async function () {
-    let body
+    let body: { id: string; state: string }[] = []
     for (let i = 0; i < 10; i++) {
       const response = await holderClient
         .get('/v1/credentials')
@@ -198,8 +204,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should let the Issuer see the credential as issued', async function () {
-    this.timeout(10000)
-    let body
+    let body: { state: string } = { state: '' }
     for (let i = 0; i < 10; i++) {
       const response = await issuerClient
         .get(`/v1/credentials/${issuerCredentialRecordId}`)
@@ -213,8 +218,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should let the Holder see the credential as issued', async function () {
-    this.timeout(10000)
-    let body
+    let body: { id: string; state: string }[] = []
     for (let i = 0; i < 10; i++) {
       const response = await holderClient
         .get('/v1/credentials')
@@ -273,14 +277,20 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should create a connection record on the Verifier', async function () {
-    const response = await verifierClient
-      .get('/v1/connections')
-      .query({ outOfBandId: verifierToHolderOobRecordId })
-      .expect('Content-Type', /json/)
-      .expect(200)
+    let body: { id: string }[] = []
+    for (let i = 0; i < 10; i++) {
+      const response = await verifierClient
+        .get('/v1/connections')
+        .query({ outOfBandId: verifierToHolderOobRecordId })
+        .expect('Content-Type', /json/)
+        .expect(200)
+      body = response.body
+      if (body.length > 0) break
+      await new Promise((resolve) => setTimeout(resolve, 500))
+    }
 
-    expect(response.body).to.be.an('array').that.has.length(1)
-    verifierToHolderConnectionRecordId = response.body[0].id
+    expect(body).to.be.an('array').that.has.length(1)
+    verifierToHolderConnectionRecordId = body[0].id
   })
 
   it('should let Verifier request proof of credential from holder', async function () {
@@ -391,7 +401,6 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
-    this.timeout(10000)
     // We need to wait for the state to become 'done' as the Verifier processes the presentation asynchronously.
     // This polling loop prevents race conditions where the test checks before the background process completes.
     let result: ProofExchangeRecordProps | undefined
