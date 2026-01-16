@@ -8,7 +8,6 @@ import type {
   ProofFormatPayload,
   ProofsProtocolVersionType,
 } from '@credo-ts/core'
-
 import type { AnonCredsRequestProofFormatOptions } from './anoncreds.js'
 import type { UUID } from './common.js'
 import type { PresentationExchangeCreateRequest } from './pex.js'
