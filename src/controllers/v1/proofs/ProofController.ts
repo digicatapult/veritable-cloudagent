@@ -31,7 +31,6 @@ import {
   isSimpleProofFormats,
   redactProofFormats,
   simplifyProofContent,
-  transformAnonCredsProofFormat,
   transformProofFormats,
 } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
