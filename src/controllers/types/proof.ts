@@ -1,3 +1,6 @@
+/**
+ * Proof Presentation (Request, Proposal) types.
+ */
 import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
 import type {
   AutoAcceptProof,

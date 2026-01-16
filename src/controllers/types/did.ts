@@ -1,3 +1,6 @@
+/**
+ * DID Resolution, Creation, and Management types.
+ */
 import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata, KeyType } from '@credo-ts/core'
 import type { DID } from './common.js'
 

@@ -1,3 +1,6 @@
+/**
+ * Hyperledger AnonCreds credential and schema types.
+ */
 import type {
   AnonCredsCredentialDefinition,
   AnonCredsProof,

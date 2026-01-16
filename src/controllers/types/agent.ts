@@ -1,3 +1,6 @@
+/**
+ * General Agent information and message types.
+ */
 import type { UUID } from './common.js'
 
 export interface AgentInfo {

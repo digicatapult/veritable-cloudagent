@@ -1,3 +1,6 @@
+/**
+ * Credential and Proof protocol version definitions.
+ */
 import type {
   AnonCredsCredentialFormat,
   AnonCredsCredentialFormatService,

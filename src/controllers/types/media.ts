@@ -1,3 +1,6 @@
+/**
+ * DIDComm Media Sharing types.
+ */
 import type { UUID } from './common.js'
 
 // Media Sharing
