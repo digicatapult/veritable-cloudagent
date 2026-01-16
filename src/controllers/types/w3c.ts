@@ -1,7 +1,7 @@
 /**
  * W3C Verifiable Credential and JSON-LD credential format types.
  */
-import type { ApiJsonObject, ApiJsonValue, GenericRecord } from './common'
+import type { ApiJsonObject, ApiJsonValue, GenericRecord } from './common.js'
 
 /**
  * enforce the first element is a string

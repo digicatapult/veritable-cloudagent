@@ -2,7 +2,7 @@
  * Credential Issuance (Proposal, Offer, Request) types.
  */
 import type { AutoAcceptCredential, CredentialFormatPayload, CredentialProtocolVersionType } from '@credo-ts/core'
-import type { UUID } from './common'
+import type { UUID } from './common.js'
 import type { CredentialFormats, CredentialProtocols } from './protocols'
 
 export interface CredentialAttribute {

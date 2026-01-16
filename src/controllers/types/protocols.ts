@@ -8,8 +8,8 @@ import type {
   AnonCredsProofFormatService,
 } from '@credo-ts/anoncreds'
 import type { V2CredentialProtocol, V2ProofProtocol } from '@credo-ts/core'
-import type { DifPresentationExchangeProofFormat } from './pex'
-import type { JsonLdCredentialFormat } from './w3c'
+import type { DifPresentationExchangeProofFormat } from './pex.js'
+import type { JsonLdCredentialFormat } from './w3c.js'
 
 export type CredentialProtocols = [V2CredentialProtocol<[AnonCredsCredentialFormatService]>]
 export type CredentialFormats = [AnonCredsCredentialFormat, JsonLdCredentialFormat]

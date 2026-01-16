@@ -1,7 +1,7 @@
 /**
  * Presentation Exchange (PEX) and Input Descriptor types.
  */
-import type { ApiJsonArray, ApiJsonObject, GenericRecord } from './common'
+import type { ApiJsonArray, ApiJsonObject, GenericRecord } from './common.js'
 
 // --- Presentation Exchange Types ---
 
