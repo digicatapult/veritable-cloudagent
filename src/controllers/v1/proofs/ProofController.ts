@@ -17,6 +17,13 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+
+type InternalProposeProofOptions = Parameters<RestAgent['proofs']['proposeProof']>[0]
+type InternalAcceptProofProposalOptions = Parameters<RestAgent['proofs']['acceptProposal']>[0]
+type InternalCreateProofRequestOptions = Parameters<RestAgent['proofs']['createRequest']>[0]
+type InternalRequestProofOptions = Parameters<RestAgent['proofs']['requestProof']>[0]
+type InternalAcceptProofRequestOptions = Parameters<RestAgent['proofs']['acceptRequest']>[0]
+
 import {
   getMissingAnonCredsCredentials,
   hydrateAnonCredsAttributes,
@@ -24,7 +31,7 @@ import {
   isSimpleAnonCredsProofFormats,
   redactProofFormats,
   simplifyAnonCredsProofContent,
-  transformAnonCredsProofFormat,
+  transformProofFormats,
 } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
@@ -203,7 +210,7 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
-      const proof = await this.agent.proofs.proposeProof(proposal)
+      const proof = await this.agent.proofs.proposeProof(proposal as InternalProposeProofOptions)
       req.log.info('proof proposal created %j', proof.toJSON())
 
       return proof.toJSON()
@@ -236,8 +243,9 @@ export class ProofController extends Controller {
     try {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
       const proof = await this.agent.proofs.acceptProposal({
+        ...(proposal as InternalAcceptProofProposalOptions),
+        // Path parameter takes precedence over body property to ensure URL authority
         proofRecordId,
-        ...proposal,
       })
 
       return proof.toJSON()
@@ -264,11 +272,9 @@ export class ProofController extends Controller {
     const { proofFormats, ...rest } = request
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
     const { message, proofRecord } = await this.agent.proofs.createRequest({
-      proofFormats: {
-        anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
-      },
+      proofFormats: transformProofFormats(proofFormats),
       ...rest,
-    })
+    } as InternalCreateProofRequestOptions)
 
     req.log.info('returning proof record %j', { proofRecord, message })
 
@@ -294,11 +300,9 @@ export class ProofController extends Controller {
       req.log.info('requesting proof for %s connection %j', connectionId, body)
       const proof = await this.agent.proofs.requestProof({
         connectionId,
-        proofFormats: {
-          anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
-        },
+        proofFormats: transformProofFormats(proofFormats),
         ...rest,
-      })
+      } as InternalRequestProofOptions)
 
       req.log.info('success, returning proof %j', proof.toJSON())
       return proof.toJSON()
@@ -390,10 +394,11 @@ export class ProofController extends Controller {
       // Optionally log full formats at debug level for troubleshooting
       req.log.debug('accepting proof request with formats %j', redactProofFormats(formatsToAccept))
       const proof = await this.agent.proofs.acceptRequest({
-        proofRecordId,
         ...body,
+        // Path parameter takes precedence over body property to ensure URL authority
+        proofRecordId,
         proofFormats: formatsToAccept,
-      })
+      } as InternalAcceptProofRequestOptions)
 
       req.log.debug('success, returning proof %j', proof.toJSON())
 

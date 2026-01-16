@@ -10,6 +10,7 @@ import type {
 } from '@credo-ts/core'
 import type { AnonCredsRequestProofFormatOptions } from './anoncreds.js'
 import type { UUID } from './common.js'
+import type { PresentationExchangeCreateRequest } from './pex.js'
 import type { ProofFormats, ProofProtocols } from './protocols.js'
 
 export interface ProofRequestMessageResponse {
@@ -67,6 +68,7 @@ export interface SimpleProofFormats {
 export interface AcceptProofProposalOptions {
   proofFormats?: {
     anoncreds?: AnonCredsRequestProofFormatOptions
+    presentationExchange?: PresentationExchangeCreateRequest
   }
   goalCode?: string
   willConfirm?: boolean
@@ -95,7 +97,8 @@ export interface AcceptProofRequestOptions {
 export interface CreateProofRequestOptions {
   protocolVersion: ProofsProtocolVersionType<ProofProtocols>
   proofFormats: {
-    [key in ProofFormats[number] as key['formatKey']]?: AnonCredsRequestProofFormatOptions
+    anoncreds?: AnonCredsRequestProofFormatOptions
+    presentationExchange?: PresentationExchangeCreateRequest
   }
   goalCode?: string
   parentThreadId?: UUID

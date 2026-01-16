@@ -225,6 +225,22 @@ export const CredentialFormatDataExample = {
       schema_id: '351936',
       cred_def_id: 'WgWxqztrNooG92RXvxSTWv:3:CL:20:tag',
     },
+    jsonld: {
+      credential: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential'],
+        issuer: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+        issuanceDate: '2023-01-01T19:23:24Z',
+        credentialSubject: {
+          id: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+          degree: 'Bachelor of Science',
+        },
+      },
+      options: {
+        proofType: 'Ed25519Signature2018',
+        proofPurpose: 'assertionMethod',
+      },
+    },
   },
   offer: {
     anoncreds: {
@@ -233,6 +249,22 @@ export const CredentialFormatDataExample = {
       key_correctness_proof: {},
       nonce: '333868740182662939520186',
     },
+    jsonld: {
+      credential: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential'],
+        issuer: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+        issuanceDate: '2023-01-01T19:23:24Z',
+        credentialSubject: {
+          id: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+          degree: 'Bachelor of Science',
+        },
+      },
+      options: {
+        proofType: 'Ed25519Signature2018',
+        proofPurpose: 'assertionMethod',
+      },
+    },
   },
   request: {
     anoncreds: {
@@ -240,6 +272,22 @@ export const CredentialFormatDataExample = {
       blinded_ms: {},
       blinded_ms_correctness_proof: {},
       nonce: '86778542088265913483731',
+    },
+    jsonld: {
+      credential: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential'],
+        issuer: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+        issuanceDate: '2023-01-01T19:23:24Z',
+        credentialSubject: {
+          id: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+          degree: 'Bachelor of Science',
+        },
+      },
+      options: {
+        proofType: 'Ed25519Signature2018',
+        proofPurpose: 'assertionMethod',
+      },
     },
   },
   credential: {
@@ -256,6 +304,26 @@ export const CredentialFormatDataExample = {
         p_credential: {},
       },
       signature_correctness_proof: {},
+    },
+    jsonld: {
+      credential: {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential'],
+        issuer: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+        issuanceDate: '2023-01-01T19:23:24Z',
+        credentialSubject: {
+          id: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+          degree: 'Bachelor of Science',
+        },
+        proof: {
+          type: 'Ed25519Signature2018',
+          created: '2023-01-01T19:23:24Z',
+          verificationMethod:
+            'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL#z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+          proofPurpose: 'assertionMethod',
+          jws: 'eyJhbGciOiJFZERTQSIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..nP7jT1c_... ',
+        },
+      },
     },
   },
 }

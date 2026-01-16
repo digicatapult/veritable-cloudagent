@@ -29,3 +29,26 @@ export type CredentialDefinitionId = string
  * @example "WgWxqztrNooG92RXvxSTWv:2:schema_name:1.0"
  */
 export type SchemaId = string
+
+/**
+ * Recursive JSON types for TSOA compatibility.
+ * Defined locally to avoid TSOA errors with imported specific types.
+ *
+ * NOTE: The extensive type and interface definitions in this file (specifically explicitly
+ * recursive types like ApiJsonObject) are required to satisfy TSOA's schema generation.
+ * TSOA struggles with generic 'Record<string, any>' or complex union types imported
+ * from @credo-ts/core, often throwing 'Index Type' or 'Reference' errors during spec generation.
+ * By defining strict, self-contained recursive structures here, we ensure Swagger/OpenAPI
+ * specs are generated correctly.
+ *
+ * TODO: TSOA v7.0.0-alpha.0 added OpenAPI 3.1 support (PR #1768), effectively supporting
+ * variadic tuples and usage of 'prefixItems' for array validation.
+ * Once upgraded, we should revisit these recursive types to see if the workaround is still needed.
+ */
+export type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonArray | undefined
+export type ApiJsonArray = Array<ApiJsonValue>
+export interface ApiJsonObject {
+  [key: string]: ApiJsonValue
+}
+
+export type GenericRecord = ApiJsonObject

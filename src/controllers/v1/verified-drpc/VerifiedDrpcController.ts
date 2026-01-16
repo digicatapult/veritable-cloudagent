@@ -6,7 +6,7 @@ import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules
 
 import { RestAgent } from '../../../agent.js'
 import { GatewayTimeout, NotFoundError } from '../../../error.js'
-import { transformAnonCredsProofFormat } from '../../../utils/proofs.js'
+import { transformProofFormats } from '../../../utils/proofs.js'
 import type { CreateProofRequestOptions, UUID } from '../../types/index.js'
 
 interface VerifiedDrpcRequestOptions {
@@ -48,9 +48,7 @@ export class VerifiedDrpcController extends Controller {
         proofRequestOptions: { proofFormats, ...rest },
       } = requestOptions
       proofOptions = {
-        proofFormats: {
-          anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
-        },
+        proofFormats: transformProofFormats(proofFormats),
         ...rest,
       }
       req.log.info('sending DRPC request with options %j', proofOptions)
