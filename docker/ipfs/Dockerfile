@@ -10,4 +10,6 @@ ENV IPFS_PROFILE=server
 COPY swarm.key /usr/local/share/ipfs/swarm.key
 
 # Install startup script
+# IPFS Kubo runs executable scripts from /container-init.d/ on container startup,
+# so we place our configuration/init script there as 001-config.sh.
 COPY --chmod=0755 ipfs-startup.sh /container-init.d/001-config.sh
