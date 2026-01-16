@@ -29,17 +29,6 @@ export interface ProposeProofOptions {
   comment?: string
 }
 
-export interface AcceptProofProposalOptions {
-  proofFormats?: {
-    anoncreds?: AnonCredsRequestProofFormatOptions
-    presentationExchange?: PresentationExchangeCreateRequest
-  }
-  goalCode?: string
-  willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
-  comment?: string
-}
-
 export interface SimpleProofFormats {
   anoncreds?: {
     attributes?: Record<
@@ -75,6 +64,17 @@ export interface SimpleProofFormats {
       }
     >
   }
+}
+
+export interface AcceptProofProposalOptions {
+  proofFormats?: {
+    anoncreds?: AnonCredsRequestProofFormatOptions
+    presentationExchange?: PresentationExchangeCreateRequest
+  }
+  goalCode?: string
+  willConfirm?: boolean
+  autoAcceptProof?: AutoAcceptProof
+  comment?: string
 }
 
 export interface MatchingCredentialsResponse {
