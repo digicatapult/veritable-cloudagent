@@ -36,7 +36,6 @@ export interface DidOperationStateFinished {
   secret?: { [x: string]: unknown }
   didDocument: { [x: string]: unknown }
 }
-
 export interface DidOperationStateFailed {
   state: 'failed'
   did?: DID
@@ -44,14 +43,12 @@ export interface DidOperationStateFailed {
   didDocument?: { [x: string]: unknown }
   reason: string
 }
-
 export interface DidOperationStateWait {
   state: 'wait'
   did?: DID
   secret?: { [x: string]: unknown }
   didDocument?: { [x: string]: unknown }
 }
-
 export interface DidOperationStateActionBase {
   state: 'action'
   action: string
