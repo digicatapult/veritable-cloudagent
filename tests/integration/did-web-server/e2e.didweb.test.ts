@@ -2,8 +2,7 @@ import { expect } from 'chai'
 import { readFileSync } from 'fs'
 import { Agent, fetch } from 'undici'
 
-const caPath = process.env.NODE_EXTRA_CA_CERTS || '/rootCA.pem'
-const ca = readFileSync(caPath)
+const ca = readFileSync('/rootCA.pem')
 
 const agents = ['https://alice:8443', 'https://bob:8443', 'https://charlie:8443']
 const dids = ['did:web:alice%3A8443', 'did:web:bob%3A8443', 'did:web:charlie%3A8443']
