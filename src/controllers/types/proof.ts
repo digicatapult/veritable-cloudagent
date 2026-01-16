@@ -32,6 +32,7 @@ export interface ProposeProofOptions {
 export interface AcceptProofProposalOptions {
   proofFormats?: {
     anoncreds?: AnonCredsRequestProofFormatOptions
+    presentationExchange?: PresentationExchangeCreateRequest
   }
   goalCode?: string
   willConfirm?: boolean

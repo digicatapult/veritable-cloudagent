@@ -3,8 +3,15 @@
  */
 import type { ApiJsonObject, ApiJsonValue, GenericRecord } from './common'
 
+/**
+ * enforce the first element is a string
+ * Note: TSOA 6.x doesn't support variadic tuples ([string, ...rest[]]) so we fallback to array
+ * TODO: Revisit when TSOA 7.x is released which supports variadic tuples
+ */
+export type JsonLdContext = (string | GenericRecord)[]
+
 export interface W3cCredential extends ApiJsonObject {
-  '@context': string[] | GenericRecord
+  '@context': JsonLdContext
   id?: string
   type: string[]
   issuer: string | { id: string; [key: string]: ApiJsonValue }
