@@ -18,13 +18,13 @@ import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
 import {
-  getMissingCredentials,
-  hydrateAttributes,
-  hydratePredicates,
-  isSimpleProofFormats,
+  getMissingAnonCredsCredentials,
+  hydrateAnonCredsAttributes,
+  hydrateAnonCredsPredicates,
+  isSimpleAnonCredsProofFormats,
   redactProofFormats,
-  simplifyProofContent,
-  transformProofFormat,
+  simplifyAnonCredsProofContent,
+  transformAnonCredsProofFormat,
 } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
@@ -128,7 +128,7 @@ export class ProofController extends Controller {
       req.log.info('proof content found for %s', proofRecordId)
 
       if (view === 'simplified') {
-        return simplifyProofContent(formatData)
+        return simplifyAnonCredsProofContent(formatData)
       }
 
       return formatData
@@ -265,7 +265,7 @@ export class ProofController extends Controller {
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
     const { message, proofRecord } = await this.agent.proofs.createRequest({
       proofFormats: {
-        anoncreds: transformProofFormat(proofFormats.anoncreds),
+        anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
       },
       ...rest,
     })
@@ -295,7 +295,7 @@ export class ProofController extends Controller {
       const proof = await this.agent.proofs.requestProof({
         connectionId,
         proofFormats: {
-          anoncreds: transformProofFormat(proofFormats.anoncreds),
+          anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
         },
         ...rest,
       })
@@ -344,7 +344,7 @@ export class ProofController extends Controller {
         })
         formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         req.log.info('credentials found (redacted) %j', redactProofFormats(retrievedCredentials.proofFormats))
-      } else if (isSimpleProofFormats(body.proofFormats)) {
+      } else if (isSimpleAnonCredsProofFormats(body.proofFormats)) {
         const requestedAnonCreds = body.proofFormats.anoncreds
 
         if (!requestedAnonCreds) {
@@ -465,17 +465,17 @@ export class ProofController extends Controller {
       )
     }
 
-    const { hydrated: hydratedAttributes, errors: attrErrors } = hydrateAttributes(
+    const { hydrated: hydratedAttributes, errors: attrErrors } = hydrateAnonCredsAttributes(
       requestedAnonCreds.attributes,
       availableAnonCreds.attributes
     )
     if (attrErrors.length > 0) {
       throw new BadRequest(attrErrors.join('; '))
     }
-    const hydratedPredicates = hydratePredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
+    const hydratedPredicates = hydrateAnonCredsPredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
 
-    const missingAttributes = getMissingCredentials(requestedAnonCreds.attributes, hydratedAttributes)
-    const missingPredicates = getMissingCredentials(requestedAnonCreds.predicates, hydratedPredicates)
+    const missingAttributes = getMissingAnonCredsCredentials(requestedAnonCreds.attributes, hydratedAttributes)
+    const missingPredicates = getMissingAnonCredsCredentials(requestedAnonCreds.predicates, hydratedPredicates)
 
     if (missingAttributes.length > 0 || missingPredicates.length > 0) {
       const formatDetails = (items: typeof missingAttributes, type: string) =>

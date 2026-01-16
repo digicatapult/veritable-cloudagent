@@ -36,6 +36,7 @@ services:
       - CHARLIE_DID
       - CHARLIE_PRIV_KEY
       - LOG_LEVEL=debug
+      - NODE_EXTRA_CA_CERTS=/rootCA.pem
     command: ['npm', 'run', 'test:integration']
     networks:
       - testnet
