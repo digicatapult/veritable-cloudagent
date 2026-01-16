@@ -41,9 +41,9 @@ export type SchemaId = string
  * By defining strict, self-contained recursive structures here, we ensure Swagger/OpenAPI
  * specs are generated correctly.
  *
- * NOTE: This may be revisited once TSOA supports OpenAPI 3.1 (likely in v7.x), which includes
- * support for variadic tuples and usage of 'prefixItems' for array validation, potentially
- * solving the recursion limitations.
+ * TODO: TSOA v7.0.0-alpha.0 added OpenAPI 3.1 support (PR #1768), effectively supporting
+ * variadic tuples and usage of 'prefixItems' for array validation.
+ * Once upgraded, we should revisit these recursive types to see if the workaround is still needed.
  */
 export type ApiJsonValue = string | number | boolean | null | ApiJsonObject | ApiJsonArray | undefined
 export type ApiJsonArray = Array<ApiJsonValue>
