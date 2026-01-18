@@ -36,25 +36,24 @@ export class DidWebDocGenerator {
           controller: didId,
           publicKeyJwk: { ...signingKeyJwk.toJson(), kid: 'owner' },
         },
-      ],
-      authentication: [`${didId}#owner`],
-      assertionMethod: [`${didId}#owner`],
-      service: [
-        {
-          id: `${didId}#did-communication`,
-          type: 'did-communication',
-          priority: 0,
-          recipientKeys: [`${didId}#owner`],
-          routingKeys: [],
-          serviceEndpoint: serviceEndpoint,
-        },
-      ],
-      keyAgreement: [
         {
           id: `${didId}#encryption`,
           type: 'JsonWebKey2020',
           controller: didId,
           publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'encryption' },
+        },
+      ],
+      authentication: [`${didId}#owner`],
+      assertionMethod: [`${didId}#owner`],
+      keyAgreement: [`${didId}#encryption`],
+      service: [
+        {
+          id: `${didId}#did-communication`,
+          type: 'did-communication',
+          priority: 0,
+          recipientKeys: [`${didId}#encryption`],
+          routingKeys: [],
+          serviceEndpoint: serviceEndpoint,
         },
       ],
     }
