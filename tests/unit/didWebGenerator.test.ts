@@ -36,10 +36,14 @@ describe('didWebGenerator', function () {
     expect(signingKey.id).to.equal(`${did}#owner`)
     expect(signingKey.type).to.equal('Ed25519VerificationKey2020')
     expect(signingKey.controller).to.equal(did)
+    expect(signingKey.publicKeyMultibase).to.be.a('string')
+    expect(signingKey.publicKeyMultibase!.length).to.be.greaterThan(0)
+    expect(signingKey.publicKeyMultibase!.startsWith('z')).to.equal(true)
 
     // Verify encryption key (verificationMethod[1])
     const encryptionKey = generated.didDocument.verificationMethod![1]
     expect(encryptionKey.id).to.equal(`${did}#encryption`)
+    expect(encryptionKey.type).to.equal('JsonWebKey2020')
     expect(encryptionKey.publicKeyJwk!.kid).to.equal('encryption')
     expect(encryptionKey.controller).to.equal(did)
 
