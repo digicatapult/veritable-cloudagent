@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
-import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types.js'
+import type { AcceptCredentialProposalOptions, ProposeCredentialOptions } from '../../src/controllers/types/index.js'
 
 import type { AddressInfo, Server } from 'node:net'
 

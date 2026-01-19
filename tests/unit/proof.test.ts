@@ -8,7 +8,7 @@ import type {
   ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
-} from '../../src/controllers/types.js'
+} from '../../src/controllers/types/index.js'
 
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
