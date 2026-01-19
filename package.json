@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.17.9",
+  "version": "0.17.10",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -80,7 +80,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.19.6",
+    "@types/node": "^22.19.7",
     "@types/sinon": "^21.0.0",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
