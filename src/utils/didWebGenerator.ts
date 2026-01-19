@@ -21,40 +21,42 @@ export class DidWebDocGenerator {
     const signingKey = await this.agent.wallet.createKey({ keyType: KeyType.Ed25519 })
     const encryptionKey = await this.agent.wallet.createKey({ keyType: KeyType.X25519 })
 
-    const signingKeyJwk = getJwkFromKey(signingKey)
     const encryptionKeyJwk = getJwkFromKey(encryptionKey)
 
     // Assemble the DID:web document
     // This is a plain object that will be transformed and hydrated within credo-ts
     const didWebDocument = {
-      '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
+      '@context': [
+        'https://www.w3.org/ns/did/v1',
+        'https://w3id.org/security/suites/jws-2020/v1',
+        'https://w3id.org/security/suites/ed25519-2020/v1',
+      ],
       id: didId,
       verificationMethod: [
         {
           id: `${didId}#owner`,
-          type: 'JsonWebKey2020',
+          type: 'Ed25519VerificationKey2020',
           controller: didId,
-          publicKeyJwk: { ...signingKeyJwk.toJson(), kid: 'owner' },
+          publicKeyMultibase: signingKey.fingerprint,
         },
-      ],
-      authentication: [`${didId}#owner`],
-      assertionMethod: [`${didId}#owner`],
-      service: [
-        {
-          id: `${didId}#did-communication`,
-          type: 'did-communication',
-          priority: 0,
-          recipientKeys: [`${didId}#owner`],
-          routingKeys: [],
-          serviceEndpoint: serviceEndpoint,
-        },
-      ],
-      keyAgreement: [
         {
           id: `${didId}#encryption`,
           type: 'JsonWebKey2020',
           controller: didId,
           publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'encryption' },
+        },
+      ],
+      authentication: [`${didId}#owner`],
+      assertionMethod: [`${didId}#owner`],
+      keyAgreement: [`${didId}#encryption`],
+      service: [
+        {
+          id: `${didId}#did-communication`,
+          type: 'did-communication',
+          priority: 0,
+          recipientKeys: [`${didId}#encryption`],
+          routingKeys: [],
+          serviceEndpoint: serviceEndpoint,
         },
       ],
     }

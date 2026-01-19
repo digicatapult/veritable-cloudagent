@@ -1,4 +1,4 @@
-import { type Agent } from '@credo-ts/core'
+import { type Agent, DidCommV1Service } from '@credo-ts/core'
 import { expect } from 'chai'
 import { Logger } from 'pino'
 import { DidWebDocGenerator } from '../../src/utils/didWebGenerator.js'
@@ -31,18 +31,28 @@ describe('didWebGenerator', function () {
     expect(generated.did).to.equal(did)
     expect(generated.didDocument.id).to.equal(did)
 
-    // Verify signing key (verificationMethod)
-    const verificationMethod = generated.didDocument.verificationMethod![0]
-    expect(verificationMethod.id).to.equal(`${did}#owner`)
-    expect(verificationMethod.publicKeyJwk!.kid).to.equal('owner')
+    // Verify signing key (verificationMethod[0])
+    const signingKey = generated.didDocument.verificationMethod![0]
+    expect(signingKey.id).to.equal(`${did}#owner`)
+    expect(signingKey.type).to.equal('Ed25519VerificationKey2020')
+    expect(signingKey.controller).to.equal(did)
+    expect(signingKey.publicKeyMultibase).to.be.a('string')
+    expect(signingKey.publicKeyMultibase!.length).to.be.greaterThan(0)
+    expect(signingKey.publicKeyMultibase!.startsWith('z')).to.equal(true)
 
-    // Verify encryption key (keyAgreement)
+    // Verify encryption key (verificationMethod[1])
+    const encryptionKey = generated.didDocument.verificationMethod![1]
+    expect(encryptionKey.id).to.equal(`${did}#encryption`)
+    expect(encryptionKey.type).to.equal('JsonWebKey2020')
+    expect(encryptionKey.publicKeyJwk!.kid).to.equal('encryption')
+    expect(encryptionKey.controller).to.equal(did)
+
+    // Verify keyAgreement (reference to encryption key)
     const keyAgreement = generated.didDocument.keyAgreement![0]
-    // keyAgreement can be a string or VerificationMethod, here it is defined as VerificationMethod in the generator
-    if (typeof keyAgreement === 'string') {
-      throw new Error('Expected keyAgreement to be an object')
-    }
-    expect(keyAgreement.id).to.equal(`${did}#encryption`)
-    expect(keyAgreement.publicKeyJwk!.kid).to.equal('encryption')
+    expect(keyAgreement).to.equal(`${did}#encryption`)
+
+    // Verify service recipientKeys (reference to encryption key)
+    const service = generated.didDocument.service![0]
+    expect((service as DidCommV1Service).recipientKeys).to.deep.equal([`${did}#encryption`])
   })
 })
