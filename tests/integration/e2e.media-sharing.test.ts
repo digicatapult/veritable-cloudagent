@@ -68,4 +68,11 @@ describe('Media Sharing A→B', function () {
     expect(res.body).to.have.property('id')
     expect(res.body).to.have.property('state')
   })
+
+  after(async function () {
+    // Disconnect after test to clean up
+    if (aliceConnectionId) {
+      await alice.delete(`/v1/connections/${aliceConnectionId}`).query({ deleteConnectionRecord: true })
+    }
+  })
 })

@@ -1,6 +1,6 @@
 import type { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
-import { afterEach, beforeEach, describe, it } from 'mocha'
+import { beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
 
@@ -27,21 +27,12 @@ describe('Onboarding & Verification flow', function () {
   let holderCredentialRecordId: UUID
   let holderProofRequestId: UUID
   let threadIdOnVerifier: UUID
-  let failed = false
 
   beforeEach(function (done) {
-    // abort remaining tests in suite if one fails
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    failed && this.skip()
     // pause between tests/retries to allow state to resolve on peers
     setTimeout(function () {
       done()
     }, 200)
-  })
-
-  afterEach(function () {
-    // flag to track suite failure
-    failed = failed || this?.currentTest?.state === 'failed'
   })
 
   it('should allow an Issuer to create a Schema', async function () {
@@ -422,5 +413,24 @@ describe('Onboarding & Verification flow', function () {
     }
 
     expect(result?.state).to.be.equal('done')
+  })
+
+  after(async function () {
+    if (holderToIssuerConnectionRecordId)
+      await holderClient
+        .delete(`/v1/connections/${holderToIssuerConnectionRecordId}`)
+        .query({ deleteConnectionRecord: true })
+    if (issuerToHolderConnectionRecordId)
+      await issuerClient
+        .delete(`/v1/connections/${issuerToHolderConnectionRecordId}`)
+        .query({ deleteConnectionRecord: true })
+    if (verifierToHolderConnectionRecordId)
+      await verifierClient
+        .delete(`/v1/connections/${verifierToHolderConnectionRecordId}`)
+        .query({ deleteConnectionRecord: true })
+    if (holderToVerifierConnectionRecordId)
+      await holderClient
+        .delete(`/v1/connections/${holderToVerifierConnectionRecordId}`)
+        .query({ deleteConnectionRecord: true })
   })
 })

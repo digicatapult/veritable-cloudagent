@@ -114,7 +114,12 @@ describe('Media Sharing Events (WS)', function () {
     expect(states, `States captured: ${states.join(',')}`).to.include('media-shared')
   })
 
-  it('Closes WebSocket', function () {
-    ws.close()
+  after(async function () {
+    if (ws) {
+      ws.close()
+    }
+    if (aliceConnectionId) {
+      await alice.delete(`/v1/connections/${aliceConnectionId}`).query({ deleteConnectionRecord: true })
+    }
   })
 })
