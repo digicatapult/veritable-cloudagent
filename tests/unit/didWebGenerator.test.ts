@@ -43,9 +43,9 @@ describe('didWebGenerator', function () {
     // Verify encryption key (verificationMethod[1])
     const encryptionKey = generated.didDocument.verificationMethod![1]
     expect(encryptionKey.id).to.equal(`${did}#encryption`)
-    expect(encryptionKey.type).to.equal('JsonWebKey2020')
-    expect(encryptionKey.publicKeyJwk!.kid).to.equal('encryption')
+    expect(encryptionKey.type).to.equal('X25519KeyAgreementKey2019')
     expect(encryptionKey.controller).to.equal(did)
+    expect(encryptionKey.publicKeyBase58).to.be.a('string')
 
     // Verify keyAgreement (reference to encryption key)
     const keyAgreement = generated.didDocument.keyAgreement![0]
@@ -53,6 +53,6 @@ describe('didWebGenerator', function () {
 
     // Verify service recipientKeys (reference to encryption key)
     const service = generated.didDocument.service![0]
-    expect((service as DidCommV1Service).recipientKeys).to.deep.equal([`${did}#encryption`])
+    expect((service as DidCommV1Service).recipientKeys).to.deep.equal([`${did}#owner`])
   })
 })
