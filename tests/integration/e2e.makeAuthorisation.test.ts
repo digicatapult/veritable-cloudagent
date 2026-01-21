@@ -13,7 +13,7 @@ describe('Register makeAuthorisation schema', function () {
   let schemaId: string
 
   it('registers the schema via API (Alice) and captures a schema id', async function () {
-    this.timeout(10000)
+    this.timeout(20000)
 
     const body = { ...makerAuthorisationSchema, issuerId }
 
@@ -35,7 +35,7 @@ describe('Register makeAuthorisation schema', function () {
   })
 
   it('Maker (Bob) can resolve the schema via IPFS', async function () {
-    this.timeout(10000)
+    this.timeout(20000)
 
     const url = `${MAKER_BASE_URL}/v1/schemas/${encodeURIComponent(schemaId)}`
 

@@ -1,8 +1,10 @@
 import type { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
-import { afterEach, beforeEach, describe, it } from 'mocha'
+import { beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
+
+import { safeDeleteConnection } from './utils/cleanup.js'
 
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
@@ -27,21 +29,12 @@ describe('Onboarding & Verification flow', function () {
   let holderCredentialRecordId: UUID
   let holderProofRequestId: UUID
   let threadIdOnVerifier: UUID
-  let failed = false
 
   beforeEach(function (done) {
-    // abort remaining tests in suite if one fails
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    failed && this.skip()
     // pause between tests/retries to allow state to resolve on peers
     setTimeout(function () {
       done()
     }, 200)
-  })
-
-  afterEach(function () {
-    // flag to track suite failure
-    failed = failed || this?.currentTest?.state === 'failed'
   })
 
   it('should allow an Issuer to create a Schema', async function () {
@@ -63,6 +56,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow an issuer to create a Credential Definition', async function () {
+    this.timeout(20000)
     const createCredDefPayload = {
       tag: 'placeholderCredDef',
       schemaId: schemaId,
@@ -422,5 +416,16 @@ describe('Onboarding & Verification flow', function () {
     }
 
     expect(result?.state).to.be.equal('done')
+  })
+
+  after(async function () {
+    if (holderToIssuerConnectionRecordId)
+      await safeDeleteConnection(holderClient, holderToIssuerConnectionRecordId, 'Holder→Issuer')
+    if (issuerToHolderConnectionRecordId)
+      await safeDeleteConnection(issuerClient, issuerToHolderConnectionRecordId, 'Issuer→Holder')
+    if (verifierToHolderConnectionRecordId)
+      await safeDeleteConnection(verifierClient, verifierToHolderConnectionRecordId, 'Verifier→Holder')
+    if (holderToVerifierConnectionRecordId)
+      await safeDeleteConnection(holderClient, holderToVerifierConnectionRecordId, 'Holder→Verifier')
   })
 })

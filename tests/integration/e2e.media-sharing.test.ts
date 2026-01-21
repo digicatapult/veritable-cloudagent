@@ -2,6 +2,8 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import request from 'supertest'
 
+import { safeDeleteConnectionsByOutOfBandId } from './utils/cleanup.js'
+
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 
@@ -67,5 +69,13 @@ describe('Media Sharing A→B', function () {
     const res = await alice.post('/v1/media/share').send(body).expect('Content-Type', /json/).expect(200)
     expect(res.body).to.have.property('id')
     expect(res.body).to.have.property('state')
+  })
+
+  after(async function () {
+    // Best-effort teardown; don't mask test failures.
+    if (oobRecordId) {
+      await safeDeleteConnectionsByOutOfBandId(alice, oobRecordId, 'Alice')
+      await safeDeleteConnectionsByOutOfBandId(bob, oobRecordId, 'Bob')
+    }
   })
 })
