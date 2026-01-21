@@ -4,6 +4,8 @@ import { beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
 
+import { safeDeleteConnection } from './utils/cleanup.js'
+
 const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
@@ -417,20 +419,12 @@ describe('Onboarding & Verification flow', function () {
 
   after(async function () {
     if (holderToIssuerConnectionRecordId)
-      await holderClient
-        .delete(`/v1/connections/${holderToIssuerConnectionRecordId}`)
-        .query({ deleteConnectionRecord: true })
+      await safeDeleteConnection(holderClient, holderToIssuerConnectionRecordId, 'Holder→Issuer')
     if (issuerToHolderConnectionRecordId)
-      await issuerClient
-        .delete(`/v1/connections/${issuerToHolderConnectionRecordId}`)
-        .query({ deleteConnectionRecord: true })
+      await safeDeleteConnection(issuerClient, issuerToHolderConnectionRecordId, 'Issuer→Holder')
     if (verifierToHolderConnectionRecordId)
-      await verifierClient
-        .delete(`/v1/connections/${verifierToHolderConnectionRecordId}`)
-        .query({ deleteConnectionRecord: true })
+      await safeDeleteConnection(verifierClient, verifierToHolderConnectionRecordId, 'Verifier→Holder')
     if (holderToVerifierConnectionRecordId)
-      await holderClient
-        .delete(`/v1/connections/${holderToVerifierConnectionRecordId}`)
-        .query({ deleteConnectionRecord: true })
+      await safeDeleteConnection(holderClient, holderToVerifierConnectionRecordId, 'Holder→Verifier')
   })
 })

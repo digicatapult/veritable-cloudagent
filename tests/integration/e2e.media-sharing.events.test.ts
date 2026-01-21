@@ -4,6 +4,8 @@ import request from 'supertest'
 import WebSocket from 'ws'
 import PinoLogger from '../../src/utils/logger.js'
 
+import { safeCloseWebSocket, safeDeleteConnectionsByOutOfBandId } from './utils/cleanup.js'
+
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const ALICE_WS_URL = ALICE_BASE_URL.replace('http', 'ws')
@@ -115,11 +117,11 @@ describe('Media Sharing Events (WS)', function () {
   })
 
   after(async function () {
-    if (ws) {
-      ws.close()
-    }
-    if (aliceConnectionId) {
-      await alice.delete(`/v1/connections/${aliceConnectionId}`).query({ deleteConnectionRecord: true })
+    safeCloseWebSocket(ws, 'Alice WS')
+
+    if (oobRecordId) {
+      await safeDeleteConnectionsByOutOfBandId(alice, oobRecordId, 'Alice')
+      await safeDeleteConnectionsByOutOfBandId(bob, oobRecordId, 'Bob')
     }
   })
 })

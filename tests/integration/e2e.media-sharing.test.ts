@@ -2,6 +2,8 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import request from 'supertest'
 
+import { safeDeleteConnectionsByOutOfBandId } from './utils/cleanup.js'
+
 const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
 const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 
@@ -70,9 +72,10 @@ describe('Media Sharing A→B', function () {
   })
 
   after(async function () {
-    // Disconnect after test to clean up
-    if (aliceConnectionId) {
-      await alice.delete(`/v1/connections/${aliceConnectionId}`).query({ deleteConnectionRecord: true })
+    // Best-effort teardown; don't mask test failures.
+    if (oobRecordId) {
+      await safeDeleteConnectionsByOutOfBandId(alice, oobRecordId, 'Alice')
+      await safeDeleteConnectionsByOutOfBandId(bob, oobRecordId, 'Bob')
     }
   })
 })
