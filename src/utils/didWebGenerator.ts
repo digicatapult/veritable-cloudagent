@@ -1,10 +1,9 @@
-import { Agent, DidDocument, getJwkFromKey, JsonTransformer, KeyType } from '@credo-ts/core'
+import { Agent, DidDocument, JsonTransformer, KeyType } from '@credo-ts/core'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
   did: string
   didDocument: DidDocument
-  publicEncryptionKey: string
 }
 
 export class DidWebDocGenerator {
@@ -21,15 +20,13 @@ export class DidWebDocGenerator {
     const signingKey = await this.agent.wallet.createKey({ keyType: KeyType.Ed25519 })
     const encryptionKey = await this.agent.wallet.createKey({ keyType: KeyType.X25519 })
 
-    const encryptionKeyJwk = getJwkFromKey(encryptionKey)
-
     // Assemble the DID:web document
     // This is a plain object that will be transformed and hydrated within credo-ts
     const didWebDocument = {
       '@context': [
         'https://www.w3.org/ns/did/v1',
-        'https://w3id.org/security/suites/jws-2020/v1',
         'https://w3id.org/security/suites/ed25519-2020/v1',
+        'https://w3id.org/security/suites/x25519-2019/v1',
       ],
       id: didId,
       verificationMethod: [
@@ -41,9 +38,9 @@ export class DidWebDocGenerator {
         },
         {
           id: `${didId}#encryption`,
-          type: 'JsonWebKey2020',
+          type: 'X25519KeyAgreementKey2019',
           controller: didId,
-          publicKeyJwk: { ...encryptionKeyJwk.toJson(), kid: 'encryption' },
+          publicKeyBase58: encryptionKey.publicKeyBase58,
         },
       ],
       authentication: [`${didId}#owner`],
@@ -54,7 +51,7 @@ export class DidWebDocGenerator {
           id: `${didId}#did-communication`,
           type: 'did-communication',
           priority: 0,
-          recipientKeys: [`${didId}#encryption`],
+          recipientKeys: [`${didId}#owner`],
           routingKeys: [],
           serviceEndpoint: serviceEndpoint,
         },
@@ -63,14 +60,9 @@ export class DidWebDocGenerator {
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
 
-    if (!encryptionKeyJwk.x) {
-      throw new Error('Generated X25519 encryption key is missing required "x" property')
-    }
-
     return {
       did: didId,
       didDocument: JsonTransformer.fromJSON(didWebDocument, DidDocument),
-      publicEncryptionKey: encryptionKeyJwk.x,
     }
   }
 
