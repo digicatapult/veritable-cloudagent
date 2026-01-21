@@ -40,7 +40,13 @@ export async function safeDeleteConnection(
 }
 
 function isConnectionIdList(value: unknown): value is Array<{ id: string }> {
-  return Array.isArray(value) && value.every((item) => typeof item === 'object' && item !== null && 'id' in item)
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        typeof item === 'object' && item !== null && 'id' in item && typeof (item as { id: unknown }).id === 'string'
+    )
+  )
 }
 
 export async function safeDeleteConnectionsByOutOfBandId(
@@ -61,7 +67,7 @@ export async function safeDeleteConnectionsByOutOfBandId(
     if (!isConnectionIdList(response.body)) return
 
     for (const connection of response.body) {
-      if (typeof connection.id === 'string' && connection.id) {
+      if (connection.id) {
         await safeDeleteConnection(client, connection.id, label)
       }
     }
