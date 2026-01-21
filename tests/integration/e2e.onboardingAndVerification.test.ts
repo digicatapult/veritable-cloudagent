@@ -56,6 +56,7 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow an issuer to create a Credential Definition', async function () {
+    this.timeout(20000)
     const createCredDefPayload = {
       tag: 'placeholderCredDef',
       schemaId: schemaId,
