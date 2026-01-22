@@ -65,7 +65,9 @@ services:
 
   ipfs:
     container_name: ipfs
-    image: ipfs/kubo:release
+    build:
+      context: ./docker/ipfs
+      dockerfile: Dockerfile
     ports:
       #     - "4001:4001" # ipfs swarm - expose if needed/wanted
       #     - "5001:5001" # ipfs api - expose if needed/wanted

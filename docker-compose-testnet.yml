@@ -179,7 +179,9 @@ services:
 
   ipfs0:
     container_name: ipfs0
-    image: ipfs/kubo:release
+    build:
+      context: ./docker/ipfs
+      dockerfile: Dockerfile
     ports:
       #     - "4001:4001" # ipfs swarm - expose if needed/wanted
       #     - "5001:5001" # ipfs api - expose if needed/wanted
@@ -188,6 +190,12 @@ services:
       - ipfs0:/data/ipfs
     networks:
       - testnet
+    healthcheck:
+      test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 2"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
 
   cluster0:
     container_name: cluster0
@@ -221,11 +229,19 @@ services:
 
   ipfs1:
     container_name: ipfs1
-    image: ipfs/kubo:release
+    build:
+      context: ./docker/ipfs
+      dockerfile: Dockerfile
     volumes:
       - ipfs1:/data/ipfs
     networks:
       - testnet
+    healthcheck:
+      test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 2"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
 
   cluster1:
     container_name: cluster1
@@ -250,11 +266,19 @@ services:
 
   ipfs2:
     container_name: ipfs2
-    image: ipfs/kubo:release
+    build:
+      context: ./docker/ipfs
+      dockerfile: Dockerfile
     volumes:
       - ipfs2:/data/ipfs
     networks:
       - testnet
+    healthcheck:
+      test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 2"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
 
   cluster2:
     container_name: cluster2
@@ -289,7 +313,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=did-web-server
     healthcheck:
-      test: ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
+      test: ['CMD-SHELL', 'PGUSER=postgres pg_isready -d postgres']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -313,7 +337,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=did-web-server
     healthcheck:
-      test: ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
+      test: ['CMD-SHELL', 'PGUSER=postgres pg_isready -d postgres']
       interval: 5s
       timeout: 5s
       retries: 20
@@ -337,7 +361,7 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=did-web-server
     healthcheck:
-      test: ['CMD-SHELL', 'PGUSER=postgres', pg_isready", '-d', 'postgres']
+      test: ['CMD-SHELL', 'PGUSER=postgres pg_isready -d postgres']
       interval: 5s
       timeout: 5s
       retries: 20
