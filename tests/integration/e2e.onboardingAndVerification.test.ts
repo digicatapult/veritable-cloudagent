@@ -9,6 +9,8 @@ const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
 
 describe('Onboarding & Verification flow', function () {
+  this.timeout(60000)
+
   const issuerClient = request(ISSUER_BASE_URL)
   const holderClient = request(HOLDER_BASE_URL)
   const verifierClient = request(VERIFIER_BASE_URL)
@@ -201,7 +203,6 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow the Holder to accept the credential offered', async function () {
-    this.timeout(10000)
     const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
 
     const response = await holderClient

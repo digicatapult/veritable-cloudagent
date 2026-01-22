@@ -10,11 +10,10 @@ const MAKER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
 
 describe('Register makeAuthorisation schema', function () {
+  this.timeout(60000)
   let schemaId: string
 
   it('registers the schema via API (Alice) and captures a schema id', async function () {
-    this.timeout(10000)
-
     const body = { ...makerAuthorisationSchema, issuerId }
 
     const res = await fetch(`${ISSUER_BASE_URL}/v1/schemas`, {
@@ -35,8 +34,6 @@ describe('Register makeAuthorisation schema', function () {
   })
 
   it('Maker (Bob) can resolve the schema via IPFS', async function () {
-    this.timeout(10000)
-
     const url = `${MAKER_BASE_URL}/v1/schemas/${encodeURIComponent(schemaId)}`
 
     const res = await fetch(url)

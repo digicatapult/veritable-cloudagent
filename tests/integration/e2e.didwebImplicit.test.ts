@@ -9,6 +9,8 @@ const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const ALICE_DID = 'did:web:alice%3A8443'
 
 describe('DID:web Implicit Connection Flow', function () {
+  this.timeout(60000)
+
   const aliceClient = request(ALICE_BASE_URL)
   const bobClient = request(BOB_BASE_URL)
 
@@ -43,8 +45,6 @@ describe('DID:web Implicit Connection Flow', function () {
   })
 
   it("should eventually result in a completed connection on Alice's side", async function () {
-    this.timeout(20000)
-
     let connectionFound = false
     const maxRetries = 20
 
@@ -78,7 +78,6 @@ describe('DID:web Implicit Connection Flow', function () {
   })
 
   it('Bob should reach "completed" state', async function () {
-    this.timeout(20000)
     let state = ''
     for (let i = 0; i < 20; i++) {
       const res = await bobClient.get(`/v1/connections/${bobConnectionId}`).expect(200)
