@@ -17,6 +17,8 @@ concurrency:
 jobs:
   static-checks:
     uses: digicatapult/shared-workflows/.github/workflows/static-checks-npm.yml@main
+    permissions:
+      security-events: write
     with:
       enable_semgrep_action: true
       enable_trufflehog_action: true
@@ -24,6 +26,8 @@ jobs:
 
   unit-tests:
     uses: digicatapult/shared-workflows/.github/workflows/tests-npm.yml@main
+    permissions:
+      pull-requests: write
     with:
       coverage: true
       docker_compose_file: ''
@@ -32,6 +36,8 @@ jobs:
 
   integration-tests:
     name: 'Run integration tests'
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: 'Login to GitHub Container Registry'
@@ -90,16 +96,14 @@ jobs:
       - integration-tests
     uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
     permissions:
+      contents: read
       packages: write
-      contents: write
       security-events: write
-      actions: read
 
   generate-sbom-npm:
     needs:
       - build-docker
     uses: digicatapult/shared-workflows/.github/workflows/generate-sbom-npm.yml@main
-    permissions:
-      contents: read
+    permissions: {}
     with:
       additional_args: "--ignore-npm-errors"
