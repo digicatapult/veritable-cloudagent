@@ -1,5 +1,7 @@
 # Explicit Credential Selection
 
+> **Note**: For a general overview of supported credential formats (AnonCreds vs W3C) and basic flows, please refer to the [Credentials and Proofs Guide](./credentials-and-proofs.md).
+
 When responding to a Proof Request, an agent may hold multiple credentials that satisfy the request's requirements (e.g., multiple credentials from the same issuer, or multiple credentials with the same attribute names). By default, the agent might select any valid credential, which can lead to incorrect data being shared if a specific credential was intended.
 
 The **Explicit Credential Selection** feature allows a client (controller) to specify exactly which credential ID should be used for each requested attribute or predicate.

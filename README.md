@@ -14,6 +14,7 @@ The project aims to enable supply chains to share insights and data across multi
 - [Verified DRPC](#verified-drpc)
 - [Schema Definition](#schema-definition)
 - [Demoing credential issuance and verification](#demoing-credential-issuance-and-verification)
+- [Credentials and Proofs](#credentials-and-proofs)
 - [Explicit Credential Selection](#explicit-credential-selection)
 
 ## Attribution
@@ -870,6 +871,10 @@ npx tsx scripts/maker-propose-proof-to-oem.ts --credential-id < credential ID > 
 ```bash
 npx tsx scripts/maker-respond-proof-request.ts --proof-id < proof ID >
 ```
+
+## Credentials and Proofs
+
+For a comprehensive guide on the supported credential formats (AnonCreds and W3C Verifiable Credentials), including detailed API payloads for issuance and verification, see the [Credentials and Proofs Guide](docs/credentials-and-proofs.md).
 
 ## Explicit Credential Selection
 
