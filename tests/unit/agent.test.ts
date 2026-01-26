@@ -39,6 +39,17 @@ describe('AgentController', () => {
     })
   })
 
+  describe('Agent Modules', () => {
+    test('should have AnonCreds module registered', () => {
+      expect(agent.modules).to.have.property('anoncreds')
+    })
+
+    test('should have W3C credentials module registered', () => {
+      // W3cCredentialsModule is a core module in BaseAgent, so it is available directly on agent instance
+      expect(agent).to.have.property('w3cCredentials')
+    })
+  })
+
   after(async () => {
     await agent.shutdown()
     await agent.wallet.delete()
