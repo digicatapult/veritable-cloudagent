@@ -36,7 +36,8 @@ jobs:
 
   integration-tests:
     name: 'Run integration tests'
-    permissions: {}
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - name: 'Login to GitHub Container Registry'
