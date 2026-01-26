@@ -25,12 +25,22 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
+import { transformToCredentialFormatData } from '../../../utils/credentials.js'
 import { CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
+
+type InternalProposeCredentialOptions = Parameters<RestAgent['credentials']['proposeCredential']>[0]
+type InternalAcceptCredentialProposalOptions = Parameters<RestAgent['credentials']['acceptProposal']>[0]
+type InternalCreateOfferOptions = Parameters<RestAgent['credentials']['createOffer']>[0]
+type InternalOfferCredentialOptions = Parameters<RestAgent['credentials']['offerCredential']>[0]
+type InternalAcceptCredentialOfferOptions = Parameters<RestAgent['credentials']['acceptOffer']>[0]
+type InternalAcceptCredentialRequestOptions = Parameters<RestAgent['credentials']['acceptRequest']>[0]
+
 import type {
   AcceptCredentialOfferOptions,
   AcceptCredentialProposalOptions,
   AcceptCredentialRequestOptions,
   CreateOfferOptions,
+  CredentialFormatData,
   OfferCredentialOptions,
   ProposeCredentialOptions,
   UUID,
@@ -101,20 +111,21 @@ export class CredentialController extends Controller {
    * Retrieve format-data for a credential by credential record id
    *
    * @param credentialRecordId
-   * @returns GetCredentialFormatDataReturn
+   * @returns CredentialFormatData
    */
-  @Example<Awaited<ReturnType<RestAgent['credentials']['getFormatData']>>>(CredentialFormatDataExample)
+  @Example<CredentialFormatData>(CredentialFormatDataExample)
   @Get('/:credentialRecordId/format-data')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async getCredentialFormatDataById(
     @Request() req: express.Request,
     @Path('credentialRecordId') credentialRecordId: UUID
-  ) {
+  ): Promise<CredentialFormatData> {
     try {
       req.log.info('getting format data for %s', credentialRecordId)
       const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
-      return formatData
+
+      return transformToCredentialFormatData(formatData)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('format data not found')
@@ -158,7 +169,9 @@ export class CredentialController extends Controller {
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
     try {
       req.log.info('proposing credential to %s', options.connectionId)
-      const credential = await this.agent.credentials.proposeCredential(options)
+      const credential = await this.agent.credentials.proposeCredential(
+        options satisfies InternalProposeCredentialOptions
+      )
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -188,9 +201,9 @@ export class CredentialController extends Controller {
     try {
       req.log.debug('accepting credential proposal for %s', credentialRecordId)
       const credential = await this.agent.credentials.acceptProposal({
-        ...options,
+        ...(options ?? {}),
         credentialRecordId: credentialRecordId,
-      })
+      } satisfies InternalAcceptCredentialProposalOptions)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -210,7 +223,7 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
-    const offer = await this.agent.credentials.createOffer(options)
+    const offer = await this.agent.credentials.createOffer(options satisfies InternalCreateOfferOptions)
     req.log.info('credential offer has been created %j', offer)
 
     return {
@@ -238,7 +251,7 @@ export class CredentialController extends Controller {
     }
 
     try {
-      const credential = await this.agent.credentials.offerCredential(options)
+      const credential = await this.agent.credentials.offerCredential(options satisfies InternalOfferCredentialOptions)
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
@@ -269,9 +282,9 @@ export class CredentialController extends Controller {
   ) {
     try {
       const credential = await this.agent.credentials.acceptOffer({
-        ...options,
+        ...(options ?? {}),
         credentialRecordId: credentialRecordId,
-      })
+      } satisfies InternalAcceptCredentialOfferOptions)
       req.log.debug('returning credential %j', credential.toJSON())
 
       return credential.toJSON()
@@ -302,9 +315,9 @@ export class CredentialController extends Controller {
   ) {
     try {
       const credential = await this.agent.credentials.acceptRequest({
-        ...options,
+        ...(options ?? {}),
         credentialRecordId: credentialRecordId,
-      })
+      } satisfies InternalAcceptCredentialRequestOptions)
       req.log.debug('returning credential %j', credential.toJSON())
 
       return credential.toJSON()

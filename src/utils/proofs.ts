@@ -1,22 +1,104 @@
 import type {
-  AnonCredsProofRequest,
+  AnonCredsProofFormat,
   AnonCredsProofRequestRestriction,
   AnonCredsRequestProofFormat,
   AnonCredsRequestedAttribute,
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-import type { ProofFormatPayload } from '@credo-ts/core'
+import type { DifPresentationExchangeProofFormat, GetProofFormatDataReturn, ProofFormatPayload } from '@credo-ts/core'
 
 import type {
   AcceptProofRequestOptions,
-  AnonCredsPresentation,
   AnonCredsProofRequestRestrictionOptions,
   AnonCredsRequestProofFormatOptions,
+  PresentationExchangeCreateRequest,
   ProofFormats,
   SimpleProofFormats,
 } from '../controllers/types/index.js'
 import { maybeMapValues } from './helpers.js'
+
+type AgentProofFormats = [AnonCredsProofFormat, DifPresentationExchangeProofFormat]
+type AgentPresentationDefinition =
+  DifPresentationExchangeProofFormat['proofFormats']['createRequest']['presentationDefinition']
+
+type ValidationFieldError = { message: string; value?: unknown }
+
+/**
+ * Validates that a PEX presentation definition stays within a conservative “v1-compatible profile”.
+ *
+ * Why: Credo TS v0.5.x’s PEX type surface is V1-shaped, while controller DTOs intentionally use
+ * permissive JSON-ish types to keep TSOA stable. This validator makes the runtime contract explicit
+ * and returns a 422 for unknown / v2-only-ish constructs.
+ */
+
+export const validatePexV1Presentation = (value: unknown): Record<string, ValidationFieldError> | null => {
+  const fieldPath = 'proofFormats.presentationExchange.presentationDefinition'
+  const errors: Record<string, ValidationFieldError> = {}
+  const addError = (field: string, message: string, errorValue?: unknown) => {
+    if (errors[field]) return
+    errors[field] = { message, value: errorValue }
+  }
+
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    addError(fieldPath, 'presentationDefinition must be an object', value)
+    return errors
+  }
+
+  const presentationDefinition = value as Record<string, unknown>
+
+  const allowedTopLevelKeys = new Set(['id', 'input_descriptors', 'name', 'purpose', 'format'])
+  for (const key of Object.keys(presentationDefinition)) {
+    if (key === 'submission_requirements') {
+      addError(
+        `${fieldPath}.submission_requirements`,
+        'submission_requirements is not supported on the current PEX profile',
+        presentationDefinition[key]
+      )
+      continue
+    }
+    if (!allowedTopLevelKeys.has(key)) {
+      addError(`${fieldPath}.${key}`, 'Unexpected property', presentationDefinition[key])
+    }
+  }
+
+  const id = presentationDefinition.id
+  if (typeof id !== 'string' || id.length === 0) {
+    addError(`${fieldPath}.id`, 'id must be a non-empty string', id)
+  }
+
+  const inputDescriptors = presentationDefinition.input_descriptors
+  if (!Array.isArray(inputDescriptors)) {
+    addError(`${fieldPath}.input_descriptors`, 'input_descriptors must be an array', inputDescriptors)
+    return Object.keys(errors).length > 0 ? errors : null
+  }
+
+  const inputDescriptorArray = inputDescriptors as unknown[]
+
+  const allowedDescriptorKeys = new Set(['id', 'name', 'purpose', 'group', 'constraints', 'format'])
+  for (const [index, descriptor] of inputDescriptorArray.entries()) {
+    const descriptorPath = `${fieldPath}.input_descriptors[${index}]`
+    if (typeof descriptor !== 'object' || descriptor === null || Array.isArray(descriptor)) {
+      addError(descriptorPath, 'input descriptor must be an object', descriptor)
+      continue
+    }
+
+    const descriptorRecord = descriptor as Record<string, unknown>
+
+    for (const key of Object.keys(descriptorRecord)) {
+      if (!allowedDescriptorKeys.has(key)) {
+        addError(`${descriptorPath}.${key}`, 'Unexpected property', descriptorRecord[key])
+      }
+    }
+
+    const descriptorId = descriptorRecord.id
+    if (typeof descriptorId !== 'string' || descriptorId.length === 0) {
+      addError(`${descriptorPath}.id`, 'id must be a non-empty string', descriptorId)
+    }
+  }
+
+  return Object.keys(errors).length > 0 ? errors : null
+}
 
 export const transformAnonCredsAttributeMarkers = (attributes?: { [key: string]: boolean }) => {
   if (!attributes) {
@@ -81,6 +163,40 @@ export const transformAnonCredsProofFormat = (
       }),
       requested_predicates
     ),
+  }
+}
+
+export const transformProofFormats = (proofFormats: {
+  anoncreds?: AnonCredsRequestProofFormatOptions
+  presentationExchange?: PresentationExchangeCreateRequest
+}): ProofFormatPayload<AgentProofFormats, 'createRequest'> => {
+  return {
+    ...(proofFormats.anoncreds ? { anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds) } : {}),
+    ...(proofFormats.presentationExchange
+      ? {
+          presentationExchange: {
+            ...proofFormats.presentationExchange,
+            presentationDefinition: proofFormats.presentationExchange
+              .presentationDefinition as AgentPresentationDefinition,
+          },
+        }
+      : {}),
+  }
+}
+
+export const transformProposeProofFormats = (
+  proofFormats: ProofFormatPayload<ProofFormats, 'createProposal'>
+): ProofFormatPayload<AgentProofFormats, 'createProposal'> => {
+  return {
+    ...(proofFormats.anoncreds ? { anoncreds: proofFormats.anoncreds } : {}),
+    ...(proofFormats.presentationExchange
+      ? {
+          presentationExchange: {
+            presentationDefinition: proofFormats.presentationExchange
+              .presentationDefinition as AgentPresentationDefinition,
+          },
+        }
+      : {}),
   }
 }
 
@@ -187,10 +303,9 @@ export const redactProofFormats = (
  * @param formatData The raw proof format data containing request and presentation details.
  * @returns A simplified record of attribute names and their revealed values.
  */
-export const simplifyAnonCredsProofContent = (formatData: {
-  request?: { anoncreds?: AnonCredsProofRequest }
-  presentation?: { anoncreds?: AnonCredsPresentation }
-}): Record<string, unknown> => {
+export const simplifyAnonCredsProofContent = (
+  formatData: GetProofFormatDataReturn<[AnonCredsProofFormat, DifPresentationExchangeProofFormat]>
+): Record<string, unknown> => {
   const request = formatData.request?.anoncreds
   const presentation = formatData.presentation?.anoncreds
 

@@ -3,7 +3,6 @@
  */
 import type {
   AnonCredsCredentialDefinition,
-  AnonCredsProof,
   AnonCredsRequestedAttribute,
   AnonCredsRequestedPredicate,
   AnonCredsRequestProofFormat,
@@ -64,19 +63,4 @@ export interface AnonCredsSchemaResponse extends AnonCredsSchema {
 
 export interface AnonCredsCredentialDefinitionResponse extends AnonCredsCredentialDefinition {
   id: UUID
-}
-
-/**
- * Extend the upstream type but narrow the 'proof' property for better DX.
- * The upstream `AnonCredsProof` defines `proof` as `any`, so we override it here
- * with a strict structure to help API consumers.
- */
-export interface AnonCredsPresentation extends Omit<AnonCredsProof, 'proof'> {
-  proof: {
-    proofs: Record<string, unknown>
-    aggregated_proof: {
-      c_hash: string
-      c_list: number[][]
-    }
-  }
 }
