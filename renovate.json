@@ -13,10 +13,6 @@
     {
       "matchPackageNames": ["@hyperledger/anoncreds-nodejs"],
       "enabled": false
-    },
-    {
-      "matchPackageNames": ["@swc/core"],
-      "enabled": false
     }
   ]
 }
