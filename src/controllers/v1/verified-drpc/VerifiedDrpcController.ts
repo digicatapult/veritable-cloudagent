@@ -1,17 +1,21 @@
-import { Agent } from '@credo-ts/core'
-import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
+import {
+  Agent,
+  type CreateProofRequestOptions as CredoCreateProofRequestOptions,
+  type ProofProtocol,
+} from '@credo-ts/core'
+import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags, ValidateError } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules/verified-drpc/index.js'
 
 import { RestAgent } from '../../../agent.js'
 import { GatewayTimeout, NotFoundError } from '../../../error.js'
-import { transformAnonCredsProofFormat } from '../../../utils/proofs.js'
-import type { CreateProofRequestOptions, UUID } from '../../types/index.js'
+import { transformProofFormats, validatePexV1Presentation } from '../../../utils/proofs.js'
+import type { CreateProofRequestOptions as ApiCreateProofRequestOptions, UUID } from '../../types/index.js'
 
 interface VerifiedDrpcRequestOptions {
   drpcRequest: VerifiedDrpcRequest
-  proofRequestOptions?: CreateProofRequestOptions
+  proofRequestOptions?: ApiCreateProofRequestOptions
 }
 
 @Tags('Verified DRPC')
@@ -42,25 +46,28 @@ export class VerifiedDrpcController extends Controller {
     @Query('async') async_ = false,
     @Query('timeout') timeout = 5000
   ) {
-    let proofOptions: CreateProofRequestOptions | undefined
+    let proofOptions: CredoCreateProofRequestOptions<ProofProtocol[]> | undefined
     if (requestOptions.proofRequestOptions) {
       const {
         proofRequestOptions: { proofFormats, ...rest },
       } = requestOptions
+
+      if (proofFormats.presentationExchange?.presentationDefinition) {
+        const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
+        if (errors) throw new ValidateError(errors, 'Validation Failed')
+      }
+
       proofOptions = {
-        proofFormats: {
-          anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
-        },
+        // Defensive: keep transformed proofFormats authoritative
         ...rest,
+        proofFormats: transformProofFormats(proofFormats),
       }
       req.log.info('sending DRPC request with options %j', proofOptions)
     }
 
-    const responseListener = await this.agent.modules.verifiedDrpc.sendRequest(
-      connectionId,
-      requestOptions.drpcRequest,
-      proofOptions
-    )
+    const responseListener = proofOptions
+      ? await this.agent.modules.verifiedDrpc.sendRequest(connectionId, requestOptions.drpcRequest, proofOptions)
+      : await this.agent.modules.verifiedDrpc.sendRequest(connectionId, requestOptions.drpcRequest)
     const responsePromise = responseListener(timeout).then((response?: VerifiedDrpcResponse) => {
       if (response === undefined) {
         req.log.warn('responseListener just hit a timeout %j', { timeout, response })

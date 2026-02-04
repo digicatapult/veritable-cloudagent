@@ -27,12 +27,15 @@ services:
       - NODE_ENV=test
       - ALICE_BASE_URL=http://alice:3000
       - ALICE_WS_PORT=5003
+      - ALICE_DID_WEB_URL=https://alice:8443
       - ALICE_DID
       - ALICE_PRIV_KEY
       - BOB_BASE_URL=http://bob:3000
+      - BOB_DID_WEB_URL=https://bob:8443
       - BOB_DID
       - BOB_PRIV_KEY
       - CHARLIE_BASE_URL=http://charlie:3000
+      - CHARLIE_DID_WEB_URL=https://charlie:8443
       - CHARLIE_DID
       - CHARLIE_PRIV_KEY
       - LOG_LEVEL=debug
