@@ -300,7 +300,7 @@ services:
       # NOTE: Docker socket mount grants full daemon access; keep to test/dev.
       - /var/run/docker.sock:/var/run/docker.sock
       - ./scripts/peer-ipfs.sh:/scripts/peer-ipfs.sh
-    command: ["sh", "-c", "apk add --no-cache bash >/dev/null && /scripts/peer-ipfs.sh"]
+    command: ["sh", "-c", "apk add --no-cache bash >/dev/null && bash /scripts/peer-ipfs.sh"]
     # NOTE: One-time init. Peering state persists in IPFS volumes, so this
     # container is not restarted when agents restart.
     restart: "no"
