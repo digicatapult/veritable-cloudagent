@@ -2,12 +2,8 @@ import { expect } from 'chai'
 import { beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { UUID } from '../../src/controllers/types/index.js'
-
-const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-
-const ALICE_DID = 'did:web:alice%3A8443'
-const BOB_DID = 'did:web:bob%3A8443'
+import { ALICE_BASE_URL, BOB_BASE_URL, DID_WEB_ALICE, DID_WEB_BOB } from './utils/fixtures.js'
+import { sleep, waitForConnectionState, waitForCredentialRecord, waitForCredentialState } from './utils/helpers.js'
 
 describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   this.timeout(60000)
@@ -27,10 +23,10 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should allow Bob to connect to Alice via Implicit Invitation using her DID:web', async function () {
-    await bobClient.get(`/v1/dids/${encodeURIComponent(ALICE_DID)}`).expect(200)
+    await bobClient.get(`/v1/dids/${encodeURIComponent(DID_WEB_ALICE)}`).expect(200)
 
     const payload = {
-      did: ALICE_DID,
+      did: DID_WEB_ALICE,
       alias: 'Alice (Implicit)',
       autoAcceptConnection: true,
     }
@@ -72,7 +68,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
           break
         }
       }
-      await new Promise((r) => setTimeout(r, 1000))
+      await sleep(1000)
     }
 
     if (!connectionFound) {
@@ -81,13 +77,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('Bob should reach "completed" state', async function () {
-    let state = ''
-    for (let i = 0; i < 60; i++) {
-      const res = await bobClient.get(`/v1/connections/${bobConnectionId}`).expect(200)
-      state = res.body.state
-      if (state === 'completed') break
-      await new Promise((r) => setTimeout(r, 1000))
-    }
+    const state = await waitForConnectionState(bobClient, bobConnectionId, 'completed')
     expect(state).to.equal('completed')
   })
 
@@ -110,10 +100,10 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
           credential: {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             type: ['VerifiableCredential'],
-            issuer: ALICE_DID,
+            issuer: DID_WEB_ALICE,
             issuanceDate: new Date().toISOString(),
             credentialSubject: {
-              id: BOB_DID,
+              id: DID_WEB_BOB,
             },
           },
           options: {
@@ -136,22 +126,9 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('Bob should be able to receive the W3C credential offer', async function () {
-    let received = false
-    for (let i = 0; i < 60; i++) {
-      const response = await bobClient.get('/v1/credentials').query({ connectionId: bobConnectionId }).expect(200)
-      const records = response.body as { state: string; id: UUID }[]
-
-      const record = records.find((r) => r.state === 'offer-received')
-      if (record) {
-        bobCredentialRecordId = record.id
-        received = true
-        break
-      }
-
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-
-    expect(received).to.equal(true)
+    const record = await waitForCredentialRecord(bobClient, bobConnectionId, 'offer-received')
+    bobCredentialRecordId = record.id
+    expect(record).to.have.property('state', 'offer-received')
   })
 
   it('Bob should be able to accept the W3C credential offer', async function () {
@@ -173,17 +150,8 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('Bob should be able to accept the issued W3C credential (done state)', async function () {
-    let credentialReceived = false
-    for (let i = 0; i < 60; i++) {
-      const response = await bobClient.get(`/v1/credentials/${bobCredentialRecordId}`).expect(200)
-      if (response.body.state === 'credential-received') {
-        credentialReceived = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-
-    expect(credentialReceived).to.equal(true, 'Bob should have reached state credential-received')
+    const state = await waitForCredentialState(bobClient, bobCredentialRecordId, 'credential-received')
+    expect(state).to.equal('credential-received')
 
     const response = await bobClient
       .post(`/v1/credentials/${bobCredentialRecordId}/accept-credential`)
@@ -195,16 +163,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('Alice should reach done state for the W3C credential issuance', async function () {
-    let issuerDone = false
-    for (let i = 0; i < 60; i++) {
-      const response = await aliceClient.get(`/v1/credentials/${aliceCredentialRecordId}`).expect(200)
-      if (response.body.state === 'done') {
-        issuerDone = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-
-    expect(issuerDone).to.equal(true)
+    const state = await waitForCredentialState(aliceClient, aliceCredentialRecordId, 'done')
+    expect(state).to.equal('done')
   })
 })

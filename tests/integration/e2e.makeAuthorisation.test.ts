@@ -1,13 +1,12 @@
 import { expect } from 'chai'
 import makerAuthorisationSchema from '../../scripts/schemas/makeAuthorisation.json' with { type: 'json' }
+import { ALICE_BASE_URL, BOB_BASE_URL, ISSUER_DID_KEY } from './utils/fixtures.js'
 
 // This test validates the registration via API, then checks Bob (maker) can fetch the schema.
 
-const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const MAKER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-
-// Alice DID (issuer)
-const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
+const ISSUER_BASE_URL = ALICE_BASE_URL
+const MAKER_BASE_URL = BOB_BASE_URL
+const issuerId = ISSUER_DID_KEY
 
 describe('Register makeAuthorisation schema', function () {
   this.timeout(60000)
