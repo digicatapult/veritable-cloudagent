@@ -1,24 +1,37 @@
 /**
  * Credential Issuance (Proposal, Offer, Request) types.
  */
-import type { AutoAcceptCredential, CredentialFormatPayload, CredentialProtocolVersionType } from '@credo-ts/core'
+import type {
+  AutoAcceptCredential,
+  CredentialFormatPayload,
+  CredentialPreviewAttributeOptions,
+  CredentialProtocolVersionType,
+} from '@credo-ts/core'
 import type { UUID } from './common.js'
 import type { CredentialFormats, CredentialProtocols } from './protocols.js'
 
+export type CredentialAttribute = CredentialPreviewAttributeOptions
+
+export interface CredentialFormatData {
+  proposalAttributes?: CredentialAttribute[]
+  offerAttributes?: CredentialAttribute[]
+  requestAttributes?: CredentialAttribute[]
+  proposal?: Record<string, unknown>
+  offer?: Record<string, unknown>
+  request?: Record<string, unknown>
+  credential?: Record<string, unknown>
+}
+
 export interface ProposeCredentialOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: {
-    [key in CredentialFormats[number] as key['formatKey']]?: CredentialFormats[number]['credentialFormats']['createProposal']
-  }
+  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
   connectionId: UUID
 }
 
 export interface AcceptCredentialProposalOptions {
-  credentialFormats?: {
-    [key in CredentialFormats[number] as key['formatKey']]?: CredentialFormats[number]['credentialFormats']['acceptProposal']
-  }
+  credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptProposal'>
   autoAcceptCredential?: AutoAcceptCredential
   comment?: string
 }

@@ -12,6 +12,7 @@ import {
   Response,
   Route,
   Tags,
+  ValidateError,
 } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
@@ -24,7 +25,9 @@ import {
   isSimpleAnonCredsProofFormats,
   redactProofFormats,
   simplifyAnonCredsProofContent,
-  transformAnonCredsProofFormat,
+  transformProofFormats,
+  transformProposeProofFormats,
+  validatePexV1Presentation,
 } from '../../../utils/proofs.js'
 import { ProofRecordExample } from '../../examples.js'
 import type {
@@ -38,6 +41,12 @@ import type {
   SimpleProofFormats,
   UUID,
 } from '../../types/index.js'
+
+type InternalProposeProofOptions = Parameters<RestAgent['proofs']['proposeProof']>[0]
+type InternalAcceptProofProposalOptions = Parameters<RestAgent['proofs']['acceptProposal']>[0]
+type InternalCreateProofRequestOptions = Parameters<RestAgent['proofs']['createRequest']>[0]
+type InternalRequestProofOptions = Parameters<RestAgent['proofs']['requestProof']>[0]
+type InternalAcceptProofRequestOptions = Parameters<RestAgent['proofs']['acceptRequest']>[0]
 
 @Tags('Proofs')
 @Route('/v1/proofs')
@@ -203,7 +212,15 @@ export class ProofController extends Controller {
   @Response<HttpResponse>(500)
   public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
-      const proof = await this.agent.proofs.proposeProof(proposal)
+      if (proposal.proofFormats.presentationExchange?.presentationDefinition) {
+        const errors = validatePexV1Presentation(proposal.proofFormats.presentationExchange.presentationDefinition)
+        if (errors) throw new ValidateError(errors, 'Validation Failed')
+      }
+
+      const proof = await this.agent.proofs.proposeProof({
+        ...proposal,
+        proofFormats: transformProposeProofFormats(proposal.proofFormats),
+      } satisfies InternalProposeProofOptions)
       req.log.info('proof proposal created %j', proof.toJSON())
 
       return proof.toJSON()
@@ -235,10 +252,12 @@ export class ProofController extends Controller {
   ) {
     try {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
+
       const proof = await this.agent.proofs.acceptProposal({
-        proofRecordId,
         ...proposal,
-      })
+        // Path parameter takes precedence over body property to ensure URL authority
+        proofRecordId,
+      } satisfies InternalAcceptProofProposalOptions)
 
       return proof.toJSON()
     } catch (error) {
@@ -263,12 +282,15 @@ export class ProofController extends Controller {
   public async createRequest(@Request() req: express.Request, @Body() request: CreateProofRequestOptions) {
     const { proofFormats, ...rest } = request
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
+    if (proofFormats.presentationExchange?.presentationDefinition) {
+      const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
+      if (errors) throw new ValidateError(errors, 'Validation Failed')
+    }
+
     const { message, proofRecord } = await this.agent.proofs.createRequest({
-      proofFormats: {
-        anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
-      },
+      proofFormats: transformProofFormats(proofFormats),
       ...rest,
-    })
+    } satisfies InternalCreateProofRequestOptions)
 
     req.log.info('returning proof record %j', { proofRecord, message })
 
@@ -292,13 +314,16 @@ export class ProofController extends Controller {
     const { connectionId, proofFormats, ...rest } = body
     try {
       req.log.info('requesting proof for %s connection %j', connectionId, body)
+      if (proofFormats.presentationExchange?.presentationDefinition) {
+        const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
+        if (errors) throw new ValidateError(errors, 'Validation Failed')
+      }
+
       const proof = await this.agent.proofs.requestProof({
         connectionId,
-        proofFormats: {
-          anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds),
-        },
+        proofFormats: transformProofFormats(proofFormats),
         ...rest,
-      })
+      } satisfies InternalRequestProofOptions)
 
       req.log.info('success, returning proof %j', proof.toJSON())
       return proof.toJSON()
@@ -343,7 +368,10 @@ export class ProofController extends Controller {
           proofRecordId,
         })
         formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
-        req.log.info('credentials found (redacted) %j', redactProofFormats(retrievedCredentials.proofFormats))
+        req.log.info(
+          'credentials found (redacted) %j',
+          redactProofFormats(retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>)
+        )
       } else if (isSimpleAnonCredsProofFormats(body.proofFormats)) {
         const requestedAnonCreds = body.proofFormats.anoncreds
 
@@ -389,11 +417,15 @@ export class ProofController extends Controller {
       )
       // Optionally log full formats at debug level for troubleshooting
       req.log.debug('accepting proof request with formats %j', redactProofFormats(formatsToAccept))
-      const proof = await this.agent.proofs.acceptRequest({
-        proofRecordId,
+
+      const options = {
         ...body,
-        proofFormats: formatsToAccept,
-      })
+        // Path parameter takes precedence over body property to ensure URL authority
+        proofRecordId,
+        proofFormats: formatsToAccept as unknown as InternalAcceptProofRequestOptions['proofFormats'],
+      } satisfies InternalAcceptProofRequestOptions
+
+      const proof = await this.agent.proofs.acceptRequest(options)
 
       req.log.debug('success, returning proof %j', proof.toJSON())
 

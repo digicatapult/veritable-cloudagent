@@ -1,5 +1,7 @@
 # Explicit Credential Selection
 
+> **Note**: For a general overview of supported credential formats (AnonCreds vs W3C) and basic flows, please refer to the [Credentials and Proofs Guide](./credentials-and-proofs.md).
+
 When responding to a Proof Request, an agent may hold multiple credentials that satisfy the request's requirements (e.g., multiple credentials from the same issuer, or multiple credentials with the same attribute names). By default, the agent might select any valid credential, which can lead to incorrect data being shared if a specific credential was intended.
 
 The **Explicit Credential Selection** feature allows a client (controller) to specify exactly which credential ID should be used for each requested attribute or predicate.
@@ -12,6 +14,8 @@ The **Explicit Credential Selection** feature allows a client (controller) to sp
 ## The Solution: Simplified Proof Formats
 
 The `veritable-cloudagent` API supports a **Simplified Proof Format**. Clients can provide a lightweight object specifying only the `credentialId` and `revealed` status for each attribute. The agent's controller then "hydrates" this object by fetching the full credential details from the wallet before passing it to the core agent.
+
+Note: the simplified selection payload applies to AnonCreds proof formats only. PEX/W3C credential selection remains pass-through at this API boundary.
 
 ### API Usage
 
@@ -58,8 +62,8 @@ The `ProofController` employs a three-path logic flow to handle proof acceptance
    * It matches the `credentialId` provided by the client with the available credentials.
    * It populates the required `credentialInfo` (Schema ID, Cred Def ID, etc.) into the request object.
    * **Validation**:
-     * If attributes are missing in the simplified format, the API returns a `400 Bad Request`.
-     * If no matching credentials are found to satisfy the request, the API returns a `404 Not Found`.
+     * If the requested credential cannot be used due to reveal mismatch, the API returns `400 Bad Request`.
+     * If no matching credentials are found for the requested attributes/predicates, the API returns `404 Not Found`.
 
 3. **Pass-Through (Full `proofFormats` provided)**
    * If the client provides the full, complex Credo-TS proof format, the controller passes it directly to the agent.
