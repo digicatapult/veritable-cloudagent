@@ -4,16 +4,11 @@ This document tracks known issues and technical debt identified during PR #451 r
 
 ## Unsafe Type Assertions
 
-In several places, we use type assertions (`as InternalType`) to bridge between controller DTOs (TSOA/OpenAPI-facing) and the `RestAgent` method parameter types. This is risky because if the agent method parameter types change (e.g. in a Credo-TS upgrade), API inputs might no longer match what the agent expects, leading to runtime errors.
+In several places, we use `satisfies` at the DTO boundary to align controller DTOs (TSOA/OpenAPI-facing) with `RestAgent` method parameter types, with explicit casts only where needed. This must be monitored because if the agent method parameter types change (e.g. in a Credo-TS upgrade), API inputs might no longer match what the agent expects, leading to runtime errors.
 
 * **Locations:**
-  * `src/controllers/v1/credentials/CredentialController.ts`: `offerCredential`, `proposeCredential`, `createOffer`, `acceptOffer` use `options as Internal...`.
-  * `src/controllers/v1/proofs/ProofController.ts`:
-    * `proposeProof` -> `InternalProposeProofOptions`
-    * `acceptProposal` -> `InternalAcceptProofProposalOptions`
-    * `createRequest` -> `InternalCreateProofRequestOptions`
-    * `requestProof` -> `InternalRequestProofOptions`
-    * `acceptRequest` -> `InternalAcceptProofRequestOptions`
+  * `src/controllers/v1/credentials/CredentialController.ts`: mostly uses `satisfies` for DTO-to-agent alignment.
+  * `src/controllers/v1/proofs/ProofController.ts`: mostly uses `satisfies`, with explicit casts in `acceptRequest` for proof format handling.
 
 * **Mitigation options:**
   * Add runtime validation for controller inputs (e.g. Zod schemas or type guards) before passing data into the agent.

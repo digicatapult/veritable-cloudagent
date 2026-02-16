@@ -22,7 +22,7 @@ This agent supports a hybrid identity architecture, enabling the issuance and ve
 
 ## W3C Credential Flow
 
-W3C credentials allow for broad interoperability using standard JSON-LD or JWT formats. Verification is handled via the Presentation Exchange (PEX) protocol (Version 2).
+W3C credentials in this service use JSON-LD format. Verification uses Presentation Exchange (PEX) with a v1-compatible profile enforced at the API boundary. JWT VC/VP is not supported at this time.
 
 ### 1. Issuance (W3C)
 
@@ -107,7 +107,7 @@ W3C credentials allow for broad interoperability using standard JSON-LD or JWT f
 
 ## AnonCreds Credential Flow
 
-AnonCreds provide strong privacy guarantees. This flow typically requires registering Schemas and Credential Definitions on a public ledger (e.g., Indy).
+AnonCreds provide strong privacy guarantees. This flow requires registering Schemas and Credential Definitions in the configured registry (in this repo: IPFS-backed Veritable registry).
 
 ### Prerequisites
 
@@ -193,20 +193,7 @@ For detailed documentation on how to control creating proofs with specific crede
 
 ## Developer Notes: Type Safety & Internal Casts
 
-In the controller layer (`src/controllers/`), you will notice a pattern of casting request bodies to "Internal" types before passing them to the agent methods.
-
-Example:
-
-```typescript
-type InternalAcceptCredentialOfferOptions = Parameters<RestAgent['credentials']['acceptOffer']>[0]
-
-// ...
-
-const credential = await this.agent.credentials.acceptOffer({
-  ...(options as InternalAcceptCredentialOfferOptions),
-  credentialRecordId: credentialRecordId,
-})
-```
+In the controller layer (`src/controllers/`), we use the `satisfies` keyword at the DTO boundary to align API types with the agent's internal method parameter types, with a small number of explicit casts where needed (e.g., proof accept-request formats).
 
 ### Why is this necessary?
 
@@ -217,4 +204,4 @@ The codebase bridges two distinct type systems:
 
 While the API type and the internal type are structurally compatible (they hold the same data), the TypeScript compiler cannot easily verify that the explicit TSOA object satisfies the complex generic constraints of the extensible agent modules.
 
-The cast `options as InternalOptions` acts as a verified bridge. It confirms to the compiler that the API input conforms to the internal module requirements without circumventing type safety (which using `as unknown` would do). This ensures we can support polymorphic endpoints—handling both AnonCreds and W3C formats simultaneously—while maintaining strict compilation checks.
+Using `satisfies` and explicit casts only where necessary acts as a verified bridge. It confirms to the compiler that the API input conforms to the internal module requirements without circumventing type safety (which using `as unknown` would do). This ensures we can support polymorphic endpoints—handling both AnonCreds and W3C formats simultaneously—while maintaining strict compilation checks.
