@@ -35,6 +35,7 @@ import type {
   AcceptProofRequestOptions,
   CreateProofRequestOptions,
   MatchingCredentialsResponse,
+  NegotiateProofProposalOptions,
   ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
@@ -44,6 +45,7 @@ import type {
 
 type InternalProposeProofOptions = Parameters<RestAgent['proofs']['proposeProof']>[0]
 type InternalAcceptProofProposalOptions = Parameters<RestAgent['proofs']['acceptProposal']>[0]
+type InternalNegotiateProofProposalOptions = Parameters<RestAgent['proofs']['negotiateProposal']>[0]
 type InternalCreateProofRequestOptions = Parameters<RestAgent['proofs']['createRequest']>[0]
 type InternalRequestProofOptions = Parameters<RestAgent['proofs']['requestProof']>[0]
 type InternalAcceptProofRequestOptions = Parameters<RestAgent['proofs']['acceptRequest']>[0]
@@ -258,6 +260,48 @@ export class ProofController extends Controller {
         // Path parameter takes precedence over body property to ensure URL authority
         proofRecordId,
       } satisfies InternalAcceptProofProposalOptions)
+
+      return proof.toJSON()
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError('proof proposal not found')
+      }
+      throw error
+    }
+  }
+
+  /**
+   * Negotiate a presentation proposal as verifier by sending a counter-request message
+   * to the connection associated with the proof record.
+   *
+   * @param proofRecordId
+   * @param options
+   * @returns ProofExchangeRecordProps
+   */
+  @Post('/:proofRecordId/negotiate-proposal')
+  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Response<NotFoundError['message']>(404)
+  @Response<HttpResponse>(500)
+  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
+  public async negotiateProposal(
+    @Request() req: express.Request,
+    @Path('proofRecordId') proofRecordId: UUID,
+    @Body() options: NegotiateProofProposalOptions
+  ) {
+    try {
+      req.log.info('negotiating %s proof proposal %j', proofRecordId, options)
+
+      if (options.proofFormats.presentationExchange?.presentationDefinition) {
+        const errors = validatePexV1Presentation(options.proofFormats.presentationExchange.presentationDefinition)
+        if (errors) throw new ValidateError(errors, 'Validation Failed')
+      }
+
+      const proof = await this.agent.proofs.negotiateProposal({
+        ...options,
+        // Path parameter takes precedence over body property to ensure URL authority
+        proofRecordId,
+        proofFormats: transformProofFormats(options.proofFormats),
+      } satisfies InternalNegotiateProofProposalOptions)
 
       return proof.toJSON()
     } catch (error) {
