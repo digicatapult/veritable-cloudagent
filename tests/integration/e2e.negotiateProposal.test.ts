@@ -1,0 +1,435 @@
+import { expect } from 'chai'
+import { beforeEach, describe, it } from 'mocha'
+import request from 'supertest'
+import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
+import { OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
+import {
+  waitForConnectionByOob,
+  waitForConnectionState,
+  waitForCredentialRecord,
+  waitForCredentialState,
+  waitForProofRecordByThread,
+  waitForProofState,
+} from './utils/helpers.js'
+
+const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
+const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
+const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
+
+describe('Negotiate proof proposal flows', function () {
+  this.timeout(60000)
+  const issuerClient = request(ISSUER_BASE_URL)
+  const holderClient = request(HOLDER_BASE_URL)
+  const verifierClient = request(VERIFIER_BASE_URL)
+
+  beforeEach(function (done) {
+    setTimeout(function () {
+      done()
+    }, 200)
+  })
+
+  it('should negotiate an AnonCreds proof proposal', async function () {
+    const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
+
+    const schemaResponse = await issuerClient
+      .post('/v1/schemas')
+      .send({
+        issuerId,
+        version: '1.0',
+        name: 'negotiateProposalSchema',
+        attrNames: ['checkName', 'companyName'],
+      })
+      .expect(200)
+
+    const schemaId = schemaResponse.body.id as SchemaId
+
+    const credDefResponse = await issuerClient
+      .post('/v1/credential-definitions')
+      .send({
+        tag: 'negotiateProposalCredDef',
+        schemaId,
+        issuerId,
+      })
+      .expect(200)
+
+    const credentialDefinitionId = credDefResponse.body.id as CredentialDefinitionId
+
+    // Establish connection: Issuer -> Holder
+    const issuerInvitationResponse = await issuerClient
+      .post('/v1/oob/create-invitation')
+      .send(OOB_INVITATION_PAYLOAD)
+      .expect(200)
+    const issuerOobId = issuerInvitationResponse.body.outOfBandRecord.id
+    const issuerInvitationUrl = issuerInvitationResponse.body.invitationUrl
+
+    const holderAcceptResponse = await holderClient
+      .post('/v1/oob/receive-invitation-url')
+      .send({ invitationUrl: issuerInvitationUrl })
+      .expect(200)
+    const holderToIssuerConnectionRecordId = holderAcceptResponse.body.connectionRecord.id
+
+    const issuerToHolderConnectionRecordId = await waitForConnectionByOob(issuerClient, issuerOobId)
+    await waitForConnectionState(issuerClient, issuerToHolderConnectionRecordId, 'completed')
+    await waitForConnectionState(holderClient, holderToIssuerConnectionRecordId, 'completed')
+
+    const offerResponse = await issuerClient
+      .post('/v1/credentials/offer-credential')
+      .send({
+        protocolVersion: 'v2',
+        credentialFormats: {
+          anoncreds: {
+            credentialDefinitionId,
+            attributes: [
+              { name: 'checkName', value: 'someName' },
+              { name: 'companyName', value: 'someCompanyName' },
+            ],
+          },
+        },
+        connectionId: issuerToHolderConnectionRecordId,
+        autoAcceptCredential: 'always',
+      })
+      .expect(200)
+
+    const issuerCredentialRecordId = offerResponse.body.id as UUID
+
+    const holderCredentialRecord = await waitForCredentialRecord(
+      holderClient,
+      holderToIssuerConnectionRecordId,
+      'offer-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+    const holderCredentialRecordId = holderCredentialRecord.id
+
+    await holderClient.post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`).send({}).expect(200)
+
+    await waitForCredentialState(holderClient, holderCredentialRecordId, 'credential-received', {
+      maxAttempts: 60,
+      intervalMs: 1000,
+    })
+
+    await holderClient.post(`/v1/credentials/${holderCredentialRecordId}/accept-credential`).send({}).expect(200)
+    await waitForCredentialState(holderClient, holderCredentialRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
+    await waitForCredentialState(issuerClient, issuerCredentialRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
+
+    // Establish connection: Verifier -> Holder
+    const verifierInvitationResponse = await verifierClient
+      .post('/v1/oob/create-invitation')
+      .send(OOB_INVITATION_PAYLOAD)
+      .expect(200)
+    const verifierOobId = verifierInvitationResponse.body.outOfBandRecord.id
+    const verifierInvitationUrl = verifierInvitationResponse.body.invitationUrl
+
+    const holderAcceptVerifierResponse = await holderClient
+      .post('/v1/oob/receive-invitation-url')
+      .send({ invitationUrl: verifierInvitationUrl })
+      .expect(200)
+    const holderToVerifierConnectionRecordId = holderAcceptVerifierResponse.body.connectionRecord.id
+
+    const verifierToHolderConnectionRecordId = await waitForConnectionByOob(verifierClient, verifierOobId)
+    await waitForConnectionState(verifierClient, verifierToHolderConnectionRecordId, 'completed')
+    await waitForConnectionState(holderClient, holderToVerifierConnectionRecordId, 'completed')
+
+    const proposalResponse = await holderClient
+      .post('/v1/proofs/propose-proof')
+      .send({
+        connectionId: holderToVerifierConnectionRecordId,
+        protocolVersion: 'v2',
+        proofFormats: {
+          anoncreds: {
+            attributes: [
+              {
+                name: 'checkName',
+                credentialDefinitionId,
+              },
+            ],
+          },
+        },
+        comment: 'proof proposal',
+      })
+      .expect(200)
+
+    const holderProposalThreadId = proposalResponse.body.threadId as UUID
+
+    const verifierProofRecord = await waitForProofRecordByThread(
+      verifierClient,
+      holderProposalThreadId,
+      'proposal-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+    const verifierProofRecordId = verifierProofRecord.id
+
+    const negotiateResponse = await verifierClient
+      .post(`/v1/proofs/${verifierProofRecordId}/negotiate-proposal`)
+      .send({
+        proofFormats: {
+          anoncreds: {
+            name: 'proof-request',
+            version: '1.0',
+            requested_attributes: {
+              name: {
+                names: ['checkName'],
+                restrictions: [
+                  {
+                    cred_def_id: credentialDefinitionId,
+                  },
+                ],
+              },
+            },
+          },
+        },
+        willConfirm: true,
+      })
+      .expect(200)
+
+    expect(negotiateResponse.body).to.have.property('state', 'request-sent')
+
+    const holderProofRecord = await waitForProofRecordByThread(
+      holderClient,
+      holderProposalThreadId,
+      'request-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+
+    const credentialsRes = await holderClient
+      .get(`/v1/proofs/${holderProofRecord.id}/credentials`)
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    const credentialId =
+      credentialsRes.body.proofFormats?.anoncreds?.attributes?.name?.[0]?.credentialId ??
+      credentialsRes.body.proofFormats?.anoncreds?.attributes?.[0]?.credentialId
+
+    if (!credentialId) {
+      throw new Error('No AnonCreds credential available for proof request')
+    }
+
+    await holderClient
+      .post(`/v1/proofs/${holderProofRecord.id}/accept-request`)
+      .send({
+        proofFormats: {
+          anoncreds: {
+            attributes: {
+              name: {
+                credentialId,
+                revealed: true,
+              },
+            },
+          },
+        },
+      })
+      .expect(200)
+
+    await waitForProofState(verifierClient, verifierProofRecordId, 'presentation-received', {
+      maxAttempts: 60,
+      intervalMs: 1000,
+    })
+    await verifierClient.post(`/v1/proofs/${verifierProofRecordId}/accept-presentation`).send({}).expect(200)
+    await waitForProofState(verifierClient, verifierProofRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
+  })
+
+  it('should negotiate a Presentation Exchange proof proposal', async function () {
+    const issuerResponse = await issuerClient.post('/v1/dids/create').send({
+      method: 'key',
+      options: {
+        keyType: 'ed25519',
+      },
+    })
+    const issuerDid = issuerResponse.body.did as string
+
+    const holderResponse = await holderClient.post('/v1/dids/create').send({
+      method: 'key',
+      options: {
+        keyType: 'ed25519',
+      },
+    })
+    const holderDid = holderResponse.body.did as string
+
+    // Establish connection: Issuer -> Holder
+    const issuerInvitationResponse = await issuerClient
+      .post('/v1/oob/create-invitation')
+      .send(OOB_INVITATION_PAYLOAD)
+      .expect(200)
+    const issuerOobId = issuerInvitationResponse.body.outOfBandRecord.id
+    const issuerInvitationUrl = issuerInvitationResponse.body.invitationUrl
+
+    const holderAcceptResponse = await holderClient
+      .post('/v1/oob/receive-invitation-url')
+      .send({ invitationUrl: issuerInvitationUrl })
+      .expect(200)
+    const holderToIssuerConnectionRecordId = holderAcceptResponse.body.connectionRecord.id
+
+    const issuerToHolderConnectionRecordId = await waitForConnectionByOob(issuerClient, issuerOobId)
+    await waitForConnectionState(issuerClient, issuerToHolderConnectionRecordId, 'completed')
+    await waitForConnectionState(holderClient, holderToIssuerConnectionRecordId, 'completed')
+
+    await issuerClient
+      .post('/v1/credentials/offer-credential')
+      .send({
+        protocolVersion: 'v2',
+        connectionId: issuerToHolderConnectionRecordId,
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1', 'http://schema.org/'],
+              type: ['VerifiableCredential', 'Person'],
+              issuer: issuerDid,
+              issuanceDate: new Date().toISOString(),
+              credentialSubject: {
+                id: holderDid,
+                givenName: 'Alice',
+                familyName: 'Doe',
+              },
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+        autoAcceptCredential: 'always',
+      })
+      .expect(200)
+
+    const holderCredentialRecord = await waitForCredentialRecord(
+      holderClient,
+      holderToIssuerConnectionRecordId,
+      'offer-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+    const holderCredentialRecordId = holderCredentialRecord.id
+
+    await holderClient
+      .post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`)
+      .send({
+        credentialFormats: {
+          jsonld: {},
+        },
+      })
+      .expect(200)
+
+    await waitForCredentialState(holderClient, holderCredentialRecordId, 'credential-received', {
+      maxAttempts: 60,
+      intervalMs: 1000,
+    })
+    await holderClient.post(`/v1/credentials/${holderCredentialRecordId}/accept-credential`).send({}).expect(200)
+    await waitForCredentialState(holderClient, holderCredentialRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
+
+    // Establish connection: Verifier -> Holder
+    const verifierInvitationResponse = await verifierClient
+      .post('/v1/oob/create-invitation')
+      .send(OOB_INVITATION_PAYLOAD)
+      .expect(200)
+    const verifierOobId = verifierInvitationResponse.body.outOfBandRecord.id
+    const verifierInvitationUrl = verifierInvitationResponse.body.invitationUrl
+
+    const holderAcceptVerifierResponse = await holderClient
+      .post('/v1/oob/receive-invitation-url')
+      .send({ invitationUrl: verifierInvitationUrl })
+      .expect(200)
+    const holderToVerifierConnectionRecordId = holderAcceptVerifierResponse.body.connectionRecord.id
+    const verifierToHolderConnectionRecordId = await waitForConnectionByOob(verifierClient, verifierOobId)
+    await waitForConnectionState(verifierClient, verifierToHolderConnectionRecordId, 'completed')
+    await waitForConnectionState(holderClient, holderToVerifierConnectionRecordId, 'completed')
+
+    const proposalResponse = await holderClient
+      .post('/v1/proofs/propose-proof')
+      .send({
+        connectionId: holderToVerifierConnectionRecordId,
+        protocolVersion: 'v2',
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'negotiation-pex-definition',
+              name: 'Person Identity Request',
+              purpose: 'We need to verify your identity',
+              input_descriptors: [
+                {
+                  id: 'person_credential',
+                  name: 'Person Credential',
+                  constraints: {
+                    fields: [
+                      {
+                        path: ['$.credentialSubject.givenName'],
+                        filter: {
+                          type: 'string',
+                          pattern: 'Alice',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+        comment: 'pex proof proposal',
+      })
+      .expect(200)
+
+    const holderProposalThreadId = proposalResponse.body.threadId as UUID
+
+    const verifierProofRecord = await waitForProofRecordByThread(
+      verifierClient,
+      holderProposalThreadId,
+      'proposal-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+    const verifierProofRecordId = verifierProofRecord.id
+
+    await verifierClient
+      .post(`/v1/proofs/${verifierProofRecordId}/negotiate-proposal`)
+      .send({
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'negotiation-pex-definition',
+              name: 'Person Identity Request',
+              purpose: 'We need to verify your identity',
+              input_descriptors: [
+                {
+                  id: 'person_credential',
+                  name: 'Person Credential',
+                  constraints: {
+                    fields: [
+                      {
+                        path: ['$.credentialSubject.givenName'],
+                        filter: {
+                          type: 'string',
+                          pattern: 'Alice',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        },
+        willConfirm: true,
+      })
+      .expect(200)
+
+    const holderProofRecord = await waitForProofRecordByThread(
+      holderClient,
+      holderProposalThreadId,
+      'request-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+
+    await holderClient
+      .post(`/v1/proofs/${holderProofRecord.id}/accept-request`)
+      .send({
+        proofFormats: {
+          presentationExchange: {},
+        },
+      })
+      .expect(200)
+
+    await waitForProofState(verifierClient, verifierProofRecordId, 'presentation-received', {
+      maxAttempts: 60,
+      intervalMs: 1000,
+    })
+    await verifierClient.post(`/v1/proofs/${verifierProofRecordId}/accept-presentation`).send({}).expect(200)
+    await waitForProofState(verifierClient, verifierProofRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
+  })
+})
