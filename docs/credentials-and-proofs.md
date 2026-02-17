@@ -171,6 +171,82 @@ AnonCreds allows for requesting specific attributes or predicates (e.g., `age >=
 
 ---
 
+## Proof Negotiation
+
+In addition to the standard Verifier-initiated proof request flow, this agent supports **Proof Negotiation**. This allows a Holder to initiate the process by proposing a proof, or for a Verifier to counter-propose a different request based on a Holder's proposal.
+
+### 1. Propose Proof (Holder)
+
+A Holder can send a proof proposal to a Verifier to start the process.
+
+* **Endpoint**: `POST /v1/proofs/propose-proof`
+* **Payload Example (PEX)**:
+
+```json
+{
+  "protocolVersion": "v2",
+  "connectionId": "<connection-uuid>",
+  "proofFormats": {
+    "presentationExchange": {
+      "presentationDefinition": {
+        "id": "proposal-123",
+        "input_descriptors": [
+          {
+            "id": "credential_descriptor",
+            "name": "My Credential",
+            "constraints": { "fields": [...] }
+          }
+        ]
+      }
+    }
+  },
+  "comment": "I would like to share my credential"
+}
+```
+
+### 2. Negotiate Proposal (Verifier)
+
+Upon receiving a proposal (state: `proposal-received`), the Verifier can "negotiate" it. This action effectively accepts the proposal's intent and turns it into a formal **Proof Request**. The Verifier can modify the request details in this step, for example, to insist that the credential must be issued by a specific trusted issuer.
+
+* **Endpoint**: `POST /v1/proofs/{proofRecordId}/negotiate-proposal`
+* **Payload Example** (insisting on specific issuer):
+
+```json
+{
+  "proofFormats": {
+    "presentationExchange": {
+      "presentationDefinition": {
+        "id": "final-verification-request",
+        "name": "Trusted Identity Check",
+        "input_descriptors": [
+          {
+            "id": "identity_credential",
+            "name": "Identity Credential",
+            "purpose": "Must be issued by the specific Trusted Authority",
+            "constraints": {
+              "fields": [
+                {
+                  "path": ["$.issuer.id", "$.issuer", "$.vc.issuer", "$.iss"],
+                  "filter": {
+                    "type": "string",
+                    "const": "did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "willConfirm": true
+}
+```
+
+Once the Verifier sends this, the Holder receives a standard proof request (state: `request-received`), which they can then accept using `/v1/proofs/{proofRecordId}/accept-request`.
+
+---
+
 ## Comparison Reference
 
 | Feature | AnonCreds | W3C Credentials |
