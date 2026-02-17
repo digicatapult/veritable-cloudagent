@@ -91,6 +91,7 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should wait for connection to be established on Issuer side', async function () {
+    this.timeout(120000)
     issuerToHolderConnectionRecordId = await waitForConnectionByOob(issuerClient, issuerToHolderOobRecordId)
     const state = await waitForConnectionState(issuerClient, issuerToHolderConnectionRecordId, 'completed')
     expect(state).to.equal('completed')

@@ -8,7 +8,7 @@ type WaitOptions = {
 
 export type TestClient = ReturnType<typeof request>
 
-const DEFAULT_MAX_ATTEMPTS = 60
+const DEFAULT_MAX_ATTEMPTS = 40
 const DEFAULT_INTERVAL_MS = 1000
 
 const getWaitOptions = (options?: WaitOptions) => ({
@@ -59,14 +59,16 @@ export const waitForCredentialRecord = async (
   const { maxAttempts, intervalMs } = getWaitOptions(options)
 
   for (let i = 0; i < maxAttempts; i++) {
-    const response = await client.get('/v1/credentials').query({ connectionId }).expect(200)
+    const query = state ? { connectionId, state } : { connectionId }
+    const response = await client.get('/v1/credentials').query(query).expect(200)
     const records = response.body as { id: UUID; state?: string }[]
 
     if (records.length > 0) {
-      if (!state) return records[0]
-
-      const record = records.find((r) => r.state === state)
-      if (record) return record
+      // When state is provided, the API should already have filtered by state.
+      // Keep a defensive check to avoid changing behavior if that assumption changes.
+      if (!state || records[0].state === state) {
+        return records[0]
+      }
     }
 
     await sleep(intervalMs)
