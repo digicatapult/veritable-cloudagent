@@ -43,5 +43,52 @@ ipfs config --json Routing.LoopbackAddressesOnLanDHT true
 ipfs config --json Swarm.AddrFilters null
 ipfs config --json Discovery.MDNS.Enabled true
 
+# Bootstrap Logic
+if [ "$IPFS_ROLE" = "bootstrap" ]; then
+    echo "I am the bootstrap node (IPFS_ROLE=bootstrap)."
+    
+    # Ensure IPFS data directory is initialized so we can read the config.
+    # The standard entrypoint handles init, but this script runs before daemon start,
+    # so we must check and init manually if needed to access Identity.PeerID.
+    if [ ! -f /data/ipfs/config ]; then
+       echo "Initializing IPFS data directory..."
+       ipfs init
+    fi
+
+    PEER_ID=$(ipfs config Identity.PeerID)
+    echo "My PeerID is $PEER_ID"
+    
+    # Construct the multiaddr for other nodes to connect to.
+    # We use 'ipfs0' as the hostname because it is the Docker service name reachable by all peers in the network.
+    BOOTSTRAP_ADDR="/dns4/ipfs0/tcp/4001/ipfs/$PEER_ID"
+    
+    echo "$BOOTSTRAP_ADDR" > /ipfs-bootstrap/ipfs0.addr
+    echo "Wrote bootstrap address to /ipfs-bootstrap/ipfs0.addr: $BOOTSTRAP_ADDR"
+else
+    # I am a client node (ipfs1, ipfs2).
+    if [ ! -f /data/ipfs/config ]; then
+       echo "Initializing IPFS data directory..."
+       ipfs init
+    fi
+
+    echo "Waiting for bootstrap file from ipfs0..."
+    # Timeout after 60 seconds
+    attempts=0
+    while [ ! -f /ipfs-bootstrap/ipfs0.addr ]; do
+      sleep 2
+      attempts=$((attempts+1))
+      if [ $attempts -ge 30 ]; then
+        echo "Timeout waiting for bootstrap file!"
+        exit 1
+      fi
+    done
+    
+    BOOTSTRAP_ADDR=$(cat /ipfs-bootstrap/ipfs0.addr)
+    echo "Found bootstrap address: $BOOTSTRAP_ADDR"
+    
+    # Add bootstrap node
+    ipfs bootstrap add "$BOOTSTRAP_ADDR"
+fi
+
 # Note: This script only configures IPFS.
 # The container's default entrypoint will start the ipfs daemon after this script completes.

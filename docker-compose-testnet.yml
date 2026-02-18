@@ -15,6 +15,19 @@
 
 services:
   ##################################################################################
+  ## IPFS Network Bootstrap ########################################################
+  ##################################################################################
+  
+  ipfs-bootstrap:
+    container_name: ipfs-bootstrap
+    image: alpine:latest
+    command: sh -c "chown -R 1000:1000 /ipfs-bootstrap && chmod 777 /ipfs-bootstrap && tail -f /dev/null"
+    volumes:
+      - ipfs-bootstrap-data:/ipfs-bootstrap
+    networks:
+      - testnet
+
+  ##################################################################################
   ## Alice #########################################################################
   ##################################################################################
 
@@ -186,10 +199,16 @@ services:
       #     - "4001:4001" # ipfs swarm - expose if needed/wanted
       #     - "5001:5001" # ipfs api - expose if needed/wanted
       - '8080:8080' # ipfs HTTP gateway
+    environment:
+      - IPFS_ROLE=bootstrap
     volumes:
       - ipfs0:/data/ipfs
+      - ipfs-bootstrap-data:/ipfs-bootstrap
     networks:
       - testnet
+    depends_on:
+      ipfs-bootstrap:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 2"]
       interval: 5s
@@ -232,10 +251,16 @@ services:
     build:
       context: ./docker/ipfs
       dockerfile: Dockerfile
+    environment:
+      - IPFS_ROLE=client
     volumes:
       - ipfs1:/data/ipfs
+      - ipfs-bootstrap-data:/ipfs-bootstrap
     networks:
       - testnet
+    depends_on:
+      ipfs-bootstrap:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 2"]
       interval: 5s
@@ -269,10 +294,16 @@ services:
     build:
       context: ./docker/ipfs
       dockerfile: Dockerfile
+    environment:
+      - IPFS_ROLE=client
     volumes:
+      - ipfs-bootstrap-data:/ipfs-bootstrap
       - ipfs2:/data/ipfs
     networks:
       - testnet
+    depends_on:
+      ipfs-bootstrap:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 2"]
       interval: 5s
@@ -373,6 +404,7 @@ volumes:
   ipfs1:
   ipfs2:
   cluster0:
+  ipfs-bootstrap-data:
   cluster1:
   cluster2:
   alice-veritable-cloudagent-storage:
