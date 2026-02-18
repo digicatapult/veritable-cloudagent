@@ -2,7 +2,13 @@ import { expect } from 'chai'
 import { beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
-import { OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
+import {
+  ALICE_BASE_URL,
+  BOB_BASE_URL,
+  CHARLIE_BASE_URL,
+  ISSUER_DID_KEY,
+  OOB_INVITATION_PAYLOAD,
+} from './utils/fixtures.js'
 import {
   waitForConnectionByOob,
   waitForConnectionState,
@@ -12,15 +18,11 @@ import {
   waitForProofState,
 } from './utils/helpers.js'
 
-const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
-
 describe('Negotiate proof proposal flows', function () {
   this.timeout(60000)
-  const issuerClient = request(ISSUER_BASE_URL)
-  const holderClient = request(HOLDER_BASE_URL)
-  const verifierClient = request(VERIFIER_BASE_URL)
+  const issuerClient = request(ALICE_BASE_URL)
+  const holderClient = request(BOB_BASE_URL)
+  const verifierClient = request(CHARLIE_BASE_URL)
 
   beforeEach(function (done) {
     setTimeout(function () {
@@ -29,7 +31,7 @@ describe('Negotiate proof proposal flows', function () {
   })
 
   it('should negotiate an AnonCreds proof proposal', async function () {
-    const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
+    const issuerId = ISSUER_DID_KEY
 
     const schemaResponse = await issuerClient
       .post('/v1/schemas')
