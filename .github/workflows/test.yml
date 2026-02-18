@@ -87,7 +87,16 @@ jobs:
           docker compose \
             -f docker-compose-testnet.yml \
             -f docker-compose-integration-tests.yml \
+            up -d --wait alice bob charlie ipfs0 ipfs1 ipfs2 ipfs-bootstrap
+
+          echo "🔍 Verifying IPFS Swarm Connectivity..."
+          ./scripts/test-ipfs-connectivity.sh || echo "⚠️ Connectivity check failed but continuing (non-blocking)"
+
+          docker compose \
+            -f docker-compose-testnet.yml \
+            -f docker-compose-integration-tests.yml \
             up --exit-code-from integration-tests
+
 
   build-docker:
     needs:
