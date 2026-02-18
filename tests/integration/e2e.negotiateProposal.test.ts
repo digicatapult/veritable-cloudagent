@@ -74,6 +74,7 @@ describe('Negotiate proof proposal flows', function () {
     await waitForConnectionState(issuerClient, issuerToHolderConnectionRecordId, 'completed')
     await waitForConnectionState(holderClient, holderToIssuerConnectionRecordId, 'completed')
 
+    // 1. ORIGINAL CREDENTIAL: The Issuer offers a credential with two attributes: 'checkName' and 'companyName'.
     const offerResponse = await issuerClient
       .post('/v1/credentials/offer-credential')
       .send({
@@ -131,6 +132,7 @@ describe('Negotiate proof proposal flows', function () {
     await waitForConnectionState(verifierClient, verifierToHolderConnectionRecordId, 'completed')
     await waitForConnectionState(holderClient, holderToVerifierConnectionRecordId, 'completed')
 
+    // 2. PROOF PROPOSAL: The Holder proposes to prove only the 'checkName' attribute.
     const proposalResponse = await holderClient
       .post('/v1/proofs/propose-proof')
       .send({
@@ -160,28 +162,37 @@ describe('Negotiate proof proposal flows', function () {
     )
     const verifierProofRecordId = verifierProofRecord.id
 
-    const negotiateResponse = await verifierClient
-      .post(`/v1/proofs/${verifierProofRecordId}/negotiate-proposal`)
-      .send({
-        proofFormats: {
-          anoncreds: {
-            name: 'proof-request',
-            version: '1.0',
-            requested_attributes: {
-              name: {
-                names: ['checkName'],
-                restrictions: [
-                  {
-                    cred_def_id: credentialDefinitionId,
-                  },
-                ],
-              },
+    // 3. NEGOTIATION: The Verifier accepts the proposal but negotiates to ALSO request the 'companyName' attribute,
+    // which was present in the original credential but not included in the Holder's proposal.
+    const negotiateResponse = await verifierClient.post(`/v1/proofs/${verifierProofRecordId}/negotiate-proposal`).send({
+      proofFormats: {
+        anoncreds: {
+          name: 'proof-request',
+          version: '1.0',
+          requested_attributes: {
+            req_checkName: {
+              names: ['checkName'],
+              restrictions: [
+                {
+                  cred_def_id: credentialDefinitionId,
+                },
+              ],
+            },
+            req_companyName: {
+              names: ['companyName'],
+              restrictions: [
+                {
+                  cred_def_id: credentialDefinitionId,
+                },
+              ],
             },
           },
         },
-        willConfirm: true,
-      })
-      .expect(200)
+      },
+      willConfirm: true,
+    })
+
+    expect(negotiateResponse.status).to.equal(200)
 
     expect(negotiateResponse.body).to.have.property('state', 'request-sent')
 
@@ -197,22 +208,27 @@ describe('Negotiate proof proposal flows', function () {
       .expect('Content-Type', /json/)
       .expect(200)
 
-    const credentialId =
-      credentialsRes.body.proofFormats?.anoncreds?.attributes?.name?.[0]?.credentialId ??
-      credentialsRes.body.proofFormats?.anoncreds?.attributes?.[0]?.credentialId
+    const credentialIdCheck = credentialsRes.body.proofFormats?.anoncreds?.attributes?.req_checkName?.[0]?.credentialId
+    const credentialIdCompany =
+      credentialsRes.body.proofFormats?.anoncreds?.attributes?.req_companyName?.[0]?.credentialId
 
-    if (!credentialId) {
+    if (!credentialIdCheck || !credentialIdCompany) {
       throw new Error('No AnonCreds credential available for proof request')
     }
 
+    // 4. RESPONSE TO NEGOTIATION: The Holder accepts the new presentation definition which now requires both 'checkName' and 'companyName'.
     await holderClient
       .post(`/v1/proofs/${holderProofRecord.id}/accept-request`)
       .send({
         proofFormats: {
           anoncreds: {
             attributes: {
-              name: {
-                credentialId,
+              req_checkName: {
+                credentialId: credentialIdCheck,
+                revealed: true,
+              },
+              req_companyName: {
+                credentialId: credentialIdCompany,
                 revealed: true,
               },
             },
@@ -260,6 +276,7 @@ describe('Negotiate proof proposal flows', function () {
       .expect(200)
     const holderToIssuerConnectionRecordId = holderAcceptResponse.body.connectionRecord.id
 
+    // 1. ORIGINAL CREDENTIAL: The Issuer offers a JSON-LD credential with 'givenName' (Alice) and 'familyName' (Doe).
     const issuerToHolderConnectionRecordId = await waitForConnectionByOob(issuerClient, issuerOobId)
     await waitForConnectionState(issuerClient, issuerToHolderConnectionRecordId, 'completed')
     await waitForConnectionState(holderClient, holderToIssuerConnectionRecordId, 'completed')
@@ -333,6 +350,7 @@ describe('Negotiate proof proposal flows', function () {
     await waitForConnectionState(verifierClient, verifierToHolderConnectionRecordId, 'completed')
     await waitForConnectionState(holderClient, holderToVerifierConnectionRecordId, 'completed')
 
+    // 2. PROOF PROPOSAL: The Holder proposes a presentation definition asking only for 'givenName'.
     const proposalResponse = await holderClient
       .post('/v1/proofs/propose-proof')
       .send({
@@ -378,6 +396,7 @@ describe('Negotiate proof proposal flows', function () {
     )
     const verifierProofRecordId = verifierProofRecord.id
 
+    // 3. NEGOTIATION: The Verifier negotiates to include a second input descriptor for 'familyName'.
     await verifierClient
       .post(`/v1/proofs/${verifierProofRecordId}/negotiate-proposal`)
       .send({
@@ -403,6 +422,21 @@ describe('Negotiate proof proposal flows', function () {
                     ],
                   },
                 },
+                {
+                  id: 'person_credential_family_name',
+                  name: 'Person Credential Family Name',
+                  constraints: {
+                    fields: [
+                      {
+                        path: ['$.credentialSubject.familyName'],
+                        filter: {
+                          type: 'string',
+                          pattern: 'Doe',
+                        },
+                      },
+                    ],
+                  },
+                },
               ],
             },
           },
@@ -418,6 +452,7 @@ describe('Negotiate proof proposal flows', function () {
       { maxAttempts: 60, intervalMs: 1000 }
     )
 
+    // 4. RESPONSE TO NEGOTIATION: The Holder accepts the new presentation definition which now requires both 'givenName' and 'familyName'.
     await holderClient
       .post(`/v1/proofs/${holderProofRecord.id}/accept-request`)
       .send({
