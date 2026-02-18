@@ -3,9 +3,9 @@ import { describe, it } from 'mocha'
 import request from 'supertest'
 import WebSocket from 'ws'
 import PinoLogger from '../../src/utils/logger.js'
+import { ALICE_BASE_URL, BOB_BASE_URL, OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
+import { sleep, waitForConnectionByOob } from './utils/helpers.js'
 
-const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
 const ALICE_WS_URL = ALICE_BASE_URL.replace('http', 'ws')
 
 const logger = new PinoLogger('trace')
@@ -52,14 +52,7 @@ describe('Media Sharing Events (WS)', function () {
   })
 
   it('Alice creates invitation', async function () {
-    const res = await alice
-      .post('/v1/oob/create-invitation')
-      .send({
-        handshake: true,
-        handshakeProtocols: ['https://didcomm.org/connections/1.x'],
-        autoAcceptConnection: true,
-      })
-      .expect(200)
+    const res = await alice.post('/v1/oob/create-invitation').send(OOB_INVITATION_PAYLOAD).expect(200)
 
     invitationUrl = res.body.invitationUrl
     oobRecordId = res.body.outOfBandRecord.id
@@ -70,15 +63,8 @@ describe('Media Sharing Events (WS)', function () {
   })
 
   it('Alice fetches her connection', async function () {
-    let body: { id: string }[] = []
-    for (let i = 0; i < 60; i++) {
-      const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
-      body = res.body
-      if (body.length > 0 && body[0].id) break
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
-    expect(body).to.be.an('array').that.has.length(1)
-    aliceConnectionId = body[0].id
+    aliceConnectionId = await waitForConnectionByOob(alice, oobRecordId)
+    expect(aliceConnectionId).to.be.a('string')
   })
 
   it('Alice shares media to Bob and receives events', async function () {
@@ -107,7 +93,7 @@ describe('Media Sharing Events (WS)', function () {
         if (state && !states.includes(state)) states.push(state)
       }
       if (states.includes('init') && states.includes('media-shared')) break
-      await new Promise((r) => setTimeout(r, 250))
+      await sleep(250)
     }
 
     expect(states, `States captured: ${states.join(',')}`).to.include('init')

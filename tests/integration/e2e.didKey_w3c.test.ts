@@ -2,16 +2,21 @@ import { expect } from 'chai'
 import { before, beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { UUID } from '../../src/controllers/types/index.js'
-
-const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
+import { ALICE_BASE_URL, BOB_BASE_URL, CHARLIE_BASE_URL, OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
+import {
+  waitForConnectionByOob,
+  waitForConnectionState,
+  waitForCredentialRecord,
+  waitForCredentialState,
+  waitForProofRecordByThread,
+  waitForProofState,
+} from './utils/helpers.js'
 
 describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   this.timeout(60000)
-  const issuerClient = request(ISSUER_BASE_URL) // Alice
-  const holderClient = request(HOLDER_BASE_URL) // Bob
-  const verifierClient = request(VERIFIER_BASE_URL)
+  const issuerClient = request(ALICE_BASE_URL) // Alice
+  const holderClient = request(BOB_BASE_URL) // Bob
+  const verifierClient = request(CHARLIE_BASE_URL)
 
   let ISSUER_DID: string
   let HOLDER_DID: string
@@ -24,7 +29,6 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   let holderToIssuerConnectionRecordId: UUID
   let issuerToHolderConnectionRecordId: UUID
 
-  let holderToVerifierConnectionRecordId: UUID
   let verifierToHolderConnectionRecordId: UUID
 
   let issuerCredentialRecordId: UUID
@@ -63,15 +67,9 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   // --- 1. Connection: Issuer <-> Holder ---
 
   it('should allow an Issuer to create an OOB invitation', async function () {
-    const createInvitationPayload = {
-      handshake: true,
-      handshakeProtocols: ['https://didcomm.org/connections/1.x'],
-      autoAcceptConnection: true,
-    }
-
     const response = await issuerClient
       .post('/v1/oob/create-invitation')
-      .send(createInvitationPayload)
+      .send(OOB_INVITATION_PAYLOAD)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -93,30 +91,15 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should wait for connection to be established on Issuer side', async function () {
-    let connected = false
-    for (let i = 0; i < 60; i++) {
-      const response = await issuerClient.get('/v1/connections').query({ outOfBandId: issuerToHolderOobRecordId })
-      if (response.body.length > 0 && ['completed'].includes(response.body[0].state)) {
-        issuerToHolderConnectionRecordId = response.body[0].id
-        connected = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(connected).to.equal(true)
+    this.timeout(120000)
+    issuerToHolderConnectionRecordId = await waitForConnectionByOob(issuerClient, issuerToHolderOobRecordId)
+    const state = await waitForConnectionState(issuerClient, issuerToHolderConnectionRecordId, 'completed')
+    expect(state).to.equal('completed')
   })
 
   it('should wait for connection to be established on Holder side', async function () {
-    let connected = false
-    for (let i = 0; i < 60; i++) {
-      const response = await holderClient.get(`/v1/connections/${holderToIssuerConnectionRecordId}`)
-      if (['completed'].includes(response.body.state)) {
-        connected = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(connected).to.equal(true)
+    const state = await waitForConnectionState(holderClient, holderToIssuerConnectionRecordId, 'completed')
+    expect(state).to.equal('completed')
   })
 
   // --- 2. W3C Credential Issuance ---
@@ -157,22 +140,9 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should allow the Holder to receive the W3C credential offer', async function () {
-    let received = false
-    for (let i = 0; i < 60; i++) {
-      const response = await holderClient
-        .get('/v1/credentials')
-        .query({ connectionId: holderToIssuerConnectionRecordId })
-        .expect(200)
-
-      const record = response.body.find((r: { state: string; id: UUID }) => r.state === 'offer-received')
-      if (record) {
-        holderCredentialRecordId = record.id
-        received = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(received).to.equal(true)
+    const record = await waitForCredentialRecord(holderClient, holderToIssuerConnectionRecordId, 'offer-received')
+    holderCredentialRecordId = record.id
+    expect(record).to.have.property('state', 'offer-received')
   })
 
   it('should allow the Holder to accept the W3C credential offer', async function () {
@@ -194,17 +164,8 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should allow the Holder to accept the issued credential', async function () {
-    // Wait for Holder to receive credential
-    let received = false
-    for (let i = 0; i < 60; i++) {
-      const response = await holderClient.get(`/v1/credentials/${holderCredentialRecordId}`)
-      if (response.body.state === 'credential-received') {
-        received = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(received).to.equal(true, 'Holder should have reached state credential-received')
+    const state = await waitForCredentialState(holderClient, holderCredentialRecordId, 'credential-received')
+    expect(state).to.equal('credential-received')
 
     // Explicitly accept the credential (storage)
     const response = await holderClient
@@ -216,44 +177,19 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should confirm the credential has been issued (done state)', async function () {
-    let holderDone = false
-    let issuerDone = false
+    const holderState = await waitForCredentialState(holderClient, holderCredentialRecordId, 'done')
+    expect(holderState).to.equal('done')
 
-    // Check Holder
-    for (let i = 0; i < 60; i++) {
-      const response = await holderClient.get(`/v1/credentials/${holderCredentialRecordId}`)
-      if (response.body.state === 'done') {
-        holderDone = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(holderDone).to.equal(true)
-
-    // Check Issuer
-    for (let i = 0; i < 60; i++) {
-      const response = await issuerClient.get(`/v1/credentials/${issuerCredentialRecordId}`)
-      if (response.body.state === 'done') {
-        issuerDone = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(issuerDone).to.equal(true)
+    const issuerState = await waitForCredentialState(issuerClient, issuerCredentialRecordId, 'done')
+    expect(issuerState).to.equal('done')
   })
 
   // --- 3. Connection: Verifier <-> Holder ---
 
   it('should allow a Verifier to create an OOB invitation', async function () {
-    const createInvitationPayload = {
-      handshake: true,
-      handshakeProtocols: ['https://didcomm.org/connections/1.x'],
-      autoAcceptConnection: true,
-    }
-
     const response = await verifierClient
       .post('/v1/oob/create-invitation')
-      .send(createInvitationPayload)
+      .send(OOB_INVITATION_PAYLOAD)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -270,21 +206,12 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
       .expect('Content-Type', /json/)
       .expect(200)
 
-    holderToVerifierConnectionRecordId = response.body.connectionRecord.id
+    expect(response.body).to.have.nested.property('connectionRecord.id')
   })
 
   it('should create a connection record on the Verifier', async function () {
-    let connected = false
-    for (let i = 0; i < 60; i++) {
-      const response = await verifierClient.get('/v1/connections').query({ outOfBandId: verifierToHolderOobRecordId })
-      if (response.body.length > 0) {
-        verifierToHolderConnectionRecordId = response.body[0].id
-        connected = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(connected).to.equal(true)
+    verifierToHolderConnectionRecordId = await waitForConnectionByOob(verifierClient, verifierToHolderOobRecordId)
+    expect(verifierToHolderConnectionRecordId).to.be.a('string')
   })
 
   // --- 4. W3C Proof Verification (Presentation Exchange) ---
@@ -333,22 +260,9 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should allow Holder to receive proof request', async function () {
-    let received = false
-    for (let i = 0; i < 60; i++) {
-      const response = await holderClient.get('/v1/proofs').query({ connectionId: holderToVerifierConnectionRecordId })
-
-      const record = response.body.find(
-        (r: { state: string; id: UUID; threadId: string }) =>
-          r.state === 'request-received' && r.threadId === verifierThreadId
-      )
-      if (record) {
-        holderProofRequestId = record.id
-        received = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(received).to.equal(true)
+    const record = await waitForProofRecordByThread(holderClient, verifierThreadId, 'request-received')
+    holderProofRequestId = record.id
+    expect(record).to.have.property('state', 'request-received')
   })
 
   it('should allow Holder to accept proof request', async function () {
@@ -368,15 +282,7 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should complete W3C verification (Verifier verified)', async function () {
-    let success = false
-    for (let i = 0; i < 30; i++) {
-      const response = await verifierClient.get(`/v1/proofs/${verifierProofRecordId}`)
-      if (response.body.state === 'done') {
-        success = true
-        break
-      }
-      await new Promise((r) => setTimeout(r, 1000))
-    }
-    expect(success).to.equal(true)
+    const state = await waitForProofState(verifierClient, verifierProofRecordId, 'done', { maxAttempts: 30 })
+    expect(state).to.equal('done')
   })
 })
