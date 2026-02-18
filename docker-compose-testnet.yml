@@ -302,7 +302,7 @@ services:
   ##################################################################################
   alice-postgres:
     container_name: alice-postgres
-    image: postgres:18.1-alpine
+    image: postgres:18.2-alpine
     restart: on-failure
     ports:
       - 5432:5432
@@ -326,7 +326,7 @@ services:
   ##################################################################################
   bob-postgres:
     container_name: bob-postgres
-    image: postgres:18.1-alpine
+    image: postgres:18.2-alpine
     restart: on-failure
     ports:
       - 5433:5432
@@ -350,7 +350,7 @@ services:
   ##################################################################################
   charlie-postgres:
     container_name: charlie-postgres
-    image: postgres:18.1-alpine
+    image: postgres:18.2-alpine
     restart: on-failure
     ports:
       - 5434:5432
