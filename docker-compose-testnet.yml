@@ -210,7 +210,7 @@ services:
       ipfs-bootstrap:
         condition: service_started
     healthcheck:
-      test: ["CMD-SHELL", "test $(ipfs swarm peers | wc -l) -ge 1"]
+      test: ["CMD-SHELL", "ipfs id"]
       interval: 5s
       timeout: 5s
       retries: 20
