@@ -10,6 +10,8 @@ import {
   OOB_INVITATION_PAYLOAD,
 } from './utils/fixtures.js'
 import {
+  acceptCredential,
+  acceptPresentation,
   waitForConnectionByOob,
   waitForConnectionState,
   waitForCredentialRecord,
@@ -30,7 +32,7 @@ describe('Negotiate proof proposal flows', function () {
     }, 200)
   })
 
-  it.skip('should negotiate an AnonCreds proof proposal', async function () {
+  it('should negotiate an AnonCreds proof proposal', async function () {
     const issuerId = ISSUER_DID_KEY
 
     const schemaResponse = await issuerClient
@@ -89,7 +91,7 @@ describe('Negotiate proof proposal flows', function () {
           },
         },
         connectionId: issuerToHolderConnectionRecordId,
-        autoAcceptCredential: 'always',
+        autoAcceptCredential: 'never',
       })
       .expect(200)
 
@@ -103,14 +105,23 @@ describe('Negotiate proof proposal flows', function () {
     )
     const holderCredentialRecordId = holderCredentialRecord.id
 
-    await holderClient.post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`).send({}).expect(200)
+    await holderClient
+      .post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`)
+      .send({ autoAcceptCredential: 'never' })
+      .expect(200)
+
+    await waitForCredentialState(issuerClient, issuerCredentialRecordId, 'request-received', {
+      maxAttempts: 60,
+      intervalMs: 1000,
+    })
+    await issuerClient.post(`/v1/credentials/${issuerCredentialRecordId}/accept-request`).send({}).expect(200)
 
     await waitForCredentialState(holderClient, holderCredentialRecordId, 'credential-received', {
       maxAttempts: 60,
       intervalMs: 1000,
     })
 
-    await holderClient.post(`/v1/credentials/${holderCredentialRecordId}/accept-credential`).send({}).expect(200)
+    await acceptCredential(holderClient, holderCredentialRecordId)
     await waitForCredentialState(holderClient, holderCredentialRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
     await waitForCredentialState(issuerClient, issuerCredentialRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
 
@@ -190,6 +201,7 @@ describe('Negotiate proof proposal flows', function () {
         },
       },
       willConfirm: true,
+      autoAcceptProof: 'never',
     })
 
     expect(negotiateResponse.status).to.equal(200)
@@ -241,7 +253,7 @@ describe('Negotiate proof proposal flows', function () {
       maxAttempts: 60,
       intervalMs: 1000,
     })
-    await verifierClient.post(`/v1/proofs/${verifierProofRecordId}/accept-presentation`).send({}).expect(200)
+    await acceptPresentation(verifierClient, verifierProofRecordId)
     await waitForProofState(verifierClient, verifierProofRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
   })
 
@@ -305,7 +317,7 @@ describe('Negotiate proof proposal flows', function () {
             },
           },
         },
-        autoAcceptCredential: 'always',
+        autoAcceptCredential: 'never',
       })
       .expect(200)
 
@@ -323,14 +335,23 @@ describe('Negotiate proof proposal flows', function () {
         credentialFormats: {
           jsonld: {},
         },
+        autoAcceptCredential: 'never',
       })
       .expect(200)
+
+    const issuerCredRecPex = await waitForCredentialRecord(
+      issuerClient,
+      issuerToHolderConnectionRecordId,
+      'request-received',
+      { maxAttempts: 60, intervalMs: 1000 }
+    )
+    await issuerClient.post(`/v1/credentials/${issuerCredRecPex.id}/accept-request`).send({}).expect(200)
 
     await waitForCredentialState(holderClient, holderCredentialRecordId, 'credential-received', {
       maxAttempts: 60,
       intervalMs: 1000,
     })
-    await holderClient.post(`/v1/credentials/${holderCredentialRecordId}/accept-credential`).send({}).expect(200)
+    await acceptCredential(holderClient, holderCredentialRecordId)
     await waitForCredentialState(holderClient, holderCredentialRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
 
     // Establish connection: Verifier -> Holder
@@ -442,6 +463,7 @@ describe('Negotiate proof proposal flows', function () {
           },
         },
         willConfirm: true,
+        autoAcceptProof: 'never',
       })
       .expect(200)
 
@@ -466,7 +488,7 @@ describe('Negotiate proof proposal flows', function () {
       maxAttempts: 60,
       intervalMs: 1000,
     })
-    await verifierClient.post(`/v1/proofs/${verifierProofRecordId}/accept-presentation`).send({}).expect(200)
+    await acceptPresentation(verifierClient, verifierProofRecordId)
     await waitForProofState(verifierClient, verifierProofRecordId, 'done', { maxAttempts: 60, intervalMs: 1000 })
   })
 })

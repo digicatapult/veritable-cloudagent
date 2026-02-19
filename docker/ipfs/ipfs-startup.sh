@@ -7,8 +7,8 @@ if [ -f /usr/local/share/ipfs/swarm.key ]; then
     cp /usr/local/share/ipfs/swarm.key /data/ipfs/swarm.key
 fi
 
-# Force DHT routing for private network
-ipfs config Routing.Type dht
+# Disable DHT routing (rely on Bitswap for small networks)
+ipfs config Routing.Type none
 
 # Disable AutoConf to prevent public network interference
 ipfs config --json AutoConf.Enabled false
@@ -60,7 +60,7 @@ if [ "$IPFS_ROLE" = "bootstrap" ]; then
     
     # Construct the multiaddr for other nodes to connect to.
     # We use 'ipfs0' as the hostname because it is the Docker service name reachable by all peers in the network.
-    BOOTSTRAP_ADDR="/dns4/ipfs0/tcp/4001/ipfs/$PEER_ID"
+    BOOTSTRAP_ADDR="/dns4/ipfs0/tcp/4001/p2p/$PEER_ID"
     
     echo "$BOOTSTRAP_ADDR" > /ipfs-bootstrap/ipfs0.addr
     echo "Wrote bootstrap address to /ipfs-bootstrap/ipfs0.addr: $BOOTSTRAP_ADDR"

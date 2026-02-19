@@ -137,3 +137,11 @@ export const waitForProofState = async (
 
   throw new Error(`Timed out waiting for proof state ${states.join(', ')}`)
 }
+
+export const acceptCredential = async (client: TestClient, credentialId: UUID) => {
+  await client.post(`/v1/credentials/${credentialId}/accept-credential`).expect(200)
+}
+
+export const acceptPresentation = async (client: TestClient, proofId: UUID) => {
+  await client.post(`/v1/proofs/${proofId}/accept-presentation`).expect(200)
+}
