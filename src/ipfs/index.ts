@@ -5,8 +5,16 @@ export interface MetadataFile {
   filename: string
 }
 
+export interface IpfsOptions {
+  maxRetries?: number
+  initialDelay?: number
+}
+
 export default class Ipfs {
-  constructor(private origin: string) {
+  constructor(
+    private origin: string,
+    private options: IpfsOptions = {}
+  ) {
     try {
       new URL(origin)
     } catch (err) {
@@ -41,8 +49,8 @@ export default class Ipfs {
     const search = new URLSearchParams(args)
     url.search = search.toString()
 
-    const maxRetries = 5
-    let delay = 1000
+    const maxRetries = this.options.maxRetries ?? 5
+    let delay = this.options.initialDelay ?? 1000
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {

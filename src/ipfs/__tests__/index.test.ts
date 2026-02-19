@@ -40,7 +40,7 @@ describe('ipfs', function () {
     const { ipfsOrigin } = withIpfsCatResponse([{ cid: 'testCid', code: 400, body: Buffer.from('1234', 'hex') }])
 
     it('should throw if request fails', async function () {
-      const ipfs = new Ipfs(ipfsOrigin)
+      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 1 })
 
       let error: Error | null = null
       try {
@@ -71,7 +71,7 @@ describe('ipfs', function () {
     const { ipfsOrigin } = withIpfsAddResponse([{ cid: 'testCid', code: 400, body: Buffer.from('hello', 'utf8') }])
 
     it('should throw if request fails', async function () {
-      const ipfs = new Ipfs(ipfsOrigin)
+      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 1 })
 
       let error: Error | null = null
       try {
@@ -92,7 +92,7 @@ describe('ipfs', function () {
     const { ipfsOrigin } = withIpfsAddResponse([{ cid: null, code: 200, body: Buffer.from('hello', 'utf8') }])
 
     it('should throw if Hash is not returned', async function () {
-      const ipfs = new Ipfs(ipfsOrigin)
+      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 1 })
 
       let error: Error | null = null
       try {
