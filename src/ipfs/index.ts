@@ -41,15 +41,37 @@ export default class Ipfs {
     const search = new URLSearchParams(args)
     url.search = search.toString()
 
-    const response = await fetch(url.toString(), {
-      method: 'POST',
-      body,
-    })
+    const maxRetries = 5
+    let delay = 1000
 
-    if (!response.ok) {
-      throw new Error(`Error calling IPFS`)
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          body,
+        })
+
+        if (response.ok) {
+          return response
+        }
+
+        // If this was the last attempt, parse the error and throw
+        if (attempt === maxRetries) {
+          const text = await response.text().catch(() => 'No response body')
+          throw new Error(`Error calling IPFS: ${response.status} ${response.statusText} - ${text}`)
+        }
+      } catch (err) {
+        // If this was a network error and it's the last attempt, rethrow
+        if (attempt === maxRetries) {
+          throw err
+        }
+      }
+
+      // Wait before retrying (exponential backoff)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+      delay *= 2
     }
 
-    return response
+    throw new Error(`IPFS request failed after ${maxRetries} retries`)
   }
 }

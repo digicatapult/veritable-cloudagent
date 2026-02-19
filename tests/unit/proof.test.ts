@@ -4,6 +4,7 @@ import type {
   AcceptProofProposalOptions,
   CreateProofRequestOptions,
   MatchingCredentialsResponse,
+  NegotiateProofProposalOptions,
   ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
@@ -423,6 +424,87 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(422)
       expect(acceptProposalStub.called).equals(false)
+    })
+  })
+
+  describe('Negotiate proof proposal', () => {
+    test('should transform anoncreds restrictions and return proof record', async () => {
+      const negotiateProposalStub = stub(bobAgent.proofs, 'negotiateProposal')
+      negotiateProposalStub.resolves(testProof)
+      const getResult = (): Promise<ProofExchangeRecord> => negotiateProposalStub.firstCall.returnValue
+
+      const body: NegotiateProofProposalOptions = {
+        proofFormats: {
+          anoncreds: {
+            name: 'string',
+            version: '1.0',
+            requested_attributes: {
+              additionalProp1: {
+                name: 'string',
+                restrictions: [
+                  {
+                    attributeMarkers: { a: true, b: false },
+                    attributeValues: { c: 'd', e: 'f' },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/negotiate-proposal`).send(body)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      expect(
+        negotiateProposalStub.calledWithMatch({
+          proofRecordId: testProof.id,
+          proofFormats: {
+            anoncreds: {
+              name: 'string',
+              version: '1.0',
+              requested_attributes: {
+                additionalProp1: {
+                  name: 'string',
+                  restrictions: [
+                    {
+                      'attr::a::marker': '1',
+                      'attr::b::marker': '0',
+                      'attr::c::value': 'd',
+                      'attr::e::value': 'f',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        })
+      ).equals(true)
+    })
+
+    test('should reject presentation exchange proof format with unexpected top-level keys (422)', async () => {
+      const negotiateProposalStub = stub(bobAgent.proofs, 'negotiateProposal')
+      negotiateProposalStub.resolves(testProof)
+
+      // Intentionally bypass DTO typing here: we want to test runtime validation
+      // when a client sends unexpected PEX keys.
+      const body = {
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'test-id',
+              input_descriptors: [],
+              unexpected: 'nope',
+            },
+          },
+        },
+      } as unknown as NegotiateProofProposalOptions
+
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/negotiate-proposal`).send(body)
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(negotiateProposalStub.called).to.equal(false)
     })
   })
 
