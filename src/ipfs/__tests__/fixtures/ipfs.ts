@@ -1,7 +1,9 @@
 import { after, before } from 'mocha'
 import { Dispatcher, getGlobalDispatcher, MockAgent, setGlobalDispatcher } from 'undici'
 
-export const withIpfsCatResponse = (responses: { cid: string; code: number; body: string | object | Buffer }[]) => {
+export const withIpfsCatResponse = (
+  responses: { cid: string; code?: number; body?: string | object | Buffer; error?: Error }[]
+) => {
   const ipfsOrigin = `http://ipfs`
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent
@@ -11,13 +13,17 @@ export const withIpfsCatResponse = (responses: { cid: string; code: number; body
     setGlobalDispatcher(mockAgent)
     const mockIpfs = mockAgent.get(`http://ipfs`)
 
-    for (const { cid, code, body } of responses) {
-      mockIpfs
-        .intercept({
-          path: `/api/v0/cat?arg=${cid}`,
-          method: 'POST',
-        })
-        .reply(code, body)
+    for (const { cid, code, body, error } of responses) {
+      const scope = mockIpfs.intercept({
+        path: `/api/v0/cat?arg=${cid}`,
+        method: 'POST',
+      })
+
+      if (error) {
+        scope.replyWithError(error)
+      } else {
+        scope.reply(code!, body!)
+      }
     }
   })
 

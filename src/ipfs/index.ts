@@ -63,12 +63,23 @@ export default class Ipfs {
           return response
         }
 
-        // If this was the last attempt, parse the error and throw
+        // Client errors (4xx) should not be retried
+        if (response.status >= 400 && response.status < 500) {
+          const text = await response.text().catch(() => 'No response body')
+          throw new Error(`Error calling IPFS: ${response.status} ${response.statusText} - ${text}`)
+        }
+
+        // If this was the last attempt, parse the error and throw (for 5xx errors)
         if (attempt === maxRetries) {
           const text = await response.text().catch(() => 'No response body')
           throw new Error(`Error calling IPFS: ${response.status} ${response.statusText} - ${text}`)
         }
       } catch (err) {
+        // If it's a client error (that we threw above), rethrow immediately
+        if (err instanceof Error && err.message.startsWith('Error calling IPFS: 4')) {
+          throw err
+        }
+
         // If this was a network error and it's the last attempt, rethrow
         if (attempt === maxRetries) {
           throw err
