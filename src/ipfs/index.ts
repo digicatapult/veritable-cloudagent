@@ -73,6 +73,13 @@ export default class Ipfs {
         if (attempt === maxRetries) {
           throw err
         }
+
+        // For intermediate attempts, log the failure and retry
+        console.warn(
+          `IPFS request to ${url.toString()} failed on attempt ${attempt}/${maxRetries}: ${
+            err instanceof Error ? err.message : String(err)
+          }. Retrying in ${delay}ms.`
+        )
       }
 
       // Wait before retrying (exponential backoff)
