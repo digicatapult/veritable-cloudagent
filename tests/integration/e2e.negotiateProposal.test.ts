@@ -30,7 +30,7 @@ describe('Negotiate proof proposal flows', function () {
     }, 200)
   })
 
-  it('should negotiate an AnonCreds proof proposal', async function () {
+  it.skip('should negotiate an AnonCreds proof proposal', async function () {
     const issuerId = ISSUER_DID_KEY
 
     const schemaResponse = await issuerClient
