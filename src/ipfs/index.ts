@@ -1,3 +1,4 @@
+import PinoLogger from '../utils/logger.js'
 import { addResponseParser } from './responseParser.js'
 
 export interface MetadataFile {
@@ -13,6 +14,7 @@ export interface IpfsOptions {
 export default class Ipfs {
   constructor(
     private origin: string,
+    private logger: PinoLogger,
     private options: IpfsOptions = {}
   ) {
     try {
@@ -86,7 +88,7 @@ export default class Ipfs {
         }
 
         // For intermediate attempts, log the failure and retry
-        console.warn(
+        this.logger.warn(
           `IPFS request to ${url.toString()} failed on attempt ${attempt}/${maxRetries}: ${
             err instanceof Error ? err.message : String(err)
           }. Retrying in ${delay}ms.`

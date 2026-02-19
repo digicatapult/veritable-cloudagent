@@ -119,6 +119,7 @@ const getAgentModules = (options: {
   verifiedDrpcOptions: { credDefId?: CredentialDefinitionId; issuerDid?: DID } & VerifiedDrpcModuleConfigOptions<
     [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
   >
+  logger: PinoLogger
 }): RestAgentModules => {
   return {
     connections: new ConnectionsModule({
@@ -145,7 +146,7 @@ const getAgentModules = (options: {
     }),
     w3cCredentials: new W3cCredentialsModule(),
     anoncreds: new AnonCredsModule({
-      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
+      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin, options.logger))],
       anoncreds,
     }),
     askar: new AskarModule({
@@ -197,6 +198,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     verifiedDrpcOptions,
 
     agentConfig,
+    logger,
   } = restConfig
 
   const modules = getAgentModules({
@@ -206,6 +208,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     autoAcceptMediationRequests,
     ipfsOrigin,
     verifiedDrpcOptions,
+    logger,
   })
 
   const agent: RestAgent = new Agent({

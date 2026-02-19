@@ -1,15 +1,18 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
 
+import PinoLogger from '../../utils/logger.js'
 import Ipfs from '../index.js'
 import { withIpfsCatResponse } from './fixtures/ipfs.js'
 
 describe('ipfs retries', function () {
+  const logger = new PinoLogger('silent')
+
   describe('getFile success on first attempt', function () {
     const { ipfsOrigin } = withIpfsCatResponse([{ cid: 'testOk', code: 200, body: Buffer.from('ok', 'utf8') }])
 
     it('should return buffer contents without retry', async function () {
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 1 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 1 })
       const result = await ipfs.getFile('testOk')
       expect(result.toString('utf8')).to.equal('ok')
     })
@@ -22,7 +25,7 @@ describe('ipfs retries', function () {
     ])
 
     it('should retry on network error and succeed', async function () {
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 1 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 1 })
       const result = await ipfs.getFile('testNetErr')
       expect(result.toString('utf8')).to.equal('ok')
     })
@@ -35,7 +38,7 @@ describe('ipfs retries', function () {
     ])
 
     it('should retry upon receiving 500 status code', async function () {
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 1 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 1 })
       const result = await ipfs.getFile('test500')
       expect(result.toString('utf8')).to.equal('ok')
     })
@@ -49,7 +52,7 @@ describe('ipfs retries', function () {
     ])
 
     it('should throw immediately on 400 error without retry', async function () {
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 1 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 1 })
       let error: Error | null = null
       try {
         await ipfs.getFile('test400')
@@ -69,7 +72,7 @@ describe('ipfs retries', function () {
     ])
 
     it('should throw last network error after max retries', async function () {
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 1 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 1 })
       let error: Error | null = null
       try {
         await ipfs.getFile('testMaxRetryNet')
@@ -95,7 +98,7 @@ describe('ipfs retries', function () {
     ])
 
     it('should throw last 5xx error after max retries', async function () {
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 1 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 1 })
       let error: Error | null = null
       try {
         await ipfs.getFile('testMaxRetry500')
@@ -123,7 +126,7 @@ describe('ipfs retries', function () {
     it('should retry twice and then succeed', async function () {
       const start = Date.now()
       // Use a small delay to make test fast but measurable if needed (though tricky in shared env)
-      const ipfs = new Ipfs(ipfsOrigin, { maxRetries: 3, initialDelay: 10 })
+      const ipfs = new Ipfs(ipfsOrigin, logger, { maxRetries: 3, initialDelay: 10 })
       const result = await ipfs.getFile('testBackoff')
       const duration = Date.now() - start
 
