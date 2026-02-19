@@ -160,6 +160,9 @@ services:
       - POSTGRES_USERNAME=postgres
       - POSTGRES_PASSWORD=postgres
       - AUTO_ACCEPT_CREDENTIALS=always
+      # NOTE: For the multi-agent testnet we explicitly disable auto-acceptance of proofs
+      # to exercise manual proof acceptance flows in integration tests and to reflect
+      # expected production behavior, even though src/env.ts uses devDefault 'always'.
       - AUTO_ACCEPT_PROOFS=never
       - DID_WEB_ENABLED=true
       - DID_WEB_USE_DEV_CERT=true
