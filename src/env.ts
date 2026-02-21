@@ -105,6 +105,7 @@ export const envConfig = {
   ADMIN_PORT: envalid.num({ default: 3000, devDefault: 3000 }),
   ADMIN_PING_INTERVAL_MS: envalid.num({ default: 10000 }),
   IPFS_ORIGIN: envalid.str({ default: 'http://ipfs0:5001', devDefault: 'http://localhost:5001' }),
+  IPFS_TIMEOUT_MS: envalid.num({ default: 15000, devDefault: 15000 }),
   PERSONA_TITLE: envalid.str({ default: 'Veritable Cloudagent' }),
   PERSONA_COLOR: envalid.str({ default: 'white' }),
   STORAGE_TYPE: envalid.str({ default: 'postgres', choices: ['sqlite', 'postgres'] }),

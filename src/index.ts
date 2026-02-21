@@ -61,6 +61,7 @@ const agent = await setupAgent({
   autoAcceptProofs: env.get('AUTO_ACCEPT_PROOFS') as AutoAcceptProof,
   autoAcceptMediationRequests: env.get('AUTO_ACCEPT_MEDIATION_REQUESTS'),
   ipfsOrigin: env.get('IPFS_ORIGIN'),
+  ipfsTimeoutMs: env.get('IPFS_TIMEOUT_MS'),
 
   verifiedDrpcOptions: {
     proofTimeoutMs: env.get('VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS'),

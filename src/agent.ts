@@ -68,6 +68,7 @@ export type AriesRestConfig = {
   autoAcceptMediationRequests?: boolean
   autoAcceptProofs?: AutoAcceptProof
   ipfsOrigin: string
+  ipfsTimeoutMs: number
 
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<
     [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
@@ -116,6 +117,7 @@ const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
+  ipfsTimeoutMs: number
   verifiedDrpcOptions: { credDefId?: CredentialDefinitionId; issuerDid?: DID } & VerifiedDrpcModuleConfigOptions<
     [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
   >
@@ -145,7 +147,7 @@ const getAgentModules = (options: {
     }),
     w3cCredentials: new W3cCredentialsModule(),
     anoncreds: new AnonCredsModule({
-      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
+      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin, options.ipfsTimeoutMs))],
       anoncreds,
     }),
     askar: new AskarModule({
@@ -194,6 +196,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     autoAcceptMediationRequests = true,
     autoAcceptProofs = AutoAcceptProof.ContentApproved,
     ipfsOrigin,
+    ipfsTimeoutMs,
     verifiedDrpcOptions,
 
     agentConfig,
@@ -205,6 +208,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptMediationRequests,
     ipfsOrigin,
+    ipfsTimeoutMs,
     verifiedDrpcOptions,
   })
 
