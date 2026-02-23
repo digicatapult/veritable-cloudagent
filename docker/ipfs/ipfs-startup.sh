@@ -44,15 +44,12 @@ ipfs config --json Swarm.Transports.Network.Websocket false
 # Remove all public bootstrap nodes
 ipfs bootstrap rm --all
 
-# Allow DHT on LAN addresses (important for Docker networks)
-ipfs config --json Routing.LoopbackAddressesOnLanDHT true
-
 # Allow announcing private IP addresses (otherwise server profile prevents it)
 ipfs config --json Addresses.NoAnnounce '[]'
 
 # Allow connection to private IP addresses (Docker network) by clearing filters set by server profile
 ipfs config --json Swarm.AddrFilters null
-ipfs config --json Discovery.MDNS.Enabled true
+ipfs config --json Discovery.MDNS.Enabled false
 
 # Ensure IPFS data directory is initialized so we can read Identity.PeerID.
 if [ ! -f /data/ipfs/config ]; then
