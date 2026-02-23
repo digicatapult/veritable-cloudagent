@@ -61,13 +61,16 @@ PEER_ID=$(ipfs config Identity.PeerID)
 echo "$PEER_ID" > "/ipfs-peerdata/$IPFS_NODE_NAME.peerid"
 
 echo "Waiting for peer metadata from all IPFS nodes..."
-for _ in $(seq 1 60); do
+for _ in $(seq 1 30); do
   all_ready=true
   missing_nodes=""
+  missing_files=""
   for node in $NODES; do
-    if [ ! -f "/ipfs-peerdata/$node.peerid" ]; then
+    peer_file="/ipfs-peerdata/$node.peerid"
+    if [ ! -f "$peer_file" ]; then
       all_ready=false
       missing_nodes="$missing_nodes $node"
+      missing_files="$missing_files $peer_file"
     fi
   done
 
@@ -79,7 +82,7 @@ for _ in $(seq 1 60); do
 done
 
 if [ "$all_ready" != true ]; then
-  echo "Timeout waiting for peer metadata from all nodes. Missing:$missing_nodes" >&2
+  echo "Timeout waiting for peer metadata after 60s (30 attempts x 2s). Current node: $IPFS_NODE_NAME. Missing nodes:$missing_nodes. Missing files:$missing_files" >&2
   exit 1
 fi
 
