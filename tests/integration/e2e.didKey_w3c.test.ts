@@ -282,6 +282,12 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it('should complete W3C verification (Verifier verified)', async function () {
+    // Wait for the presentation to be received
+    await waitForProofState(verifierClient, verifierProofRecordId, 'presentation-received', { maxAttempts: 30 })
+
+    // Manually accept the presentation (required since AUTO_ACCEPT_PROOFS=never)
+    await verifierClient.post(`/v1/proofs/${verifierProofRecordId}/accept-presentation`).send({}).expect(200)
+
     const state = await waitForProofState(verifierClient, verifierProofRecordId, 'done', { maxAttempts: 30 })
     expect(state).to.equal('done')
   })

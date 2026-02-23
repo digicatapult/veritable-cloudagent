@@ -10,6 +10,8 @@ import {
   OOB_INVITATION_PAYLOAD,
 } from './utils/fixtures.js'
 import {
+  acceptCredential,
+  acceptPresentation,
   waitForConnectionByOob,
   waitForCredentialRecord,
   waitForCredentialState,
@@ -151,7 +153,7 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
           ],
         },
       },
-      autoAcceptCredential: 'always',
+      autoAcceptCredential: 'never',
       connectionId: issuerToHolderConnectionRecordId,
     }
 
@@ -173,7 +175,7 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   })
 
   it('should allow the Holder to accept the credential offered', async function () {
-    const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
+    const acceptCredentialOfferPayload = { autoAcceptCredential: 'never' }
 
     const response = await holderClient
       .post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`)
@@ -182,6 +184,18 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
       .expect(200)
 
     expect(response.body).to.have.property('state', 'request-sent')
+  })
+
+  it('should allow the Issuer to accept the credential request', async function () {
+    const record = await waitForCredentialRecord(issuerClient, issuerToHolderConnectionRecordId, 'request-received')
+    await issuerClient.post(`/v1/credentials/${record.id}/accept-request`).send({}).expect(200)
+  })
+
+  it('should allow the Holder to accept the issued credential', async function () {
+    const record = await waitForCredentialRecord(holderClient, holderToIssuerConnectionRecordId, 'credential-received')
+    holderCredentialRecordId = record.id
+
+    await acceptCredential(holderClient, holderCredentialRecordId)
   })
 
   it('should let the Issuer see the credential as issued', async function () {
@@ -257,7 +271,7 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
         },
       },
       willConfirm: true,
-      autoAcceptProof: 'always',
+      autoAcceptProof: 'never',
       connectionId: verifierToHolderConnectionRecordId,
     }
     const response = await verifierClient
@@ -331,6 +345,11 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
       .expect(200)
 
     expect(response.body.state).to.be.equal('presentation-sent')
+  })
+
+  it('should allow the Verifier to accept the presentation', async function () {
+    await waitForProofState(verifierClient, verifierProofRequestId, 'presentation-received')
+    await acceptPresentation(verifierClient, verifierProofRequestId)
   })
 
   it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
