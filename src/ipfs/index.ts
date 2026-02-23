@@ -41,7 +41,7 @@ export default class Ipfs {
       clearTimeout(timeout)
     }
 
-    const buffer = await response.arrayBuffer()
+    const buffer = await this.withTimeout(response.arrayBuffer(), `Timeout reading file ${cid} from IPFS`)
     return Buffer.from(buffer)
   }
   //needs to pass on form data
@@ -61,17 +61,36 @@ export default class Ipfs {
       if (err instanceof Error && err.name === 'AbortError') {
         throw new Error(`Timeout uploading file to IPFS`)
       }
-      throw new Error(`Error calling IPFS`)
+      throw err
     } finally {
       clearTimeout(timeout)
     }
 
     try {
-      const responseJson = await response.json()
+      const responseJson = await this.withTimeout(response.json(), 'Timeout reading upload response from IPFS')
       const parsedResponse = addResponseParser.parse(responseJson)
       return parsedResponse.Hash
-    } catch {
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('Timeout')) {
+        throw err
+      }
       throw new Error(`Error calling IPFS`)
+    }
+  }
+
+  private async withTimeout<T>(operation: Promise<T>, timeoutMessage: string): Promise<T> {
+    let timeout: NodeJS.Timeout | undefined
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => reject(new Error(timeoutMessage)), this.timeoutMs)
+    })
+
+    try {
+      return await Promise.race([operation, timeoutPromise])
+    } finally {
+      if (timeout) {
+        clearTimeout(timeout)
+      }
     }
   }
 

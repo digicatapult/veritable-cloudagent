@@ -194,7 +194,7 @@ services:
     networks:
       - testnet
     healthcheck:
-      test: ["CMD-SHELL", "timeout 5s sh -c 'ipfs swarm peers | grep -q .' || exit 1"]
+      test: ["CMD-SHELL", "timeout 5s sh -c 'test $(ipfs swarm peers | wc -l) -ge 2' || exit 1"]
       interval: 5s
       timeout: 10s
       retries: 20
@@ -217,7 +217,7 @@ services:
     networks:
       - testnet
     healthcheck:
-      test: ["CMD-SHELL", "timeout 5s sh -c 'ipfs swarm peers | grep -q .' || exit 1"]
+      test: ["CMD-SHELL", "timeout 5s sh -c 'test $(ipfs swarm peers | wc -l) -ge 2' || exit 1"]
       interval: 5s
       timeout: 10s
       retries: 20
@@ -240,7 +240,7 @@ services:
     networks:
       - testnet
     healthcheck:
-      test: ["CMD-SHELL", "timeout 5s sh -c 'ipfs swarm peers | grep -q .' || exit 1"]
+      test: ["CMD-SHELL", "timeout 5s sh -c 'test $(ipfs swarm peers | wc -l) -ge 2' || exit 1"]
       interval: 5s
       timeout: 10s
       retries: 20
