@@ -13,6 +13,12 @@ if [ ! -f /usr/local/share/ipfs/swarm.key ]; then
   exit 1
 fi
 
+# Remove stale lock file if it exists (fixes restart issues after ungraceful shutdown)
+if [ -f /data/ipfs/repo.lock ]; then
+	echo "Removing stale repo.lock file..."
+	rm /data/ipfs/repo.lock
+fi
+
 cp /usr/local/share/ipfs/swarm.key /data/ipfs/swarm.key
 
 # Force DHT routing for private network
