@@ -1,4 +1,8 @@
-import { type BasicMessageRecord, type BasicMessageStorageProps, Agent, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, RecordNotFoundError } from '@credo-ts/core'
+import {
+  type DidCommBasicMessageRecord as BasicMessageRecord,
+  type DidCommBasicMessageStorageProps as BasicMessageStorageProps,
+} from '@credo-ts/didcomm'
 import { Body, Controller, Example, Get, Path, Post, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
@@ -28,7 +32,7 @@ export class BasicMessageController extends Controller {
   @Example<BasicMessageStorageProps[]>([BasicMessageRecordExample])
   @Get('/:connectionId')
   public async getBasicMessages(@Path('connectionId') connectionId: UUID): Promise<BasicMessageRecord[]> {
-    return await this.agent.basicMessages.findAllByQuery({ connectionId })
+    return await this.agent.didcomm.basicMessages.findAllByQuery({ connectionId })
   }
 
   /**
@@ -48,7 +52,7 @@ export class BasicMessageController extends Controller {
     try {
       this.setStatus(204)
       req.log.info('sending basic message %j to connection %s', body, connectionId)
-      await this.agent.basicMessages.sendMessage(connectionId, body.content)
+      await this.agent.didcomm.basicMessages.sendMessage(connectionId, body.content)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError('connection not found')

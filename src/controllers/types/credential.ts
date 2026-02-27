@@ -2,11 +2,11 @@
  * Credential Issuance (Proposal, Offer, Request) types.
  */
 import type {
-  AutoAcceptCredential,
-  CredentialFormatPayload,
-  CredentialPreviewAttributeOptions,
+  DidCommAutoAcceptCredential as AutoAcceptCredential,
+  DidCommCredentialFormatPayload as CredentialFormatPayload,
+  DidCommCredentialPreviewAttributeOptions as CredentialPreviewAttributeOptions,
   CredentialProtocolVersionType,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 import type { UUID } from './common.js'
 import type { CredentialFormats, CredentialProtocols } from './protocols.js'
 

@@ -7,15 +7,18 @@ import type {
 import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
 
 import {
-  type ConnectionRecord,
   AgentContext,
-  ConnectionsApi,
-  MessageHandlerRegistry,
-  MessageSender,
-  OutboundMessageContext,
   injectable,
 } from '@credo-ts/core'
-import { type CreateProofRequestOptions, type DidCommProofProtocol } from '@credo-ts/didcomm'
+import {
+  type CreateProofRequestOptions,
+  type DidCommConnectionRecord as ConnectionRecord,
+  DidCommConnectionsApi as ConnectionsApi,
+  DidCommMessageHandlerRegistry as MessageHandlerRegistry,
+  DidCommMessageSender as MessageSender,
+  DidCommOutboundMessageContext as OutboundMessageContext,
+  type DidCommProofProtocol,
+} from '@credo-ts/didcomm'
 
 import type { UUID } from '../../controllers/types/index.js'
 import { NotFoundError } from '../../error.js'

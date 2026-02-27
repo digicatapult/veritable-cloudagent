@@ -1,7 +1,7 @@
 /**
  * DID Resolution, Creation, and Management types.
  */
-import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata, KeyType } from '@credo-ts/core'
+import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata } from '@credo-ts/core'
 import type { DID } from './common.js'
 
 export interface DidResolutionResultProps {
@@ -11,7 +11,7 @@ export interface DidResolutionResultProps {
 }
 
 interface PrivateKey {
-  keyType: KeyType
+  keyType: string
   privateKey: string
 }
 

@@ -1,16 +1,16 @@
 import {
-  type Agent,
-  type ConnectionDidRotatedEvent,
-  type ConnectionStateChangedEvent,
-  ConnectionEventTypes,
-} from '@credo-ts/core'
+  DidCommConnectionEventTypes,
+  type DidCommConnectionDidRotatedEvent,
+  type DidCommConnectionStateChangedEvent,
+} from '@credo-ts/didcomm'
+import type { Agent } from '@credo-ts/core'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
-  const eventHandler = async (event: ConnectionStateChangedEvent | ConnectionDidRotatedEvent) => {
+  const eventHandler = async (event: DidCommConnectionStateChangedEvent | DidCommConnectionDidRotatedEvent) => {
     const body = event.payload
 
     // Only send webhook if webhook url is configured
@@ -30,6 +30,6 @@ export const connectionEvents = async (agent: Agent, config: ServerConfig) => {
       })
     }
   }
-  agent.events.on(ConnectionEventTypes.ConnectionStateChanged, eventHandler)
-  agent.events.on(ConnectionEventTypes.ConnectionDidRotated, eventHandler)
+  agent.events.on(DidCommConnectionEventTypes.DidCommConnectionStateChanged, eventHandler)
+  agent.events.on(DidCommConnectionEventTypes.DidCommConnectionDidRotated, eventHandler)
 }

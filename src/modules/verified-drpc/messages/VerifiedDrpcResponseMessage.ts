@@ -1,4 +1,4 @@
-import { AgentMessage, IsValidMessageType, parseMessageType } from '@credo-ts/core'
+import { DidCommMessage, IsValidMessageType, parseMessageType } from '@credo-ts/didcomm'
 import { Expose } from 'class-transformer'
 
 import type { UUID } from '../../../controllers/types/index.js'
@@ -24,7 +24,7 @@ export interface VerifiedDrpcResponseObject {
   id: UUID | number | null
 }
 
-export class VerifiedDrpcResponseMessage extends AgentMessage {
+export class VerifiedDrpcResponseMessage extends DidCommMessage {
   public constructor(options: { response: VerifiedDrpcResponse; threadId: UUID }) {
     super()
     if (options) {

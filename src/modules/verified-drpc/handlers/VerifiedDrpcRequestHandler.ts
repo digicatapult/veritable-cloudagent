@@ -1,5 +1,8 @@
-import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core'
-import type { DidCommProofProtocol } from '@credo-ts/didcomm'
+import type {
+  DidCommMessageHandler as MessageHandler,
+  DidCommMessageHandlerInboundMessage as MessageHandlerInboundMessage,
+  DidCommProofProtocol,
+} from '@credo-ts/didcomm'
 import type { VerifiedDrpcService } from '../services/VerifiedDrpcService.js'
 
 import { VerifiedDrpcRequestMessage } from '../messages/index.js'
@@ -14,5 +17,6 @@ export class VerifiedDrpcRequestHandler<PPs extends DidCommProofProtocol[]> impl
 
   public async handle(messageContext: MessageHandlerInboundMessage<VerifiedDrpcRequestHandler<PPs>>) {
     await this.verifiedDrpcMessageService.receiveRequest(messageContext)
+    return undefined
   }
 }

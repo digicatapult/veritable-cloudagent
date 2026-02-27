@@ -1,12 +1,15 @@
-import { type Agent, type CredentialStateChangedEvent, CredentialEventTypes } from '@credo-ts/core'
+import type { Agent } from '@credo-ts/core'
+import { DidCommCredentialEventTypes, type DidCommCredentialStateChangedEvent } from '@credo-ts/didcomm'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
-  agent.events.on(CredentialEventTypes.CredentialStateChanged, async (event: CredentialStateChangedEvent) => {
-    const record = event.payload.credentialRecord
+  agent.events.on(
+    DidCommCredentialEventTypes.DidCommCredentialStateChanged,
+    async (event: DidCommCredentialStateChangedEvent) => {
+      const record = event.payload.credentialExchangeRecord
     const body = record.toJSON()
 
     // Only send webhook if webhook url is configured
@@ -22,9 +25,10 @@ export const credentialEvents = async (agent: Agent, config: ServerConfig) => {
         ...event,
         payload: {
           ...event.payload,
-          credentialRecord: body,
+          credentialExchangeRecord: body,
         },
       })
     }
-  })
+    }
+  )
 }

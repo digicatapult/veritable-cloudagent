@@ -1,11 +1,14 @@
-import { type Agent, type BasicMessageStateChangedEvent, BasicMessageEventTypes } from '@credo-ts/core'
+import type { Agent } from '@credo-ts/core'
+import { DidCommBasicMessageEventTypes, type DidCommBasicMessageStateChangedEvent } from '@credo-ts/didcomm'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const basicMessageEvents = async (agent: Agent, config: ServerConfig) => {
-  agent.events.on(BasicMessageEventTypes.BasicMessageStateChanged, async (event: BasicMessageStateChangedEvent) => {
+  agent.events.on(
+    DidCommBasicMessageEventTypes.DidCommBasicMessageStateChanged,
+    async (event: DidCommBasicMessageStateChangedEvent) => {
     const record = event.payload.basicMessageRecord
     const body = record.toJSON()
 
@@ -26,5 +29,6 @@ export const basicMessageEvents = async (agent: Agent, config: ServerConfig) => 
         },
       })
     }
-  })
+    }
+  )
 }

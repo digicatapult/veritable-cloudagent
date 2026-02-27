@@ -1,7 +1,11 @@
 /**
  * Connection and Out-of-Band Invitation types.
  */
-import type { HandshakeProtocol, OutOfBandDidCommService, ReceiveOutOfBandInvitationConfig } from '@credo-ts/core'
+import type {
+  DidCommHandshakeProtocol as HandshakeProtocol,
+  OutOfBandDidCommService,
+  ReceiveOutOfBandInvitationConfig,
+} from '@credo-ts/didcomm'
 import type { DID, UUID } from './common.js'
 
 type ReceiveOutOfBandInvitationProps = Omit<ReceiveOutOfBandInvitationConfig, 'routing'>

@@ -8,12 +8,12 @@ import type {
   AnonCredsProofFormatService,
 } from '@credo-ts/anoncreds'
 import type {
-  DifPresentationExchangeProofFormatService,
-  JsonLdCredentialFormat,
-  JsonLdCredentialFormatService,
-  V2CredentialProtocol,
-  V2ProofProtocol,
-} from '@credo-ts/core'
+  DidCommDifPresentationExchangeProofFormatService as DifPresentationExchangeProofFormatService,
+  DidCommJsonLdCredentialFormat as JsonLdCredentialFormat,
+  DidCommJsonLdCredentialFormatService as JsonLdCredentialFormatService,
+  DidCommCredentialV2Protocol as V2CredentialProtocol,
+  DidCommProofV2Protocol as V2ProofProtocol,
+} from '@credo-ts/didcomm'
 import type { DifPresentationExchangeProofFormat } from './pex.js'
 
 export type CredentialProtocols = [

@@ -1,4 +1,5 @@
-import { Agent, RecordNotFoundError, type ProofExchangeRecordProps, type ProofFormatPayload } from '@credo-ts/core'
+import { Agent, RecordNotFoundError } from '@credo-ts/core'
+import { type DidCommProofExchangeRecordProps as ProofExchangeRecordProps, type DidCommProofFormatPayload as ProofFormatPayload } from '@credo-ts/didcomm'
 import {
   Body,
   Controller,
@@ -43,12 +44,12 @@ import type {
   UUID,
 } from '../../types/index.js'
 
-type InternalProposeProofOptions = Parameters<RestAgent['proofs']['proposeProof']>[0]
-type InternalAcceptProofProposalOptions = Parameters<RestAgent['proofs']['acceptProposal']>[0]
-type InternalNegotiateProofProposalOptions = Parameters<RestAgent['proofs']['negotiateProposal']>[0]
-type InternalCreateProofRequestOptions = Parameters<RestAgent['proofs']['createRequest']>[0]
-type InternalRequestProofOptions = Parameters<RestAgent['proofs']['requestProof']>[0]
-type InternalAcceptProofRequestOptions = Parameters<RestAgent['proofs']['acceptRequest']>[0]
+type InternalProposeProofOptions = Parameters<RestAgent['didcomm']['proofs']['proposeProof']>[0]
+type InternalAcceptProofProposalOptions = Parameters<RestAgent['didcomm']['proofs']['acceptProposal']>[0]
+type InternalNegotiateProofProposalOptions = Parameters<RestAgent['didcomm']['proofs']['negotiateProposal']>[0]
+type InternalCreateProofRequestOptions = Parameters<RestAgent['didcomm']['proofs']['createRequest']>[0]
+type InternalRequestProofOptions = Parameters<RestAgent['didcomm']['proofs']['requestProof']>[0]
+type InternalAcceptProofRequestOptions = Parameters<RestAgent['didcomm']['proofs']['acceptRequest']>[0]
 
 @Tags('Proofs')
 @Route('/v1/proofs')
@@ -70,7 +71,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
   public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: UUID) {
-    let proofs = await this.agent.proofs.getAll()
+    let proofs = await this.agent.didcomm.proofs.getAll()
     req.log.debug('retrieving all proofs %j', proofs)
 
     if (threadId) {
@@ -99,13 +100,13 @@ export class ProofController extends Controller {
   ) {
     req.log.debug('getting proof record %s', proofRecordId)
     try {
-      const proof = await this.agent.proofs.getById(proofRecordId)
+      const proof = await this.agent.didcomm.proofs.getById(proofRecordId)
       req.log.info('proof found %j', proof)
 
       const result = proof.toJSON() as Record<string, unknown>
 
       if (includeContent) {
-        const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+        const formatData = await this.agent.didcomm.proofs.getFormatData(proofRecordId)
         result.content = formatData
       }
 
@@ -135,7 +136,7 @@ export class ProofController extends Controller {
   ): Promise<Record<string, unknown>> {
     req.log.debug('getting proof content for %s', proofRecordId)
     try {
-      const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+      const formatData = await this.agent.didcomm.proofs.getFormatData(proofRecordId)
       req.log.info('proof content found for %s', proofRecordId)
 
       if (view === 'simplified') {
@@ -166,8 +167,8 @@ export class ProofController extends Controller {
   ): Promise<MatchingCredentialsResponse> {
     req.log.debug('getting matching credentials for proof record %s', proofRecordId)
     try {
-      const credentials = await this.agent.proofs.getCredentialsForRequest({
-        proofRecordId,
+      const credentials = await this.agent.didcomm.proofs.getCredentialsForRequest({
+        proofExchangeRecordId: proofRecordId,
       })
 
       req.log.info('matching credentials found for %s', proofRecordId)
@@ -192,7 +193,7 @@ export class ProofController extends Controller {
     try {
       this.setStatus(204)
       req.log.info('deleting proof %s', proofRecordId)
-      await this.agent.proofs.deleteById(proofRecordId)
+      await this.agent.didcomm.proofs.deleteById(proofRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError(`proof record not found`)
@@ -219,7 +220,7 @@ export class ProofController extends Controller {
         if (errors) throw new ValidateError(errors, 'Validation Failed')
       }
 
-      const proof = await this.agent.proofs.proposeProof({
+      const proof = await this.agent.didcomm.proofs.proposeProof({
         ...proposal,
         proofFormats: transformProposeProofFormats(proposal.proofFormats),
       } satisfies InternalProposeProofOptions)
@@ -255,10 +256,10 @@ export class ProofController extends Controller {
     try {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
 
-      const proof = await this.agent.proofs.acceptProposal({
+      const proof = await this.agent.didcomm.proofs.acceptProposal({
         ...proposal,
         // Path parameter takes precedence over body property to ensure URL authority
-        proofRecordId,
+        proofExchangeRecordId: proofRecordId,
       } satisfies InternalAcceptProofProposalOptions)
 
       return proof.toJSON()
@@ -296,10 +297,10 @@ export class ProofController extends Controller {
         if (errors) throw new ValidateError(errors, 'Validation Failed')
       }
 
-      const proof = await this.agent.proofs.negotiateProposal({
+      const proof = await this.agent.didcomm.proofs.negotiateProposal({
         ...options,
         // Path parameter takes precedence over body property to ensure URL authority
-        proofRecordId,
+        proofExchangeRecordId: proofRecordId,
         proofFormats: transformProofFormats(options.proofFormats),
       } satisfies InternalNegotiateProofProposalOptions)
 
@@ -331,16 +332,16 @@ export class ProofController extends Controller {
       if (errors) throw new ValidateError(errors, 'Validation Failed')
     }
 
-    const { message, proofRecord } = await this.agent.proofs.createRequest({
+    const { message, proofExchangeRecord } = await this.agent.didcomm.proofs.createRequest({
       proofFormats: transformProofFormats(proofFormats),
       ...rest,
     } satisfies InternalCreateProofRequestOptions)
 
-    req.log.info('returning proof record %j', { proofRecord, message })
+    req.log.info('returning proof record %j', { proofExchangeRecord, message })
 
     return {
       message,
-      proofRecord: proofRecord,
+      proofRecord: proofExchangeRecord,
     }
   }
 
@@ -363,7 +364,7 @@ export class ProofController extends Controller {
         if (errors) throw new ValidateError(errors, 'Validation Failed')
       }
 
-      const proof = await this.agent.proofs.requestProof({
+      const proof = await this.agent.didcomm.proofs.requestProof({
         connectionId,
         proofFormats: transformProofFormats(proofFormats),
         ...rest,
@@ -408,8 +409,8 @@ export class ProofController extends Controller {
 
       if (!body.proofFormats) {
         req.log.info('retrieving credentials for %s proof', proofRecordId)
-        const retrievedCredentials = await this.agent.proofs.selectCredentialsForRequest({
-          proofRecordId,
+        const retrievedCredentials = await this.agent.didcomm.proofs.selectCredentialsForRequest({
+          proofExchangeRecordId: proofRecordId,
         })
         formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         req.log.info(
@@ -465,11 +466,11 @@ export class ProofController extends Controller {
       const options = {
         ...body,
         // Path parameter takes precedence over body property to ensure URL authority
-        proofRecordId,
+        proofExchangeRecordId: proofRecordId,
         proofFormats: formatsToAccept as unknown as InternalAcceptProofRequestOptions['proofFormats'],
       } satisfies InternalAcceptProofRequestOptions
 
-      const proof = await this.agent.proofs.acceptRequest(options)
+      const proof = await this.agent.didcomm.proofs.acceptRequest(options)
 
       req.log.debug('success, returning proof %j', proof.toJSON())
 
@@ -496,7 +497,7 @@ export class ProofController extends Controller {
   public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
       req.log.info('accepting proof presentation %s', proofRecordId)
-      const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
+      const proof = await this.agent.didcomm.proofs.acceptPresentation({ proofExchangeRecordId: proofRecordId })
 
       return proof.toJSON()
     } catch (error) {
@@ -522,7 +523,9 @@ export class ProofController extends Controller {
   ): Promise<ProofFormatPayload<ProofFormats, 'acceptRequest'>> {
     req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
 
-    const availableCredentials = await this.agent.proofs.getCredentialsForRequest({ proofRecordId })
+    const availableCredentials = await this.agent.didcomm.proofs.getCredentialsForRequest({
+      proofExchangeRecordId: proofRecordId,
+    })
     const availableAnonCreds = availableCredentials.proofFormats.anoncreds
 
     const attrCount = Object.keys(availableAnonCreds?.attributes || {}).length

@@ -3,11 +3,11 @@
  */
 import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
 import type {
-  AutoAcceptProof,
-  ProofExchangeRecord,
-  ProofFormatPayload,
+  DidCommAutoAcceptProof as AutoAcceptProof,
+  DidCommProofExchangeRecord as ProofExchangeRecord,
+  DidCommProofFormatPayload as ProofFormatPayload,
   ProofsProtocolVersionType,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 import type { AnonCredsRequestProofFormatOptions } from './anoncreds.js'
 import type { UUID } from './common.js'
 import type { PresentationExchangeAcceptProposal, PresentationExchangeCreateRequest } from './pex.js'

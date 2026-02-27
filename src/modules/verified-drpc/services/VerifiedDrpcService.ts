@@ -1,8 +1,9 @@
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
-import { type AgentContext, EventEmitter, type InboundMessageContext, injectable, type Query } from '@credo-ts/core'
+import { type AgentContext, EventEmitter, injectable, type Query } from '@credo-ts/core'
 import {
   type CreateProofRequestOptions,
+  type DidCommInboundMessageContext as InboundMessageContext,
   DidCommProofEventTypes,
   type DidCommProofProtocol,
   DidCommProofsApi,
@@ -77,7 +78,7 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
     await new Promise<void>((resolve, reject) => {
       const proofFailed = () => {
-        this.eventEmitter.off(DidCommProofEventTypes.DidCommProofStateChanged, onProofStateChanged)
+        this.eventEmitter.off(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
         reject('Proof verification timed out')
       }
       const proofTimeout = setTimeout(proofFailed, timeoutMs)
@@ -85,14 +86,14 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
         if (proofRecord.id === proofRecordId) {
           if (proofRecord.state === DidCommProofState.Done) {
             clearTimeout(proofTimeout)
-            this.eventEmitter.off(DidCommProofEventTypes.DidCommProofStateChanged, onProofStateChanged)
+            this.eventEmitter.off(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
             resolve()
           } else if (proofRecord.state === DidCommProofState.Abandoned) {
             proofFailed()
           }
         }
       }
-      this.eventEmitter.on(DidCommProofEventTypes.DidCommProofStateChanged, onProofStateChanged)
+      this.eventEmitter.on(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
     })
   }
 
