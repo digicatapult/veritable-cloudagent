@@ -8,8 +8,6 @@ import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
 
 import {
   type ConnectionRecord,
-  type CreateProofRequestOptions,
-  type ProofProtocol,
   AgentContext,
   ConnectionsApi,
   MessageHandlerRegistry,
@@ -17,6 +15,7 @@ import {
   OutboundMessageContext,
   injectable,
 } from '@credo-ts/core'
+import { type CreateProofRequestOptions, type DidCommProofProtocol } from '@credo-ts/didcomm'
 
 import type { UUID } from '../../controllers/types/index.js'
 import { NotFoundError } from '../../error.js'
@@ -26,7 +25,7 @@ import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
 
 @injectable()
-export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
+export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
   private config: VerifiedDrpcModuleConfig<PPs>
   private verifiedDrpcMessageService: VerifiedDrpcService<PPs>
   private messageSender: MessageSender
@@ -61,7 +60,7 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
   public async sendRequest(
     connectionId: UUID,
     request: VerifiedDrpcRequest,
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
+    proofOptions: CreateProofRequestOptions<PPs> = this.config.proofRequestOptions,
     proofTimeoutMs: number = this.config.proofTimeoutMs
   ): Promise<(timeout?: number) => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionsApi.getById(connectionId)

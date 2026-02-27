@@ -1,9 +1,10 @@
-import type { MessageHandler, MessageHandlerInboundMessage, ProofProtocol } from '@credo-ts/core'
+import type { MessageHandler, MessageHandlerInboundMessage } from '@credo-ts/core'
+import type { DidCommProofProtocol } from '@credo-ts/didcomm'
 import type { VerifiedDrpcService } from '../services/VerifiedDrpcService.js'
 
 import { VerifiedDrpcResponseMessage } from '../messages/index.js'
 
-export class VerifiedDrpcResponseHandler<PPs extends ProofProtocol[]> implements MessageHandler {
+export class VerifiedDrpcResponseHandler<PPs extends DidCommProofProtocol[]> implements MessageHandler {
   private verifiedDrpcMessageService: VerifiedDrpcService<PPs>
   public supportedMessages = [VerifiedDrpcResponseMessage]
 
