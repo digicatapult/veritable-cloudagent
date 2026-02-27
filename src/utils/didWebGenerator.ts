@@ -1,4 +1,4 @@
-import { Agent, DidDocument, JsonTransformer, KeyType } from '@credo-ts/core'
+import { Agent, DidDocument, JsonTransformer, Kms, TypedArrayEncoder } from '@credo-ts/core'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
@@ -16,9 +16,26 @@ export class DidWebDocGenerator {
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
-    // Generate keys directly in the wallet
-    const signingKey = await this.agent.wallet.createKey({ keyType: KeyType.Ed25519 })
-    const encryptionKey = await this.agent.wallet.createKey({ keyType: KeyType.X25519 })
+    const kms = this.agent.context.resolve(Kms.KeyManagementApi)
+
+    // Generate keys in KMS
+    const signingKey = await kms.createKey({ type: { kty: 'OKP', crv: 'Ed25519' } })
+    const encryptionKey = await kms.createKey({ type: { kty: 'OKP', crv: 'X25519' } })
+
+    if (!signingKey.publicJwk.x || !encryptionKey.publicJwk.x) {
+      throw new Error('Invalid key material returned from KMS')
+    }
+
+    const signingPublicKeyBytes = TypedArrayEncoder.fromBase64(signingKey.publicJwk.x)
+    const encryptionPublicKeyBytes = TypedArrayEncoder.fromBase64(encryptionKey.publicJwk.x)
+
+    const signingPublicKeyMultibase = Kms.PublicJwk.fromPublicKey({
+      kty: 'OKP',
+      crv: 'Ed25519',
+      publicKey: signingPublicKeyBytes,
+    }).fingerprint
+
+    const encryptionPublicKeyBase58 = TypedArrayEncoder.toBase58(encryptionPublicKeyBytes)
 
     // Assemble the DID:web document
     // This is a plain object that will be transformed and hydrated within credo-ts
@@ -34,13 +51,13 @@ export class DidWebDocGenerator {
           id: `${didId}#owner`,
           type: 'Ed25519VerificationKey2020',
           controller: didId,
-          publicKeyMultibase: signingKey.fingerprint,
+          publicKeyMultibase: signingPublicKeyMultibase,
         },
         {
           id: `${didId}#encryption`,
           type: 'X25519KeyAgreementKey2019',
           controller: didId,
-          publicKeyBase58: encryptionKey.publicKeyBase58,
+          publicKeyBase58: encryptionPublicKeyBase58,
         },
       ],
       authentication: [`${didId}#owner`],

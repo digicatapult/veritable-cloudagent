@@ -1,5 +1,4 @@
-import { JsonTransformer } from '@credo-ts/core'
-import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
+import { JsonEncoder, JsonTransformer } from '@credo-ts/core'
 
 export function maybeMapValues<V, U>(
   transform: (input: V) => U,

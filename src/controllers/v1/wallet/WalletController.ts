@@ -1,9 +1,9 @@
-import { Agent, Key, KeyType, TypedArrayEncoder } from '@credo-ts/core'
+import { Agent, JsonEncoder, Kms, TypedArrayEncoder } from '@credo-ts/core'
 import { Body, Controller, Post, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
 
-import { RestAgent } from '../../../agent.js'
+import type { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse } from '../../../error.js'
 
 @Tags('Wallet')
@@ -39,16 +39,46 @@ export class WalletController extends Controller {
     const { jwe, recipientPublicKey } = request
     req.log.info('decrypting jwe for recipient public key %s', recipientPublicKey)
 
-    if (!this.agent.context.wallet.directDecryptCompactJweEcdhEs) {
-      throw new HttpResponse({ message: 'Wallet not configured for ECDH-ES' })
+    const jweParts = jwe.split('.')
+    if (jweParts.length !== 5) {
+      throw new HttpResponse({ message: 'Invalid compact JWE format', code: 400 })
     }
-    const recipientKey = new Key(TypedArrayEncoder.fromBase64(recipientPublicKey), KeyType.X25519)
 
-    const decrypt = await this.agent.context.wallet.directDecryptCompactJweEcdhEs({
-      compactJwe: jwe,
-      recipientKey,
+    const [encodedHeader, , encodedIv, encodedCiphertext, encodedTag] = jweParts
+    const header = JsonEncoder.fromBase64(encodedHeader)
+
+    if (!header?.epk) {
+      throw new HttpResponse({ message: 'Invalid compact JWE header', code: 400 })
+    }
+
+    const recipientPublicKeyBytes = TypedArrayEncoder.fromBase64(recipientPublicKey)
+    const recipientPublicJwk = Kms.PublicJwk.fromPublicKey({
+      kty: 'OKP',
+      crv: 'X25519',
+      publicKey: recipientPublicKeyBytes,
     })
 
-    return decrypt.data.toString('base64')
+    const kms = this.agent.context.resolve(Kms.KeyManagementApi)
+
+    const decrypt = await kms.decrypt({
+      encrypted: TypedArrayEncoder.fromBase64(encodedCiphertext),
+      decryption: {
+        algorithm: 'A256GCM',
+        iv: TypedArrayEncoder.fromBase64(encodedIv),
+        tag: TypedArrayEncoder.fromBase64(encodedTag),
+        aad: TypedArrayEncoder.fromString(encodedHeader),
+      },
+      key: {
+        keyAgreement: {
+          algorithm: 'ECDH-ES',
+          keyId: recipientPublicJwk.legacyKeyId,
+          externalPublicJwk: Kms.PublicJwk.fromUnknown(header.epk).toJson(),
+          apu: typeof header.apu === 'string' ? TypedArrayEncoder.fromBase64(header.apu) : undefined,
+          apv: typeof header.apv === 'string' ? TypedArrayEncoder.fromBase64(header.apv) : undefined,
+        },
+      },
+    })
+
+    return TypedArrayEncoder.toBase64(decrypt.data)
   }
 }

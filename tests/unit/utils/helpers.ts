@@ -11,13 +11,13 @@ import {
   DidDocument,
   DidExchangeRole,
   DidExchangeState,
+  JsonEncoder,
   JsonTransformer,
   OutOfBandInvitation,
   OutOfBandRecord,
   ProofExchangeRecord,
   TrustPingMessage,
 } from '@credo-ts/core'
-import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
 import { WebSocket } from 'ws'
