@@ -51,6 +51,7 @@ export async function getTestAgent(name: string, port: number) {
 
     logger,
     ipfsOrigin: 'https://localhost:5001',
+    ipfsTimeoutMs: 15000,
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
 }

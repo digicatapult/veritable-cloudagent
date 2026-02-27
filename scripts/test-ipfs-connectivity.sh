@@ -68,12 +68,12 @@ for container in "${CONTAINERS[@]}"; do
         FAILED=1
     fi
 
-    # Check mDNS (Should be true for discovery)
+    # Check mDNS (Should be false with deterministic peering)
     mdns=$(docker exec $container ipfs config Discovery.MDNS.Enabled)
-    if [ "$mdns" == "true" ]; then
-        echo "  ✅ CONFIG: Discovery.MDNS.Enabled is true"
+    if [ "$mdns" == "false" ]; then
+        echo "  ✅ CONFIG: Discovery.MDNS.Enabled is false"
     else
-        echo "  ❌ CONFIG: Discovery.MDNS.Enabled is '$mdns' (Expected: true)"
+        echo "  ❌ CONFIG: Discovery.MDNS.Enabled is '$mdns' (Expected: false)"
         FAILED=1
     fi
 
