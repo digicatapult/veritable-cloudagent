@@ -83,6 +83,17 @@ export interface AcceptProofProposalOptions {
   comment?: string
 }
 
+export interface NegotiateProofProposalOptions {
+  proofFormats: {
+    anoncreds?: AnonCredsRequestProofFormatOptions
+    presentationExchange?: PresentationExchangeCreateRequest
+  }
+  goalCode?: string
+  willConfirm?: boolean
+  autoAcceptProof?: AutoAcceptProof
+  comment?: string
+}
+
 export interface MatchingCredentialsResponse {
   proofFormats: {
     anoncreds?: {
