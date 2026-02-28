@@ -43,7 +43,7 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
     const issuerResponse = await issuerClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'ed25519',
+        keyType: 'Ed25519',
       },
     })
     ISSUER_DID = issuerResponse.body.did
@@ -52,7 +52,7 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
     const holderResponse = await holderClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'ed25519',
+        keyType: 'Ed25519',
       },
     })
     HOLDER_DID = holderResponse.body.did

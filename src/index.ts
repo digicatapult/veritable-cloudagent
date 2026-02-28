@@ -3,7 +3,7 @@ import 'reflect-metadata'
 
 import type { Socket } from 'node:net'
 
-import WebSocket from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 
 import { DidCommAutoAcceptCredential, DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import { clearInterval } from 'node:timers'
@@ -98,7 +98,7 @@ await didWebGenerator.generateAndRegister(
   (document) => didWebServer.upsertDid(document)
 )
 
-const socketServer = new WebSocket.Server({ noServer: true })
+const socketServer = new WebSocketServer({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
 const interval = setInterval(() => {
   logger.trace(`WebSocket PING (socket count = ${socketServer.clients.size})`)

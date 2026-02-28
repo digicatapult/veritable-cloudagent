@@ -261,7 +261,7 @@ describe('Negotiate proof proposal flows', function () {
     const issuerResponse = await issuerClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'ed25519',
+        keyType: 'Ed25519',
       },
     })
     const issuerDid = issuerResponse.body.did as string
@@ -269,7 +269,7 @@ describe('Negotiate proof proposal flows', function () {
     const holderResponse = await holderClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'ed25519',
+        keyType: 'Ed25519',
       },
     })
     const holderDid = holderResponse.body.did as string
