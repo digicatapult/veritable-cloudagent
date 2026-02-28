@@ -572,7 +572,10 @@ describe('CredentialController', () => {
         recordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
       }
 
-      const createLegacyConnectionlessInvitationStub = stub(bobAgent.didcomm.oob, 'createLegacyConnectionlessInvitation')
+      const createLegacyConnectionlessInvitationStub = stub(
+        bobAgent.didcomm.oob,
+        'createLegacyConnectionlessInvitation'
+      )
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
