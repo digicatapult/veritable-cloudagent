@@ -122,7 +122,8 @@
     "npm": "11.x"
   },
   "overrides": {
-    "ref-napi": "npm:@2060.io/ref-napi"
+    "ref-napi": "npm:@2060.io/ref-napi",
+    "node-addon-api": "8.5.0"
   },
   "directories": {
     "doc": "docs",
