@@ -469,7 +469,7 @@ describe('OutOfBandController', () => {
     test('should throw 404 if out of band record is not found', async () => {
       const response = await request(app)
         .post('/v1/oob/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-invitation')
-        .send({})
+        .send({ label: 'test' })
 
       expect(response.statusCode).to.be.equal(404)
     })

@@ -310,16 +310,9 @@ export class OutOfBandController extends Controller {
     @Body() acceptInvitationConfig: AcceptInvitationConfig
   ) {
     try {
-      const agentConfig = this.agent.config as typeof this.agent.config & {
-        label?: string
-      }
-      const configWithLabel = {
-        label: acceptInvitationConfig.label ?? agentConfig.label ?? 'Cloudagent',
-        ...acceptInvitationConfig,
-      }
       const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.acceptInvitation(
         outOfBandId,
-        configWithLabel
+        acceptInvitationConfig
       )
 
       req.log.info('OOB invitation accepted %j', {

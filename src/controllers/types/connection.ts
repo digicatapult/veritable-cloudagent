@@ -21,7 +21,7 @@ export interface ReceiveInvitationByUrlProps extends ReceiveOutOfBandInvitationP
 export interface AcceptInvitationConfig {
   autoAcceptConnection?: boolean
   reuseConnection?: boolean
-  label?: string
+  label: string
   alias?: string
   imageUrl?: string
   mediatorId?: string
