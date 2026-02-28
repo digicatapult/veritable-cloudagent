@@ -293,6 +293,17 @@ describe('OutOfBandController', () => {
         )
       ).equals(true)
     })
+
+    test('should return 422 when label is omitted', async () => {
+      const receiveInvitationStub = stub(bobAgent.didcomm.oob, 'receiveInvitation')
+
+      const response = await request(app)
+        .post('/v1/oob/receive-invitation')
+        .send({ invitation: outOfBandRecord.outOfBandInvitation })
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(receiveInvitationStub.called).to.equal(false)
+    })
   })
 
   describe('Receive out of band implicit invitation', () => {
