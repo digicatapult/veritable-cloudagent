@@ -37,6 +37,15 @@ Auto-generated DID:web documents now use canonical v0.6 semantics:
 
 Service configuration remains DIDComm v1-compatible (`did-communication`) for interoperability.
 
+### Out-of-band invitation label contract
+
+- REST endpoints for invitation receipt/acceptance are aligned to Credo v0.6 request contracts for `label`.
+- `label` is now required for:
+  - `POST /v1/oob/receive-invitation`
+  - `POST /v1/oob/receive-invitation-url`
+  - `POST /v1/oob/:outOfBandId/accept-invitation`
+- Requests missing `label` are rejected at validation boundary (`422`) instead of being defaulted server-side.
+
 ### Agent bootstrap and Askar config
 
 - Askar store config is explicit at top-level bootstrap input (`askarStoreConfig`), not inferred from `agentConfig.walletConfig`.
