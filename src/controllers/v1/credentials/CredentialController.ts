@@ -1,7 +1,4 @@
-import {
-  Agent,
-  RecordNotFoundError,
-} from '@credo-ts/core'
+import { Agent, RecordNotFoundError } from '@credo-ts/core'
 import {
   type DidCommCredentialExchangeRecordProps as CredentialExchangeRecordProps,
   DidCommCredentialExchangeRepository as CredentialRepository,
@@ -230,7 +227,7 @@ export class CredentialController extends Controller {
 
     return {
       message: offer.message.toJSON(),
-        credentialExchangeRecord: offer.credentialExchangeRecord.toJSON(),
+      credentialExchangeRecord: offer.credentialExchangeRecord.toJSON(),
     }
   }
 
@@ -253,7 +250,9 @@ export class CredentialController extends Controller {
     }
 
     try {
-      const credential = await this.agent.didcomm.credentials.offerCredential(options satisfies InternalOfferCredentialOptions)
+      const credential = await this.agent.didcomm.credentials.offerCredential(
+        options satisfies InternalOfferCredentialOptions
+      )
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {

@@ -1,8 +1,4 @@
-import {
-  Agent,
-  JsonTransformer,
-  RecordNotFoundError,
-} from '@credo-ts/core'
+import { Agent, JsonTransformer, RecordNotFoundError } from '@credo-ts/core'
 import {
   type DidCommConnectionRecordProps as ConnectionRecordProps,
   type CreateLegacyInvitationConfig,
@@ -112,14 +108,15 @@ export class OutOfBandController extends Controller {
     @Body() config?: Omit<CreateOutOfBandInvitationConfig, 'routing' | 'appendedAttachments' | 'messages'> // props removed because of issues with serialization
   ) {
     const outOfBandRecord = await this.agent.didcomm.oob.createInvitation(config)
+    const didcommConfig = this.agent.didcomm.config
     req.log.info('invitation has been created %j', outOfBandRecord.toJSON())
 
     return {
       invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-        domain: this.agent.config.endpoints[0],
+        domain: didcommConfig.endpoints[0] ?? '',
       }),
       invitation: outOfBandRecord.outOfBandInvitation.toJSON({
-        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        useDidSovPrefixWhereAllowed: didcommConfig.useDidSovPrefixWhereAllowed,
       }),
       outOfBandRecord: outOfBandRecord.toJSON(),
     }
@@ -143,15 +140,16 @@ export class OutOfBandController extends Controller {
     @Body() config?: Omit<CreateLegacyInvitationConfig, 'routing'> // routing prop removed because of issues with public key serialization
   ) {
     const { outOfBandRecord, invitation } = await this.agent.didcomm.oob.createLegacyInvitation(config)
+    const didcommConfig = this.agent.didcomm.config
     req.log.info('legacy invitation has been created %j', outOfBandRecord.toJSON())
 
     return {
       invitationUrl: invitation.toUrl({
-        domain: this.agent.config.endpoints[0],
-        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        domain: didcommConfig.endpoints[0] ?? '',
+        useDidSovPrefixWhereAllowed: didcommConfig.useDidSovPrefixWhereAllowed,
       }),
       invitation: invitation.toJSON({
-        useDidSovPrefixWhereAllowed: this.agent.config.useDidSovPrefixWhereAllowed,
+        useDidSovPrefixWhereAllowed: didcommConfig.useDidSovPrefixWhereAllowed,
       }),
       outOfBandRecord: outOfBandRecord.toJSON(),
     }
@@ -312,9 +310,16 @@ export class OutOfBandController extends Controller {
     @Body() acceptInvitationConfig: AcceptInvitationConfig
   ) {
     try {
+      const agentConfig = this.agent.config as typeof this.agent.config & {
+        label?: string
+      }
+      const configWithLabel = {
+        label: acceptInvitationConfig.label ?? agentConfig.label ?? 'Cloudagent',
+        ...acceptInvitationConfig,
+      }
       const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.acceptInvitation(
         outOfBandId,
-        acceptInvitationConfig
+        configWithLabel
       )
 
       req.log.info('OOB invitation accepted %j', {

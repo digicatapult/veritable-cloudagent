@@ -12,6 +12,49 @@ import { BadRequest, HttpResponse } from '../../../error.js'
 export class WalletController extends Controller {
   private agent: RestAgent
 
+  private getVerificationMethodPublicKeyBase58(verificationMethod: {
+    publicKeyBase58?: string
+    publicKeyJwk?: unknown
+  }): string | undefined {
+    if (verificationMethod.publicKeyBase58) {
+      return verificationMethod.publicKeyBase58
+    }
+
+    if (!verificationMethod.publicKeyJwk) {
+      return undefined
+    }
+
+    const publicJwk = Kms.PublicJwk.fromUnknown(verificationMethod.publicKeyJwk).toJson()
+    if (publicJwk.kty !== 'OKP' || typeof publicJwk.x !== 'string') {
+      return undefined
+    }
+
+    return TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64(publicJwk.x))
+  }
+
+  private async resolveKmsKeyIdForRecipientPublicKey(recipientPublicKeyBase58: string, fallbackKeyId: string) {
+    const importedDids = await this.agent.dids.getCreatedDids()
+
+    for (const didRecord of importedDids) {
+      const verificationMethods = didRecord.didDocument?.verificationMethod ?? []
+
+      for (const verificationMethod of verificationMethods) {
+        const verificationMethodPublicKey = this.getVerificationMethodPublicKeyBase58(verificationMethod)
+        if (!verificationMethodPublicKey || verificationMethodPublicKey !== recipientPublicKeyBase58) continue
+
+        const mappedKeyId = didRecord.keys?.find(({ didDocumentRelativeKeyId }) =>
+          verificationMethod.id.endsWith(didDocumentRelativeKeyId)
+        )?.kmsKeyId
+
+        if (mappedKeyId) {
+          return mappedKeyId
+        }
+      }
+    }
+
+    return fallbackKeyId
+  }
+
   public constructor(agent: Agent) {
     super()
     this.agent = agent
@@ -51,6 +94,11 @@ export class WalletController extends Controller {
       throw new HttpResponse({ message: 'Invalid compact JWE header', code: 400 })
     }
 
+    const externalPublicJwk = Kms.PublicJwk.fromUnknown(header.epk).toJson()
+    if (externalPublicJwk.kty !== 'OKP' || externalPublicJwk.crv !== 'X25519') {
+      throw new HttpResponse({ message: 'Invalid compact JWE header key type', code: 400 })
+    }
+
     const recipientPublicKeyBytes = TypedArrayEncoder.fromBase64(recipientPublicKey)
     const recipientPublicJwk = Kms.PublicJwk.fromPublicKey({
       kty: 'OKP',
@@ -58,7 +106,12 @@ export class WalletController extends Controller {
       publicKey: recipientPublicKeyBytes,
     })
 
-    const kms = this.agent.context.resolve(Kms.KeyManagementApi)
+    const kms = this.agent.kms
+    const recipientPublicKeyBase58 = TypedArrayEncoder.toBase58(recipientPublicKeyBytes)
+    const keyId = await this.resolveKmsKeyIdForRecipientPublicKey(
+      recipientPublicKeyBase58,
+      recipientPublicJwk.legacyKeyId
+    )
 
     const decrypt = await kms.decrypt({
       encrypted: TypedArrayEncoder.fromBase64(encodedCiphertext),
@@ -71,8 +124,8 @@ export class WalletController extends Controller {
       key: {
         keyAgreement: {
           algorithm: 'ECDH-ES',
-          keyId: recipientPublicJwk.legacyKeyId,
-          externalPublicJwk: Kms.PublicJwk.fromUnknown(header.epk).toJson(),
+          keyId,
+          externalPublicJwk,
           apu: typeof header.apu === 'string' ? TypedArrayEncoder.fromBase64(header.apu) : undefined,
           apv: typeof header.apv === 'string' ? TypedArrayEncoder.fromBase64(header.apv) : undefined,
         },

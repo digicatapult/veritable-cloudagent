@@ -28,16 +28,12 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { anoncreds } from '@hyperledger/anoncreds-nodejs'
-import { askar } from '@openwallet-foundation/askar-nodejs'
+import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
+import { registerAskar } from '@openwallet-foundation/askar-shared'
 import { container } from 'tsyringe'
 
 import { DidCommMediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
-import {
-  AskarModule,
-  type AskarModuleConfigStoreOptions,
-  type AskarPostgresStorageConfig,
-  type AskarSqliteStorageConfig,
-} from '@credo-ts/askar'
+import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
 import type { CredentialDefinitionId, DID } from './controllers/types/index.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
@@ -55,12 +51,6 @@ type AgentProofProtocols = [
   DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
 ]
 
-type AgentWalletConfig = {
-  id: string
-  key: string
-  storage?: AskarSqliteStorageConfig | AskarPostgresStorageConfig
-}
-
 const inboundTransportMapping = {
   http: DidCommHttpInboundTransport,
   ws: DidCommWsInboundTransport,
@@ -72,7 +62,16 @@ const outboundTransportMapping = {
 } as const
 
 export type AriesRestConfig = {
-  agentConfig: InitConfig
+  agentConfig: InitConfig & {
+    label?: string
+    endpoints: string[]
+    connectionImageUrl?: string
+    backupBeforeStorageUpdate?: boolean
+    autoUpdateStorageOnStartup?: boolean
+    useDidKeyInProtocols?: boolean
+    useDidSovPrefixWhereAllowed?: boolean
+  }
+  askarStoreConfig: AskarModuleConfigStoreOptions
 
   inboundTransports?: InboundTransport[]
   outboundTransports?: Transports[]
@@ -113,7 +112,25 @@ export type RestAgent<
   },
 > = Agent<modules>
 
+let hasRegisteredAskar = false
+
+const ensureAskarRegistered = () => {
+  if (hasRegisteredAskar) {
+    return
+  }
+
+  registerAskar({ askar: askarNodeJS })
+  hasRegisteredAskar = true
+}
+
+ensureAskarRegistered()
+
 const getAgentModules = (options: {
+  didcommConfig: {
+    endpoints: string[]
+    useDidSovPrefixWhereAllowed?: boolean
+    useDidKeyInProtocols?: boolean
+  }
   autoAcceptConnections: boolean
   autoAcceptProofs: DidCommAutoAcceptProof
   autoAcceptCredentials: DidCommAutoAcceptCredential
@@ -127,7 +144,14 @@ const getAgentModules = (options: {
   askarStoreConfig: AskarModuleConfigStoreOptions
 }): RestAgentModules => {
   return {
+    askar: new AskarModule({
+      askar: askarNodeJS,
+      store: options.askarStoreConfig,
+    }),
     didcomm: new DidCommModule({
+      endpoints: options.didcommConfig.endpoints,
+      useDidSovPrefixWhereAllowed: options.didcommConfig.useDidSovPrefixWhereAllowed,
+      useDidKeyInProtocols: options.didcommConfig.useDidKeyInProtocols,
       connections: {
         autoAcceptConnections: options.autoAcceptConnections,
       },
@@ -165,10 +189,6 @@ const getAgentModules = (options: {
       registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin, options.ipfsTimeoutMs))],
       anoncreds,
     }),
-    askar: new AskarModule({
-      askar,
-      store: options.askarStoreConfig,
-    }),
     drpc: new DrpcModule(),
     verifiedDrpc: new VerifiedDrpcModule(
       (() => {
@@ -200,6 +220,8 @@ const getAgentModules = (options: {
 }
 
 export async function setupAgent(restConfig: AriesRestConfig) {
+  ensureAskarRegistered()
+
   const {
     inboundTransports = [],
     outboundTransports = [],
@@ -213,19 +235,15 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     verifiedDrpcOptions,
 
     agentConfig,
+    askarStoreConfig,
   } = restConfig
 
-  const askarStoreConfig = (
-    agentConfig as InitConfig & {
-      walletConfig?: AgentWalletConfig
-    }
-  ).walletConfig
-
-  if (!askarStoreConfig?.id || !askarStoreConfig?.key) {
-    throw new Error('Missing walletConfig.id or walletConfig.key in agentConfig for Askar store setup')
-  }
-
   const modules = getAgentModules({
+    didcommConfig: {
+      endpoints: agentConfig.endpoints,
+      useDidSovPrefixWhereAllowed: agentConfig.useDidSovPrefixWhereAllowed,
+      useDidKeyInProtocols: agentConfig.useDidKeyInProtocols,
+    },
     autoAcceptConnections,
     autoAcceptProofs,
     autoAcceptCredentials,
@@ -233,11 +251,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
-    askarStoreConfig: {
-      id: askarStoreConfig.id,
-      key: askarStoreConfig.key,
-      database: askarStoreConfig.storage,
-    },
+    askarStoreConfig,
   })
 
   const agent: RestAgent = new Agent({

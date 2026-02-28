@@ -6,45 +6,57 @@ import PinoLogger from '../../src/utils/logger.js'
 
 describe('didWebGenerator', function () {
   let aliceAgent: {
-    context: {
-      resolve: () => {
-        createKey: (options: { type: { kty: 'OKP'; crv: 'Ed25519' | 'X25519' } }) => Promise<{
-          keyId: string
-          publicJwk: { x: string }
-        }>
-      }
+    kms: {
+      createKey: (options: { type: { kty: 'OKP'; crv: 'Ed25519' | 'X25519' } }) => Promise<{
+        keyId: string
+        publicJwk: { kty: 'OKP'; crv: 'Ed25519' | 'X25519'; x: string }
+      }>
     }
   }
   let logger: Logger
   const did = `did:web:localhost%3A5002`
 
   before(() => {
-    const signingPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(11))
+    const authenticationPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(11))
+    const assertionPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(33))
     const encryptionPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(22))
 
     let keyCallCount = 0
     aliceAgent = {
-      context: {
-        resolve: () => ({
-          createKey: async () => {
-            keyCallCount += 1
-            if (keyCallCount === 1) {
-              return {
-                keyId: 'signing-key-id',
-                publicJwk: {
-                  x: signingPublicKey,
-                },
-              }
-            }
-
+      kms: {
+        createKey: async () => {
+          keyCallCount += 1
+          if (keyCallCount === 1) {
             return {
-              keyId: 'encryption-key-id',
+              keyId: 'auth-key-id',
               publicJwk: {
-                x: encryptionPublicKey,
+                kty: 'OKP',
+                crv: 'Ed25519',
+                x: authenticationPublicKey,
               },
             }
-          },
-        }),
+          }
+
+          if (keyCallCount === 2) {
+            return {
+              keyId: 'assertion-key-id',
+              publicJwk: {
+                kty: 'OKP',
+                crv: 'Ed25519',
+                x: assertionPublicKey,
+              },
+            }
+          }
+
+          return {
+            keyId: 'encryption-key-id',
+            publicJwk: {
+              kty: 'OKP',
+              crv: 'X25519',
+              x: encryptionPublicKey,
+            },
+          }
+        },
       },
     }
 
@@ -61,29 +73,59 @@ describe('didWebGenerator', function () {
     const generated = await didWebDocGenerator.generateDidWebDocument(did, 'http://localhost%3A5002')
     expect(generated.did).to.equal(did)
     expect(generated.didDocument.id).to.equal(did)
+    expect(generated.didDocument.capabilityInvocation).to.deep.equal([`${did}#auth-key`])
 
-    // Verify signing key (verificationMethod[0])
-    const signingKey = generated.didDocument.verificationMethod![0]
-    expect(signingKey.id).to.equal(`${did}#owner`)
-    expect(signingKey.type).to.equal('Ed25519VerificationKey2020')
-    expect(signingKey.controller).to.equal(did)
-    expect(signingKey.publicKeyMultibase).to.be.a('string')
-    expect(signingKey.publicKeyMultibase!.length).to.be.greaterThan(0)
-    expect(signingKey.publicKeyMultibase!.startsWith('z')).to.equal(true)
+    const authKey = generated.didDocument.verificationMethod![0]
+    expect(authKey.id).to.equal(`${did}#auth-key`)
+    expect(authKey.type).to.equal('JsonWebKey2020')
+    expect(authKey.controller).to.equal(did)
+    expect(authKey.publicKeyJwk).to.deep.equal({
+      kty: 'OKP',
+      crv: 'Ed25519',
+      x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(11)),
+    })
 
-    // Verify encryption key (verificationMethod[1])
-    const encryptionKey = generated.didDocument.verificationMethod![1]
-    expect(encryptionKey.id).to.equal(`${did}#encryption`)
-    expect(encryptionKey.type).to.equal('X25519KeyAgreementKey2019')
-    expect(encryptionKey.controller).to.equal(did)
-    expect(encryptionKey.publicKeyBase58).to.be.a('string')
+    const assertionKey = generated.didDocument.verificationMethod![1]
+    expect(assertionKey.id).to.equal(`${did}#assertion-key`)
+    expect(assertionKey.type).to.equal('JsonWebKey2020')
+    expect(assertionKey.controller).to.equal(did)
+    expect(assertionKey.publicKeyJwk).to.deep.equal({
+      kty: 'OKP',
+      crv: 'Ed25519',
+      x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(33)),
+    })
 
-    // Verify keyAgreement (reference to encryption key)
+    const agreementKey = generated.didDocument.verificationMethod![2]
+    expect(agreementKey.id).to.equal(`${did}#agreement-key`)
+    expect(agreementKey.type).to.equal('JsonWebKey2020')
+    expect(agreementKey.controller).to.equal(did)
+    expect(agreementKey.publicKeyJwk).to.deep.equal({
+      kty: 'OKP',
+      crv: 'X25519',
+      x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(22)),
+    })
+
+    expect(generated.didDocument.authentication).to.deep.equal([`${did}#auth-key`])
+    expect(generated.didDocument.assertionMethod).to.deep.equal([`${did}#assertion-key`])
     const keyAgreement = generated.didDocument.keyAgreement![0]
-    expect(keyAgreement).to.equal(`${did}#encryption`)
+    expect(keyAgreement).to.equal(`${did}#agreement-key`)
 
-    // Verify service recipientKeys (reference to encryption key)
     const service = generated.didDocument.service![0]
-    expect((service as DidCommV1Service).recipientKeys).to.deep.equal([`${did}#owner`])
+    expect((service as DidCommV1Service).recipientKeys).to.deep.equal([`${did}#auth-key`])
+
+    expect(generated.keys).to.deep.equal([
+      {
+        didDocumentRelativeKeyId: '#auth-key',
+        kmsKeyId: 'auth-key-id',
+      },
+      {
+        didDocumentRelativeKeyId: '#assertion-key',
+        kmsKeyId: 'assertion-key-id',
+      },
+      {
+        didDocumentRelativeKeyId: '#agreement-key',
+        kmsKeyId: 'encryption-key-id',
+      },
+    ])
   })
 })

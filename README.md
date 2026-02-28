@@ -97,10 +97,14 @@ The generated DID:web document follows the W3C DID Core specification and includ
 
 - **@context**: Standard DID contexts
 - **id**: The DID identifier
-- **verificationMethod**: Cryptographic key material
-- **authentication**: Authentication methods
-- **assertionMethod**: Assertion methods
-- **service**: Service endpoints for communication
+- **verificationMethod**: Canonical Credo v0.6 `JsonWebKey2020` methods (`#auth-key`, `#assertion-key`, `#agreement-key`)
+- **authentication**: References `#auth-key`
+- **assertionMethod**: References `#assertion-key`
+- **keyAgreement**: References `#agreement-key`
+- **capabilityInvocation**: References `#auth-key`
+- **service**: DIDComm v1-compatible `did-communication` service with `recipientKeys` referencing `#auth-key`
+
+For migration details from the legacy generated shape (`#owner`/`#encryption`, multibase/base58 keys), see `docs/didweb-canonical-v0.6-migration.md`.
 
 ### Loading `did:web`s
 

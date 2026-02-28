@@ -3,12 +3,12 @@ import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 import { type AgentContext, EventEmitter, injectable, type Query } from '@credo-ts/core'
 import {
   type CreateProofRequestOptions,
-  type DidCommInboundMessageContext as InboundMessageContext,
   DidCommProofEventTypes,
   type DidCommProofProtocol,
   DidCommProofsApi,
   DidCommProofState,
   type DidCommProofStateChangedEvent,
+  type DidCommInboundMessageContext as InboundMessageContext,
 } from '@credo-ts/didcomm'
 
 import type { UUID } from '../../../controllers/types/index.js'

@@ -1,6 +1,6 @@
 import type { IncomingHttpHeaders } from 'http'
 
-import { ConnectionRecord } from '@credo-ts/core'
+import { DidCommConnectionRecord as ConnectionRecord } from '@credo-ts/didcomm'
 import express, { json } from 'express'
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))

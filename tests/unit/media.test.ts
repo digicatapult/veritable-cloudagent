@@ -1,3 +1,4 @@
+import { AskarStoreManager } from '@credo-ts/askar'
 import { expect } from 'chai'
 import { after, before, describe, test } from 'mocha'
 import type { Server } from 'node:net'
@@ -5,9 +6,9 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import {
-  MediaSharingRecord,
-  MediaSharingRole,
-  MediaSharingState,
+  DidCommMediaSharingRecord,
+  DidCommMediaSharingRole,
+  DidCommMediaSharingState,
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
 
@@ -31,7 +32,7 @@ describe('MediaController', () => {
   after(async () => {
     sinonRestore()
     await agent.shutdown()
-    await agent.wallet.delete()
+    await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
     app.close()
   })
 
@@ -41,21 +42,21 @@ describe('MediaController', () => {
       const createStub = stub(agent.modules.media, 'create')
       const shareStub = stub(agent.modules.media, 'share')
 
-      const fakeRecord = new MediaSharingRecord({
+      const fakeRecord = new DidCommMediaSharingRecord({
         id: 'rec-123',
         createdAt: new Date(),
         connectionId: '52907745-7672-470e-a803-a2f8feb52944',
-        role: MediaSharingRole.Sender,
-        state: MediaSharingState.Init,
+        role: DidCommMediaSharingRole.Sender,
+        state: DidCommMediaSharingState.Init,
         items: [],
       })
       createStub.resolves(fakeRecord)
-      const sharedRecord = new MediaSharingRecord({
+      const sharedRecord = new DidCommMediaSharingRecord({
         id: 'rec-123',
         createdAt: new Date(),
         connectionId: '52907745-7672-470e-a803-a2f8feb52944',
-        role: MediaSharingRole.Sender,
-        state: MediaSharingState.MediaShared,
+        role: DidCommMediaSharingRole.Sender,
+        state: DidCommMediaSharingState.MediaShared,
         items: [],
       })
       shareStub.resolves(sharedRecord)

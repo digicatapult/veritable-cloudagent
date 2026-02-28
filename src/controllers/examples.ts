@@ -1,22 +1,21 @@
 import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
+import { DidDocument, JsonTransformer } from '@credo-ts/core'
 import {
-  type AutoAcceptProof,
-  type BasicMessageRole,
-  type CredentialExchangeRecordProps,
-  CredentialRole,
-  type CredentialState,
-  DidDocument,
-  type DidExchangeRole,
-  type DidExchangeState,
-  JsonTransformer,
-  type OutOfBandInvitationOptions,
-  type OutOfBandRecordProps,
-  type OutOfBandRole,
-  type OutOfBandState,
-  type ProofExchangeRecordProps,
-  ProofRole,
-  type ProofState,
-} from '@credo-ts/core'
+  type DidCommAutoAcceptProof as AutoAcceptProof,
+  type DidCommBasicMessageRole as BasicMessageRole,
+  type DidCommCredentialExchangeRecordProps as CredentialExchangeRecordProps,
+  DidCommCredentialRole as CredentialRole,
+  type DidCommCredentialState as CredentialState,
+  type DidCommDidExchangeRole as DidExchangeRole,
+  type DidCommDidExchangeState as DidExchangeState,
+  type DidCommOutOfBandInvitationOptions as OutOfBandInvitationOptions,
+  type DidCommOutOfBandRecordProps as OutOfBandRecordProps,
+  type DidCommOutOfBandRole as OutOfBandRole,
+  type DidCommOutOfBandState as OutOfBandState,
+  type DidCommProofExchangeRecordProps as ProofExchangeRecordProps,
+  DidCommProofRole as ProofRole,
+  type DidCommProofState as ProofState,
+} from '@credo-ts/didcomm'
 
 export const BasicMessageRecordExample = {
   _tags: {

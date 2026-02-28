@@ -1,44 +1,56 @@
 import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
+import { AskarStoreManager } from '@credo-ts/askar'
+import {
+  DidCommMessage as AgentMessage,
+  DidCommConnectionInvitationMessage as ConnectionInvitationMessage,
+  DidCommConnectionRecord as ConnectionRecord,
+  DidCommCredentialExchangeRecord as CredentialExchangeRecord,
+  DidCommDidExchangeRole as DidExchangeRole,
+  DidCommDidExchangeState as DidExchangeState,
+  DidCommOutOfBandInvitation as OutOfBandInvitation,
+  DidCommOutOfBandRecord as OutOfBandRecord,
+  DidCommProofExchangeRecord as ProofExchangeRecord,
+  DidCommTrustPingMessage as TrustPingMessage,
+  type DidCommConnectionRecordProps as ConnectionRecordProps,
+} from '@credo-ts/didcomm'
 import type { Socket } from 'node:net'
 
-import {
-  type ConnectionRecordProps,
-  type DidCreateResult,
-  AgentMessage,
-  ConnectionInvitationMessage,
-  ConnectionRecord,
-  CredentialExchangeRecord,
-  DidDocument,
-  DidExchangeRole,
-  DidExchangeState,
-  JsonEncoder,
-  JsonTransformer,
-  OutOfBandInvitation,
-  OutOfBandRecord,
-  ProofExchangeRecord,
-  TrustPingMessage,
-} from '@credo-ts/core'
+import { DidDocument, JsonEncoder, JsonTransformer, type DidCreateResult } from '@credo-ts/core'
 import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
-import { WebSocket } from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
+export type TestAgent = RestAgent
+
+export async function deleteAgentStore(agent: RestAgent): Promise<void> {
+  await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
+}
+
 export async function getTestAgent(name: string, port: number) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
-  return await setupAgent({
+  const agent = await setupAgent({
     agentConfig: {
       // add some randomness to ensure test isolation
       label: `${name} (${randomUUID()})`,
       endpoints: [`http://localhost:${port}`],
-      walletConfig: { id: randomUUID(), key: name },
       useDidSovPrefixWhereAllowed: true,
       logger,
       autoUpdateStorageOnStartup: true,
       backupBeforeStorageUpdate: false,
+    },
+
+    askarStoreConfig: {
+      id: randomUUID(),
+      key: 'DZ9hPqFWTPxemcGea72C1X1nusqk5wFNLq6QPjwXGqAa',
+      keyDerivationMethod: 'raw',
+      database: {
+        type: 'sqlite',
+      },
     },
 
     inboundTransports: [
@@ -54,10 +66,12 @@ export async function getTestAgent(name: string, port: number) {
     ipfsTimeoutMs: 15000,
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
+
+  return agent
 }
 
 export async function getTestServer(agent: RestAgent) {
-  const socketServer = new WebSocket.Server({ noServer: true })
+  const socketServer = new WebSocketServer({ noServer: true })
   const app = await setupServer(agent, new PinoLogger('silent'), {
     socketServer,
   })
@@ -576,7 +590,7 @@ export function getTestConnectionNoDid({
 export function getTestDidDocument() {
   return {
     '@context': [
-      'https://w3id.org/did/v1',
+      'https://www.w3.org/ns/did/v1',
       'https://w3id.org/security/suites/ed25519-2018/v1',
       'https://w3id.org/security/suites/x25519-2019/v1',
     ],
@@ -622,7 +636,7 @@ export function getTestDidCreate() {
       didDocument: JsonTransformer.fromJSON(
         {
           '@context': [
-            'https://w3id.org/did/v1',
+            'https://www.w3.org/ns/did/v1',
             'https://w3id.org/security/suites/ed25519-2018/v1',
             'https://w3id.org/security/suites/x25519-2019/v1',
           ],
@@ -672,12 +686,12 @@ export async function openWebSocket(port: number): Promise<WebSocket> {
   return ws
 }
 
-export async function closeWebSocket(ws: WebSocket) {
+export async function closeWebSocket(ws: WebSocket | undefined) {
   return new Promise<void>((resolve, reject) => {
     if (!ws || ws.readyState === ws.CLOSED) return resolve()
     ws.removeAllListeners()
     ws.once('close', () => resolve())
-    ws.once('error', (err) => reject(err))
+    ws.once('error', (err: Error) => reject(err))
     ws.close()
   })
 }

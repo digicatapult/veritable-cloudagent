@@ -221,3 +221,26 @@ Keys are selected by **relationship + algorithm compatibility**, not inferred.
 
 Credo-TS v0.5.x treats the DID Document as a **key container**.  
 Credo-TS v0.6.x treats it as a **cryptographic contract**.
+
+---
+
+## 8. Implemented Cloudagent Profile (2026-02-27)
+
+`veritable-cloudagent` now generates DID:web documents using canonical v0.6 key semantics:
+
+- `verificationMethod` uses three `JsonWebKey2020` entries:
+  - `#auth-key` (Ed25519)
+  - `#assertion-key` (Ed25519)
+  - `#agreement-key` (X25519)
+- Relationships are explicit:
+  - `authentication: [#auth-key]`
+  - `assertionMethod: [#assertion-key]`
+  - `keyAgreement: [#agreement-key]`
+  - `capabilityInvocation: [#auth-key]`
+- DID service remains DIDComm v1-compatible (`did-communication`) for current interoperability.
+
+Implementation references:
+
+- `src/utils/didWebGenerator.ts`
+- `src/controllers/v1/wallet/WalletController.ts` (JWK-compatible key-id resolution)
+- `tests/unit/didWebGenerator.test.ts`

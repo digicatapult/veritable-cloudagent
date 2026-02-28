@@ -21,9 +21,13 @@ export class AgentController extends Controller {
    */
   @Get('/')
   public async getAgentInfo(@Request() req: express.Request): Promise<AgentInfo> {
+    const config = this.agent.config as typeof this.agent.config & {
+      label?: string
+      endpoints?: string[]
+    }
     const info = {
-      label: this.agent.config.label,
-      endpoints: this.agent.config.endpoints,
+      label: config.label ?? '',
+      endpoints: config.endpoints ?? [],
       isInitialized: this.agent.isInitialized,
     }
     req.log.info('getting agent config %j', { info })

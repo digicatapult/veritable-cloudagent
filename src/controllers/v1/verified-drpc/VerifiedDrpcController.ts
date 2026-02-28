@@ -1,7 +1,8 @@
+import { Agent } from '@credo-ts/core'
 import {
-  Agent,
-} from '@credo-ts/core'
-import { type CreateProofRequestOptions as CredoCreateProofRequestOptions, type DidCommProofProtocol } from '@credo-ts/didcomm'
+  type CreateProofRequestOptions as CredoCreateProofRequestOptions,
+  type DidCommProofProtocol,
+} from '@credo-ts/didcomm'
 import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags, ValidateError } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'

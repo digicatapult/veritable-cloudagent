@@ -1,9 +1,9 @@
+import type { Agent } from '@credo-ts/core'
 import {
   DidCommConnectionEventTypes,
   type DidCommConnectionDidRotatedEvent,
   type DidCommConnectionStateChangedEvent,
 } from '@credo-ts/didcomm'
-import type { Agent } from '@credo-ts/core'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'

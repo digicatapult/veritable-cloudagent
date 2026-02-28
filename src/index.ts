@@ -5,7 +5,7 @@ import type { Socket } from 'node:net'
 
 import WebSocket from 'ws'
 
-import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
+import { DidCommAutoAcceptCredential, DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
 import { setupAgent } from './agent.js'
@@ -26,25 +26,6 @@ const agent = await setupAgent({
   agentConfig: {
     label: env.get('LABEL'),
     logger: logger.child({ component: 'credo-ts-agent' }),
-    walletConfig: {
-      id: env.get('WALLET_ID'),
-      key: env.get('WALLET_KEY'),
-      storage:
-        env.get('STORAGE_TYPE') === 'sqlite'
-          ? {
-              type: 'sqlite',
-            }
-          : {
-              type: 'postgres',
-              config: {
-                host: `${env.get('POSTGRES_HOST') as string}:${String(env.get('POSTGRES_PORT'))}`,
-              },
-              credentials: {
-                account: env.get('POSTGRES_USERNAME') as string,
-                password: env.get('POSTGRES_PASSWORD') as string,
-              },
-            },
-    },
     endpoints: env.get('ENDPOINT'),
     connectionImageUrl: env.get('CONNECTION_IMAGE_URL'),
     backupBeforeStorageUpdate: env.get('BACKUP_BEFORE_STORAGE_UPDATE'),
@@ -53,12 +34,32 @@ const agent = await setupAgent({
     useDidSovPrefixWhereAllowed: env.get('USE_DID_SOV_PREFIX_WHERE_ALLOWED'),
   },
 
+  askarStoreConfig: {
+    id: env.get('WALLET_ID'),
+    key: env.get('WALLET_KEY'),
+    database:
+      env.get('STORAGE_TYPE') === 'sqlite'
+        ? {
+            type: 'sqlite',
+          }
+        : {
+            type: 'postgres',
+            config: {
+              host: `${env.get('POSTGRES_HOST') as string}:${String(env.get('POSTGRES_PORT'))}`,
+            },
+            credentials: {
+              account: env.get('POSTGRES_USERNAME') as string,
+              password: env.get('POSTGRES_PASSWORD') as string,
+            },
+          },
+  },
+
   inboundTransports: env.get('INBOUND_TRANSPORT'),
   outboundTransports: env.get('OUTBOUND_TRANSPORT'),
 
   autoAcceptConnections: env.get('AUTO_ACCEPT_CONNECTIONS'),
-  autoAcceptCredentials: env.get('AUTO_ACCEPT_CREDENTIALS') as AutoAcceptCredential,
-  autoAcceptProofs: env.get('AUTO_ACCEPT_PROOFS') as AutoAcceptProof,
+  autoAcceptCredentials: env.get('AUTO_ACCEPT_CREDENTIALS') as DidCommAutoAcceptCredential,
+  autoAcceptProofs: env.get('AUTO_ACCEPT_PROOFS') as DidCommAutoAcceptProof,
   autoAcceptMediationRequests: env.get('AUTO_ACCEPT_MEDIATION_REQUESTS'),
   ipfsOrigin: env.get('IPFS_ORIGIN'),
   ipfsTimeoutMs: env.get('IPFS_TIMEOUT_MS'),

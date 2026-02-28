@@ -4,29 +4,28 @@ import { after, before, describe, test } from 'mocha'
 import type { Server } from 'net'
 
 import {
-  CredentialEventTypes,
-  CredentialExchangeRecord,
-  CredentialRole,
-  CredentialState,
-  ProofEventTypes,
-  ProofExchangeRecord,
-  ProofRole,
-  ProofState,
-  type Agent,
-  type CredentialStateChangedEvent,
-  type ProofStateChangedEvent,
-} from '@credo-ts/core'
+  DidCommCredentialExchangeRecord as CredentialExchangeRecord,
+  DidCommCredentialRole as CredentialRole,
+  DidCommCredentialState as CredentialState,
+  DidCommCredentialEventTypes,
+  DidCommProofEventTypes,
+  DidCommProofExchangeRecord as ProofExchangeRecord,
+  DidCommProofRole as ProofRole,
+  DidCommProofState as ProofState,
+  type DidCommCredentialStateChangedEvent as CredentialStateChangedEvent,
+  type DidCommProofStateChangedEvent as ProofStateChangedEvent,
+} from '@credo-ts/didcomm'
 
 import { setupServer } from '../../src/server.js'
 import { waitForHook, webhookListener, type WebhookData } from '../../src/utils/webhook.js'
 
 import PinoLogger from '../../src/utils/logger.js'
-import { getTestAgent } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, type TestAgent } from './utils/helpers.js'
 
 describe('WebhookTests', () => {
   let server: Server
-  let aliceAgent: Agent
-  let bobAgent: Agent
+  let aliceAgent: TestAgent
+  let bobAgent: TestAgent
   const webhooks: WebhookData[] = []
 
   before(async () => {
@@ -37,11 +36,13 @@ describe('WebhookTests', () => {
   })
 
   test('should return a webhook event when basic message state changed', async () => {
-    const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
-    const { connectionRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
-    const connection = await bobAgent.connections.returnWhenIsConnected(connectionRecord!.id)
+    const { outOfBandInvitation } = await aliceAgent.didcomm.oob.createInvitation()
+    const { connectionRecord } = await bobAgent.didcomm.oob.receiveInvitation(outOfBandInvitation, {
+      label: 'Bob',
+    })
+    const connection = await bobAgent.didcomm.connections.returnWhenIsConnected(connectionRecord!.id)
 
-    await bobAgent.basicMessages.sendMessage(connection.id, 'Hello')
+    await bobAgent.didcomm.basicMessages.sendMessage(connection.id, 'Hello')
 
     const webhook = await waitForHook(webhooks, (webhook) => webhook.topic !== 'connections')
 
@@ -49,9 +50,11 @@ describe('WebhookTests', () => {
   })
 
   test('should return a webhook event when connection state changed', async () => {
-    const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
-    const { connectionRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
-    const connection = await bobAgent.connections.returnWhenIsConnected(connectionRecord!.id)
+    const { outOfBandInvitation } = await aliceAgent.didcomm.oob.createInvitation()
+    const { connectionRecord } = await bobAgent.didcomm.oob.receiveInvitation(outOfBandInvitation, {
+      label: 'Bob',
+    })
+    const connection = await bobAgent.didcomm.connections.returnWhenIsConnected(connectionRecord!.id)
 
     const webhook = await waitForHook(
       webhooks,
@@ -64,13 +67,15 @@ describe('WebhookTests', () => {
   })
 
   test('should return a webhook event when disconnected by hangup', async () => {
-    const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
-    const { connectionRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
-    const connection = await bobAgent.connections.returnWhenIsConnected(connectionRecord!.id)
+    const { outOfBandInvitation } = await aliceAgent.didcomm.oob.createInvitation()
+    const { connectionRecord } = await bobAgent.didcomm.oob.receiveInvitation(outOfBandInvitation, {
+      label: 'Bob',
+    })
+    const connection = await bobAgent.didcomm.connections.returnWhenIsConnected(connectionRecord!.id)
     // Workaround to get Alice's connection record from the ThreadId in Bob's connection record
-    const { id: connectionId } = await aliceAgent.connections.getByThreadId(connection.threadId!)
+    const { id: connectionId } = await aliceAgent.didcomm.connections.getByThreadId(connection.threadId!)
     // Alice hangs up on Bob
-    await aliceAgent.connections.hangup({ connectionId })
+    await aliceAgent.didcomm.connections.hangup({ connectionId })
 
     const webhook = await waitForHook(
       webhooks,
@@ -94,10 +99,10 @@ describe('WebhookTests', () => {
     })
 
     bobAgent.events.emit<CredentialStateChangedEvent>(bobAgent.context, {
-      type: CredentialEventTypes.CredentialStateChanged,
+      type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
       payload: {
         previousState: null,
-        credentialRecord,
+        credentialExchangeRecord: credentialRecord,
       },
     })
 
@@ -124,7 +129,7 @@ describe('WebhookTests', () => {
     })
 
     bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
-      type: ProofEventTypes.ProofStateChanged,
+      type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
         previousState: null,
         proofRecord,
@@ -151,7 +156,7 @@ describe('WebhookTests', () => {
 
     // Emit event where previousState === state
     bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
-      type: ProofEventTypes.ProofStateChanged,
+      type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
         previousState: ProofState.RequestReceived,
         proofRecord,
@@ -168,7 +173,7 @@ describe('WebhookTests', () => {
     })
 
     bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
-      type: ProofEventTypes.ProofStateChanged,
+      type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
         previousState: ProofState.RequestReceived,
         proofRecord: markerProofRecord,
@@ -194,7 +199,7 @@ describe('WebhookTests', () => {
 
     // Emit event where previousState !== state
     bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
-      type: ProofEventTypes.ProofStateChanged,
+      type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
         previousState: ProofState.RequestReceived,
         proofRecord,
@@ -216,9 +221,9 @@ describe('WebhookTests', () => {
   after(async () => {
     await new Promise((r) => setTimeout(r, 2000))
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
+    await deleteAgentStore(bobAgent)
     server.close()
   })
 })

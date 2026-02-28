@@ -16,8 +16,9 @@ describe('WalletController', () => {
         decrypt: async () => ({ data: Buffer.from('test') }),
       }
       const agent = {
-        context: {
-          resolve: () => kms,
+        kms,
+        dids: {
+          getCreatedDids: async () => [],
         },
       }
       const walletController = new WalletController(agent as never)
@@ -41,8 +42,8 @@ describe('WalletController', () => {
       const params = {
         jwe,
         recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(7)),
-        enc: 'A256GCM',
-        alg: 'ECDH-ES',
+        enc: 'A256GCM' as const,
+        alg: 'ECDH-ES' as const,
       }
 
       const response = await walletController.decrypt(

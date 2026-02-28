@@ -1,4 +1,4 @@
-import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
+import { Agent, CredoError } from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
@@ -96,15 +96,8 @@ export class DidController extends Controller {
   @Response<HttpResponse>(500)
   public async importDid(@Request() req: express.Request, @Body() options: ImportDidOptions) {
     try {
-      const { privateKeys, ...rest } = options
-      req.log.info('importing DIDs %j', rest)
-      await this.agent.dids.import({
-        ...rest,
-        privateKeys: privateKeys?.map(({ keyType, privateKey }) => ({
-          keyType,
-          privateKey: TypedArrayEncoder.fromBase64(privateKey),
-        })),
-      })
+      req.log.info('importing DIDs %j', options)
+      await this.agent.dids.import(options)
       req.log.debug('%s successfully imported', options.did)
       return this.getDidRecordByDid(req, options.did)
     } catch (error) {

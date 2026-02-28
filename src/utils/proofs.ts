@@ -1,12 +1,16 @@
 import type {
-  AnonCredsProofFormat,
+  AnonCredsDidCommProofFormat,
   AnonCredsProofRequestRestriction,
   AnonCredsRequestProofFormat,
   AnonCredsRequestedAttribute,
   AnonCredsRequestedAttributeMatch,
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
-import type { DifPresentationExchangeProofFormat, GetProofFormatDataReturn, ProofFormatPayload } from '@credo-ts/core'
+import type {
+  DidCommDifPresentationExchangeProofFormat as DifPresentationExchangeProofFormat,
+  GetProofFormatDataReturn,
+  DidCommProofFormatPayload as ProofFormatPayload,
+} from '@credo-ts/didcomm'
 
 import type {
   AcceptProofRequestOptions,
@@ -18,7 +22,7 @@ import type {
 } from '../controllers/types/index.js'
 import { maybeMapValues } from './helpers.js'
 
-type AgentProofFormats = [AnonCredsProofFormat, DifPresentationExchangeProofFormat]
+type AgentProofFormats = [AnonCredsDidCommProofFormat, DifPresentationExchangeProofFormat]
 type AgentPresentationDefinition =
   DifPresentationExchangeProofFormat['proofFormats']['createRequest']['presentationDefinition']
 
@@ -304,7 +308,7 @@ export const redactProofFormats = (
  * @returns A simplified record of attribute names and their revealed values.
  */
 export const simplifyAnonCredsProofContent = (
-  formatData: GetProofFormatDataReturn<[AnonCredsProofFormat, DifPresentationExchangeProofFormat]>
+  formatData: GetProofFormatDataReturn<[AnonCredsDidCommProofFormat, DifPresentationExchangeProofFormat]>
 ): Record<string, unknown> => {
   const request = formatData.request?.anoncreds
   const presentation = formatData.presentation?.anoncreds

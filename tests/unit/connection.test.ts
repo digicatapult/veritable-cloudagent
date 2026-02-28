@@ -4,18 +4,18 @@ import type { AddressInfo, Server } from 'node:net'
 import { restore as sinonRestore, stub } from 'sinon'
 
 import {
-  ConnectionEventTypes,
-  ConnectionRepository,
-  type Agent,
-  type ConnectionRecord,
-  type OutOfBandRecord,
-  type TrustPingMessage,
-} from '@credo-ts/core'
+  DidCommConnectionRepository as ConnectionRepository,
+  DidCommConnectionEventTypes,
+  type DidCommConnectionRecord as ConnectionRecord,
+  type DidCommOutOfBandRecord as OutOfBandRecord,
+  type DidCommTrustPingMessage as TrustPingMessage,
+} from '@credo-ts/didcomm'
 import request from 'supertest'
-import WebSocket from 'ws'
+import type WebSocket from 'ws'
 
 import {
   closeWebSocket,
+  deleteAgentStore,
   getTestAgent,
   getTestConnection,
   getTestConnectionNoDid,
@@ -25,14 +25,15 @@ import {
   getTestTrustPingMessage,
   objectToJson,
   openWebSocket,
+  type TestAgent,
 } from './utils/helpers.js'
 
 describe('ConnectionController', () => {
   let port: number
   let app: Server
   let socket: WebSocket
-  let aliceAgent: Agent
-  let bobAgent: Agent
+  let aliceAgent: TestAgent
+  let bobAgent: TestAgent
   let connection: ConnectionRecord
   let outOfBandRecord: OutOfBandRecord
 
@@ -52,7 +53,7 @@ describe('ConnectionController', () => {
 
   describe('Send trust ping', () => {
     test('Should send a ping on an established connection', async () => {
-      const sendPingStub = stub(bobAgent.connections, 'sendPing')
+      const sendPingStub = stub(bobAgent.didcomm.connections, 'sendPing')
       const message = getTestTrustPingMessage()
       sendPingStub.resolves(message)
       const getResult = (): Promise<TrustPingMessage> => sendPingStub.firstCall.returnValue
@@ -194,7 +195,7 @@ describe('ConnectionController', () => {
 
   describe('Get connection by id', () => {
     test('should return connection record', async () => {
-      const findByIdStub = stub(bobAgent.connections, 'findById')
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
       findByIdStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord | null> => findByIdStub.firstCall.returnValue
 
@@ -214,7 +215,7 @@ describe('ConnectionController', () => {
 
   describe('Accept request', () => {
     test('should return accepted connection record', async () => {
-      const acceptRequestStub = stub(bobAgent.connections, 'acceptRequest')
+      const acceptRequestStub = stub(bobAgent.didcomm.connections, 'acceptRequest')
       acceptRequestStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord> => acceptRequestStub.firstCall.returnValue
 
@@ -234,7 +235,7 @@ describe('ConnectionController', () => {
 
   describe('Accept response', () => {
     test('should return accepted connection record', async () => {
-      const acceptResponseStub = stub(bobAgent.connections, 'acceptResponse')
+      const acceptResponseStub = stub(bobAgent.didcomm.connections, 'acceptResponse')
       acceptResponseStub.resolves(connection)
       const getResult = (): Promise<ConnectionRecord | null> => acceptResponseStub.firstCall.returnValue
 
@@ -254,7 +255,7 @@ describe('ConnectionController', () => {
 
   describe('Create connection', async function () {
     test('Bob creates a connection with Alice', async function () {
-      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      const receiveImplicitInvitationStub = stub(bobAgent.didcomm.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connection,
@@ -272,17 +273,17 @@ describe('ConnectionController', () => {
     test('Bob replaces old connection with Alice', async function () {
       const { invitationDid } = connection
 
-      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      const receiveImplicitInvitationStub = stub(bobAgent.didcomm.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connection,
       })
 
       // stub a connection to be replaced
-      stub(bobAgent.connections, 'findByInvitationDid').resolves([connection])
+      stub(bobAgent.didcomm.connections, 'findByInvitationDid').resolves([connection])
 
       // assert old connection is deleted
-      const deleteByIdStub = stub(bobAgent.connections, 'deleteById')
+      const deleteByIdStub = stub(bobAgent.didcomm.connections, 'deleteById')
 
       await request(app).post('/v1/connections').send({ did: invitationDid }).expect(200)
       expect(deleteByIdStub.callCount).to.equal(1)
@@ -299,16 +300,16 @@ describe('ConnectionController', () => {
 
   describe('Call for hangup or deletion', async function () {
     test('should call for hangup', async () => {
-      stub(bobAgent.connections, 'getById').resolves(connection)
-      stub(bobAgent.connections, 'hangup')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(connection)
+      stub(bobAgent.didcomm.connections, 'hangup')
 
       await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
     })
 
     test('should call for hangup not deletion when deleteConnectionRecord is not set', async () => {
-      stub(bobAgent.connections, 'getById').resolves(connection)
-      const hangupCallStub = stub(bobAgent.connections, 'hangup')
-      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.didcomm.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.didcomm.connections, 'deleteById')
 
       await request(app).delete(`/v1/connections/${connection.id}`).expect(204)
       expect(deleteCallStub.callCount).to.equal(0)
@@ -316,9 +317,9 @@ describe('ConnectionController', () => {
     })
 
     test('should only call for hangup not deletion when deleteConnectionRecord is false', async () => {
-      stub(bobAgent.connections, 'getById').resolves(connection)
-      const hangupCallStub = stub(bobAgent.connections, 'hangup')
-      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.didcomm.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.didcomm.connections, 'deleteById')
 
       await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=false`).expect(204)
       expect(deleteCallStub.callCount).to.equal(0)
@@ -326,9 +327,9 @@ describe('ConnectionController', () => {
     })
 
     test('should only call for hangup not deletion if passed invalid query', async () => {
-      stub(bobAgent.connections, 'getById').resolves(connection)
-      const hangupCallStub = stub(bobAgent.connections, 'hangup')
-      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.didcomm.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.didcomm.connections, 'deleteById')
 
       await request(app).delete(`/v1/connections/${connection.id}?foobar=false`).expect(204)
       expect(deleteCallStub.callCount).to.equal(0)
@@ -336,8 +337,8 @@ describe('ConnectionController', () => {
     })
 
     test('should call for hangup and record deletion when deleteConnectionRecord is true', async () => {
-      stub(bobAgent.connections, 'getById').resolves(connection)
-      const hangupCallStub = stub(bobAgent.connections, 'hangup')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(connection)
+      const hangupCallStub = stub(bobAgent.didcomm.connections, 'hangup')
 
       await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=true`).expect(204)
       expect(hangupCallStub.args).to.deep.include([{ connectionId: connection.id, deleteAfterHangup: true }])
@@ -346,9 +347,9 @@ describe('ConnectionController', () => {
     test('should call deleteById if no theirDid on record when deleteConnectionRecord is true', async () => {
       // Doesn't like object destructuring to blank theirDid value
       const noTheirDid = getTestConnectionNoTheirDid()
-      stub(bobAgent.connections, 'getById').resolves(noTheirDid)
-      stub(bobAgent.connections, 'hangup')
-      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(noTheirDid)
+      stub(bobAgent.didcomm.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.didcomm.connections, 'deleteById')
 
       await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=true`)
       expect(deleteCallStub.callCount).to.equal(1)
@@ -357,9 +358,9 @@ describe('ConnectionController', () => {
     test('should call deleteById if no Did on record when deleteConnectionRecord is true', async () => {
       // Doesn't like object destructuring to blank Did value
       const noDid = getTestConnectionNoDid()
-      stub(bobAgent.connections, 'getById').resolves(noDid)
-      stub(bobAgent.connections, 'hangup')
-      const deleteCallStub = stub(bobAgent.connections, 'deleteById')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(noDid)
+      stub(bobAgent.didcomm.connections, 'hangup')
+      const deleteCallStub = stub(bobAgent.didcomm.connections, 'deleteById')
 
       await request(app).delete(`/v1/connections/${connection.id}?deleteConnectionRecord=true`)
       expect(deleteCallStub.callCount).to.equal(1)
@@ -368,14 +369,14 @@ describe('ConnectionController', () => {
     test('should 400 if already disconnected and deleteConnectionRecord is false / not set', async () => {
       // Doesn't like object destructuring to blank Did value
       const noDid = getTestConnectionNoDid()
-      stub(bobAgent.connections, 'getById').resolves(noDid)
-      stub(bobAgent.connections, 'hangup')
+      stub(bobAgent.didcomm.connections, 'getById').resolves(noDid)
+      stub(bobAgent.didcomm.connections, 'hangup')
 
       await request(app).delete(`/v1/connections/${connection.id}`).expect(400)
     })
 
     test('should 404 if no connection record exists', async () => {
-      stub(bobAgent.connections, 'hangup')
+      stub(bobAgent.didcomm.connections, 'hangup')
       await request(app).delete(`/v1/connections/aaaaaaaa-aaaa-4444-aaaa-aaaaaaaaaaaa`).expect(404)
     })
   })
@@ -386,13 +387,13 @@ describe('ConnectionController', () => {
     })
 
     test('should return connection event sent from test agent to websocket client when completed', async () => {
-      const aliceOutOfBandRecord = await aliceAgent.oob.createInvitation()
+      const aliceOutOfBandRecord = await aliceAgent.didcomm.oob.createInvitation()
 
       const waitForMessagePromise = new Promise((resolve) => {
         socket.on('message', (data) => {
           const event = JSON.parse(data.toString())
           if (
-            event.type === ConnectionEventTypes.ConnectionStateChanged &&
+            event.type === DidCommConnectionEventTypes.DidCommConnectionStateChanged &&
             event.payload.connectionRecord.state === 'completed'
           ) {
             resolve(event)
@@ -400,17 +401,19 @@ describe('ConnectionController', () => {
         })
       })
 
-      await bobAgent.oob.receiveInvitation(aliceOutOfBandRecord.outOfBandInvitation)
+      await bobAgent.didcomm.oob.receiveInvitation(aliceOutOfBandRecord.outOfBandInvitation, {
+        label: 'Bob',
+      })
       await waitForMessagePromise
     })
 
     test('should return disconnection event sent from test agent to websocket client', async () => {
-      const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
+      const { outOfBandInvitation } = await aliceAgent.didcomm.oob.createInvitation()
 
       const waitForMessagePromise = new Promise((resolve) => {
         socket.on('message', (data) => {
           const event = JSON.parse(data.toString())
-          if (event.type === ConnectionEventTypes.ConnectionDidRotated) {
+          if (event.type === DidCommConnectionEventTypes.DidCommConnectionDidRotated) {
             const connectionRecord = event.payload.connectionRecord
             expect(connectionRecord.protocol).to.be.equal('https://didcomm.org/didexchange/1.x')
             expect(connectionRecord).to.not.have.property('theirDid')
@@ -420,13 +423,15 @@ describe('ConnectionController', () => {
         })
       })
 
-      const { connectionRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
-      const connection = await bobAgent.connections.returnWhenIsConnected(connectionRecord!.id)
+      const { connectionRecord } = await bobAgent.didcomm.oob.receiveInvitation(outOfBandInvitation, {
+        label: 'Bob',
+      })
+      const connection = await bobAgent.didcomm.connections.returnWhenIsConnected(connectionRecord!.id)
 
       // Workaround to get Alice's connection record from the ThreadId in Bob's connection record
-      const { id: connectionId } = await aliceAgent.connections.getByThreadId(connection.threadId!)
+      const { id: connectionId } = await aliceAgent.didcomm.connections.getByThreadId(connection.threadId!)
       // Alice hangs up on Bob
-      await aliceAgent.connections.hangup({ connectionId })
+      await aliceAgent.didcomm.connections.hangup({ connectionId })
 
       await waitForMessagePromise
     })
@@ -434,9 +439,9 @@ describe('ConnectionController', () => {
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
+    await deleteAgentStore(bobAgent)
     await closeWebSocket(socket)
     app.close()
   })

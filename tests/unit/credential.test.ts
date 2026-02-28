@@ -1,36 +1,34 @@
+import type { AnonCredsDidCommCredentialFormat as AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
+import { JsonTransformer } from '@credo-ts/core'
+import {
+  DidCommMessage as AgentMessage,
+  DidCommCredentialExchangeRecord as CredentialExchangeRecord,
+  DidCommCredentialPreviewAttribute as CredentialPreviewAttribute,
+  DidCommCredentialExchangeRepository as CredentialRepository,
+  DidCommCredentialRole as CredentialRole,
+  DidCommCredentialState as CredentialState,
+  DidCommAutoAcceptCredential,
+  DidCommCredentialEventTypes,
+  type DidCommConnectionRecord as ConnectionRecord,
+  type DidCommCredentialStateChangedEvent as CredentialStateChangedEvent,
+  type GetCredentialFormatDataReturn,
+  type DidCommOutOfBandRecord as OutOfBandRecord,
+} from '@credo-ts/didcomm'
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
+import type { AddressInfo, Server } from 'node:net'
 import { restore as sinonRestore, stub } from 'sinon'
+import request from 'supertest'
+import type WebSocket from 'ws'
+
 import type {
   AcceptCredentialProposalOptions,
   OfferCredentialOptions,
   ProposeCredentialOptions,
 } from '../../src/controllers/types/index.js'
-
-import type { AddressInfo, Server } from 'node:net'
-
-import {
-  type Agent,
-  type ConnectionRecord,
-  type CredentialStateChangedEvent,
-  type GetCredentialFormatDataReturn,
-  type OutOfBandRecord,
-  AgentMessage,
-  AutoAcceptCredential,
-  CredentialEventTypes,
-  CredentialExchangeRecord,
-  CredentialPreviewAttribute,
-  CredentialRepository,
-  CredentialRole,
-  CredentialState,
-  JsonTransformer,
-} from '@credo-ts/core'
-import request from 'supertest'
-import WebSocket from 'ws'
-
-import { AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
 import {
   closeWebSocket,
+  deleteAgentStore,
   getCredentialFormatData,
   getTestAgent,
   getTestConnection,
@@ -40,19 +38,20 @@ import {
   getTestServer,
   objectToJson,
   openWebSocket,
+  type TestAgent,
 } from './utils/helpers.js'
 
 describe('CredentialController', () => {
   let port: number
   let app: Server
   let socket: WebSocket
-  let aliceAgent: Agent
-  let bobAgent: Agent
+  let aliceAgent: TestAgent
+  let bobAgent: TestAgent
   let testCredential: CredentialExchangeRecord
   let testFormatData: GetCredentialFormatDataReturn<[AnonCredsCredentialFormat]>
   let testOffer: {
     message: AgentMessage
-    credentialRecord: CredentialExchangeRecord
+    credentialExchangeRecord: CredentialExchangeRecord
   }
   let outOfBandRecord: OutOfBandRecord
   let connection: ConnectionRecord
@@ -65,7 +64,11 @@ describe('CredentialController', () => {
 
     testCredential = getTestCredential() as CredentialExchangeRecord
     testFormatData = getCredentialFormatData()
-    testOffer = getTestOffer()
+    const helperOffer = getTestOffer()
+    testOffer = {
+      message: helperOffer.message,
+      credentialExchangeRecord: helperOffer.credentialRecord,
+    }
     outOfBandRecord = getTestOutOfBandRecord()
     connection = getTestConnection()
   })
@@ -147,7 +150,7 @@ describe('CredentialController', () => {
 
   describe('Get credential by id', () => {
     test('should return single credential', async () => {
-      const getByIdStub = stub(bobAgent.credentials, 'getById')
+      const getByIdStub = stub(bobAgent.didcomm.credentials, 'getById')
       getByIdStub.resolves(testCredential)
 
       const getResult = (): Promise<CredentialExchangeRecord> => {
@@ -171,7 +174,7 @@ describe('CredentialController', () => {
 
   describe('Get credential format-data by id', () => {
     test('should return format data for a single credential', async () => {
-      const getFormatDataStub = stub(bobAgent.credentials, 'getFormatData')
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
       getFormatDataStub.resolves(testFormatData)
 
       const getResult = (): Promise<typeof testFormatData> => {
@@ -203,7 +206,7 @@ describe('CredentialController', () => {
 
   describe('Propose a credential', () => {
     test('should return credential record', async () => {
-      const proposeCredentialStub = stub(bobAgent.credentials, 'proposeCredential')
+      const proposeCredentialStub = stub(bobAgent.didcomm.credentials, 'proposeCredential')
       proposeCredentialStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => proposeCredentialStub.firstCall.returnValue
 
@@ -242,7 +245,7 @@ describe('CredentialController', () => {
     })
 
     test('should support jsonld format in proposal', async () => {
-      const proposeCredentialStub = stub(bobAgent.credentials, 'proposeCredential')
+      const proposeCredentialStub = stub(bobAgent.didcomm.credentials, 'proposeCredential')
       proposeCredentialStub.resolves(testCredential)
 
       const proposalRequestJsonLd: ProposeCredentialOptions = {
@@ -282,7 +285,7 @@ describe('CredentialController', () => {
 
   describe('Accept a credential proposal', () => {
     test('should return credential record', async () => {
-      const acceptProposalStub = stub(bobAgent.credentials, 'acceptProposal')
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
       const proposalRequest: AcceptCredentialProposalOptions = {
@@ -297,7 +300,7 @@ describe('CredentialController', () => {
             ],
           },
         },
-        autoAcceptCredential: 'always' as AutoAcceptCredential,
+        autoAcceptCredential: 'always' as DidCommAutoAcceptCredential,
         comment: 'test',
       }
 
@@ -310,13 +313,13 @@ describe('CredentialController', () => {
       expect(response.statusCode).to.be.equal(200)
       expect(acceptProposalStub.lastCall.args[0]).to.be.deep.include({
         ...proposalRequest,
-        credentialRecordId: testCredential.id,
+        credentialExchangeRecordId: testCredential.id,
       })
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
     test('should work without optional parameters', async () => {
-      const acceptProposalStub = stub(bobAgent.credentials, 'acceptProposal')
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
       //added proposal request - credentialFormats is required even if empty
@@ -363,13 +366,13 @@ describe('CredentialController', () => {
 
       // Emit event
       bobAgent.events.emit<CredentialStateChangedEvent>(bobAgent.context, {
-        type: CredentialEventTypes.CredentialStateChanged,
+        type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
         payload: {
-          credentialRecord: new CredentialExchangeRecord({
+          credentialExchangeRecord: new CredentialExchangeRecord({
             protocolVersion: 'v1',
             state: CredentialState.OfferSent,
             threadId: 'thread-id',
-            autoAcceptCredential: AutoAcceptCredential.ContentApproved,
+            autoAcceptCredential: DidCommAutoAcceptCredential.ContentApproved,
             connectionId: 'connection-id',
             createdAt: now,
             credentialAttributes: [
@@ -400,13 +403,13 @@ describe('CredentialController', () => {
       const event = await waitForEvent
 
       expect(event).to.deep.equal({
-        type: CredentialEventTypes.CredentialStateChanged,
+        type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
         payload: {
-          credentialRecord: {
+          credentialExchangeRecord: {
             protocolVersion: 'v1',
             state: CredentialState.OfferSent,
             threadId: 'thread-id',
-            autoAcceptCredential: AutoAcceptCredential.ContentApproved,
+            autoAcceptCredential: DidCommAutoAcceptCredential.ContentApproved,
             connectionId: 'connection-id',
             createdAt: now.toISOString(),
             metadata: {},
@@ -442,9 +445,9 @@ describe('CredentialController', () => {
 
   describe('Create a credential offer', () => {
     test('should return single credential record with attached offer message', async () => {
-      const createOfferStub = stub(bobAgent.credentials, 'createOffer')
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
-      const getResult = (): Promise<{ message: AgentMessage; credentialRecord: CredentialExchangeRecord }> =>
+      const getResult = (): Promise<{ message: AgentMessage; credentialExchangeRecord: CredentialExchangeRecord }> =>
         createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
@@ -472,9 +475,9 @@ describe('CredentialController', () => {
 
   describe('Create a credential offer and a corresponding invitation using create-invitation', () => {
     test('should return single credential record with attached offer message', async () => {
-      const createOfferStub = stub(bobAgent.credentials, 'createOffer')
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
-      const getResult = (): Promise<{ message: AgentMessage; credentialRecord: CredentialExchangeRecord }> =>
+      const getResult = (): Promise<{ message: AgentMessage; credentialExchangeRecord: CredentialExchangeRecord }> =>
         createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
@@ -500,7 +503,7 @@ describe('CredentialController', () => {
     })
 
     test('should return single out of bound record', async () => {
-      const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
+      const createInvitationStub = stub(bobAgent.didcomm.oob, 'createInvitation')
       createInvitationStub.resolves(outOfBandRecord)
 
       const params = {
@@ -523,9 +526,9 @@ describe('CredentialController', () => {
 
   describe('Create a credential offer and a corresponding invitation using create-legacy-connectionless-invitation', () => {
     test('should return single credential record with attached offer message', async () => {
-      const createOfferStub = stub(bobAgent.credentials, 'createOffer')
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
-      const getResult = (): Promise<{ message: AgentMessage; credentialRecord: CredentialExchangeRecord }> =>
+      const getResult = (): Promise<{ message: AgentMessage; credentialExchangeRecord: CredentialExchangeRecord }> =>
         createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
@@ -569,7 +572,7 @@ describe('CredentialController', () => {
         recordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
       }
 
-      const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
+      const createLegacyConnectionlessInvitationStub = stub(bobAgent.didcomm.oob, 'createLegacyConnectionlessInvitation')
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
@@ -606,9 +609,9 @@ describe('CredentialController', () => {
     }
 
     test('should return credential record', async () => {
-      const findByIdStub = stub(bobAgent.connections, 'findById')
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
       findByIdStub.resolves(connection)
-      const offerCredentialStub = stub(bobAgent.credentials, 'offerCredential')
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
       offerCredentialStub.resolves(testCredential)
 
       const getResult = (): Promise<CredentialExchangeRecord> => offerCredentialStub.firstCall.returnValue
@@ -621,11 +624,11 @@ describe('CredentialController', () => {
     })
 
     test('should give 404 not found when credential is not found', async () => {
-      const findByIdStub = stub(bobAgent.connections, 'findById')
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
       findByIdStub.resolves(connection) //connection is present - fails on missing credential definition
       const response = await request(app)
         .post('/v1/credentials/accept-offer')
-        .send({ credentialRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
+        .send({ credentialExchangeRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -633,15 +636,15 @@ describe('CredentialController', () => {
       //fails on missing connection
       const response = await request(app)
         .post('/v1/credentials/accept-offer')
-        .send({ credentialRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
+        .send({ credentialExchangeRecordId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa' })
 
       expect(response.statusCode).to.be.equal(404)
     })
 
     test('should support jsonld format in offer', async () => {
-      const findByIdStub = stub(bobAgent.connections, 'findById')
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
       findByIdStub.resolves(connection)
-      const offerCredentialStub = stub(bobAgent.credentials, 'offerCredential')
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
       offerCredentialStub.resolves(testCredential)
 
       const offerRequestJsonLd: OfferCredentialOptions = {
@@ -681,7 +684,7 @@ describe('CredentialController', () => {
 
   describe('Accept a credential offer', () => {
     test('should return credential record', async () => {
-      const acceptOfferStub = stub(bobAgent.credentials, 'acceptOffer')
+      const acceptOfferStub = stub(bobAgent.didcomm.credentials, 'acceptOffer')
       acceptOfferStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptOfferStub.firstCall.returnValue
 
@@ -689,7 +692,7 @@ describe('CredentialController', () => {
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
-      expect(acceptOfferStub.calledWithMatch({ credentialRecordId: testCredential.id })).equals(true)
+      expect(acceptOfferStub.calledWithMatch({ credentialExchangeRecordId: testCredential.id })).equals(true)
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
@@ -702,7 +705,7 @@ describe('CredentialController', () => {
 
   describe('Accept a credential request', () => {
     test('should return credential record', async () => {
-      const acceptRequestStub = stub(bobAgent.credentials, 'acceptRequest')
+      const acceptRequestStub = stub(bobAgent.didcomm.credentials, 'acceptRequest')
       acceptRequestStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptRequestStub.firstCall.returnValue
 
@@ -710,7 +713,7 @@ describe('CredentialController', () => {
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
-      expect(acceptRequestStub.calledWithMatch({ credentialRecordId: testCredential.id })).equals(true)
+      expect(acceptRequestStub.calledWithMatch({ credentialExchangeRecordId: testCredential.id })).equals(true)
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
@@ -723,7 +726,7 @@ describe('CredentialController', () => {
 
   describe('Accept a credential', () => {
     test('should return credential record', async () => {
-      const acceptCredentialStub = stub(bobAgent.credentials, 'acceptCredential')
+      const acceptCredentialStub = stub(bobAgent.didcomm.credentials, 'acceptCredential')
       acceptCredentialStub.resolves(testCredential)
       const getResult = (): Promise<CredentialExchangeRecord> => acceptCredentialStub.firstCall.returnValue
 
@@ -731,7 +734,7 @@ describe('CredentialController', () => {
       const result = await getResult()
 
       expect(response.statusCode).to.be.equal(200)
-      expect(acceptCredentialStub.calledWithMatch({ credentialRecordId: testCredential.id })).equals(true)
+      expect(acceptCredentialStub.calledWithMatch({ credentialExchangeRecordId: testCredential.id })).equals(true)
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
@@ -744,7 +747,7 @@ describe('CredentialController', () => {
 
   describe('Send problem report about a credential', () => {
     test('should send a problem report', async () => {
-      const problemRecordStub = stub(bobAgent.credentials, 'sendProblemReport')
+      const problemRecordStub = stub(bobAgent.didcomm.credentials, 'sendProblemReport')
       problemRecordStub.resolves(testCredential)
 
       const getResult = (): Promise<CredentialExchangeRecord> => problemRecordStub.firstCall.returnValue
@@ -758,7 +761,7 @@ describe('CredentialController', () => {
       expect(response.statusCode).to.be.equal(200)
       expect(problemRecordStub.calledOnce).to.be.equal(true)
       expect(problemRecordStub.firstCall.args[0]).to.deep.equal({
-        credentialRecordId: testCredential.id,
+        credentialExchangeRecordId: testCredential.id,
         description: 'some Error report',
       })
     })
@@ -766,9 +769,9 @@ describe('CredentialController', () => {
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
+    await deleteAgentStore(bobAgent)
     await closeWebSocket(socket)
     app.close()
   })

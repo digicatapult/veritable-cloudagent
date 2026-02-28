@@ -6,17 +6,14 @@ import type {
 } from './messages/index.js'
 import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
 
+import { AgentContext, injectable } from '@credo-ts/core'
 import {
-  AgentContext,
-  injectable,
-} from '@credo-ts/core'
-import {
-  type CreateProofRequestOptions,
-  type DidCommConnectionRecord as ConnectionRecord,
   DidCommConnectionsApi as ConnectionsApi,
   DidCommMessageHandlerRegistry as MessageHandlerRegistry,
   DidCommMessageSender as MessageSender,
   DidCommOutboundMessageContext as OutboundMessageContext,
+  type DidCommConnectionRecord as ConnectionRecord,
+  type CreateProofRequestOptions,
   type DidCommProofProtocol,
 } from '@credo-ts/didcomm'
 

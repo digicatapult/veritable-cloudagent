@@ -13,7 +13,9 @@ export default class Ipfs {
     try {
       new URL(origin)
     } catch (err) {
-      throw new Error(`Invalid origin ${origin} ${err}`)
+      throw new Error(`Invalid origin ${origin}`, {
+        cause: err,
+      })
     }
   }
 
@@ -34,7 +36,9 @@ export default class Ipfs {
       )
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new Error(`Timeout fetching file ${cid} from IPFS`)
+        throw new Error(`Timeout fetching file ${cid} from IPFS`, {
+          cause: err,
+        })
       }
       throw err
     } finally {
@@ -59,7 +63,9 @@ export default class Ipfs {
       response = await this.makeIpfsRequest('/api/v0/add', { 'cid-version': '1' }, form, controller.signal)
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new Error(`Timeout uploading file to IPFS`)
+        throw new Error(`Timeout uploading file to IPFS`, {
+          cause: err,
+        })
       }
       throw err
     } finally {
@@ -72,9 +78,13 @@ export default class Ipfs {
       return parsedResponse.Hash
     } catch (err) {
       if (err instanceof Error && err.message.startsWith('Timeout')) {
-        throw err
+        throw new Error(err.message, {
+          cause: err,
+        })
       }
-      throw new Error(`Error calling IPFS`)
+      throw new Error(`Error calling IPFS`, {
+        cause: err,
+      })
     }
   }
 
@@ -106,7 +116,9 @@ export default class Ipfs {
     })
 
     if (!response.ok) {
-      throw new Error(`Error calling IPFS`)
+      throw new Error(`Error calling IPFS`, {
+        cause: new Error(`HTTP ${response.status}`),
+      })
     }
 
     return response

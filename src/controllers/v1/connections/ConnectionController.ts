@@ -1,8 +1,4 @@
-import {
-  Agent,
-  CredoError,
-  RecordNotFoundError,
-} from '@credo-ts/core'
+import { Agent, CredoError, RecordNotFoundError } from '@credo-ts/core'
 import {
   DidCommConnectionRecordProps as ConnectionRecordProps,
   DidCommConnectionRepository as ConnectionRepository,
@@ -245,8 +241,12 @@ export class ConnectionController extends Controller {
           await this.agent.didcomm.connections.deleteById(id)
         }
       }
+      const agentConfig = this.agent.config as typeof this.agent.config & {
+        label?: string
+      }
       const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.receiveImplicitInvitation({
         did,
+        label: agentConfig.label ?? 'Cloudagent',
         handshakeProtocols: [HandshakeProtocol.Connections],
       })
 

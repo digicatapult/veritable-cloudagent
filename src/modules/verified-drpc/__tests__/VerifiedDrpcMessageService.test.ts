@@ -3,20 +3,19 @@ import { describe, it } from 'mocha'
 import type { SinonStubbedInstance } from 'sinon'
 import * as sinon from 'sinon'
 
-import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
+import type { AnonCredsDidCommProofFormatService as AnonCredsProofFormatService } from '@credo-ts/anoncreds'
+import { type AgentContext, EventEmitter } from '@credo-ts/core'
 import {
-  ConnectionRecord,
-  ConnectionRecordProps,
-  DidExchangeRole,
-  DidExchangeState,
-  EventEmitter,
-  InboundMessageContext,
-  ProofEventTypes,
-  ProofsApi,
-  ProofState,
-  type AgentContext,
-  type V2ProofProtocol,
-} from '@credo-ts/core'
+  DidCommConnectionRecord as ConnectionRecord,
+  type DidCommConnectionRecordProps as ConnectionRecordProps,
+  DidCommDidExchangeRole as DidExchangeRole,
+  DidCommDidExchangeState as DidExchangeState,
+  DidCommInboundMessageContext as InboundMessageContext,
+  DidCommProofEventTypes as ProofEventTypes,
+  DidCommProofsApi as ProofsApi,
+  DidCommProofState as ProofState,
+  type DidCommProofV2Protocol as V2ProofProtocol,
+} from '@credo-ts/didcomm'
 
 import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'

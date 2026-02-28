@@ -1,16 +1,15 @@
 import { expect } from 'chai'
 import { after, before, describe, test } from 'mocha'
 
-import type { Agent } from '@credo-ts/core'
 import type { Server } from 'node:net'
 
 import request from 'supertest'
 
-import { getTestAgent, getTestServer } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestServer, type TestAgent } from './utils/helpers.js'
 
 describe('AgentController', () => {
   let app: Server
-  let agent: Agent
+  let agent: TestAgent
 
   before(async () => {
     agent = await getTestAgent('Agent REST Agent Test', 3001)
@@ -52,7 +51,7 @@ describe('AgentController', () => {
 
   after(async () => {
     await agent.shutdown()
-    await agent.wallet.delete()
+    await deleteAgentStore(agent)
     app.close()
   })
 })

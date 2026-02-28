@@ -1,4 +1,4 @@
-import type { GetCredentialFormatDataReturn } from '@credo-ts/core'
+import type { GetCredentialFormatDataReturn } from '@credo-ts/didcomm'
 
 import type { CredentialFormatData, CredentialFormats } from '../controllers/types/index.js'
 

@@ -49,9 +49,18 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
     agentContext: AgentContext,
     options: RegisterSchemaOptions
   ): Promise<RegisterSchemaReturn> {
-    let cid: string | null = null
     try {
-      cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.schema), 'utf8'))
+      const cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.schema), 'utf8'))
+
+      return {
+        schemaState: {
+          state: 'finished',
+          schema: options.schema,
+          schemaId: `ipfs://${cid}`,
+        },
+        registrationMetadata: {},
+        schemaMetadata: {},
+      }
     } catch (err) {
       agentContext.config.logger.debug(`${err}`)
       agentContext.config.logger.error(`Failed to upload schema to IPFS`, {
@@ -67,16 +76,6 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
           reason: `unknownError`,
         },
       }
-    }
-
-    return {
-      schemaState: {
-        state: 'finished',
-        schema: options.schema,
-        schemaId: `ipfs://${cid}`,
-      },
-      registrationMetadata: {},
-      schemaMetadata: {},
     }
   }
 
@@ -125,9 +124,18 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
       }
     }
 
-    let cid: string | null = null
     try {
-      cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.credentialDefinition), 'utf8'))
+      const cid = await this.ipfs.uploadFile(Buffer.from(JSON.stringify(options.credentialDefinition), 'utf8'))
+
+      return {
+        credentialDefinitionState: {
+          state: 'finished',
+          credentialDefinition: options.credentialDefinition,
+          credentialDefinitionId: `ipfs://${cid}`,
+        },
+        registrationMetadata: {},
+        credentialDefinitionMetadata: {},
+      }
     } catch (err) {
       agentContext.config.logger.debug(`${err}`)
       agentContext.config.logger.error(`Failed to upload schema to IPFS`, {
@@ -143,16 +151,6 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
           reason: `unknownError`,
         },
       }
-    }
-
-    return {
-      credentialDefinitionState: {
-        state: 'finished',
-        credentialDefinition: options.credentialDefinition,
-        credentialDefinitionId: `ipfs://${cid}`,
-      },
-      registrationMetadata: {},
-      credentialDefinitionMetadata: {},
     }
   }
 
@@ -195,9 +193,10 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
 
     const cid = match[1]
 
-    let schemaBuffer: Buffer | null = null
+    let resultText: string
     try {
-      schemaBuffer = await this.ipfs.getFile(cid)
+      const schemaBuffer = await this.ipfs.getFile(cid)
+      resultText = schemaBuffer.toString('utf8')
     } catch (err) {
       agentContext.config.logger.error(`Failed to fetch ${cid} from IPFS`, {
         cid,
@@ -212,11 +211,13 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
         },
       }
     }
-
-    const resultText = schemaBuffer.toString('utf8')
-    let result: AObj | null = null
     try {
-      result = JSON.parse(resultText) as AObj
+      const result = JSON.parse(resultText) as AObj
+
+      return {
+        type: 'success',
+        result: result,
+      }
     } catch (err) {
       agentContext.config.logger.debug(`${err}`)
       agentContext.config.logger.error(`Failed to parse content of ${cid}`, {
@@ -231,11 +232,6 @@ export default class VeritableAnonCredsRegistry implements AnonCredsRegistry {
           message: `contents could not be parsed`,
         },
       }
-    }
-
-    return {
-      type: 'success',
-      result: result,
     }
   }
 }

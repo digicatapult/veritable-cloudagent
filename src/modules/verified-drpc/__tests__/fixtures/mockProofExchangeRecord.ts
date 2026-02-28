@@ -1,4 +1,8 @@
-import { ProofExchangeRecord, ProofRole, ProofState } from '@credo-ts/core'
+import {
+  DidCommProofExchangeRecord as ProofExchangeRecord,
+  DidCommProofRole as ProofRole,
+  DidCommProofState as ProofState,
+} from '@credo-ts/didcomm'
 
 export const withMockProofExchangeRecord = (props: Partial<ProofExchangeRecord>) => {
   return new ProofExchangeRecord({

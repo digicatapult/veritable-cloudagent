@@ -5,14 +5,22 @@ import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
-import { KeyType, type Agent, type DidCreateResult, type DidRecord } from '@credo-ts/core'
+import { type DidCreateResult, type DidRecord } from '@credo-ts/core'
 
 import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types/index.js'
-import { getTestAgent, getTestDidCreate, getTestDidDocument, getTestServer, objectToJson } from './utils/helpers.js'
+import {
+  deleteAgentStore,
+  getTestAgent,
+  getTestDidCreate,
+  getTestDidDocument,
+  getTestServer,
+  objectToJson,
+  type TestAgent,
+} from './utils/helpers.js'
 
 describe('DidController', () => {
   let app: Server
-  let aliceAgent: Agent
+  let aliceAgent: TestAgent
   let testDidDocument: Record<string, unknown>
   let testDidCreate: DidCreateResult
 
@@ -82,7 +90,7 @@ describe('DidController', () => {
     const createRequest: DidCreateOptions = {
       method: 'key',
       options: {
-        keyType: KeyType.Ed25519,
+        keyType: 'Ed25519',
       },
     }
 
@@ -104,7 +112,7 @@ describe('DidController', () => {
       const createRequest: DidCreateOptions = {
         method: 'foo',
         options: {
-          keyType: KeyType.Ed25519,
+          keyType: 'Ed25519',
         },
       }
       const response = await request(app).post(`/v1/dids/create`).send(createRequest)
@@ -114,7 +122,7 @@ describe('DidController', () => {
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     app.close()
   })
 })

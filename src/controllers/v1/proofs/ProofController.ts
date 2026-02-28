@@ -1,5 +1,9 @@
+import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
 import { Agent, RecordNotFoundError } from '@credo-ts/core'
-import { type DidCommProofExchangeRecordProps as ProofExchangeRecordProps, type DidCommProofFormatPayload as ProofFormatPayload } from '@credo-ts/didcomm'
+import {
+  type DidCommProofExchangeRecordProps as ProofExchangeRecordProps,
+  type DidCommProofFormatPayload as ProofFormatPayload,
+} from '@credo-ts/didcomm'
 import {
   Body,
   Controller,
@@ -332,16 +336,16 @@ export class ProofController extends Controller {
       if (errors) throw new ValidateError(errors, 'Validation Failed')
     }
 
-    const { message, proofExchangeRecord } = await this.agent.didcomm.proofs.createRequest({
+    const { message, proofRecord } = await this.agent.didcomm.proofs.createRequest({
       proofFormats: transformProofFormats(proofFormats),
       ...rest,
     } satisfies InternalCreateProofRequestOptions)
 
-    req.log.info('returning proof record %j', { proofExchangeRecord, message })
+    req.log.info('returning proof record %j', { proofRecord, message })
 
     return {
       message,
-      proofRecord: proofExchangeRecord,
+      proofRecord,
     }
   }
 
@@ -526,7 +530,14 @@ export class ProofController extends Controller {
     const availableCredentials = await this.agent.didcomm.proofs.getCredentialsForRequest({
       proofExchangeRecordId: proofRecordId,
     })
-    const availableAnonCreds = availableCredentials.proofFormats.anoncreds
+    const availableAnonCreds = (
+      availableCredentials.proofFormats as {
+        anoncreds?: {
+          attributes?: Record<string, AnonCredsRequestedAttributeMatch[]>
+          predicates?: Record<string, AnonCredsRequestedPredicateMatch[]>
+        }
+      }
+    ).anoncreds
 
     const attrCount = Object.keys(availableAnonCreds?.attributes || {}).length
     const predCount = Object.keys(availableAnonCreds?.predicates || {}).length

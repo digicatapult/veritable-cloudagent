@@ -10,18 +10,19 @@ export function IsValidVerifiedDrpcRequest(validationOptions?: ValidationOptions
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           validate: (value: any): boolean => {
             // Check if value is a VerifiedDrpcRequestObject or an array of VerifiedDrpcRequestObject
-            let isValid = false
-            if (!Array.isArray(value)) {
-              isValid = isValidVerifiedDrpcRequest(value)
-            } else {
-              isValid = value.every(isValidVerifiedDrpcRequest)
+            if (Array.isArray(value)) {
+              if (!value.every(isValidVerifiedDrpcRequest)) {
+                throw new ValidationError()
+              }
+
+              return true
             }
 
-            if (!isValid) {
+            if (!isValidVerifiedDrpcRequest(value)) {
               throw new ValidationError()
             }
 
-            return isValid
+            return true
           },
           defaultMessage: buildMessage(
             (eachPrefix) => eachPrefix + '$property is not a valid VerifiedDrpcRequest',

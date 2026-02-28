@@ -1,7 +1,7 @@
 import type {
+  DidCommProofProtocol,
   DidCommMessageHandler as MessageHandler,
   DidCommMessageHandlerInboundMessage as MessageHandlerInboundMessage,
-  DidCommProofProtocol,
 } from '@credo-ts/didcomm'
 import type { VerifiedDrpcService } from '../services/VerifiedDrpcService.js'
 

@@ -1,4 +1,5 @@
 import type { AnonCredsSchema, AnonCredsSchemaRecord } from '@credo-ts/anoncreds'
+import { AskarStoreManager } from '@credo-ts/askar'
 import type { Server } from 'node:net'
 import type { RestAgent } from '../../src/agent.js'
 
@@ -218,7 +219,7 @@ describe('SchemaController', () => {
 
   after(async () => {
     await agent.shutdown()
-    await agent.wallet.delete()
+    await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
     app.close()
   })
 })
