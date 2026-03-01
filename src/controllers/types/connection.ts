@@ -2,6 +2,7 @@
  * Connection and Out-of-Band Invitation types.
  */
 import type {
+  DidCommRouting,
   DidCommHandshakeProtocol as HandshakeProtocol,
   OutOfBandDidCommService,
   ReceiveOutOfBandInvitationConfig,
@@ -24,7 +25,9 @@ export interface AcceptInvitationConfig {
   label: string
   alias?: string
   imageUrl?: string
-  mediatorId?: string
+  routing?: DidCommRouting
+  timeoutMs?: number
+  ourDid?: string
 }
 
 export interface OutOfBandInvitationSchema {

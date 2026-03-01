@@ -104,7 +104,7 @@ The generated DID:web document follows the W3C DID Core specification and includ
 - **capabilityInvocation**: References `#auth-key`
 - **service**: DIDComm v1-compatible `did-communication` service with `recipientKeys` referencing `#auth-key`
 
-For migration details from the legacy generated shape (`#owner`/`#encryption`, multibase/base58 keys), see `docs/didweb-canonical-v0.6-migration.md`.
+For migration details from the legacy generated shape (`#owner`/`#encryption`, multibase/base58 keys), see `docs/credo-v0.6-migration-release-notes.md` (DID:web generated document shape section).
 
 ### Loading `did:web`s
 

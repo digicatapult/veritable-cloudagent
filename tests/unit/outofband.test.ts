@@ -432,7 +432,8 @@ describe('OutOfBandController', () => {
         label: 'test',
         alias: 'test',
         imageUrl: 'test',
-        mediatorId: 'test',
+        timeoutMs: 15000,
+        ourDid: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
       }
 
       const response = await request(app)
@@ -456,7 +457,8 @@ describe('OutOfBandController', () => {
         label: 'test',
         alias: 'test',
         imageUrl: 'test',
-        mediatorId: 'test',
+        timeoutMs: 15000,
+        ourDid: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
       }
 
       const response = await request(app)

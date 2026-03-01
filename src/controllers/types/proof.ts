@@ -69,7 +69,7 @@ export interface AcceptProofProposalOptions {
   proofFormats?: {
     /**
      * Stage-correct accept-proposal payload.
-     * Credo TS v0.5.x expects only name/version here (not a full proof request).
+     * Credo TS v0.6.x expects only name/version here (not a full proof request).
      */
     anoncreds?: {
       name?: string
