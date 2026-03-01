@@ -1,6 +1,6 @@
-# OpenAPI ↔ Credo TS v0.5.x type alignment (current approach)
+# OpenAPI ↔ Credo TS v0.6.x type alignment (current approach)
 
-This document explains how veritable-cloudagent aligns its **TSOA/OpenAPI DTO types** with **Credo TS v0.5.x** internal types while keeping OpenAPI generation stable.
+This document explains how veritable-cloudagent aligns its **TSOA/OpenAPI DTO types** with **Credo TS v0.6.x** internal types while keeping OpenAPI generation stable.
 
 It is intentionally short and describes the *current implementation* on this branch.
 
@@ -36,14 +36,29 @@ We treat controller types as *DTOs for OpenAPI*, and we bridge to Credo types at
 
 ---
 
+## Controller boundary strategy (v0.6.x)
+
+- Controller DTOs under `src/controllers/types/` are OpenAPI boundary contracts.
+- Explicit local DTO interfaces are preferred over utility-type composition (`Pick`/`Omit`) in controller request/response models.
+- Upstream naming is used directly where semantics match (including `...Options`).
+- Direct Credo re-exports are used only where schema/model stability is proven (for example DID request/resolution types).
+
+## DID alignment updates in v0.6.x
+
+- DID request/resolution contracts now use upstream Credo exports where stable:
+   - `DidCreateOptions`
+   - `ImportDidOptions`
+   - `DidResolutionResult`
+- DID create-state response DTOs remain local boundary models with explicit `state` discriminants, while sharing a local base shape for maintainability.
+
 ## Proofs: DIF Presentation Exchange (PEX)
 
-### DTO shape vs Credo v0.5.x expectations
+### DTO shape vs Credo v0.6.x expectations
 
 - Controller DTOs model `presentationDefinition` as a TSOA-friendly, “v2-looking” approximation (`PresentationDefinitionV2`) in `src/controllers/types/pex.ts`.
-- Credo v0.5.x’s declared PEX type surface is **V1-shaped** (e.g., `DifPresentationExchangeDefinitionV1`).
+- Credo v0.6.x still exposes PEX types that can pull in deeper Sphereon model graphs when used directly in controller signatures.
 
-### How we keep this safe on v0.5.x
+### How we keep this safe on v0.6.x
 
 1. **Runtime validator: v1-compatible PEX profile**
    - Implemented as `validatePexV1Presentation` in `src/utils/proofs.ts`.
@@ -96,11 +111,12 @@ Example (already done in this repo): JSON-LD credential format types are re-expo
 
 ---
 
-## Practical rules of thumb (v0.5.x)
+## Practical rules of thumb (v0.6.x)
 
 - If importing a Credo type into a controller signature drags in Sphereon PEX models: **do not import it**. Define a local DTO and bridge at the boundary.
 - If DTOs are intentionally broader than Credo: add a **runtime validator** and return a 422 on unsupported input.
 - Prefer `satisfies` for agent option objects (DTO → internal) to avoid wide `as Internal...` casts.
+- Avoid utility-type composition (`Pick`/`Omit`) in TSOA controller boundary models.
 - Keep stage-specific payloads stage-correct in DTOs; don’t accept request-stage payloads in accept-stage endpoints.
 
 ---

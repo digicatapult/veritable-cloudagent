@@ -193,15 +193,23 @@ For detailed documentation on how to control creating proofs with specific crede
 
 ## Developer Notes: Type Safety & Internal Casts
 
-In the controller layer (`src/controllers/`), we use the `satisfies` keyword at the DTO boundary to align API types with the agent's internal method parameter types, with a small number of explicit casts where needed (e.g., proof accept-request formats).
+In the controller layer (`src/controllers/`), we use the `satisfies` keyword at the DTO boundary to align API types with the agent's internal method parameter types, with a small number of explicit casts where needed (for example, proof format adaptation in utility helpers).
 
 ### Why is this necessary?
 
 The codebase bridges two distinct type systems:
 
-1. **Rest API Types (TSOA):** Defined in `src/controllers/types.ts`. These are "Plain Old JavaScript Objects" (POJOs) optimized for generating clean OpenAPI/Swagger documentation. They explicitly list fields for supported protocols (like `anoncreds` and `w3c` in `credentialFormats`).
+1. **Rest API Types (TSOA):** Defined under `src/controllers/types/`. These are "Plain Old JavaScript Objects" (POJOs) optimized for generating clean OpenAPI/Swagger documentation. They explicitly list fields for supported protocols (for example `anoncreds` and `jsonld` in `credentialFormats`).
 2. **Internal Framework Types (Credo-TS):** Defined dynamically throughout `@credo-ts/core`. These types often rely on complex TypeScript generics to support extensible modules (e.g., `CredentialFormatPayload<CredentialFormats[], 'acceptOffer'>`).
 
 While the API type and the internal type are structurally compatible (they hold the same data), the TypeScript compiler cannot easily verify that the explicit TSOA object satisfies the complex generic constraints of the extensible agent modules.
 
-Using `satisfies` and explicit casts only where necessary acts as a verified bridge. It confirms to the compiler that the API input conforms to the internal module requirements without circumventing type safety (which using `as unknown` would do). This ensures we can support polymorphic endpoints—handling both AnonCreds and W3C formats simultaneously—while maintaining strict compilation checks.
+Using `satisfies` and explicit casts only where necessary acts as a verified bridge. It confirms to the compiler that the API input conforms to the internal module requirements without circumventing type safety (which using `as unknown` would do). This ensures we can support polymorphic endpoints—handling both AnonCreds and W3C JSON-LD formats simultaneously—while maintaining strict compilation checks.
+
+### Current v0.6.x boundary rules
+
+* Prefer explicit local DTO interfaces at TSOA controller boundaries.
+* Avoid `Pick`/`Omit` utility-type composition in controller request/response models.
+* Prefer upstream naming directly (including `...Options`) when semantics match.
+* Keep proof/PEX DTOs local intentionally to avoid Sphereon/PEX graph instability in OpenAPI generation.
+* Reuse direct Credo type re-exports where proven stable (for example DID request/resolution option types).

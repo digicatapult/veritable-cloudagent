@@ -1,5 +1,10 @@
 /**
  * Proof Presentation (Request, Proposal) types.
+ *
+ * NOTE: Proof DTOs remain local controller-boundary types by design.
+ * We keep stage-specific request shapes and simplified accept-request payload support
+ * (`SimpleProofFormats`) to preserve API behaviour and avoid leaking deeper PEX/Sphereon
+ * model graphs into TSOA-generated schemas.
  */
 import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
 import type {
@@ -29,6 +34,11 @@ export interface ProposeProofOptions {
 }
 
 export interface SimpleProofFormats {
+  /**
+   * API-friendly simplified credential selection input for accept-request.
+   * This intentionally diverges from full proof-format payloads and is validated
+   * via `isSimpleAnonCredsProofFormats` in `src/utils/proofs.ts`.
+   */
   anoncreds?: {
     attributes?: Record<
       string,
