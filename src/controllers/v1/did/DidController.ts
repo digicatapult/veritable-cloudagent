@@ -10,7 +10,7 @@ import type {
   DID,
   DidCreateOptions,
   DidCreateResult,
-  DidResolutionResultProps,
+  DidResolutionResult,
   ImportDidOptions,
 } from '../../types/index.js'
 
@@ -28,9 +28,9 @@ export class DidController extends Controller {
   /**
    * Retrieve schema
    *
-   * @returns DidResolutionResultProps[]
+   * @returns DidResolutionResult[]
    */
-  @Example<DidResolutionResultProps[]>([DidRecordExample])
+  @Example<DidResolutionResult[]>([DidRecordExample])
   @Get('/')
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
@@ -38,7 +38,7 @@ export class DidController extends Controller {
     @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
     @Query('method') method?: string
-  ): Promise<DidResolutionResultProps[]> {
+  ): Promise<DidResolutionResult[]> {
     if (!createdLocally) {
       throw new BadRequest('can only list DIDs created locally')
     }
@@ -69,7 +69,7 @@ export class DidController extends Controller {
    * @param did Decentralized Identifier
    * @returns DidResolutionResult
    */
-  @Example<DidResolutionResultProps>(DidRecordExample)
+  @Example<DidResolutionResult>(DidRecordExample)
   @Get('/:did')
   public async getDidRecordByDid(@Request() req: express.Request, @Path('did') did: DID) {
     req.log.debug('resolving %s', did)
@@ -88,9 +88,9 @@ export class DidController extends Controller {
    * Import a DID to the Agent and return the DID resolution result
    *
    * @param options
-   * @returns DidResolutionResultProps
+   * @returns DidResolutionResult
    */
-  @Example<DidResolutionResultProps>(DidRecordExample)
+  @Example<DidResolutionResult>(DidRecordExample)
   @Post('/import')
   @Response<BadRequest['message']>(400)
   @Response<HttpResponse>(500)
@@ -112,7 +112,7 @@ export class DidController extends Controller {
    * Create a DID and return the DID resolution result
    *
    * @param options
-   * @returns DidResolutionResultProps
+   * @returns DidResolutionResult
    */
   @Example<DidCreateResult>(DidStateExample)
   @Post('/create')

@@ -1,23 +1,12 @@
 /**
  * DID Resolution, Creation, and Management types.
  */
-import type {
-  DidDocument,
-  DidDocumentMetadata,
-  DidRegistrationSecretOptions,
-  DidResolutionMetadata,
-} from '@credo-ts/core'
+import type { DidDocument, DidRegistrationSecretOptions } from '@credo-ts/core'
 import type { DID } from './common.js'
 
-export type { DidCreateOptions, ImportDidOptions } from '@credo-ts/core'
+export type { DidCreateOptions, DidResolutionResult, ImportDidOptions } from '@credo-ts/core'
 
 type DidDocumentLike = DidDocument | Record<string, unknown>
-
-export interface DidResolutionResultProps {
-  didResolutionMetadata: DidResolutionMetadata
-  didDocument: DidDocument | null
-  didDocumentMetadata: DidDocumentMetadata
-}
 
 export interface DidOperationStateFinished {
   state: 'finished'
