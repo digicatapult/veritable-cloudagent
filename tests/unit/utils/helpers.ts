@@ -217,7 +217,7 @@ export function getTestCredential() {
       state: 'proposal-sent',
       threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
     },
-    type: 'CredentialRecord',
+    type: 'CredentialExchangeRecord',
     id: '222222aa-aa22-42a2-aa22-222a2aa22222',
     createdAt: '2021-01-01T00:00:00.000Z',
     state: 'proposal-sent',
@@ -346,13 +346,13 @@ export function getTestOffer() {
         },
       ],
     },
-    credentialRecord: {
+    credentialExchangeRecord: {
       _tags: {
         connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
         state: 'proposal-sent',
         threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
       },
-      type: 'CredentialRecord',
+      type: 'CredentialExchangeRecord',
       id: '222222aa-aa22-42a2-aa22-222a2aa22222',
       createdAt: '2021-01-01T00:00:00.000Z',
       state: 'proposal-sent',
@@ -398,7 +398,7 @@ export function getTestOffer() {
 
   return {
     message: JsonTransformer.fromJSON(json.message, AgentMessage),
-    credentialRecord: JsonTransformer.fromJSON(json.credentialRecord, CredentialExchangeRecord),
+    credentialExchangeRecord: JsonTransformer.fromJSON(json.credentialExchangeRecord, CredentialExchangeRecord),
   }
 }
 

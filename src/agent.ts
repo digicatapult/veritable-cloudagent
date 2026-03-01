@@ -1,3 +1,6 @@
+// Must import before @credo-ts/anoncreds
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+
 import {
   AnonCredsDidCommCredentialFormatService,
   AnonCredsDidCommProofFormatService,
@@ -27,7 +30,6 @@ import {
 } from '@credo-ts/didcomm'
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
-import { anoncreds } from '@hyperledger/anoncreds-nodejs'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import { registerAskar } from '@openwallet-foundation/askar-shared'
 import { container } from 'tsyringe'

@@ -90,7 +90,12 @@ describe('DidController', () => {
     const createRequest: DidCreateOptions = {
       method: 'key',
       options: {
-        keyType: 'Ed25519',
+        createKey: {
+          type: {
+            kty: 'OKP',
+            crv: 'Ed25519',
+          },
+        },
       },
     }
 
@@ -112,7 +117,12 @@ describe('DidController', () => {
       const createRequest: DidCreateOptions = {
         method: 'foo',
         options: {
-          keyType: 'Ed25519',
+          createKey: {
+            type: {
+              kty: 'OKP',
+              crv: 'Ed25519',
+            },
+          },
         },
       }
       const response = await request(app).post(`/v1/dids/create`).send(createRequest)

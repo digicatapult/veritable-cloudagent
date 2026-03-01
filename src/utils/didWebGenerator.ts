@@ -1,4 +1,4 @@
-import { Agent, DidDocument, JsonTransformer } from '@credo-ts/core'
+import { Agent, DidDocument, JsonTransformer, Kms, TypedArrayEncoder } from '@credo-ts/core'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
@@ -27,28 +27,52 @@ export class DidWebDocGenerator {
       throw new Error('Invalid key material returned from KMS')
     }
 
+    if (
+      authenticationKey.publicJwk.kty !== 'OKP' ||
+      authenticationKey.publicJwk.crv !== 'Ed25519' ||
+      assertionKey.publicJwk.kty !== 'OKP' ||
+      assertionKey.publicJwk.crv !== 'Ed25519' ||
+      keyAgreementKey.publicJwk.kty !== 'OKP' ||
+      keyAgreementKey.publicJwk.crv !== 'X25519'
+    ) {
+      throw new Error('Unexpected key type returned from KMS')
+    }
+
+    const authenticationPublicJwk = Kms.PublicJwk.fromUnknown(authenticationKey.publicJwk)
+    const assertionPublicJwk = Kms.PublicJwk.fromUnknown(assertionKey.publicJwk)
+
+    const authenticationVerificationMethod = {
+      id: `${didId}#auth-key`,
+      type: 'Ed25519VerificationKey2020',
+      controller: didId,
+      publicKeyMultibase: authenticationPublicJwk.fingerprint,
+    }
+
+    const assertionVerificationMethod = {
+      id: `${didId}#assertion-key`,
+      type: 'Ed25519VerificationKey2020',
+      controller: didId,
+      publicKeyMultibase: assertionPublicJwk.fingerprint,
+    }
+
+    const keyAgreementVerificationMethod = {
+      id: `${didId}#agreement-key`,
+      type: 'X25519KeyAgreementKey2019',
+      controller: didId,
+      publicKeyBase58: TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64(keyAgreementKey.publicJwk.x)),
+    }
+
     const didWebDocument = {
-      '@context': ['https://www.w3.org/ns/did/v1', 'https://w3id.org/security/suites/jws-2020/v1'],
+      '@context': [
+        'https://www.w3.org/ns/did/v1',
+        'https://w3id.org/security/suites/ed25519-2020/v1',
+        'https://w3id.org/security/suites/x25519-2019/v1',
+      ],
       id: didId,
       verificationMethod: [
-        {
-          id: `${didId}#auth-key`,
-          type: 'JsonWebKey2020',
-          controller: didId,
-          publicKeyJwk: authenticationKey.publicJwk,
-        },
-        {
-          id: `${didId}#assertion-key`,
-          type: 'JsonWebKey2020',
-          controller: didId,
-          publicKeyJwk: assertionKey.publicJwk,
-        },
-        {
-          id: `${didId}#agreement-key`,
-          type: 'JsonWebKey2020',
-          controller: didId,
-          publicKeyJwk: keyAgreementKey.publicJwk,
-        },
+        authenticationVerificationMethod,
+        assertionVerificationMethod,
+        keyAgreementVerificationMethod,
       ],
       authentication: [`${didId}#auth-key`],
       assertionMethod: [`${didId}#assertion-key`],

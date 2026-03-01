@@ -27,7 +27,8 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
 
     const payload = {
       did: DID_WEB_ALICE,
-      alias: 'Alice (Implicit)',
+      label: 'Bob (Invitee)',
+      alias: 'Alice (Inviter)',
       autoAcceptConnection: true,
     }
 
@@ -107,7 +108,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
             },
           },
           options: {
-            proofType: 'Ed25519Signature2020',
+            proofType: 'Ed25519Signature2018',
             proofPurpose: 'assertionMethod',
           },
         },

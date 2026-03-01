@@ -18,7 +18,8 @@ interface DidWebJson {
     id: string
     type: string
     controller: string
-    publicKeyJwk?: { kty?: string; crv?: string; x?: string }
+    publicKeyMultibase?: string
+    publicKeyBase58?: string
   }>
   authentication: string[]
   assertionMethod: string[]
@@ -54,28 +55,22 @@ describe('DID:web server', function () {
       const agreementKey = verificationMethods.find((method) => method.id === `${did}#agreement-key`)
 
       expect(authKey).to.not.equal(undefined)
-      expect(authKey?.type).to.equal('JsonWebKey2020')
+      expect(authKey?.type).to.equal('Ed25519VerificationKey2020')
       expect(authKey?.controller).to.equal(did)
-      expect(authKey?.publicKeyJwk?.kty).to.equal('OKP')
-      expect(authKey?.publicKeyJwk?.crv).to.equal('Ed25519')
-      expect(authKey?.publicKeyJwk?.x).to.be.a('string')
-      expect((authKey?.publicKeyJwk?.x ?? '').length).to.be.greaterThan(0)
+      expect(authKey?.publicKeyMultibase).to.be.a('string')
+      expect((authKey?.publicKeyMultibase ?? '').length).to.be.greaterThan(0)
 
       expect(assertionKey).to.not.equal(undefined)
-      expect(assertionKey?.type).to.equal('JsonWebKey2020')
+      expect(assertionKey?.type).to.equal('Ed25519VerificationKey2020')
       expect(assertionKey?.controller).to.equal(did)
-      expect(assertionKey?.publicKeyJwk?.kty).to.equal('OKP')
-      expect(assertionKey?.publicKeyJwk?.crv).to.equal('Ed25519')
-      expect(assertionKey?.publicKeyJwk?.x).to.be.a('string')
-      expect((assertionKey?.publicKeyJwk?.x ?? '').length).to.be.greaterThan(0)
+      expect(assertionKey?.publicKeyMultibase).to.be.a('string')
+      expect((assertionKey?.publicKeyMultibase ?? '').length).to.be.greaterThan(0)
 
       expect(agreementKey).to.not.equal(undefined)
-      expect(agreementKey?.type).to.equal('JsonWebKey2020')
+      expect(agreementKey?.type).to.equal('X25519KeyAgreementKey2019')
       expect(agreementKey?.controller).to.equal(did)
-      expect(agreementKey?.publicKeyJwk?.kty).to.equal('OKP')
-      expect(agreementKey?.publicKeyJwk?.crv).to.equal('X25519')
-      expect(agreementKey?.publicKeyJwk?.x).to.be.a('string')
-      expect((agreementKey?.publicKeyJwk?.x ?? '').length).to.be.greaterThan(0)
+      expect(agreementKey?.publicKeyBase58).to.be.a('string')
+      expect((agreementKey?.publicKeyBase58 ?? '').length).to.be.greaterThan(0)
 
       expect(body.authentication).to.deep.equal([`${did}#auth-key`])
       expect(body.assertionMethod).to.deep.equal([`${did}#assertion-key`])

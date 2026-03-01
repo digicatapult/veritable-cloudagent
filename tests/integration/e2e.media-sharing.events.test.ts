@@ -59,7 +59,7 @@ describe('Media Sharing Events (WS)', function () {
   })
 
   it('Bob accepts invitation', async function () {
-    await bob.post('/v1/oob/receive-invitation-url').send({ invitationUrl }).expect(200)
+    await bob.post('/v1/oob/receive-invitation-url').send({ invitationUrl, label: 'Bob (Invitee)' }).expect(200)
   })
 
   it('Alice fetches her connection', async function () {

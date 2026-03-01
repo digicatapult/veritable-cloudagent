@@ -68,7 +68,7 @@ describe('Negotiate proof proposal flows', function () {
 
     const holderAcceptResponse = await holderClient
       .post('/v1/oob/receive-invitation-url')
-      .send({ invitationUrl: issuerInvitationUrl })
+      .send({ invitationUrl: issuerInvitationUrl, label: 'Bob (Invitee)' })
       .expect(200)
     const holderToIssuerConnectionRecordId = holderAcceptResponse.body.connectionRecord.id
 
@@ -135,7 +135,7 @@ describe('Negotiate proof proposal flows', function () {
 
     const holderAcceptVerifierResponse = await holderClient
       .post('/v1/oob/receive-invitation-url')
-      .send({ invitationUrl: verifierInvitationUrl })
+      .send({ invitationUrl: verifierInvitationUrl, label: 'Bob (Invitee)' })
       .expect(200)
     const holderToVerifierConnectionRecordId = holderAcceptVerifierResponse.body.connectionRecord.id
 
@@ -261,7 +261,12 @@ describe('Negotiate proof proposal flows', function () {
     const issuerResponse = await issuerClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'Ed25519',
+        createKey: {
+          type: {
+            kty: 'OKP',
+            crv: 'Ed25519',
+          },
+        },
       },
     })
     const issuerDid = issuerResponse.body.did as string
@@ -269,7 +274,12 @@ describe('Negotiate proof proposal flows', function () {
     const holderResponse = await holderClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'Ed25519',
+        createKey: {
+          type: {
+            kty: 'OKP',
+            crv: 'Ed25519',
+          },
+        },
       },
     })
     const holderDid = holderResponse.body.did as string
@@ -284,7 +294,7 @@ describe('Negotiate proof proposal flows', function () {
 
     const holderAcceptResponse = await holderClient
       .post('/v1/oob/receive-invitation-url')
-      .send({ invitationUrl: issuerInvitationUrl })
+      .send({ invitationUrl: issuerInvitationUrl, label: 'Bob (Invitee)' })
       .expect(200)
     const holderToIssuerConnectionRecordId = holderAcceptResponse.body.connectionRecord.id
 
@@ -364,7 +374,7 @@ describe('Negotiate proof proposal flows', function () {
 
     const holderAcceptVerifierResponse = await holderClient
       .post('/v1/oob/receive-invitation-url')
-      .send({ invitationUrl: verifierInvitationUrl })
+      .send({ invitationUrl: verifierInvitationUrl, label: 'Bob (Invitee)' })
       .expect(200)
     const holderToVerifierConnectionRecordId = holderAcceptVerifierResponse.body.connectionRecord.id
     const verifierToHolderConnectionRecordId = await waitForConnectionByOob(verifierClient, verifierOobId)

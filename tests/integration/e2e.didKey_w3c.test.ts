@@ -39,20 +39,28 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   let verifierThreadId: string
 
   before(async function () {
-    // Create Issuer DID
     const issuerResponse = await issuerClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'Ed25519',
+        createKey: {
+          type: {
+            kty: 'OKP',
+            crv: 'Ed25519',
+          },
+        },
       },
     })
     ISSUER_DID = issuerResponse.body.did
 
-    // Create Holder DID
     const holderResponse = await holderClient.post('/v1/dids/create').send({
       method: 'key',
       options: {
-        keyType: 'Ed25519',
+        createKey: {
+          type: {
+            kty: 'OKP',
+            crv: 'Ed25519',
+          },
+        },
       },
     })
     HOLDER_DID = holderResponse.body.did
@@ -79,7 +87,10 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it("should allow a Holder to accept Issuer's invitation", async function () {
-    const acceptInvitationPayload = { invitationUrl: issuerToHolderInvitationUrl }
+    const acceptInvitationPayload = {
+      invitationUrl: issuerToHolderInvitationUrl,
+      label: 'Bob (Invitee)',
+    }
 
     const response = await holderClient
       .post('/v1/oob/receive-invitation-url')
@@ -198,7 +209,10 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
   })
 
   it("should allow a Holder to accept Verifier's invitation", async function () {
-    const acceptInvitationPayload = { invitationUrl: verifierToHolderInvitationUrl }
+    const acceptInvitationPayload = {
+      invitationUrl: verifierToHolderInvitationUrl,
+      label: 'Bob (Invitee)',
+    }
 
     const response = await holderClient
       .post('/v1/oob/receive-invitation-url')

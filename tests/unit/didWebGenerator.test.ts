@@ -77,33 +77,29 @@ describe('didWebGenerator', function () {
 
     const authKey = generated.didDocument.verificationMethod![0]
     expect(authKey.id).to.equal(`${did}#auth-key`)
-    expect(authKey.type).to.equal('JsonWebKey2020')
+    expect(authKey.type).to.equal('Ed25519VerificationKey2020')
     expect(authKey.controller).to.equal(did)
-    expect(authKey.publicKeyJwk).to.deep.equal({
-      kty: 'OKP',
-      crv: 'Ed25519',
-      x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(11)),
-    })
+    expect(authKey.publicKeyMultibase).to.equal(
+      `z${TypedArrayEncoder.toBase58(new Uint8Array([0xed, 0x01, ...new Uint8Array(32).fill(11)]))}`
+    )
 
     const assertionKey = generated.didDocument.verificationMethod![1]
     expect(assertionKey.id).to.equal(`${did}#assertion-key`)
-    expect(assertionKey.type).to.equal('JsonWebKey2020')
+    expect(assertionKey.type).to.equal('Ed25519VerificationKey2020')
     expect(assertionKey.controller).to.equal(did)
-    expect(assertionKey.publicKeyJwk).to.deep.equal({
-      kty: 'OKP',
-      crv: 'Ed25519',
-      x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(33)),
-    })
+    expect(assertionKey.publicKeyMultibase).to.equal(
+      `z${TypedArrayEncoder.toBase58(new Uint8Array([0xed, 0x01, ...new Uint8Array(32).fill(33)]))}`
+    )
 
     const agreementKey = generated.didDocument.verificationMethod![2]
     expect(agreementKey.id).to.equal(`${did}#agreement-key`)
-    expect(agreementKey.type).to.equal('JsonWebKey2020')
+    expect(agreementKey.type).to.equal('X25519KeyAgreementKey2019')
     expect(agreementKey.controller).to.equal(did)
-    expect(agreementKey.publicKeyJwk).to.deep.equal({
-      kty: 'OKP',
-      crv: 'X25519',
-      x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(22)),
-    })
+    expect(agreementKey.publicKeyBase58).to.equal(
+      TypedArrayEncoder.toBase58(
+        TypedArrayEncoder.fromBase64(TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(22)))
+      )
+    )
 
     expect(generated.didDocument.authentication).to.deep.equal([`${did}#auth-key`])
     expect(generated.didDocument.assertionMethod).to.deep.equal([`${did}#assertion-key`])

@@ -67,7 +67,7 @@ describe('CredentialController', () => {
     const helperOffer = getTestOffer()
     testOffer = {
       message: helperOffer.message,
-      credentialExchangeRecord: helperOffer.credentialRecord,
+      credentialExchangeRecord: helperOffer.credentialExchangeRecord,
     }
     outOfBandRecord = getTestOutOfBandRecord()
     connection = getTestConnection()

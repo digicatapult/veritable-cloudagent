@@ -97,7 +97,10 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   })
 
   it("should allow a Holder to accept an Issuer's invitation", async function () {
-    const acceptInvitationPayload = { invitationUrl: issuerToHolderInvitationUrl }
+    const acceptInvitationPayload = {
+      invitationUrl: issuerToHolderInvitationUrl,
+      label: 'Bob (Invitee)',
+    }
 
     const response = await holderClient
       .post('/v1/oob/receive-invitation-url')
@@ -224,7 +227,10 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   })
 
   it("should allow a Holder to accept Verifier's invitation", async function () {
-    const acceptInvitationPayload = { invitationUrl: verifierToHolderInvitationUrl }
+    const acceptInvitationPayload = {
+      invitationUrl: verifierToHolderInvitationUrl,
+      label: 'Bob (Invitee)',
+    }
 
     const response = await holderClient
       .post('/v1/oob/receive-invitation-url')
