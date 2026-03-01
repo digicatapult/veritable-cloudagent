@@ -8,31 +8,27 @@ export type { DidCreateOptions, DidResolutionResult, ImportDidOptions } from '@c
 
 type DidDocumentLike = DidDocument | Record<string, unknown>
 
-export interface DidOperationStateFinished {
+interface DidOperationStateBase {
+  did?: DID
+  secret?: DidRegistrationSecretOptions
+  didDocument?: DidDocumentLike
+}
+
+export interface DidOperationStateFinished extends Omit<DidOperationStateBase, 'didDocument'> {
   state: 'finished'
   did: DID
-  secret?: DidRegistrationSecretOptions
   didDocument: DidDocumentLike
 }
-export interface DidOperationStateFailed {
+export interface DidOperationStateFailed extends DidOperationStateBase {
   state: 'failed'
-  did?: DID
-  secret?: DidRegistrationSecretOptions
-  didDocument?: DidDocumentLike
   reason: string
 }
-export interface DidOperationStateWait {
+export interface DidOperationStateWait extends DidOperationStateBase {
   state: 'wait'
-  did?: DID
-  secret?: DidRegistrationSecretOptions
-  didDocument?: DidDocumentLike
 }
-export interface DidOperationStateActionBase {
+export interface DidOperationStateActionBase extends DidOperationStateBase {
   state: 'action'
   action: string
-  did?: DID
-  secret?: DidRegistrationSecretOptions
-  didDocument?: DidDocumentLike
 }
 
 export type DidCreateResult = DidOperationStateWait | DidOperationStateActionBase | DidOperationStateFinished
