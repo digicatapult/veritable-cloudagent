@@ -2,20 +2,17 @@
  * Credential Issuance (Proposal, Offer, Request) types.
  */
 import type {
-  DidCommAutoAcceptCredential as AutoAcceptCredential,
-  DidCommCredentialFormatPayload as CredentialFormatPayload,
-  DidCommCredentialPreviewAttributeOptions as CredentialPreviewAttributeOptions,
   CredentialProtocolVersionType,
+  DidCommAutoAcceptCredential,
+  DidCommCredentialFormatPayload,
+  DidCommCredentialPreviewAttributeOptions,
 } from '@credo-ts/didcomm'
-import type { UUID } from './common.js'
 import type { CredentialFormats, CredentialProtocols } from './protocols.js'
 
-export type CredentialAttribute = CredentialPreviewAttributeOptions
-
 export interface CredentialFormatData {
-  proposalAttributes?: CredentialAttribute[]
-  offerAttributes?: CredentialAttribute[]
-  requestAttributes?: CredentialAttribute[]
+  proposalAttributes?: DidCommCredentialPreviewAttributeOptions[]
+  offerAttributes?: DidCommCredentialPreviewAttributeOptions[]
+  requestAttributes?: DidCommCredentialPreviewAttributeOptions[]
   proposal?: Record<string, unknown>
   offer?: Record<string, unknown>
   request?: Record<string, unknown>
@@ -24,41 +21,41 @@ export interface CredentialFormatData {
 
 export interface ProposeCredentialOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createProposal'>
-  autoAcceptCredential?: AutoAcceptCredential
+  credentialFormats: DidCommCredentialFormatPayload<CredentialFormats, 'createProposal'>
+  autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
-  connectionId: UUID
+  connectionId: string
 }
 
 export interface AcceptCredentialProposalOptions {
-  credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptProposal'>
-  autoAcceptCredential?: AutoAcceptCredential
+  credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptProposal'>
+  autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
 }
 
 export interface CreateOfferOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
-  autoAcceptCredential?: AutoAcceptCredential
+  credentialFormats: DidCommCredentialFormatPayload<CredentialFormats, 'createOffer'>
+  autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
 }
 
 export interface OfferCredentialOptions {
   protocolVersion: CredentialProtocolVersionType<CredentialProtocols>
-  credentialFormats: CredentialFormatPayload<CredentialFormats, 'createOffer'>
-  autoAcceptCredential?: AutoAcceptCredential
+  credentialFormats: DidCommCredentialFormatPayload<CredentialFormats, 'createOffer'>
+  autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
-  connectionId: UUID
+  connectionId: string
 }
 
 export interface AcceptCredentialOfferOptions {
-  credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptOffer'>
-  autoAcceptCredential?: AutoAcceptCredential
+  credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptOffer'>
+  autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
 }
 
 export interface AcceptCredentialRequestOptions {
-  credentialFormats?: CredentialFormatPayload<CredentialFormats, 'acceptRequest'>
-  autoAcceptCredential?: AutoAcceptCredential
+  credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptRequest'>
+  autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
 }

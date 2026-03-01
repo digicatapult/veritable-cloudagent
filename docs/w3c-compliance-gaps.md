@@ -24,7 +24,7 @@ We sometimes cast Credo-TS return objects (which can include complex generic typ
 * **Technique:** We use a helper function to perform a controlled cast (`obj as Record<string, unknown>`) after strictly typing the input from the agent.
 * **Risk:** The compilation safety ensures we receive the correct type from Credo-TS, but the cast erases the deep structure validation for the return value. If we try to return a type that is `not` JSON-compatible (e.g. a class instance or Function), TSOA might fail at runtime during serialization.
 
-## Loose W3C Context Definitions
+## Loose W3C Context Definitions (Partially Open)
 
 Some JSON-LD / W3C structures (especially `@context`) are hard to represent precisely in OpenAPI/TSOA without either:
 
@@ -32,9 +32,34 @@ Some JSON-LD / W3C structures (especially `@context`) are hard to represent prec
 * requiring OpenAPI 3.1 tuple features.
 
 * **Observation:** The W3C JSON-LD `@context` field is semantically constrained (e.g. first entry is typically a URI string), but enforcing tuple constraints in the OpenAPI schema is not currently practical.
-* **Current approach:** We prefer re-exporting Credo’s JSON-LD credential format types from `@credo-ts/core` where possible, and rely on runtime behaviour in Credo for deeper validation.
-* **Overcoming the gap:** If we want strict enforcement at the API boundary, add runtime validation (schema/type guards) for the specific JSON-LD structures we accept.
+* **Current approach (v0.6.x):** We use Credo DIDComm JSON-LD credential format types at the API boundary where possible, and rely on Credo runtime behaviour for deep JSON-LD checks.
+* **Current limitation:** Upstream JSON-LD type surfaces still model `@context` as a broad union (e.g. `Array<string> | JsonObject`), so type-level strictness remains limited.
+* **Can fix now:** Add targeted runtime validation at controller boundaries for accepted JSON-LD payload profiles (for example: required VC context URI, expected `type` values, and object-shape guards).
 
-## Inconsistent Naming Conventions
+### Suggested next actions
 
-* **`mimeType` naming**: Credential preview attributes use Credo’s `CredentialPreviewAttributeOptions`, which uses `mimeType`.
+* Add a reusable JSON-LD guard utility under `src/utils/` for credential payload checks.
+* Apply guard checks in credential controller entry points for propose/offer/create-request JSON-LD inputs.
+* Return explicit `422` validation errors for unsupported/invalid JSON-LD profile shapes.
+
+### Dual-format controller acceptance plan (AnonCreds + JSON-LD)
+
+The credential controllers support dual format payloads and should continue to do so.
+
+* **Validation model:** validate each format branch independently.
+  * If `credentialFormats.anoncreds` is present, run AnonCreds-path validation.
+  * If `credentialFormats.jsonld` is present, run JSON-LD profile validation.
+  * If both are present, run both validators and merge field errors.
+* **Where JSON-LD profile validation applies now:**
+  * `POST /v1/credentials/propose-credential`
+  * `POST /v1/credentials/create-offer`
+  * `POST /v1/credentials/offer-credential`
+* **Where full JSON-LD credential validation should NOT be forced:**
+  * `POST /v1/credentials/:credentialRecordId/accept-proposal` (`jsonld` stage shape is empty by design)
+  * `POST /v1/credentials/:credentialRecordId/accept-offer` (`jsonld` stage shape is empty by design)
+  * `POST /v1/credentials/:credentialRecordId/accept-request` (JSON-LD stage uses accept-request options such as `verificationMethod`, not full credential body)
+* **Outcome:** preserve backward compatibility for AnonCreds-only and mixed clients while tightening JSON-LD input quality where full JSON-LD credential payloads are supplied.
+
+## Inconsistent Naming Conventions (Resolved)
+
+* **`mimeType` naming**: Standardized and consistent with Credo naming (`mimeType`) across credential/media DTOs and generated OpenAPI schema.

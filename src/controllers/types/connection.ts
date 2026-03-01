@@ -2,8 +2,8 @@
  * Connection and Out-of-Band Invitation types.
  */
 import type {
+  DidCommHandshakeProtocol,
   DidCommRouting,
-  DidCommHandshakeProtocol as HandshakeProtocol,
   OutOfBandDidCommService,
   ReceiveOutOfBandInvitationConfig,
 } from '@credo-ts/didcomm'
@@ -37,7 +37,7 @@ export interface OutOfBandInvitationSchema {
   goalCode?: string
   goal?: string
   accept?: string[]
-  handshake_protocols?: HandshakeProtocol[]
+  handshake_protocols?: DidCommHandshakeProtocol[]
   services: Array<OutOfBandDidCommService | string>
   imageUrl?: string
 }

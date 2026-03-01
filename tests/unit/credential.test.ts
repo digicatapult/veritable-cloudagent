@@ -451,7 +451,7 @@ describe('CredentialController', () => {
         createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
-        protocolVersion: 'v1',
+        protocolVersion: 'v2',
         credentialFormats: {
           anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
@@ -481,7 +481,7 @@ describe('CredentialController', () => {
         createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
-        protocolVersion: 'v1',
+        protocolVersion: 'v2',
         credentialFormats: {
           anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
@@ -532,7 +532,7 @@ describe('CredentialController', () => {
         createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
-        protocolVersion: 'v1',
+        protocolVersion: 'v2',
         credentialFormats: {
           anoncreds: {
             credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',
@@ -597,7 +597,7 @@ describe('CredentialController', () => {
   describe('Offer a credential', () => {
     const offerRequest = {
       connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
-      protocolVersion: 'v1',
+      protocolVersion: 'v2',
       credentialFormats: {
         anoncreds: {
           credentialDefinitionId: 'WghBqNdoFjaYh6F5N9eBF:3:CL:3210:test',

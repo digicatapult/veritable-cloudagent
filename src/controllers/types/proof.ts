@@ -3,9 +3,9 @@
  */
 import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
 import type {
-  DidCommAutoAcceptProof as AutoAcceptProof,
-  DidCommProofExchangeRecord as ProofExchangeRecord,
-  DidCommProofFormatPayload as ProofFormatPayload,
+  DidCommAutoAcceptProof,
+  DidCommProofExchangeRecord,
+  DidCommProofFormatPayload,
   ProofsProtocolVersionType,
 } from '@credo-ts/didcomm'
 import type { AnonCredsRequestProofFormatOptions } from './anoncreds.js'
@@ -15,16 +15,16 @@ import type { ProofFormats, ProofProtocols } from './protocols.js'
 
 export interface ProofRequestMessageResponse {
   message: string
-  proofRecord: ProofExchangeRecord
+  proofRecord: DidCommProofExchangeRecord
 }
 
 export interface ProposeProofOptions {
   connectionId: UUID
   protocolVersion: ProofsProtocolVersionType<ProofProtocols>
-  proofFormats: ProofFormatPayload<ProofFormats, 'createProposal'>
+  proofFormats: DidCommProofFormatPayload<ProofFormats, 'createProposal'>
   goalCode?: string
   parentThreadId?: UUID
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
@@ -79,7 +79,7 @@ export interface AcceptProofProposalOptions {
   }
   goalCode?: string
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
@@ -90,7 +90,7 @@ export interface NegotiateProofProposalOptions {
   }
   goalCode?: string
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
@@ -107,9 +107,9 @@ export interface AcceptProofRequestOptions {
   useReturnRoute?: boolean
   goalCode?: string
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
-  proofFormats?: ProofFormatPayload<ProofFormats, 'acceptRequest'> | SimpleProofFormats
+  proofFormats?: DidCommProofFormatPayload<ProofFormats, 'acceptRequest'> | SimpleProofFormats
 }
 
 export interface CreateProofRequestOptions {
@@ -121,7 +121,7 @@ export interface CreateProofRequestOptions {
   goalCode?: string
   parentThreadId?: UUID
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
