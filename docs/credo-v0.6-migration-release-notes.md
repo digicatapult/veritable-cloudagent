@@ -154,6 +154,11 @@ Future support for client-selected PEX credentials (descriptor->record-id contra
 - Integrations storing raw event payloads should treat this as a schema-version boundary: keep historical v0.5 events as-is, ingest v0.6 events with the new field, and normalize cross-version analytics outside runtime API contracts.
 - PEX clients should not submit `presentationExchange.credentials` in `accept-request` for this release; rely on server-side credential selection.
 
+### Unit test teardown standard for v0.6 migration
+
+- Unit test teardown now uses shared helper-based store cleanup (`deleteAgentStore(...)`) instead of direct per-test wallet/store deletion calls.
+- This keeps Askar cleanup behavior consistent with v0.6 bootstrap/storage wiring and reduces test-specific teardown drift across suites.
+
 ### Why `scripts/patch-credo.cjs` is required in this migration
 
 This repository currently applies a `postinstall` patch pass (`node scripts/patch-credo.cjs`) as a migration safeguard for Credo v0.6 runtime compatibility.

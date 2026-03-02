@@ -1,5 +1,6 @@
 import { DidCommV1Service, TypedArrayEncoder } from '@credo-ts/core'
 import { expect } from 'chai'
+import { before, describe, it } from 'mocha'
 import { Logger } from 'pino'
 import { DidWebDocGenerator } from '../../src/utils/didWebGenerator.js'
 import PinoLogger from '../../src/utils/logger.js'

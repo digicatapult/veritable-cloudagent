@@ -2,7 +2,7 @@ import type { Server } from 'node:net'
 import type { RestAgent } from '../../src/agent.js'
 
 import { expect } from 'chai'
-import { afterEach, before, describe, test } from 'mocha'
+import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub, useFakeTimers, type SinonFakeTimers } from 'sinon'
 import request from 'supertest'
 
@@ -159,7 +159,7 @@ describe('DrpcController', () => {
     })
   })
 
-  after(async function () {
+  after(async () => {
     if (agent) {
       await agent.shutdown()
       await deleteAgentStore(agent)

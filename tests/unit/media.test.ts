@@ -1,4 +1,3 @@
-import { AskarStoreManager } from '@credo-ts/askar'
 import { expect } from 'chai'
 import { after, before, describe, test } from 'mocha'
 import type { Server } from 'node:net'
@@ -12,7 +11,7 @@ import {
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
 
-import { getTestAgent, getTestServer, objectToJson } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestServer, objectToJson } from './utils/helpers.js'
 
 import type { RestAgent } from '../../src/agent.js'
 import type { MediaShareRequest } from '../../src/controllers/types/index.js'
@@ -32,7 +31,7 @@ describe('MediaController', () => {
   after(async () => {
     sinonRestore()
     await agent.shutdown()
-    await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
+    await deleteAgentStore(agent)
     app.close()
   })
 

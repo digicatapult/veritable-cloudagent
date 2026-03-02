@@ -1,5 +1,4 @@
 import type { AnonCredsSchema, AnonCredsSchemaRecord } from '@credo-ts/anoncreds'
-import { AskarStoreManager } from '@credo-ts/askar'
 import type { Server } from 'node:net'
 import type { RestAgent } from '../../src/agent.js'
 
@@ -10,7 +9,7 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import { schema } from './utils/fixtures.js'
-import { getTestAgent, getTestSchema, getTestServer } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('SchemaController', () => {
   let app: Server
@@ -219,7 +218,7 @@ describe('SchemaController', () => {
 
   after(async () => {
     await agent.shutdown()
-    await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
+    await deleteAgentStore(agent)
     app.close()
   })
 })
