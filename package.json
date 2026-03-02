@@ -23,6 +23,7 @@
     "veritable-cloudagent": "build/index.js"
   },
   "scripts": {
+    "postinstall": "node scripts/patch-credo.cjs",
     "depcheck": "depcheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
