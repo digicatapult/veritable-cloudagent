@@ -8,6 +8,7 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
+COPY scripts/patch-credo.cjs ./scripts/patch-credo.cjs
 RUN npm ci
 
 COPY tsoa.json tsconfig.json .swcrc ./
@@ -23,6 +24,7 @@ ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
 
 COPY package*.json ./
+COPY scripts/patch-credo.cjs ./scripts/patch-credo.cjs
 RUN npm ci --omit=dev
 
 # Test stage
