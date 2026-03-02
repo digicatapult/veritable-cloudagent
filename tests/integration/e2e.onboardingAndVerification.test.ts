@@ -12,6 +12,7 @@ import {
 import {
   acceptCredential,
   acceptPresentation,
+  sleep,
   waitForConnectionByOob,
   waitForCredentialRecord,
   waitForCredentialState,
@@ -41,11 +42,8 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   let verifierProofRequestId: UUID
   let threadIdOnVerifier: UUID
 
-  beforeEach(function (done) {
-    // pause between tests/retries to allow state to resolve on peers
-    setTimeout(function () {
-      done()
-    }, 200)
+  beforeEach(async function () {
+    await sleep(200)
   })
 
   it('should allow an Issuer to create a Schema', async function () {

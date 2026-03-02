@@ -159,6 +159,15 @@ Future support for client-selected PEX credentials (descriptor->record-id contra
 - Unit test teardown now uses shared helper-based store cleanup (`deleteAgentStore(...)`) instead of direct per-test wallet/store deletion calls.
 - This keeps Askar cleanup behavior consistent with v0.6 bootstrap/storage wiring and reduces test-specific teardown drift across suites.
 
+### Integration test hook and cleanup standard for v0.6 migration
+
+- Integration tests keep long-lived Docker testnet agents running for the full suite (no per-test/per-suite agent restart), to avoid heavy runtime penalties.
+- Hook usage was normalized across integration specs:
+  - explicit Mocha imports in all integration test files
+  - consistent short pause hook style (`beforeEach(async () => await sleep(200))`) where inter-test settling is needed
+  - resource cleanup moved to hooks for test-owned resources (for example WebSocket close in media-sharing events), not as terminal test steps.
+- This improves consistency and failure resilience while preserving shared-agent execution semantics required for practical integration runtime.
+
 ### Why `scripts/patch-credo.cjs` is required in this migration
 
 This repository currently applies a `postinstall` patch pass (`node scripts/patch-credo.cjs`) as a migration safeguard for Credo v0.6 runtime compatibility.
@@ -187,6 +196,10 @@ Operational intent:
 2. Confirm payload includes `credentialExchangeRecord`.
 3. Confirm payload does not include `credentialRecord`.
 4. Confirm downstream processing (queues, DB writes, analytics, UI) remains healthy.
+
+Integration validation performed for this migration branch:
+
+- `npm run test:integration` completed successfully against the Docker testnet (`71 passing`).
 
 ## Upgrade Examples
 

@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import { describe, it } from 'mocha'
 import { fetch } from 'undici'
 import {
   ALICE_DID_WEB_URL,

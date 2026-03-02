@@ -4,6 +4,7 @@ import request from 'supertest'
 import type { UUID } from '../../src/controllers/types/index.js'
 import { ALICE_BASE_URL, BOB_BASE_URL, CHARLIE_BASE_URL, OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
 import {
+  sleep,
   waitForConnectionByOob,
   waitForConnectionState,
   waitForCredentialRecord,
@@ -66,10 +67,8 @@ describe('DID:key Explicit Connection Flow + Credential Issuance', function () {
     HOLDER_DID = holderResponse.body.did
   })
 
-  beforeEach(function (done) {
-    setTimeout(function () {
-      done()
-    }, 200)
+  beforeEach(async function () {
+    await sleep(200)
   })
 
   // --- 1. Connection: Issuer <-> Holder ---

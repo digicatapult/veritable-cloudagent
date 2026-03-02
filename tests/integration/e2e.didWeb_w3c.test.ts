@@ -19,8 +19,8 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   let bobCredentialRecordId: UUID
   let aliceVerificationMethod: string
 
-  beforeEach(function (done) {
-    setTimeout(done, 200)
+  beforeEach(async function () {
+    await sleep(200)
   })
 
   it('should allow Bob to connect to Alice via Implicit Invitation using her DID:web', async function () {

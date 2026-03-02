@@ -12,6 +12,7 @@ import {
 import {
   acceptCredential,
   acceptPresentation,
+  sleep,
   waitForConnectionByOob,
   waitForConnectionState,
   waitForCredentialRecord,
@@ -26,10 +27,8 @@ describe('Negotiate proof proposal flows', function () {
   const holderClient = request(BOB_BASE_URL)
   const verifierClient = request(CHARLIE_BASE_URL)
 
-  beforeEach(function (done) {
-    setTimeout(function () {
-      done()
-    }, 200)
+  beforeEach(async function () {
+    await sleep(200)
   })
 
   it('should negotiate an AnonCreds proof proposal', async function () {
