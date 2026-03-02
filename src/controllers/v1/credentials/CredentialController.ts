@@ -18,13 +18,14 @@ import {
   Response,
   Route,
   Tags,
+  ValidateError,
 } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { HttpResponse, NotFoundError } from '../../../error.js'
-import { transformToCredentialFormatData } from '../../../utils/credentials.js'
+import { transformToCredentialFormatData, validateJsonLdCredentialProfile } from '../../../utils/credentials.js'
 import { CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 
 type InternalProposeCredentialOptions = Parameters<RestAgent['didcomm']['credentials']['proposeCredential']>[0]
@@ -167,6 +168,11 @@ export class CredentialController extends Controller {
   @Response<HttpResponse>(500)
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
     try {
+      if (options.credentialFormats.jsonld) {
+        const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
+        if (validationErrors) throw new ValidateError(validationErrors, 'Validation Failed')
+      }
+
       req.log.info('proposing credential to %s', options.connectionId)
       const credential = await this.agent.didcomm.credentials.proposeCredential(
         options satisfies InternalProposeCredentialOptions
@@ -222,6 +228,11 @@ export class CredentialController extends Controller {
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
+    if (options.credentialFormats.jsonld) {
+      const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
+      if (validationErrors) throw new ValidateError(validationErrors, 'Validation Failed')
+    }
+
     const offer = await this.agent.didcomm.credentials.createOffer(options satisfies InternalCreateOfferOptions)
     req.log.info('credential offer has been created %j', offer)
 
@@ -243,6 +254,11 @@ export class CredentialController extends Controller {
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {
+    if (options.credentialFormats.jsonld) {
+      const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
+      if (validationErrors) throw new ValidateError(validationErrors, 'Validation Failed')
+    }
+
     req.log.debug('checking if connection %s exists', options.connectionId)
     const connection = await this.agent.didcomm.connections.findById(options.connectionId)
     if (!connection) {

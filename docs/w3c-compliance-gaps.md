@@ -34,13 +34,14 @@ Some JSON-LD / W3C structures (especially `@context`) are hard to represent prec
 * **Observation:** The W3C JSON-LD `@context` field is semantically constrained (e.g. first entry is typically a URI string), but enforcing tuple constraints in the OpenAPI schema is not currently practical.
 * **Current approach (v0.6.x):** We use Credo DIDComm JSON-LD credential format types at the API boundary where possible, and rely on Credo runtime behaviour for deep JSON-LD checks.
 * **Current limitation:** Upstream JSON-LD type surfaces still model `@context` as a broad union (e.g. `Array<string> | JsonObject`), so type-level strictness remains limited.
-* **Can fix now:** Add targeted runtime validation at controller boundaries for accepted JSON-LD payload profiles (for example: required VC context URI, expected `type` values, and object-shape guards).
+* **Implemented now:** Added targeted runtime validation at controller boundaries for JSON-LD payload shape safety (object-shape guards, valid `@context` shape, valid `type` shape, and object checks for `credentialSubject` / `options`).
+* **Intentional policy:** Validation is shape-based and not tied to a single VC context URI or a mandatory `VerifiableCredential` type, to avoid over-restricting valid JSON-LD credential profiles.
 
 ### Suggested next actions
 
-* Add a reusable JSON-LD guard utility under `src/utils/` for credential payload checks.
-* Apply guard checks in credential controller entry points for propose/offer/create-request JSON-LD inputs.
-* Return explicit `422` validation errors for unsupported/invalid JSON-LD profile shapes.
+* Keep the reusable JSON-LD guard utility under `src/utils/credentials.ts` aligned with accepted profile rules as they evolve.
+* Continue applying guard checks in credential controller entry points for propose/offer/create-request JSON-LD inputs.
+* Keep explicit `422` validation errors for unsupported/invalid JSON-LD profile shapes, with test coverage for structural-invalid payloads.
 
 ### Dual-format controller acceptance plan (AnonCreds + JSON-LD)
 

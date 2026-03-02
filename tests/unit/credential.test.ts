@@ -281,6 +281,37 @@ describe('CredentialController', () => {
         })
       ).to.equal(true)
     })
+
+    test('should return 422 for invalid jsonld proposal profile', async () => {
+      const proposeCredentialStub = stub(bobAgent.didcomm.credentials, 'proposeCredential')
+      proposeCredentialStub.resolves(testCredential)
+
+      const invalidProposalRequest = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': 1,
+              type: ['EmployeeCredential'],
+              issuer: 'did:key:123',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/propose-credential`).send(invalidProposalRequest)
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(proposeCredentialStub.called).to.be.equal(false)
+    })
   })
 
   describe('Accept a credential proposal', () => {
@@ -470,6 +501,34 @@ describe('CredentialController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(result))
+    })
+
+    test('should return 422 for invalid jsonld create-offer profile', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      createOfferStub.resolves(testOffer)
+
+      const invalidCreateOfferRequest = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: [123],
+              issuer: 'did:key:issuer',
+              credentialSubject: ['invalid-subject-shape'],
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(invalidCreateOfferRequest)
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(createOfferStub.called).to.be.equal(false)
     })
   })
 
@@ -682,6 +741,40 @@ describe('CredentialController', () => {
           },
         })
       ).to.equal(true)
+    })
+
+    test('should return 422 for invalid jsonld offer profile', async () => {
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
+      findByIdStub.resolves(connection)
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      offerCredentialStub.resolves(testCredential)
+
+      const invalidOfferRequest = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: 123,
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/offer-credential`).send(invalidOfferRequest)
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(offerCredentialStub.called).to.be.equal(false)
     })
   })
 

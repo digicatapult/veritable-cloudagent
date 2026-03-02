@@ -142,6 +142,11 @@ This is an intentional hardening boundary for v0.6 migration stability.
 
 Future support for client-selected PEX credentials (descriptor->record-id contract) remains out of scope for this migration release and should be planned as a separate post-migration API enhancement.
 
+### JSON-LD credential boundary validation
+
+- `POST /v1/credentials/propose-credential`, `POST /v1/credentials/create-offer`, and `POST /v1/credentials/offer-credential` now enforce runtime JSON-LD shape validation and return `422` for structurally invalid payloads.
+- Validation is intentionally shape-based (for example: `credential` object required, valid `@context` shape, valid `type` shape, object checks for `credentialSubject`/`options`) and is not restricted to a single context URI or fixed credential type.
+
 ## Operational Notes
 
 - Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) or legacy key fields (`publicKeyMultibase`, `publicKeyBase58`) must migrate.
