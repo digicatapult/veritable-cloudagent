@@ -17,6 +17,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
 
   let aliceCredentialRecordId: UUID
   let bobCredentialRecordId: UUID
+  let aliceVerificationMethod: string
 
   beforeEach(function (done) {
     setTimeout(done, 200)
@@ -93,13 +94,25 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('Alice should be able to offer Bob a W3C (JSON-LD) credential', async function () {
+    const didResponse = await aliceClient.get(`/v1/dids/${encodeURIComponent(DID_WEB_ALICE)}`).expect(200)
+    const assertionMethod = didResponse.body?.didDocument?.assertionMethod?.[0]
+
+    const resolvedVerificationMethod =
+      typeof assertionMethod === 'string' ? assertionMethod : (assertionMethod?.id as string | undefined)
+
+    if (!resolvedVerificationMethod) {
+      throw new Error('Unable to resolve Alice verificationMethod from DID document')
+    }
+
+    aliceVerificationMethod = resolvedVerificationMethod
+
     const offerCredentialPayload = {
       protocolVersion: 'v2',
       connectionId: aliceConnectionId,
       credentialFormats: {
         jsonld: {
           credential: {
-            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            '@context': ['https://www.w3.org/2018/credentials/v1', 'https://w3id.org/security/suites/ed25519-2020/v1'],
             type: ['VerifiableCredential'],
             issuer: DID_WEB_ALICE,
             issuanceDate: new Date().toISOString(),
@@ -108,7 +121,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
             },
           },
           options: {
-            proofType: 'Ed25519Signature2018',
+            proofType: 'Ed25519Signature2020',
             proofPurpose: 'assertionMethod',
           },
         },
@@ -148,6 +161,25 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
       .expect(200)
 
     expect(response.body).to.have.property('state', 'request-sent')
+  })
+
+  it("Alice should manually accept Bob's W3C credential request", async function () {
+    const state = await waitForCredentialState(aliceClient, aliceCredentialRecordId, 'request-received')
+    expect(state).to.equal('request-received')
+
+    const response = await aliceClient
+      .post(`/v1/credentials/${aliceCredentialRecordId}/accept-request`)
+      .send({
+        credentialFormats: {
+          jsonld: {
+            verificationMethod: aliceVerificationMethod,
+          },
+        },
+      })
+      .expect('Content-Type', /json/)
+      .expect(200)
+
+    expect(response.body).to.have.property('state', 'credential-issued')
   })
 
   it('Bob should be able to accept the issued W3C credential (done state)', async function () {
