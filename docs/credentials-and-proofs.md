@@ -103,6 +103,8 @@ W3C credentials in this service use JSON-LD format. Verification uses Presentati
 }
 ```
 
+Policy note: `POST /v1/proofs/{proofRecordId}/accept-request` currently rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`. PEX credential selection is server-side/agent-side only.
+
 ---
 
 ## AnonCreds Credential Flow

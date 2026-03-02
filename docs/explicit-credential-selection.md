@@ -15,7 +15,7 @@ The **Explicit Credential Selection** feature allows a client (controller) to sp
 
 The `veritable-cloudagent` API supports a **Simplified Proof Format**. Clients can provide a lightweight object specifying only the `credentialId` and `revealed` status for each attribute. The agent's controller then "hydrates" this object by fetching the full credential details from the wallet before passing it to the core agent.
 
-Note: the simplified selection payload applies to AnonCreds proof formats only. PEX/W3C credential selection remains pass-through at this API boundary.
+Note: the simplified selection payload applies to AnonCreds proof formats only. `POST /v1/proofs/{proofRecordId}/accept-request` currently rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`, and PEX/W3C credential selection remains server-side.
 
 ### API Usage
 

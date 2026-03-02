@@ -46,9 +46,9 @@ We treat controller types as *DTOs for OpenAPI*, and we bridge to Credo types at
 ## DID alignment updates in v0.6.x
 
 - DID request/resolution contracts now use upstream Credo exports where stable:
-   - `DidCreateOptions`
-   - `ImportDidOptions`
-   - `DidResolutionResult`
+  - `DidCreateOptions`
+  - `ImportDidOptions`
+  - `DidResolutionResult`
 - DID create-state response DTOs remain local boundary models with explicit `state` discriminants, while sharing a local base shape for maintainability.
 
 ## Proofs: DIF Presentation Exchange (PEX)
@@ -94,12 +94,13 @@ We treat controller types as *DTOs for OpenAPI*, and we bridge to Credo types at
 
 This is a deliberate API/UX choice: Credo expects full `ProofFormatPayload<..., 'acceptRequest'>`, but we also support a simpler client-facing shape for AnonCreds.
 
-### Known mismatch: PEX accept-request credential selection
+### Current contract: PEX accept-request credential selection
 
 - Credo expects PEX accept-request selections as a mapping from input descriptor ids to **Credo credential record objects**.
-- Our TSOA DTO models this as `Record<string, unknown[]>` to avoid importing record types and to keep OpenAPI stable.
+- For migration stability, `POST /v1/proofs/:proofRecordId/accept-request` now rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`.
+- PEX credential selection remains server-side/agent-side in this release.
 
-Result: this is **not a stable public client contract today**; client-driven PEX selection requires an explicit contract decision (e.g., record IDs resolved server-side).
+Result: client-driven PEX selection is intentionally out of scope for the current migration release and requires a separate post-migration API contract.
 
 ---
 
