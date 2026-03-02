@@ -12,6 +12,34 @@ import { BadRequest, HttpResponse } from '../../../error.js'
 export class WalletController extends Controller {
   private agent: RestAgent
 
+  private isBase64UrlSegment(value: string): boolean {
+    return /^[A-Za-z0-9_-]+$/.test(value)
+  }
+
+  private decodeBase64UrlSegment(value: string, errorMessage: string): Uint8Array {
+    if (!this.isBase64UrlSegment(value)) {
+      throw new BadRequest(errorMessage)
+    }
+
+    try {
+      return TypedArrayEncoder.fromBase64(value)
+    } catch {
+      throw new BadRequest(errorMessage)
+    }
+  }
+
+  private decodeBase64UrlJson<T>(value: string, errorMessage: string): T {
+    if (!this.isBase64UrlSegment(value)) {
+      throw new BadRequest(errorMessage)
+    }
+
+    try {
+      return JsonEncoder.fromBase64(value) as T
+    } catch {
+      throw new BadRequest(errorMessage)
+    }
+  }
+
   private getVerificationMethodPublicKeyBase58(verificationMethod: {
     publicKeyBase58?: string
     publicKeyJwk?: unknown
@@ -88,7 +116,8 @@ export class WalletController extends Controller {
     }
 
     const [encodedHeader, , encodedIv, encodedCiphertext, encodedTag] = jweParts
-    const header = JsonEncoder.fromBase64(encodedHeader)
+
+    const header = this.decodeBase64UrlJson<Record<string, unknown>>(encodedHeader, 'Invalid compact JWE header')
 
     if (!header?.epk) {
       throw new HttpResponse({ message: 'Invalid compact JWE header', code: 400 })
@@ -99,7 +128,14 @@ export class WalletController extends Controller {
       throw new HttpResponse({ message: 'Invalid compact JWE header key type', code: 400 })
     }
 
-    const recipientPublicKeyBytes = TypedArrayEncoder.fromBase64(recipientPublicKey)
+    let recipientPublicKeyBytes: Uint8Array
+
+    try {
+      recipientPublicKeyBytes = TypedArrayEncoder.fromBase64(recipientPublicKey)
+    } catch {
+      throw new BadRequest('Invalid compact JWE recipient public key')
+    }
+
     const recipientPublicJwk = Kms.PublicJwk.fromPublicKey({
       kty: 'OKP',
       crv: 'X25519',
@@ -113,12 +149,27 @@ export class WalletController extends Controller {
       recipientPublicJwk.legacyKeyId
     )
 
+    const encrypted = this.decodeBase64UrlSegment(encodedCiphertext, 'Invalid compact JWE segment encoding')
+    const iv = this.decodeBase64UrlSegment(encodedIv, 'Invalid compact JWE segment encoding')
+    const tag = this.decodeBase64UrlSegment(encodedTag, 'Invalid compact JWE segment encoding')
+
+    let apu: Uint8Array | undefined
+    let apv: Uint8Array | undefined
+
+    if (typeof header.apu === 'string') {
+      apu = this.decodeBase64UrlSegment(header.apu, 'Invalid compact JWE header agreement parameters')
+    }
+
+    if (typeof header.apv === 'string') {
+      apv = this.decodeBase64UrlSegment(header.apv, 'Invalid compact JWE header agreement parameters')
+    }
+
     const decrypt = await kms.decrypt({
-      encrypted: TypedArrayEncoder.fromBase64(encodedCiphertext),
+      encrypted,
       decryption: {
         algorithm: 'A256GCM',
-        iv: TypedArrayEncoder.fromBase64(encodedIv),
-        tag: TypedArrayEncoder.fromBase64(encodedTag),
+        iv,
+        tag,
         aad: TypedArrayEncoder.fromString(encodedHeader),
       },
       key: {
@@ -126,8 +177,8 @@ export class WalletController extends Controller {
           algorithm: 'ECDH-ES',
           keyId,
           externalPublicJwk,
-          apu: typeof header.apu === 'string' ? TypedArrayEncoder.fromBase64(header.apu) : undefined,
-          apv: typeof header.apv === 'string' ? TypedArrayEncoder.fromBase64(header.apv) : undefined,
+          apu,
+          apv,
         },
       },
     })
