@@ -121,6 +121,9 @@ Requests still using `privateKeys` will fail validation (`422`).
 - v0.6 moves key handling to KMS-first flows (`agent.kms`), and this change requires Askar registration to be process-global (`ensureAskarRegistered`): `registerAskar({ askar: askarNodeJS })` executes once per process and is shared across agent boots.
 - Askar store config is explicit at top-level bootstrap input (`askarStoreConfig`), not inferred from `agentConfig.walletConfig`.
 - KMS-first patterns are used in migrated crypto paths (`agent.kms`), with DID key mapping persistence for DID:web imports.
+- Runtime config reads are v0.6-aligned with `AgentConfig` semantics:
+  - DIDComm endpoints are read from `agent.didcomm.config.endpoints` (module config source), not from `agent.config.endpoints`.
+  - Optional custom init fields (for example `label`) are read via `agent.config.toJSON()` with guards, instead of casting `agent.config` to ad-hoc shapes.
 
 `src/agent.ts` Askar + AnonCreds wiring changes in v0.6:
 

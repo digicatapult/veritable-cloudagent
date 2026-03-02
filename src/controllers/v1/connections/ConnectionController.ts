@@ -241,12 +241,11 @@ export class ConnectionController extends Controller {
           await this.agent.didcomm.connections.deleteById(id)
         }
       }
-      const agentConfig = this.agent.config as typeof this.agent.config & {
-        label?: string
-      }
+      const agentConfig = this.agent.config.toJSON() as Record<string, unknown>
+      const agentLabel = typeof agentConfig.label === 'string' ? agentConfig.label : 'Veritable Cloudagent'
       const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.receiveImplicitInvitation({
         did,
-        label: agentConfig.label ?? 'Cloudagent',
+        label: agentLabel,
         handshakeProtocols: [HandshakeProtocol.Connections],
       })
 
