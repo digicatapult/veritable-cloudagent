@@ -170,7 +170,7 @@ export class CredentialController extends Controller {
     try {
       if (options.credentialFormats.jsonld) {
         const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
-        if (validationErrors) throw new BadRequest('Validation Failed')
+        if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
       }
 
       req.log.info('proposing credential to %s', options.connectionId)
@@ -231,7 +231,7 @@ export class CredentialController extends Controller {
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
     if (options.credentialFormats.jsonld) {
       const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
-      if (validationErrors) throw new BadRequest('Validation Failed')
+      if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
     }
 
     const offer = await this.agent.didcomm.credentials.createOffer(options satisfies InternalCreateOfferOptions)
@@ -258,7 +258,7 @@ export class CredentialController extends Controller {
   public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {
     if (options.credentialFormats.jsonld) {
       const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
-      if (validationErrors) throw new BadRequest('Validation Failed')
+      if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
     }
 
     req.log.debug('checking if connection %s exists', options.connectionId)

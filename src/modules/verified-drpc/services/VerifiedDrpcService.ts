@@ -77,19 +77,30 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     const proofsApi = agentContext.dependencyManager.resolve(DidCommProofsApi) as DidCommProofsApi<PPs>
     const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
     await new Promise<void>((resolve, reject) => {
-      const proofFailed = () => {
+      let settled = false
+
+      const proofFailed = (error: Error) => {
+        if (settled) return
+        settled = true
+        clearTimeout(proofTimeout)
         this.eventEmitter.off(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
-        reject('Proof verification timed out')
+        reject(error)
       }
-      const proofTimeout = setTimeout(proofFailed, timeoutMs)
+
+      const proofTimeout = setTimeout(() => {
+        proofFailed(new Error('Proof verification timed out'))
+      }, timeoutMs)
+
       const onProofStateChanged = async ({ payload: { proofRecord } }: DidCommProofStateChangedEvent) => {
         if (proofRecord.id === proofRecordId) {
           if (proofRecord.state === DidCommProofState.Done) {
+            if (settled) return
+            settled = true
             clearTimeout(proofTimeout)
             this.eventEmitter.off(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
             resolve()
           } else if (proofRecord.state === DidCommProofState.Abandoned) {
-            proofFailed()
+            proofFailed(new Error('Proof verification abandoned'))
           }
         }
       }

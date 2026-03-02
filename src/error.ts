@@ -6,11 +6,21 @@ import { isHttpError } from 'http-errors'
 export class HttpResponse extends Error {
   public code: number
   public message: string
+  public details?: unknown
 
-  constructor({ code = 500, message = 'Unexpected error' }) {
+  constructor({
+    code = 500,
+    message = 'Unexpected error',
+    details,
+  }: {
+    code?: number
+    message?: string
+    details?: unknown
+  }) {
     super(message)
     this.code = code
     this.message = message
+    this.details = details
     this.name = 'Internal server error'
   }
 }
@@ -22,8 +32,8 @@ export class NotFoundError extends HttpResponse {
 }
 
 export class BadRequest extends HttpResponse {
-  constructor(message = 'bad request') {
-    super({ code: 400, message })
+  constructor(message = 'bad request', details?: unknown) {
+    super({ code: 400, message, details })
   }
 }
 
@@ -59,6 +69,14 @@ export const errorHandler =
 
     if (err instanceof HttpResponse) {
       logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${err.message}`)
+      if (err.details !== undefined) {
+        res.status(err.code).json({
+          message: err.message,
+          details: err.details,
+        })
+        return
+      }
+
       res.status(err.code).json(err.message)
       return
     }

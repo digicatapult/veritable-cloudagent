@@ -326,6 +326,10 @@ describe('CredentialController', () => {
       const response = await request(app).post(`/v1/credentials/propose-credential`).send(invalidProposalRequest)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.have.property('message', 'Validation Failed')
+      expect(response.body).to.have.property('details')
+      expect(response.body.details).to.be.an('object')
+      expect(Object.keys(response.body.details)).to.have.length.greaterThan(0)
       expect(proposeCredentialStub.called).to.be.equal(false)
     })
 
@@ -581,6 +585,10 @@ describe('CredentialController', () => {
       const response = await request(app).post(`/v1/credentials/create-offer`).send(invalidCreateOfferRequest)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.have.property('message', 'Validation Failed')
+      expect(response.body).to.have.property('details')
+      expect(response.body.details).to.be.an('object')
+      expect(Object.keys(response.body.details)).to.have.length.greaterThan(0)
       expect(createOfferStub.called).to.be.equal(false)
     })
 
@@ -860,6 +868,10 @@ describe('CredentialController', () => {
       const response = await request(app).post(`/v1/credentials/offer-credential`).send(invalidOfferRequest)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.have.property('message', 'Validation Failed')
+      expect(response.body).to.have.property('details')
+      expect(response.body.details).to.be.an('object')
+      expect(Object.keys(response.body.details)).to.have.length.greaterThan(0)
       expect(offerCredentialStub.called).to.be.equal(false)
     })
   })
