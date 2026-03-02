@@ -154,6 +154,21 @@ Future support for client-selected PEX credentials (descriptor->record-id contra
 - Integrations storing raw event payloads should treat this as a schema-version boundary: keep historical v0.5 events as-is, ingest v0.6 events with the new field, and normalize cross-version analytics outside runtime API contracts.
 - PEX clients should not submit `presentationExchange.credentials` in `accept-request` for this release; rely on server-side credential selection.
 
+### Why `scripts/patch-credo.cjs` is required in this migration
+
+This repository currently applies a `postinstall` patch pass (`node scripts/patch-credo.cjs`) as a migration safeguard for Credo v0.6 runtime compatibility.
+
+The script patches two dependency-level behaviors in installed `@credo-ts/core` build artifacts:
+
+- **PEX proof type selection fix:** patches DIF Presentation Exchange proof-type selection from a first-supported fallback (`supportedSignatureSuites[0]`) to selected-suite output (`foundSignatureSuite`) to prevent incorrect proof type emission in some PEX paths.
+- **JSON-LD strict ESM loader fix:** rewrites JSON-LD document loader imports/requires to include explicit `.js` extensions (`.../node.js`, `.../xhr.js`) so strict ESM resolution works reliably in runtime environments using the packaged Credo build outputs.
+
+Operational intent:
+
+- The patch is idempotent (safe to run repeatedly) and skips already-patched files.
+- It is a temporary compatibility layer until equivalent upstream fixes are available and consumed via normal dependency upgrades.
+- If dependency layout changes (or upstream ships corrected artifacts), this script may become unnecessary and should then be removed to reduce maintenance overhead.
+
 ## Recommended Consumer Migration Order
 
 1. Update payload parsers and DTOs for credential events.
