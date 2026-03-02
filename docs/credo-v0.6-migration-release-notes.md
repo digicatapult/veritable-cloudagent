@@ -118,8 +118,19 @@ Requests still using `privateKeys` will fail validation (`422`).
 
 ### Agent bootstrap and Askar config
 
+- v0.6 moves key handling to KMS-first flows (`agent.kms`), and this change requires Askar registration to be process-global (`ensureAskarRegistered`): `registerAskar({ askar: askarNodeJS })` executes once per process and is shared across agent boots.
 - Askar store config is explicit at top-level bootstrap input (`askarStoreConfig`), not inferred from `agentConfig.walletConfig`.
 - KMS-first patterns are used in migrated crypto paths (`agent.kms`), with DID key mapping persistence for DID:web imports.
+
+`src/agent.ts` Askar + AnonCreds wiring changes in v0.6:
+
+- The Askar module is constructed explicitly with the NodeJS binding and provided store config (`new AskarModule({ askar: askarNodeJS, store: askarStoreConfig })`).
+- AnonCreds uses the NodeJS binding (`@hyperledger/anoncreds-nodejs`) and is wired into `AnonCredsModule` with the IPFS-backed `VeritableAnonCredsRegistry`.
+- Bootstrap now enforces link-secret existence at startup: if no link secret exists, one default secret is created.
+
+Bootstrap idempotence regression tests were added in `tests/unit/agent.test.ts` to ensure repeated `setupAgent()` runs against the same Askar store do not create additional AnonCreds link secrets. This is necessary in v0.6 because key operations now follow KMS-first flows (`agent.kms`) while Askar registration is process-global (single registration shared across agent boots), so restart/re-bootstrap paths must be proven free of duplicate side effects in shared stores.
+
+In short: the KMS migration in v0.6 is the reason Askar becomes process-global, and that is why bootstrap and AnonCreds initialization were tightened to be idempotent across repeated agent setup in the same process.
 
 ### PEX accept-request credential selection contract
 
