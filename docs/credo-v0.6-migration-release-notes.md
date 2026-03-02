@@ -157,6 +157,13 @@ Future support for client-selected PEX credentials (descriptor->record-id contra
 - Integrations storing raw event payloads should treat this as a schema-version boundary: keep historical v0.5 events as-is, ingest v0.6 events with the new field, and normalize cross-version analytics outside runtime API contracts.
 - PEX clients should not submit `presentationExchange.credentials` in `accept-request` for this release; rely on server-side credential selection.
 
+### TypeScript ESM compiler settings
+
+- TypeScript compiler settings are aligned to the Digital Catapult ESM standard:
+  - `target: ES2022`
+  - `module: NodeNext`
+  - `moduleResolution: nodenext`
+
 ### Unit test teardown standard for v0.6 migration
 
 - Unit test teardown now uses shared helper-based store cleanup (`deleteAgentStore(...)`) instead of direct per-test wallet/store deletion calls.
