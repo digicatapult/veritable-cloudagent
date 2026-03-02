@@ -219,11 +219,18 @@ describe('WebhookTests', () => {
   })
 
   after(async () => {
-    await new Promise((r) => setTimeout(r, 2000))
     await aliceAgent.shutdown()
     await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
     await deleteAgentStore(bobAgent)
-    server.close()
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        resolve()
+      })
+    })
   })
 })
