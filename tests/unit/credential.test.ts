@@ -194,6 +194,21 @@ describe('CredentialController', () => {
 
       expect(response.statusCode).to.be.equal(404)
     })
+
+    test('should give 500 when credential format data contains non-json-compatible values', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({
+        proposalAttributes: [],
+        offerAttributes: [],
+        proposal: {
+          invalid: () => 'not-json-compatible',
+        },
+      } as unknown as GetCredentialFormatDataReturn<[AnonCredsCredentialFormat]>)
+
+      const response = await request(app).get(`/v1/credentials/${testCredential.id}/format-data`)
+
+      expect(response.statusCode).to.be.equal(500)
+    })
   })
 
   describe('Delete credential by id', () => {
@@ -282,7 +297,7 @@ describe('CredentialController', () => {
       ).to.equal(true)
     })
 
-    test('should return 422 for invalid jsonld proposal profile', async () => {
+    test('should return 400 for invalid jsonld proposal profile', async () => {
       const proposeCredentialStub = stub(bobAgent.didcomm.credentials, 'proposeCredential')
       proposeCredentialStub.resolves(testCredential)
 
@@ -292,9 +307,10 @@ describe('CredentialController', () => {
         credentialFormats: {
           jsonld: {
             credential: {
-              '@context': 1,
+              '@context': [],
               type: ['EmployeeCredential'],
               issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
               credentialSubject: {
                 id: 'did:key:456',
               },
@@ -309,7 +325,41 @@ describe('CredentialController', () => {
 
       const response = await request(app).post(`/v1/credentials/propose-credential`).send(invalidProposalRequest)
 
-      expect(response.statusCode).to.be.equal(422)
+      expect(response.statusCode).to.be.equal(400)
+      expect(proposeCredentialStub.called).to.be.equal(false)
+    })
+
+    test('should return 400 when jsonld proposal credentialSubject is an array', async () => {
+      const proposeCredentialStub = stub(bobAgent.didcomm.credentials, 'proposeCredential')
+      proposeCredentialStub.resolves(testCredential)
+
+      const invalidProposalRequest = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://example.com/custom-context'],
+              type: ['EmployeeCredential'],
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: [
+                {
+                  id: 'did:key:456',
+                },
+              ],
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/propose-credential`).send(invalidProposalRequest)
+
+      expect(response.statusCode).to.be.equal(400)
       expect(proposeCredentialStub.called).to.be.equal(false)
     })
   })
@@ -503,7 +553,7 @@ describe('CredentialController', () => {
       expect(response.body).to.deep.equal(objectToJson(result))
     })
 
-    test('should return 422 for invalid jsonld create-offer profile', async () => {
+    test('should return 400 for invalid jsonld create-offer profile', async () => {
       const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
 
@@ -513,9 +563,12 @@ describe('CredentialController', () => {
           jsonld: {
             credential: {
               '@context': ['https://www.w3.org/2018/credentials/v1'],
-              type: [123],
+              type: [],
               issuer: 'did:key:issuer',
-              credentialSubject: ['invalid-subject-shape'],
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:subject',
+              },
             },
             options: {
               proofType: 'Ed25519Signature2018',
@@ -527,7 +580,40 @@ describe('CredentialController', () => {
 
       const response = await request(app).post(`/v1/credentials/create-offer`).send(invalidCreateOfferRequest)
 
-      expect(response.statusCode).to.be.equal(422)
+      expect(response.statusCode).to.be.equal(400)
+      expect(createOfferStub.called).to.be.equal(false)
+    })
+
+    test('should return 400 for jsonld create-offer credentialSubject array shape', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      createOfferStub.resolves(testOffer)
+
+      const invalidCreateOfferRequest = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://example.com/custom-context'],
+              type: ['VerifiableCredential'],
+              issuer: 'did:key:issuer',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: [
+                {
+                  id: 'did:key:subject',
+                },
+              ],
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(invalidCreateOfferRequest)
+
+      expect(response.statusCode).to.be.equal(400)
       expect(createOfferStub.called).to.be.equal(false)
     })
   })
@@ -743,7 +829,7 @@ describe('CredentialController', () => {
       ).to.equal(true)
     })
 
-    test('should return 422 for invalid jsonld offer profile', async () => {
+    test('should return 400 for invalid jsonld offer profile', async () => {
       const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
       findByIdStub.resolves(connection)
       const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
@@ -756,7 +842,7 @@ describe('CredentialController', () => {
           jsonld: {
             credential: {
               '@context': ['https://www.w3.org/2018/credentials/v1'],
-              type: 123,
+              type: [],
               issuer: 'did:key:123',
               issuanceDate: '2021-01-01T00:00:00Z',
               credentialSubject: {
@@ -773,7 +859,7 @@ describe('CredentialController', () => {
 
       const response = await request(app).post(`/v1/credentials/offer-credential`).send(invalidOfferRequest)
 
-      expect(response.statusCode).to.be.equal(422)
+      expect(response.statusCode).to.be.equal(400)
       expect(offerCredentialStub.called).to.be.equal(false)
     })
   })

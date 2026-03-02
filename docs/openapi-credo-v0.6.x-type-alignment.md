@@ -31,8 +31,9 @@ We treat controller types as *DTOs for OpenAPI*, and we bridge to Credo types at
    - We build agent-call option objects explicitly and type-check them using `satisfies Parameters<...>[0]` where possible.
    - For proofs, proof-format payloads are adapted in `src/utils/proofs.ts`.
 
-4. **Stage correctness enforced by DTO shape + 422s**
-   - Requests that provide stage-inappropriate payloads are rejected with a TSOA `ValidateError` (HTTP 422).
+4. **Stage correctness enforced by DTO shape + boundary validation**
+   - Requests that provide stage-inappropriate payloads are rejected with a TSOA `ValidateError` (HTTP `422`) when the DTO contract fails.
+   - Runtime boundary guards that reject semantically unsafe payload shapes may return HTTP `400` when implemented as explicit bad-request responses.
 
 ---
 
@@ -110,12 +111,20 @@ Where Credo exports stable, simple interface types that don’t pull in problema
 
 Example (already done in this repo): JSON-LD credential format types are re-exported for controller typing.
 
+### Credentials: JSON-LD boundary validation status code
+
+- For credential JSON-LD shape guards on:
+  - `POST /v1/credentials/propose-credential`
+  - `POST /v1/credentials/create-offer`
+  - `POST /v1/credentials/offer-credential`
+- Structurally unsafe JSON-LD payloads are rejected as HTTP `400` (bad request) by controller boundary validation.
+
 ---
 
 ## Practical rules of thumb (v0.6.x)
 
 - If importing a Credo type into a controller signature drags in Sphereon PEX models: **do not import it**. Define a local DTO and bridge at the boundary.
-- If DTOs are intentionally broader than Credo: add a **runtime validator** and return a 422 on unsupported input.
+- If DTOs are intentionally broader than Credo: add a **runtime validator** and return a status code consistent with the endpoint contract (`400` for explicit bad-request boundary guards, `422` for TSOA `ValidateError` paths).
 - Prefer `satisfies` for agent option objects (DTO → internal) to avoid wide `as Internal...` casts.
 - Avoid utility-type composition (`Pick`/`Omit`) in TSOA controller boundary models.
 - Keep stage-specific payloads stage-correct in DTOs; don’t accept request-stage payloads in accept-stage endpoints.

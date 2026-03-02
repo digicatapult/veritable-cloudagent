@@ -1,6 +1,7 @@
 # Explicit Credential Selection
 
 > **Note**: For a general overview of supported credential formats (AnonCreds vs W3C) and basic flows, please refer to the [Credentials and Proofs Guide](./credentials-and-proofs.md).
+> **Scope (important):** This document describes explicit client-side credential selection for **AnonCreds only**. For PEX/W3C proof requests, client-supplied `proofFormats.presentationExchange.credentials` is not supported in this release and `POST /v1/proofs/{proofRecordId}/accept-request` returns `422` if provided.
 
 When responding to a Proof Request, an agent may hold multiple credentials that satisfy the request's requirements (e.g., multiple credentials from the same issuer, or multiple credentials with the same attribute names). By default, the agent might select any valid credential, which can lead to incorrect data being shared if a specific credential was intended.
 
@@ -15,7 +16,7 @@ The **Explicit Credential Selection** feature allows a client (controller) to sp
 
 The `veritable-cloudagent` API supports a **Simplified Proof Format**. Clients can provide a lightweight object specifying only the `credentialId` and `revealed` status for each attribute. The agent's controller then "hydrates" this object by fetching the full credential details from the wallet before passing it to the core agent.
 
-Note: the simplified selection payload applies to AnonCreds proof formats only. `POST /v1/proofs/{proofRecordId}/accept-request` currently rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`, and PEX/W3C credential selection remains server-side.
+Note: the simplified selection payload applies to AnonCreds proof formats only. `POST /v1/proofs/{proofRecordId}/accept-request` rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`, and PEX/W3C credential selection remains server-side.
 
 ### API Usage
 
@@ -65,9 +66,11 @@ The `ProofController` employs a three-path logic flow to handle proof acceptance
      * If the requested credential cannot be used due to reveal mismatch, the API returns `400 Bad Request`.
      * If no matching credentials are found for the requested attributes/predicates, the API returns `404 Not Found`.
 
-3. **Pass-Through (Full `proofFormats` provided)**
-   * If the client provides the full, complex Credo-TS proof format, the controller passes it directly to the agent.
-   * This supports advanced use cases where the client needs full control over the cryptographic metadata.
+3. **Pass-Through (Full AnonCreds `proofFormats` provided)**
+
+* If the client provides the full, complex AnonCreds proof format, the controller passes it directly to the agent.
+* This supports advanced AnonCreds use cases where the client needs full control over the cryptographic metadata.
+* This pass-through path does **not** enable client-side PEX/W3C credential selection in this release.
 
 ### Example Scenario
 

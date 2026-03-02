@@ -36,12 +36,14 @@ Some JSON-LD / W3C structures (especially `@context`) are hard to represent prec
 * **Current limitation:** Upstream JSON-LD type surfaces still model `@context` as a broad union (e.g. `Array<string> | JsonObject`), so type-level strictness remains limited.
 * **Implemented now:** Added targeted runtime validation at controller boundaries for JSON-LD payload shape safety (object-shape guards, valid `@context` shape, valid `type` shape, and object checks for `credentialSubject` / `options`).
 * **Intentional policy:** Validation is shape-based and not tied to a single VC context URI or a mandatory `VerifiableCredential` type, to avoid over-restricting valid JSON-LD credential profiles.
+* **Test coverage expanded:** Added/extended negative unit tests for structural-invalid JSON-LD inputs across propose/create-offer/offer endpoints, including malformed `options`, malformed `@context` entries, malformed `type`, and invalid `credentialSubject` shapes.
 
 ### Suggested next actions
 
 * Keep the reusable JSON-LD guard utility under `src/utils/credentials.ts` aligned with accepted profile rules as they evolve.
 * Continue applying guard checks in credential controller entry points for propose/offer/create-request JSON-LD inputs.
-* Keep explicit `422` validation errors for unsupported/invalid JSON-LD profile shapes, with test coverage for structural-invalid payloads.
+* Keep explicit `400` validation errors for unsupported/invalid JSON-LD profile shapes, with unit tests asserting both the `400` response and that agent credential operations are not invoked on invalid input.
+* Keep the format-data JSON-compatibility guard covered by negative tests (non-JSON-safe payload returns `500`) to protect TSOA serialization boundaries.
 
 ### Dual-format controller acceptance plan (AnonCreds + JSON-LD)
 
@@ -60,7 +62,3 @@ The credential controllers support dual format payloads and should continue to d
   * `POST /v1/credentials/:credentialRecordId/accept-offer` (`jsonld` stage shape is empty by design)
   * `POST /v1/credentials/:credentialRecordId/accept-request` (JSON-LD stage uses accept-request options such as `verificationMethod`, not full credential body)
 * **Outcome:** preserve backward compatibility for AnonCreds-only and mixed clients while tightening JSON-LD input quality where full JSON-LD credential payloads are supplied.
-
-## Inconsistent Naming Conventions (Resolved)
-
-* **`mimeType` naming**: Standardized and consistent with Credo naming (`mimeType`) across credential/media DTOs and generated OpenAPI schema.
