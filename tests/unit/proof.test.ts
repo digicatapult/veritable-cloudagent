@@ -27,6 +27,7 @@ import {
 
 import request from 'supertest'
 import type WebSocket from 'ws'
+import { redactProofFormats } from '../../src/utils/proofs.js'
 
 import {
   closeWebSocket,
@@ -1477,12 +1478,50 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(422)
     })
 
+    test('should return 422 when client supplies presentationExchange credentials for accept-request', async () => {
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({
+          proofFormats: {
+            presentationExchange: {
+              credentials: {
+                descriptor1: [{ id: 'record-id-1' }],
+              },
+            },
+          },
+        })
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(acceptProofStub.called).to.equal(false)
+    })
+
     test('should give 404 not found when proof request is not found', async () => {
       const response = await request(app)
         .post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request')
         .send({})
 
       expect(response.statusCode).to.be.equal(404)
+    })
+  })
+
+  describe('Proof format redaction', () => {
+    test('should redact presentationExchange credentials', async () => {
+      const redacted = redactProofFormats({
+        presentationExchange: {
+          credentials: {
+            descriptor1: [{ id: 'record-id-1', extra: 'value' }],
+          },
+        },
+      } as unknown as ProofFormatPayload<ProofFormats, 'acceptRequest'>)
+
+      expect(redacted).to.deep.equal({
+        presentationExchange: {
+          credentials: '[REDACTED]',
+        },
+      })
     })
   })
 

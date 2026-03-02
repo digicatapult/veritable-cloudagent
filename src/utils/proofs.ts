@@ -266,8 +266,22 @@ export const isSimpleAnonCredsProofFormats = (
 export const redactProofFormats = (
   formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>
 ): Record<string, unknown> => {
+  const presentationExchange = formats.presentationExchange
+    ? {
+        ...formats.presentationExchange,
+        ...(Object.prototype.hasOwnProperty.call(formats.presentationExchange, 'credentials')
+          ? { credentials: '[REDACTED]' }
+          : {}),
+      }
+    : undefined
+
   const anoncreds = formats.anoncreds
-  if (!anoncreds) return formats as Record<string, unknown>
+  if (!anoncreds) {
+    return {
+      ...formats,
+      ...(presentationExchange ? { presentationExchange } : {}),
+    } as Record<string, unknown>
+  }
 
   const attributes = anoncreds.attributes
     ? Object.fromEntries(
@@ -293,6 +307,7 @@ export const redactProofFormats = (
 
   return {
     ...formats,
+    ...(presentationExchange ? { presentationExchange } : {}),
     anoncreds: {
       ...anoncreds,
       attributes,

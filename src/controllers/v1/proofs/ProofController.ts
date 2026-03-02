@@ -434,6 +434,20 @@ export class ProofController extends Controller {
       } else {
         formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
         const fullFormatAnonCreds = formatsToAccept.anoncreds
+        const fullFormatPresentationExchange = formatsToAccept.presentationExchange
+
+        if (fullFormatPresentationExchange && 'credentials' in fullFormatPresentationExchange) {
+          throw new ValidateError(
+            {
+              'proofFormats.presentationExchange.credentials': {
+                message:
+                  'Client-supplied presentationExchange.credentials is not supported for accept-request. Omit credentials and allow server-side selection.',
+                value: fullFormatPresentationExchange.credentials,
+              },
+            },
+            'Validation Failed'
+          )
+        }
 
         // Added validation for empty formats
         if (

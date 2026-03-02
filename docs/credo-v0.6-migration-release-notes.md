@@ -121,11 +121,22 @@ Requests still using `privateKeys` will fail validation (`422`).
 - Askar store config is explicit at top-level bootstrap input (`askarStoreConfig`), not inferred from `agentConfig.walletConfig`.
 - KMS-first patterns are used in migrated crypto paths (`agent.kms`), with DID key mapping persistence for DID:web imports.
 
+### PEX accept-request credential selection contract
+
+- `POST /v1/proofs/:proofRecordId/accept-request` now rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`.
+- PEX credential selection remains server-side/agent-side for this release.
+- PEX credential payloads are redacted in proof-format logging paths.
+
+This is an intentional hardening boundary for v0.6 migration stability.
+
+Future support for client-selected PEX credentials (descriptor->record-id contract) remains out of scope for this migration release and should be planned as a separate post-migration API enhancement.
+
 ## Operational Notes
 
 - Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) or legacy key fields (`publicKeyMultibase`, `publicKeyBase58`) must migrate.
 - Existing webhook/WebSocket consumers must update credential event parsing to `credentialExchangeRecord`.
 - Integrations storing raw event payloads should treat this as a schema-version boundary: keep historical v0.5 events as-is, ingest v0.6 events with the new field, and normalize cross-version analytics outside runtime API contracts.
+- PEX clients should not submit `presentationExchange.credentials` in `accept-request` for this release; rely on server-side credential selection.
 
 ## Recommended Consumer Migration Order
 
