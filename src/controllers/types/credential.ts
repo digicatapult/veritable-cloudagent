@@ -7,6 +7,7 @@ import type {
   DidCommCredentialFormatPayload,
   DidCommCredentialPreviewAttributeOptions,
 } from '@credo-ts/didcomm'
+import type { UUID } from './common.js'
 import type { CredentialFormats, CredentialProtocols } from './protocols.js'
 
 export interface CredentialFormatData {
@@ -24,7 +25,7 @@ export interface ProposeCredentialOptions {
   credentialFormats: DidCommCredentialFormatPayload<CredentialFormats, 'createProposal'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
-  connectionId: string
+  connectionId: UUID
 }
 
 export interface AcceptCredentialProposalOptions {
@@ -45,7 +46,7 @@ export interface OfferCredentialOptions {
   credentialFormats: DidCommCredentialFormatPayload<CredentialFormats, 'createOffer'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
-  connectionId: string
+  connectionId: UUID
 }
 
 export interface AcceptCredentialOfferOptions {
