@@ -57,7 +57,9 @@ Consumer migration checklist:
 
 Auto-generated DID:web documents now use v0.6-aligned canonical semantics:
 
-- `verificationMethod` uses `JsonWebKey2020` with `publicKeyJwk`
+- `verificationMethod` uses:
+  - `Ed25519VerificationKey2020` (`#auth-key`, `#assertion-key`) with `publicKeyMultibase`
+  - `X25519KeyAgreementKey2019` (`#agreement-key`) with `publicKeyBase58`
 - method fragments: `#auth-key`, `#assertion-key`, `#agreement-key`
 - explicit relationship arrays:
   - `authentication` -> `#auth-key`
@@ -78,7 +80,7 @@ Consumer migration guidance:
 
 - stop resolving keys by fixed fragments (`#owner`, `#encryption`)
 - resolve verification methods by relationship (`authentication`, `assertionMethod`, `keyAgreement`)
-- read key material from `publicKeyJwk`
+- read key material from method-type-specific fields (`publicKeyMultibase`, `publicKeyBase58`)
 
 Internal runtime note:
 
@@ -150,6 +152,31 @@ Future support for client-selected PEX credentials (descriptor->record-id contra
 - `POST /v1/credentials/propose-credential`, `POST /v1/credentials/create-offer`, and `POST /v1/credentials/offer-credential` now enforce runtime JSON-LD shape validation and return `400` for structurally invalid payloads.
 - Validation is intentionally shape-based (for example: `credential` object required, valid `@context` shape, valid `type` shape, object checks for `credentialSubject`/`options`) and is not restricted to a single context URI or fixed credential type.
 
+### HTTP 400 error response contract (`BadRequest`)
+
+`BadRequest` handling was enhanced during PR review to address two concrete contract issues:
+
+- **OpenAPI mismatch on 400 responses:** some endpoints documented `400` as a plain string while runtime handlers could return additional validation context.
+- **Inconsistent error payload shape:** error middleware returned a mix of string and object responses depending on code path.
+
+Contract update applied:
+
+- `400` responses now use object payloads consistently, with `message` and optional `details`.
+- Controller `@Response(400)` annotations were aligned to `BadRequest` to reflect this contract.
+- Existing validation flows now attach structured context in `details` where helpful (instead of overloading the message string).
+- `details` is intentionally selective: include only actionable context (for example identifier/reason/error arrays), and avoid echoing values that are already fully implied by `message`.
+
+Current canonical `400` shape:
+
+```json
+{
+  "message": "Validation Failed",
+  "details": { "...": "..." }
+}
+```
+
+`details` is optional and present only when additional error context exists.
+
 ## Operational Notes
 
 - Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) or legacy key fields (`publicKeyMultibase`, `publicKeyBase58`) must migrate.
@@ -193,10 +220,14 @@ Operational intent:
 - It is a temporary compatibility layer until equivalent upstream fixes are available and consumed via normal dependency upgrades.
 - If dependency layout changes (or upstream ships corrected artifacts), this script may become unnecessary and should then be removed to reduce maintenance overhead.
 
+### BadRequest error type
+
+Clients should parse `response.body.message` and optionally `response.body.details`.
+
 ## Recommended Consumer Migration Order
 
 1. Update payload parsers and DTOs for credential events.
-2. Update DID:web consumers for `JsonWebKey2020` + relationship-based key lookup.
+2. Update DID:web consumers for relationship-based key lookup and method-specific key fields (`publicKeyMultibase` / `publicKeyBase58`).
 3. Deploy consumer updates before enabling new producer/runtime versions in shared environments.
 4. Remove any temporary dual-reader fallback after all producers are on v0.6.
 

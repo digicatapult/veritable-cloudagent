@@ -25,7 +25,7 @@ export class SchemaController {
    */
   @Example<AnonCredsSchemaResponse[]>([SchemaExample])
   @Get('/')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<HttpResponse>(500)
   public async getCredentials(
     @Request() req: express.Request,
@@ -62,7 +62,7 @@ export class SchemaController {
    */
   @Example<AnonCredsSchemaResponse>(SchemaExample)
   @Get('/:schemaId')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async getSchemaById(@Request() req: express.Request, @Path('schemaId') schemaId: SchemaId) {
@@ -75,7 +75,10 @@ export class SchemaController {
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      throw new BadRequest(`schemaId "${schemaId}" has invalid structure.`)
+      throw new BadRequest('schemaId has invalid structure.', {
+        schemaId,
+        resolutionError: error,
+      })
     }
 
     if (error !== undefined || schema === undefined) {

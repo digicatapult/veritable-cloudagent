@@ -228,10 +228,9 @@ Credo-TS v0.6.x treats it as a **cryptographic contract**.
 
 `veritable-cloudagent` now generates DID:web documents using canonical v0.6 key semantics:
 
-- `verificationMethod` uses three `JsonWebKey2020` entries:
-  - `#auth-key` (Ed25519)
-  - `#assertion-key` (Ed25519)
-  - `#agreement-key` (X25519)
+- `verificationMethod` uses canonical v0.6 key types:
+  - `#auth-key` and `#assertion-key`: `Ed25519VerificationKey2020`
+  - `#agreement-key`: `X25519KeyAgreementKey2019`
 - Relationships are explicit:
   - `authentication: [#auth-key]`
   - `assertionMethod: [#assertion-key]`

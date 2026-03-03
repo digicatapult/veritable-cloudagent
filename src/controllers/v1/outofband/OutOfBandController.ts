@@ -47,6 +47,19 @@ import type {
 export class OutOfBandController extends Controller {
   private agent: RestAgent
 
+  private getInvitationDomain() {
+    const domain = this.agent.didcomm.config.endpoints[0]?.trim()
+
+    if (!domain) {
+      throw new HttpResponse({
+        code: 500,
+        message: 'DIDComm endpoint is not configured for invitation URL generation',
+      })
+    }
+
+    return domain
+  }
+
   public constructor(agent: Agent) {
     super()
     this.agent = agent
@@ -109,11 +122,12 @@ export class OutOfBandController extends Controller {
   ) {
     const outOfBandRecord = await this.agent.didcomm.oob.createInvitation(config)
     const didcommConfig = this.agent.didcomm.config
+    const invitationDomain = this.getInvitationDomain()
     req.log.info('invitation has been created %j', outOfBandRecord.toJSON())
 
     return {
       invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-        domain: didcommConfig.endpoints[0] ?? '',
+        domain: invitationDomain,
       }),
       invitation: outOfBandRecord.outOfBandInvitation.toJSON({
         useDidSovPrefixWhereAllowed: didcommConfig.useDidSovPrefixWhereAllowed,
@@ -141,11 +155,12 @@ export class OutOfBandController extends Controller {
   ) {
     const { outOfBandRecord, invitation } = await this.agent.didcomm.oob.createLegacyInvitation(config)
     const didcommConfig = this.agent.didcomm.config
+    const invitationDomain = this.getInvitationDomain()
     req.log.info('legacy invitation has been created %j', outOfBandRecord.toJSON())
 
     return {
       invitationUrl: invitation.toUrl({
-        domain: didcommConfig.endpoints[0] ?? '',
+        domain: invitationDomain,
         useDidSovPrefixWhereAllowed: didcommConfig.useDidSovPrefixWhereAllowed,
       }),
       invitation: invitation.toJSON({

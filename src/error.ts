@@ -69,27 +69,26 @@ export const errorHandler =
 
     if (err instanceof HttpResponse) {
       logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${err.message}`)
-      if (err.details !== undefined) {
-        res.status(err.code).json({
-          message: err.message,
-          details: err.details,
-        })
-        return
-      }
-
-      res.status(err.code).json(err.message)
+      res.status(err.code).json({
+        message: err.message,
+        ...(err.details !== undefined ? { details: err.details } : {}),
+      })
       return
     }
     // capture body parser errors
     if (isHttpError(err)) {
       logger.warn(`HTTPError in request for ${req.method} ${req.path}: ${err.message}`)
-      res.status(err.statusCode).json(err.message)
+      res.status(err.statusCode).json({
+        message: err.message,
+      })
       return
     }
     if (err instanceof Error) {
       logger.error(`Unexpected error thrown in handler: ${err.message}`)
       logger.debug(`Stack: ${err.stack}`)
-      res.status(500).json(err.message)
+      res.status(500).json({
+        message: err.message,
+      })
       return
     }
 

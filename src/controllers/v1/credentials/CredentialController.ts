@@ -163,7 +163,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
@@ -227,7 +227,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
     if (options.credentialFormats.jsonld) {
       const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
@@ -252,7 +252,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/offer-credential')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {

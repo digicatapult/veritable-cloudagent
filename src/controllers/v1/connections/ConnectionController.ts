@@ -131,7 +131,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/:connectionId')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
   public async closeConnection(
@@ -147,7 +147,9 @@ export class ConnectionController extends Controller {
       const deleteAfter = Boolean(deleteConnectionRecord)
       if (alreadyDisconnected) {
         if (!deleteAfter) {
-          throw new BadRequest(`cannot send hangup to disconnected peer ${connectionId}`)
+          throw new BadRequest('cannot send hangup to disconnected peer', {
+            connectionId,
+          })
         }
         await this.agent.didcomm.connections.deleteById(connectionId)
         req.log.info('connection record deleted %s', connectionId)
@@ -259,7 +261,9 @@ export class ConnectionController extends Controller {
       }
     } catch (error) {
       if (error instanceof CredoError) {
-        throw new BadRequest('invalid DID')
+        throw new BadRequest('invalid DID', {
+          did,
+        })
       }
       throw error
     }

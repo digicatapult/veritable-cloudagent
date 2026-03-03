@@ -97,7 +97,7 @@ The generated DID:web document follows the W3C DID Core specification and includ
 
 - **@context**: Standard DID contexts
 - **id**: The DID identifier
-- **verificationMethod**: Canonical Credo v0.6 `JsonWebKey2020` methods (`#auth-key`, `#assertion-key`, `#agreement-key`)
+- **verificationMethod**: Canonical Credo v0.6 methods (`Ed25519VerificationKey2020` for `#auth-key`/`#assertion-key`, `X25519KeyAgreementKey2019` for `#agreement-key`)
 - **authentication**: References `#auth-key`
 - **assertionMethod**: References `#assertion-key`
 - **keyAgreement**: References `#agreement-key`

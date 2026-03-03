@@ -400,7 +400,7 @@ export class ProofController extends Controller {
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
   public async acceptRequest(
     @Request() req: express.Request,
@@ -426,7 +426,11 @@ export class ProofController extends Controller {
 
         if (!requestedAnonCreds) {
           throw new BadRequest(
-            'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.'
+            'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.',
+            {
+              code: 'missing_anoncreds_after_type_guard',
+              proofRecordId,
+            }
           )
         }
 
@@ -455,7 +459,10 @@ export class ProofController extends Controller {
           (!fullFormatAnonCreds.attributes || Object.keys(fullFormatAnonCreds.attributes).length === 0) &&
           (!fullFormatAnonCreds.predicates || Object.keys(fullFormatAnonCreds.predicates).length === 0)
         ) {
-          throw new BadRequest('Invalid proof formats: must have at least one attribute or predicate')
+          throw new BadRequest('Invalid proof formats', {
+            code: 'invalid_proof_formats',
+            errors: ['must have at least one attribute or predicate'],
+          })
         }
 
         req.log.info('using provided proof formats for %s proof', proofRecordId)
@@ -574,7 +581,10 @@ export class ProofController extends Controller {
       availableAnonCreds.attributes
     )
     if (attrErrors.length > 0) {
-      throw new BadRequest(attrErrors.join('; '))
+      throw new BadRequest('Proof format hydration failed', {
+        code: 'proof_format_hydration_failed',
+        errors: attrErrors,
+      })
     }
     const hydratedPredicates = hydrateAnonCredsPredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
 
