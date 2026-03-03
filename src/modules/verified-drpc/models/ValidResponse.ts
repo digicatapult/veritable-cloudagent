@@ -47,7 +47,7 @@ export function isValidVerifiedDrpcResponse(value: any): boolean {
   }
 
   // Check if it's a valid VerifiedDrpcResponseObject
-  if ('jsonrpc' in value && 'id' in value) {
+  if (value.jsonrpc === '2.0' && 'id' in value) {
     // Check if 'result' and 'error' are valid
     if ('result' in value && typeof value.result === 'undefined') {
       return false
