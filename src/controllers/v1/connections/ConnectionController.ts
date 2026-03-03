@@ -1,9 +1,9 @@
 import { Agent, CredoError, RecordNotFoundError } from '@credo-ts/core'
 import {
-  DidCommConnectionRecordProps as ConnectionRecordProps,
-  DidCommConnectionRepository as ConnectionRepository,
-  DidCommDidExchangeState as DidExchangeState,
-  DidCommHandshakeProtocol as HandshakeProtocol,
+  DidCommConnectionRecordProps,
+  DidCommConnectionRepository,
+  DidCommDidExchangeState,
+  DidCommHandshakeProtocol,
 } from '@credo-ts/didcomm'
 import {
   Body,
@@ -66,13 +66,13 @@ export class ConnectionController extends Controller {
    * @param outOfBandId Out of band invitation ID
    * @returns ConnectionRecord[]
    */
-  @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
+  @Example<DidCommConnectionRecordProps[]>([ConnectionRecordExample])
   @Get('/')
   public async getAllConnections(
     @Request() req: express.Request,
     @Query('outOfBandId') outOfBandId?: UUID,
     @Query('alias') alias?: string,
-    @Query('state') state?: DidExchangeState,
+    @Query('state') state?: DidCommDidExchangeState,
     @Query('myDid') myDid?: DID,
     @Query('theirDid') theirDid?: DID,
     @Query('theirLabel') theirLabel?: string
@@ -83,7 +83,7 @@ export class ConnectionController extends Controller {
       req.log.info('retrieving OOB connections', connections)
       connections = await this.agent.didcomm.connections.findAllByOutOfBandId(outOfBandId)
     } else {
-      const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = this.agent.dependencyManager.resolve(DidCommConnectionRepository)
       req.log.info('retrieving by query connections %j', { alias, myDid, theirDid, theirLabel, state })
       connections = await connectionRepository.findByQuery(this.agent.context, {
         alias,
@@ -110,7 +110,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    * @returns ConnectionRecord
    */
-  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
   @Response<NotFoundError['message']>(404)
   public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
@@ -179,7 +179,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    * @returns ConnectionRecord
    */
-  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-request')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -206,7 +206,7 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    * @returns ConnectionRecord
    */
-  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-response')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -248,7 +248,7 @@ export class ConnectionController extends Controller {
       const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.receiveImplicitInvitation({
         did,
         label: agentLabel,
-        handshakeProtocols: [HandshakeProtocol.Connections],
+        handshakeProtocols: [DidCommHandshakeProtocol.Connections],
       })
 
       req.log.info('returning OOB record %j', {

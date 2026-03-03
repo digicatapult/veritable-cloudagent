@@ -11,6 +11,17 @@ This document summarizes externally visible changes introduced by the Credo-TS v
 - DIDComm capabilities are now accessed via `agent.didcomm.*` instead of legacy direct module access patterns.
 - Event enums/types now use `@credo-ts/didcomm` naming (for example `DidCommConnectionEventTypes`, `DidCommCredentialEventTypes`, `DidCommProofEventTypes`).
 
+### DIDComm symbol naming cleanup (source-level)
+
+- Source now uses direct `DidComm*` symbols consistently in runtime code and tests/fixtures.
+- This is a deliberate migration-era breaking style change in source conventions to reduce ambiguity and maintain parity with `Credo-ts`
+
+Contributor guidance:
+
+- Prefer direct `DidComm*` imports and usages.
+- Do not add new alias imports that map `DidComm*` symbols to legacy/internal names.
+- Keep upstream non-prefixed exports as-is when Credo defines them that way (for example `TrustPingResponseReceivedEvent`).
+
 ### Event payload contract
 
 Credential state-change payloads now expose `payload.credentialExchangeRecord` and no longer expose `payload.credentialRecord`.

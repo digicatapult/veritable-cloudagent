@@ -1,8 +1,8 @@
 import { Agent, RecordNotFoundError } from '@credo-ts/core'
 import {
-  type DidCommCredentialExchangeRecordProps as CredentialExchangeRecordProps,
-  DidCommCredentialExchangeRepository as CredentialRepository,
-  DidCommCredentialState as CredentialState,
+  type DidCommCredentialExchangeRecordProps,
+  DidCommCredentialExchangeRepository,
+  DidCommCredentialState,
   type SendCredentialProblemReportOptions,
 } from '@credo-ts/didcomm'
 import {
@@ -61,14 +61,14 @@ export class CredentialController extends Controller {
    *
    * @returns CredentialExchangeRecord[]
    */
-  @Example<CredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
+  @Example<DidCommCredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
   @Get('/')
   public async getAllCredentials(
     @Query('threadId') threadId?: UUID,
     @Query('connectionId') connectionId?: UUID,
-    @Query('state') state?: CredentialState
+    @Query('state') state?: DidCommCredentialState
   ) {
-    const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
+    const credentialRepository = this.agent.dependencyManager.resolve(DidCommCredentialExchangeRepository)
 
     const credentials = await credentialRepository.findByQuery(this.agent.context, {
       connectionId,
@@ -85,7 +85,7 @@ export class CredentialController extends Controller {
    * @param credentialRecordId
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Get('/:credentialRecordId')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -161,7 +161,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
   @Response<BadRequest>(400)
   @Response<NotFoundError['message']>(404)
@@ -194,7 +194,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-proposal')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -225,7 +225,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns AgentMessage, CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
   @Response<BadRequest>(400)
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
@@ -250,7 +250,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/offer-credential')
   @Response<BadRequest>(400)
   @Response<NotFoundError['message']>(404)
@@ -290,7 +290,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-offer')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -323,7 +323,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-request')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -355,7 +355,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-credential')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)
@@ -382,7 +382,7 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/send-problem-report')
   @Response<NotFoundError['message']>(404)
   @Response<HttpResponse>(500)

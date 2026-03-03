@@ -8,12 +8,12 @@ import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
 
 import { AgentContext, injectable } from '@credo-ts/core'
 import {
-  DidCommConnectionsApi as ConnectionsApi,
-  DidCommMessageHandlerRegistry as MessageHandlerRegistry,
-  DidCommMessageSender as MessageSender,
-  DidCommOutboundMessageContext as OutboundMessageContext,
-  type DidCommConnectionRecord as ConnectionRecord,
+  DidCommConnectionsApi,
+  DidCommMessageHandlerRegistry,
+  DidCommMessageSender,
+  DidCommOutboundMessageContext,
   type CreateProofRequestOptions,
+  type DidCommConnectionRecord,
   type DidCommProofProtocol,
 } from '@credo-ts/didcomm'
 
@@ -28,16 +28,16 @@ import { VerifiedDrpcService } from './services/index.js'
 export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
   private config: VerifiedDrpcModuleConfig<PPs>
   private verifiedDrpcMessageService: VerifiedDrpcService<PPs>
-  private messageSender: MessageSender
-  private connectionsApi: ConnectionsApi
+  private messageSender: DidCommMessageSender
+  private connectionsApi: DidCommConnectionsApi
   private agentContext: AgentContext
 
   public constructor(
     verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<PPs>,
-    messageHandlerRegistry: MessageHandlerRegistry,
+    messageHandlerRegistry: DidCommMessageHandlerRegistry,
     verifiedDrpcMessageService: VerifiedDrpcService<PPs>,
-    messageSender: MessageSender,
-    connectionsApi: ConnectionsApi,
+    messageSender: DidCommMessageSender,
+    connectionsApi: DidCommConnectionsApi,
     agentContext: AgentContext
   ) {
     this.config = verifiedDrpcModuleConfig
@@ -227,11 +227,11 @@ export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
   }
 
   private async sendMessage(
-    connection: ConnectionRecord,
+    connection: DidCommConnectionRecord,
     message: VerifiedDrpcRequestMessage | VerifiedDrpcResponseMessage,
     messageRecord: VerifiedDrpcRecord
   ): Promise<void> {
-    const outboundMessageContext = new OutboundMessageContext(message, {
+    const outboundMessageContext = new DidCommOutboundMessageContext(message, {
       agentContext: this.agentContext,
       connection,
       associatedRecord: messageRecord,
@@ -239,7 +239,7 @@ export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
     await this.messageSender.sendMessage(outboundMessageContext)
   }
 
-  private registerMessageHandlers(messageHandlerRegistry: MessageHandlerRegistry) {
+  private registerMessageHandlers(messageHandlerRegistry: DidCommMessageHandlerRegistry) {
     messageHandlerRegistry.registerMessageHandler(new VerifiedDrpcRequestHandler(this.verifiedDrpcMessageService))
     messageHandlerRegistry.registerMessageHandler(new VerifiedDrpcResponseHandler(this.verifiedDrpcMessageService))
   }

@@ -7,9 +7,9 @@ import type {
   AnonCredsRequestedPredicateMatch,
 } from '@credo-ts/anoncreds'
 import type {
-  DidCommDifPresentationExchangeProofFormat as DifPresentationExchangeProofFormat,
+  DidCommDifPresentationExchangeProofFormat,
+  DidCommProofFormatPayload,
   GetProofFormatDataReturn,
-  DidCommProofFormatPayload as ProofFormatPayload,
 } from '@credo-ts/didcomm'
 
 import type {
@@ -22,9 +22,9 @@ import type {
 } from '../controllers/types/index.js'
 import { maybeMapValues } from './helpers.js'
 
-type AgentProofFormats = [AnonCredsDidCommProofFormat, DifPresentationExchangeProofFormat]
+type AgentProofFormats = [AnonCredsDidCommProofFormat, DidCommDifPresentationExchangeProofFormat]
 type AgentPresentationDefinition =
-  DifPresentationExchangeProofFormat['proofFormats']['createRequest']['presentationDefinition']
+  DidCommDifPresentationExchangeProofFormat['proofFormats']['createRequest']['presentationDefinition']
 
 type ValidationFieldError = { message: string; value?: unknown }
 
@@ -173,7 +173,7 @@ export const transformAnonCredsProofFormat = (
 export const transformProofFormats = (proofFormats: {
   anoncreds?: AnonCredsRequestProofFormatOptions
   presentationExchange?: PresentationExchangeCreateRequest
-}): ProofFormatPayload<AgentProofFormats, 'createRequest'> => {
+}): DidCommProofFormatPayload<AgentProofFormats, 'createRequest'> => {
   return {
     ...(proofFormats.anoncreds ? { anoncreds: transformAnonCredsProofFormat(proofFormats.anoncreds) } : {}),
     ...(proofFormats.presentationExchange
@@ -189,8 +189,8 @@ export const transformProofFormats = (proofFormats: {
 }
 
 export const transformProposeProofFormats = (
-  proofFormats: ProofFormatPayload<ProofFormats, 'createProposal'>
-): ProofFormatPayload<AgentProofFormats, 'createProposal'> => {
+  proofFormats: DidCommProofFormatPayload<ProofFormats, 'createProposal'>
+): DidCommProofFormatPayload<AgentProofFormats, 'createProposal'> => {
   return {
     ...(proofFormats.anoncreds ? { anoncreds: proofFormats.anoncreds } : {}),
     ...(proofFormats.presentationExchange
@@ -264,7 +264,7 @@ export const isSimpleAnonCredsProofFormats = (
  * @returns A redacted copy of the proof formats.
  */
 export const redactProofFormats = (
-  formats: ProofFormatPayload<ProofFormats, 'acceptRequest'>
+  formats: DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>
 ): Record<string, unknown> => {
   const presentationExchange = formats.presentationExchange
     ? {
@@ -323,7 +323,7 @@ export const redactProofFormats = (
  * @returns A simplified record of attribute names and their revealed values.
  */
 export const simplifyAnonCredsProofContent = (
-  formatData: GetProofFormatDataReturn<[AnonCredsDidCommProofFormat, DifPresentationExchangeProofFormat]>
+  formatData: GetProofFormatDataReturn<[AnonCredsDidCommProofFormat, DidCommDifPresentationExchangeProofFormat]>
 ): Record<string, unknown> => {
   const request = formatData.request?.anoncreds
   const presentation = formatData.presentation?.anoncreds

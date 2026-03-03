@@ -3,12 +3,12 @@ import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 import { type AgentContext, EventEmitter, injectable, type Query } from '@credo-ts/core'
 import {
   type CreateProofRequestOptions,
+  type DidCommInboundMessageContext,
   DidCommProofEventTypes,
   type DidCommProofProtocol,
   DidCommProofsApi,
   DidCommProofState,
   type DidCommProofStateChangedEvent,
-  type DidCommInboundMessageContext as InboundMessageContext,
 } from '@credo-ts/didcomm'
 
 import type { UUID } from '../../../controllers/types/index.js'
@@ -200,7 +200,7 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     }
   }
 
-  public async receiveResponse(messageContext: InboundMessageContext<VerifiedDrpcResponseMessage>) {
+  public async receiveResponse(messageContext: DidCommInboundMessageContext<VerifiedDrpcResponseMessage>) {
     const connection = messageContext.assertReadyConnection()
     const verifiedDrpcMessageRecord = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -221,7 +221,7 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     return verifiedDrpcMessageRecord
   }
 
-  public async receiveRequest(messageContext: InboundMessageContext<VerifiedDrpcRequestMessage>) {
+  public async receiveRequest(messageContext: DidCommInboundMessageContext<VerifiedDrpcRequestMessage>) {
     const connection = messageContext.assertReadyConnection()
     const record = await this.findByThreadAndConnectionId(
       messageContext.agentContext,

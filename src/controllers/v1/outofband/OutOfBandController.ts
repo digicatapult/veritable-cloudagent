@@ -1,11 +1,11 @@
 import { Agent, JsonTransformer, RecordNotFoundError } from '@credo-ts/core'
 import {
-  type DidCommConnectionRecordProps as ConnectionRecordProps,
   type CreateLegacyInvitationConfig,
   type CreateOutOfBandInvitationConfig,
+  type DidCommConnectionRecordProps,
   type ReceiveOutOfBandImplicitInvitationConfig,
   DidCommMessage,
-  DidCommOutOfBandInvitation as OutOfBandInvitation,
+  DidCommOutOfBandInvitation,
 } from '@credo-ts/didcomm'
 import {
   Body,
@@ -215,11 +215,11 @@ export class OutOfBandController extends Controller {
    * Creates inbound out-of-band record and assigns out-of-band invitation message to it if the
    * message is valid.
    *
-   * @param invitation either OutOfBandInvitation or ConnectionInvitationMessage
+   * @param invitation either DidCommOutOfBandInvitation or ConnectionInvitationMessage
    * @param config config for handling of invitation
    * @returns out-of-band record and connection record if one has been created.
    */
-  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: ConnectionRecordProps }>({
+  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: DidCommConnectionRecordProps }>({
     outOfBandRecord: outOfBandRecordExample,
     connectionRecord: ConnectionRecordExample,
   })
@@ -227,7 +227,7 @@ export class OutOfBandController extends Controller {
   public async receiveInvitation(@Request() req: express.Request, @Body() invitationRequest: ReceiveInvitationProps) {
     const { invitation, ...config } = invitationRequest
 
-    const invite = new OutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
+    const invite = new DidCommOutOfBandInvitation({ ...invitation, handshakeProtocols: invitation.handshake_protocols })
     req.log.info('received OOB invitation %j', invite)
     const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.receiveInvitation(invite, config)
 
@@ -251,7 +251,7 @@ export class OutOfBandController extends Controller {
    * @param config config for creating and handling invitation
    * @returns out-of-band record and connection record if one has been created.
    */
-  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: ConnectionRecordProps }>({
+  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: DidCommConnectionRecordProps }>({
     outOfBandRecord: outOfBandRecordExample,
     connectionRecord: ConnectionRecordExample,
   })
@@ -281,7 +281,7 @@ export class OutOfBandController extends Controller {
    * @param config config for handling of invitation
    * @returns out-of-band record and connection record if one has been created.
    */
-  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: ConnectionRecordProps }>({
+  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: DidCommConnectionRecordProps }>({
     outOfBandRecord: outOfBandRecordExample,
     connectionRecord: ConnectionRecordExample,
   })
@@ -312,7 +312,7 @@ export class OutOfBandController extends Controller {
    * Accept a connection invitation as invitee (by sending a connection request message) for the connection with the specified connection id.
    * This is not needed when auto accepting of connections is enabled.
    */
-  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: ConnectionRecordProps }>({
+  @Example<{ outOfBandRecord: OutOfBandRecordWithInvitationProps; connectionRecord: DidCommConnectionRecordProps }>({
     outOfBandRecord: outOfBandRecordExample,
     connectionRecord: ConnectionRecordExample,
   })
