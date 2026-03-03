@@ -199,6 +199,47 @@ Migration impact:
 - Requests/responses using non-`2.0` JSON-RPC version values (for example `"1.0"`) are now rejected at validation boundaries.
 - Invalid verified-dRPC request payloads now consistently surface as validation failures (for example `422`) rather than bubbling as unexpected runtime exceptions.
 
+## Client-facing contract summary checklist
+
+Use this as a release-readiness checklist for all API, webhook, and WebSocket consumers.
+
+### Event/Webhook/WebSocket contracts
+
+- [ ] **Credential state event payload renamed**: consume `payload.credentialExchangeRecord` (not `payload.credentialRecord`).
+- [ ] **Credential event type renamed**: expect `DidCommCredentialStateChanged` (not `CredentialStateChanged`).
+- [ ] **Trust-ping WebSocket payload key renamed**: consume `payload.connectionRecord` (not `payload.basicMessageRecord`).
+
+### REST request contracts
+
+- [ ] **OOB label now required** on:
+  - `POST /v1/oob/receive-invitation`
+  - `POST /v1/oob/receive-invitation-url`
+  - `POST /v1/oob/:outOfBandId/accept-invitation`
+- [ ] **OOB accept-invitation config changed**: remove top-level `mediatorId`; use `routing`, optional `timeoutMs`, optional `ourDid`.
+- [ ] **DID import payload changed**: remove `privateKeys`; use `keys` (`DidDocumentKey[]`).
+- [ ] **Proof accept-request hardening**: do not send `proofFormats.presentationExchange.credentials`; request is rejected with `422`.
+- [ ] **verified-dRPC JSON-RPC version strictness**: request/response payloads must use `jsonrpc: "2.0"`.
+
+### REST response contracts
+
+- [ ] **`POST /v1/credentials/create-offer` response field renamed**: consume `credentialExchangeRecord` (not `credentialRecord`).
+- [ ] **HTTP `400` error shape changed**: parse `{ "message": string, "details"?: unknown }` (not a plain string body).
+
+### Validation/status-code expectations to update in client tests
+
+- [ ] Missing required OOB `label` now fails validation (`422`).
+- [ ] Legacy DID import payload with `privateKeys` now fails validation (`422`).
+- [ ] `proofFormats.presentationExchange.credentials` in proof accept-request now fails validation (`422`).
+- [ ] Invalid JSON-LD credential profile shapes now fail with `400` and structured error payload.
+- [ ] Non-`2.0` verified-dRPC `jsonrpc` values now fail validation.
+
+### Recommended rollout checks
+
+- [ ] Update typed SDK/client DTOs first (request + response models).
+- [ ] Update event parsers/ETL mappings (especially credential and trust-ping payload keys).
+- [ ] Update contract/integration tests for new status codes and error body shape.
+- [ ] Deploy consumers before enabling v0.6 producers in shared environments.
+
 ## Operational Notes
 
 - Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) or legacy key fields (`publicKeyMultibase`, `publicKeyBase58`) must migrate.
