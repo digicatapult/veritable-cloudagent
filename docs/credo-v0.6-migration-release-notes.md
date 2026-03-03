@@ -177,6 +177,17 @@ Current canonical `400` shape:
 
 `details` is optional and present only when additional error context exists.
 
+### Verified-dRPC request/response validation alignment
+
+- Verified-dRPC request validation now requires `jsonrpc === '2.0'` (not just presence of a `jsonrpc` field).
+- Verified-dRPC response validation now requires `jsonrpc === '2.0'` for non-empty response objects.
+- Custom `class-validator` validation in verified-dRPC request validation now returns `false` for invalid inputs instead of throwing `ValidationError` from `validate()`.
+
+Migration impact:
+
+- Requests/responses using non-`2.0` JSON-RPC version values (for example `"1.0"`) are now rejected at validation boundaries.
+- Invalid verified-dRPC request payloads now consistently surface as validation failures (for example `422`) rather than bubbling as unexpected runtime exceptions.
+
 ## Operational Notes
 
 - Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) or legacy key fields (`publicKeyMultibase`, `publicKeyBase58`) must migrate.
