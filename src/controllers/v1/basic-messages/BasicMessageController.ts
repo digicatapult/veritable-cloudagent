@@ -39,7 +39,7 @@ export class BasicMessageController extends Controller {
    * @param content The content of the message
    */
   @Post('/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async sendMessage(
     @Request() req: express.Request,

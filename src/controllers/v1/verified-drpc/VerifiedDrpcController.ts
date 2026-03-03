@@ -37,7 +37,7 @@ export class VerifiedDrpcController extends Controller {
    * @param timeout The timeout for receiving a response
    */
   @Post('/request/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<GatewayTimeout>(504)
   public async sendRequest(
     @Request() req: express.Request,
@@ -92,7 +92,7 @@ export class VerifiedDrpcController extends Controller {
    * @param response the verified drpc response object to send
    */
   @Post('/response/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,

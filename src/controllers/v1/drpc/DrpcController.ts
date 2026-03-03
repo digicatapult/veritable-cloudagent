@@ -99,7 +99,7 @@ export class DrpcController extends Controller {
    * @param response the verified drpc response object to send
    */
   @Post('/:requestId/response')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,

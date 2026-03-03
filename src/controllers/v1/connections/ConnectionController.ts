@@ -112,7 +112,7 @@ export class ConnectionController extends Controller {
    */
   @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     const connection = await this.agent.didcomm.connections.findById(connectionId)
 
@@ -132,7 +132,7 @@ export class ConnectionController extends Controller {
    */
   @Delete('/:connectionId')
   @Response<BadRequest>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async closeConnection(
     @Request() req: express.Request,
@@ -181,7 +181,7 @@ export class ConnectionController extends Controller {
    */
   @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-request')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
@@ -208,7 +208,7 @@ export class ConnectionController extends Controller {
    */
   @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-response')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {

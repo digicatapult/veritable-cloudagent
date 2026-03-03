@@ -163,21 +163,34 @@ Future support for client-selected PEX credentials (descriptor->record-id contra
 - `POST /v1/credentials/propose-credential`, `POST /v1/credentials/create-offer`, and `POST /v1/credentials/offer-credential` now enforce runtime JSON-LD shape validation and return `400` for structurally invalid payloads.
 - Validation is intentionally shape-based (for example: `credential` object required, valid `@context` shape, valid `type` shape, object checks for `credentialSubject`/`options`) and is not restricted to a single context URI or fixed credential type.
 
-### HTTP 400 error response contract (`BadRequest`)
+### HTTP error response contract (rich object payloads)
 
-`BadRequest` handling was enhanced during PR review to address two concrete contract issues:
+Error handling was enhanced during PR review to address two concrete contract issues:
 
-- **OpenAPI mismatch on 400 responses:** some endpoints documented `400` as a plain string while runtime handlers could return additional validation context.
+- **OpenAPI mismatch on error responses:** some endpoints documented error responses as plain strings while runtime handlers returned structured payloads.
 - **Inconsistent error payload shape:** error middleware returned a mix of string and object responses depending on code path.
 
 Contract update applied:
 
-- `400` responses now use object payloads consistently, with `message` and optional `details`.
-- Controller `@Response(400)` annotations were aligned to `BadRequest` to reflect this contract.
+- Middleware-handled error responses now use object payloads consistently across status codes.
+- `HttpResponse`-based errors now include `code` and `message`, with optional `details`.
+- Controller 404 annotations were aligned from `@Response<NotFoundError['message']>(404)` to `@Response<NotFoundError>(404)` so generated OpenAPI matches runtime object payloads.
 - Existing validation flows now attach structured context in `details` where helpful (instead of overloading the message string).
 - `details` is intentionally selective: include only actionable context (for example identifier/reason/error arrays), and avoid echoing values that are already fully implied by `message`.
 
-Current canonical `400` shape:
+Current canonical shapes:
+
+`HttpResponse` family (for example `400/404/500/502/504`):
+
+```json
+{
+  "code": 404,
+  "message": "not found",
+  "details": { "...": "..." }
+}
+```
+
+Validation (`422`) and non-`HttpResponse` middleware paths:
 
 ```json
 {
@@ -223,19 +236,19 @@ Use this as a release-readiness checklist for all API, webhook, and WebSocket co
 ### REST response contracts
 
 - [ ] **`POST /v1/credentials/create-offer` response field renamed**: consume `credentialExchangeRecord` (not `credentialRecord`).
-- [ ] **HTTP `400` error shape changed**: parse `{ "message": string, "details"?: unknown }` (not a plain string body).
+- [ ] **HTTP error payloads are object-based**: parse structured JSON objects (not plain string bodies), including `HttpResponse` payloads with `code` + `message` and optional `details`.
 
 ### Validation/status-code expectations to update in client tests
 
 - [ ] Missing required OOB `label` now fails validation (`422`).
 - [ ] Legacy DID import payload with `privateKeys` now fails validation (`422`).
-- [ ] `proofFormats.presentationExchange.credentials` in proof accept-request now fails validation (`422`).
+- [ ] `proofFormats.presentationExchange.credentials` in proof `accept-request` now fails validation (`422`).
 - [ ] Invalid JSON-LD credential profile shapes now fail with `400` and structured error payload.
 - [ ] Non-`2.0` verified-dRPC `jsonrpc` values now fail validation.
 
 ### Recommended rollout checks
 
-- [ ] Update typed SDK/client DTOs first (request + response models).
+- [ ] Update typed client DTOs first (request + response models).
 - [ ] Update event parsers/ETL mappings (especially credential and trust-ping payload keys).
 - [ ] Update contract/integration tests for new status codes and error body shape.
 - [ ] Deploy consumers before enabling v0.6 producers in shared environments.
@@ -283,9 +296,9 @@ Operational intent:
 - It is a temporary compatibility layer until equivalent upstream fixes are available and consumed via normal dependency upgrades.
 - If dependency layout changes (or upstream ships corrected artifacts), this script may become unnecessary and should then be removed to reduce maintenance overhead.
 
-### BadRequest error type
+### Error response parsing
 
-Clients should parse `response.body.message` and optionally `response.body.details`.
+Clients should parse structured error objects. For `HttpResponse`-derived errors, read `response.body.code`, `response.body.message`, and optionally `response.body.details`.
 
 ## Recommended Consumer Migration Order
 

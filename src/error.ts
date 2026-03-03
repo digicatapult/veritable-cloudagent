@@ -61,6 +61,7 @@ export const errorHandler =
     if (err instanceof ValidateError) {
       logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       res.status(422).json({
+        code: 422,
         message: 'Validation Failed',
         details: err?.fields,
       })
@@ -70,6 +71,7 @@ export const errorHandler =
     if (err instanceof HttpResponse) {
       logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${err.message}`)
       res.status(err.code).json({
+        code: err.code,
         message: err.message,
         ...(err.details !== undefined ? { details: err.details } : {}),
       })
@@ -79,6 +81,7 @@ export const errorHandler =
     if (isHttpError(err)) {
       logger.warn(`HTTPError in request for ${req.method} ${req.path}: ${err.message}`)
       res.status(err.statusCode).json({
+        code: err.statusCode,
         message: err.message,
       })
       return
@@ -87,6 +90,7 @@ export const errorHandler =
       logger.error(`Unexpected error thrown in handler: ${err.message}`)
       logger.debug(`Stack: ${err.stack}`)
       res.status(500).json({
+        code: 500,
         message: err.message,
       })
       return

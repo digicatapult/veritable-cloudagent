@@ -63,7 +63,7 @@ export class SchemaController {
   @Example<AnonCredsSchemaResponse>(SchemaExample)
   @Get('/:schemaId')
   @Response<BadRequest>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getSchemaById(@Request() req: express.Request, @Path('schemaId') schemaId: SchemaId) {
     const { schema, resolutionMetadata } = await this.agent.modules.anoncreds.getSchema(schemaId)

@@ -62,7 +62,7 @@ export class CredentialDefinitionController extends Controller {
   @Example<AnonCredsCredentialDefinitionResponse>(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
   @Response<BadRequest>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getCredentialDefinitionById(
     @Request() req: express.Request,
@@ -104,7 +104,7 @@ export class CredentialDefinitionController extends Controller {
    */
   @Example<AnonCredsCredentialDefinitionResponse & { id: string }>(CredentialDefinitionExample)
   @Post('/')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async createCredentialDefinition(
     @Request() req: express.Request,

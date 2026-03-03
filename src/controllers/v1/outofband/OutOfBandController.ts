@@ -87,7 +87,7 @@ export class OutOfBandController extends Controller {
    */
   @Example<OutOfBandRecordWithInvitationProps>(outOfBandRecordExample)
   @Get('/:outOfBandId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   public async getOutOfBandRecordById(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: UUID) {
     const outOfBandRecord = await this.agent.didcomm.oob.findById(outOfBandId)
 
@@ -184,7 +184,7 @@ export class OutOfBandController extends Controller {
     invitationUrl: 'http://example.com/invitation_url',
   })
   @Post('/create-legacy-connectionless-invitation')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async createLegacyConnectionlessInvitation(
     @Request() req: express.Request,
@@ -317,7 +317,7 @@ export class OutOfBandController extends Controller {
     connectionRecord: ConnectionRecordExample,
   })
   @Post('/:outOfBandId/accept-invitation')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptInvitation(
     @Request() req: express.Request,
@@ -353,7 +353,7 @@ export class OutOfBandController extends Controller {
    * @param outOfBandId Record identifier
    */
   @Delete('/:outOfBandId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async deleteOutOfBandRecord(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: UUID) {
     try {

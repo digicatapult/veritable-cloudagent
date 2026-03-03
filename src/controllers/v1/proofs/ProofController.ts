@@ -91,7 +91,7 @@ export class ProofController extends Controller {
    * @returns DidCommProofExchangeRecordProps
    */
   @Get('/:proofRecordId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   public async getProofById(
@@ -128,7 +128,7 @@ export class ProofController extends Controller {
    * @returns Record<string, unknown>
    */
   @Get('/:proofRecordId/content')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getProofContent(
     @Request() req: express.Request,
@@ -160,7 +160,7 @@ export class ProofController extends Controller {
    * @returns MatchingCredentialsResponse
    */
   @Get('/:proofRecordId/credentials')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getMatchingCredentials(
     @Request() req: express.Request,
@@ -188,7 +188,7 @@ export class ProofController extends Controller {
    * @param proofRecordId
    */
   @Delete('/:proofRecordId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
@@ -212,7 +212,7 @@ export class ProofController extends Controller {
    */
   @Post('/propose-proof')
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
@@ -246,7 +246,7 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-proposal')
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
     @Request() req: express.Request,
@@ -282,7 +282,7 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/negotiate-proposal')
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
   public async negotiateProposal(
@@ -354,7 +354,7 @@ export class ProofController extends Controller {
    */
   @Post('/request-proof')
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async requestProof(@Request() req: express.Request, @Body() body: RequestProofOptions) {
     const { connectionId, proofFormats, ...rest } = body
@@ -395,7 +395,7 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-request')
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<BadRequest>(400)
   @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
@@ -516,7 +516,7 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-presentation')
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
