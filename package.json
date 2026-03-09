@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.18.10",
+  "version": "0.18.11",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -71,8 +71,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.4",
-    "@eslint/js": "^9.39.3",
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^9.39.4",
     "@swc-node/register": "^1.11.1",
     "@swc/cli": "^0.8.0",
     "@swc/core": "^1.13.5",
@@ -80,7 +80,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^22.19.13",
+    "@types/node": "^22.19.15",
     "@types/sinon": "^21.0.0",
     "@types/supertest": "^6.0.3",
     "@types/swagger-ui-express": "^4.1.8",
@@ -89,7 +89,7 @@
     "chai": "^6.2.2",
     "concurrently": "^9.2.1",
     "depcheck": "^1.4.7",
-    "eslint": "^9.39.3",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.4.0",
