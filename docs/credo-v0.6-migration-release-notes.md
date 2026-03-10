@@ -281,21 +281,6 @@ Use this as a release-readiness checklist for all API, webhook, and WebSocket co
   - resource cleanup moved to hooks for test-owned resources (for example WebSocket close in media-sharing events), not as terminal test steps.
 - This improves consistency and failure resilience while preserving shared-agent execution semantics required for practical integration runtime.
 
-### Why `scripts/patch-credo.cjs` is required in this migration
-
-This repository currently applies a `postinstall` patch pass (`node scripts/patch-credo.cjs`) as a migration safeguard for Credo v0.6 runtime compatibility.
-
-The script patches two dependency-level behaviors in installed `@credo-ts/core` build artifacts:
-
-- **PEX proof type selection fix:** patches DIF Presentation Exchange proof-type selection from a first-supported fallback (`supportedSignatureSuites[0]`) to selected-suite output (`foundSignatureSuite`) to prevent incorrect proof type emission in some PEX paths.
-- **JSON-LD strict ESM loader fix:** rewrites JSON-LD document loader imports/requires to include explicit `.js` extensions (`.../node.js`, `.../xhr.js`) so strict ESM resolution works reliably in runtime environments using the packaged Credo build outputs.
-
-Operational intent:
-
-- The patch is idempotent (safe to run repeatedly) and skips already-patched files.
-- It is a temporary compatibility layer until equivalent upstream fixes are available and consumed via normal dependency upgrades.
-- If dependency layout changes (or upstream ships corrected artifacts), this script may become unnecessary and should then be removed to reduce maintenance overhead.
-
 ### Error response parsing
 
 Clients should parse structured error objects. For `HttpResponse`-derived errors, read `response.body.code`, `response.body.message`, and optionally `response.body.details`.
