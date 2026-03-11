@@ -37,6 +37,12 @@ export class BadRequest extends HttpResponse {
   }
 }
 
+export class UnprocessableEntityError extends HttpResponse {
+  constructor(message = 'validation failed', details?: unknown) {
+    super({ code: 422, message, details })
+  }
+}
+
 export class GatewayTimeout extends HttpResponse {
   constructor(message = 'gateway timeout') {
     super({ code: 504, message })

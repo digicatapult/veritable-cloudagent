@@ -14,12 +14,11 @@ import {
   Response,
   Route,
   Tags,
-  ValidateError,
 } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError, UnprocessableEntityError } from '../../../error.js'
 import {
   getMissingAnonCredsCredentials,
   hydrateAnonCredsAttributes,
@@ -214,11 +213,12 @@ export class ProofController extends Controller {
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
+  @Response<UnprocessableEntityError>(422)
   public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
       if (proposal.proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(proposal.proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       const proof = await this.agent.didcomm.proofs.proposeProof({
@@ -284,7 +284,7 @@ export class ProofController extends Controller {
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
-  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
+  @Response<UnprocessableEntityError>(422)
   public async negotiateProposal(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -295,7 +295,7 @@ export class ProofController extends Controller {
 
       if (options.proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(options.proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       const proof = await this.agent.didcomm.proofs.negotiateProposal({
@@ -325,12 +325,13 @@ export class ProofController extends Controller {
     message: {},
     proofRecord: ProofRecordExample,
   })
+  @Response<UnprocessableEntityError>(422)
   public async createRequest(@Request() req: express.Request, @Body() request: CreateProofRequestOptions) {
     const { proofFormats, ...rest } = request
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
     if (proofFormats.presentationExchange?.presentationDefinition) {
       const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
-      if (errors) throw new ValidateError(errors, 'Validation Failed')
+      if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
     }
 
     const { message, proofRecord } = await this.agent.didcomm.proofs.createRequest({
@@ -356,13 +357,14 @@ export class ProofController extends Controller {
   @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
+  @Response<UnprocessableEntityError>(422)
   public async requestProof(@Request() req: express.Request, @Body() body: RequestProofOptions) {
     const { connectionId, proofFormats, ...rest } = body
     try {
       req.log.info('requesting proof for %s connection %j', connectionId, body)
       if (proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       const proof = await this.agent.didcomm.proofs.requestProof({
@@ -398,7 +400,7 @@ export class ProofController extends Controller {
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<BadRequest>(400)
-  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
+  @Response<UnprocessableEntityError>(422)
   public async acceptRequest(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -440,16 +442,13 @@ export class ProofController extends Controller {
         const fullFormatPresentationExchange = formatsToAccept.presentationExchange
 
         if (fullFormatPresentationExchange && 'credentials' in fullFormatPresentationExchange) {
-          throw new ValidateError(
-            {
-              'proofFormats.presentationExchange.credentials': {
-                message:
-                  'Client-supplied presentationExchange.credentials is not supported for accept-request. Omit credentials and allow server-side selection.',
-                value: fullFormatPresentationExchange.credentials,
-              },
+          throw new UnprocessableEntityError('Validation Failed', {
+            'proofFormats.presentationExchange.credentials': {
+              message:
+                'Client-supplied presentationExchange.credentials is not supported for accept-request. Omit credentials and allow server-side selection.',
+              value: fullFormatPresentationExchange.credentials,
             },
-            'Validation Failed'
-          )
+          })
         }
 
         // Added validation for empty formats
