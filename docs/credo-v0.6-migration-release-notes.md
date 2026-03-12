@@ -131,7 +131,7 @@ Requests still using `privateKeys` will fail validation (`422`).
 
 ### Agent bootstrap and Askar config
 
-- v0.6 moves key handling to KMS-first flows (`agent.kms`), and this change requires Askar registration to be process-global (`ensureAskarRegistered`): `registerAskar({ askar: askarNodeJS })` executes once per process and is shared across agent boots.
+- v0.6 moves key handling to KMS-first flows (`agent.kms`), and Askar registration remains process-global: importing `@openwallet-foundation/askar-nodejs` registers the native binding once per process and shares it across agent boots.
 - Askar store config is explicit at top-level bootstrap input (`askarStoreConfig`), not inferred from `agentConfig.walletConfig`.
 - KMS-first patterns are used in migrated crypto paths (`agent.kms`), with DID key mapping persistence for DID:web imports.
 - Runtime config reads are v0.6-aligned with `AgentConfig` semantics:

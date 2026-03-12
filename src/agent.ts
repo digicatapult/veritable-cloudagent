@@ -31,7 +31,6 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
-import { registerAskar } from '@openwallet-foundation/askar-shared'
 import { container } from 'tsyringe'
 
 import { DidCommMediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
@@ -113,19 +112,6 @@ export type RestAgent<
     media: DidCommMediaSharingModule
   },
 > = Agent<modules>
-
-let hasRegisteredAskar = false
-
-const ensureAskarRegistered = () => {
-  if (hasRegisteredAskar) {
-    return
-  }
-
-  registerAskar({ askar: askarNodeJS })
-  hasRegisteredAskar = true
-}
-
-ensureAskarRegistered()
 
 const getAgentModules = (options: {
   didcommConfig: {
@@ -222,8 +208,6 @@ const getAgentModules = (options: {
 }
 
 export async function setupAgent(restConfig: AriesRestConfig) {
-  ensureAskarRegistered()
-
   const {
     inboundTransports = [],
     outboundTransports = [],
