@@ -61,6 +61,10 @@ const normalizeError = (err: unknown): HttpResponse => {
 export const errorHandler = (err: unknown, req: ExRequest, res: ExResponse, _next: NextFunction): void => {
   const normalized = normalizeError(err)
 
-  req.log.error(err, `${req.method} ${req.path}`)
+  if (normalized.code >= 500) {
+    req.log.error(err instanceof Error ? err : normalized, `${req.method} ${req.path}`)
+  } else {
+    req.log.warn(normalized, `${req.method} ${req.path}`)
+  }
   res.status(normalized.code).json(toErrorBody(normalized))
 }

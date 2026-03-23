@@ -85,7 +85,10 @@ export class CredentialDefinitionController extends Controller {
     }
 
     if (error !== undefined || credentialDefinition === undefined) {
-      throw new InternalError(`${error}`)
+      throw new InternalError('credential definition resolution failed', {
+        credentialDefinitionId,
+        resolutionError: error,
+      })
     }
 
     req.log.debug('returning %s credential definition %j', credentialDefinitionId, credentialDefinition)

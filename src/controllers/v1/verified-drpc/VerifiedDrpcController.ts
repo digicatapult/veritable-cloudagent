@@ -94,7 +94,6 @@ export class VerifiedDrpcController extends Controller {
    */
   @Post('/response/:connectionId')
   @Response<NotFoundError>(404)
-  @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,
     @Path('connectionId') connectionId: UUID,
