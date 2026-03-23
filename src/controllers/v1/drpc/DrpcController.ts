@@ -86,7 +86,9 @@ export class DrpcController extends Controller {
       req.log.info('validating DRPC response %j', response)
       validatedResponse = rpcResponseParser.parse(response)
     } catch {
-      throw new BadGatewayError(`invalid response to RPC call`)
+      throw new BadGatewayError('invalid response to RPC call', {
+        method: requestOptions.method,
+      })
     }
 
     req.log.debug('returning validated response %j', validatedResponse)
@@ -99,7 +101,7 @@ export class DrpcController extends Controller {
    * @param response the verified drpc response object to send
    */
   @Post('/:requestId/response')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,

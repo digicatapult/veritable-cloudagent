@@ -121,10 +121,16 @@ export class CredentialDefinitionController extends Controller {
     } = await this.agent.modules.anoncreds.getSchema(credentialDefinitionRequest.schemaId)
 
     if (error === 'notFound' || error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      throw new NotFoundError('credential definition not found, invalid or unsupported')
+      throw new NotFoundError('credential definition not found, invalid or unsupported', {
+        schemaId: credentialDefinitionRequest.schemaId,
+        resolutionError: error,
+      })
     }
     if (error) {
-      throw new InternalError(`${error}`)
+      throw new InternalError('credential definition schema resolution failed', {
+        schemaId: credentialDefinitionRequest.schemaId,
+        resolutionError: error,
+      })
     }
 
     req.log.info('registering a credential definition %j', credentialDefinitionRequest)
@@ -140,8 +146,12 @@ export class CredentialDefinitionController extends Controller {
     })
 
     if (state !== 'finished' || credentialDefinitionId === undefined || credentialDefinition === undefined) {
-      throw new HttpResponse({
-        message: `Something went wrong creating credential definition ${credentialDefinition}. state: ${state}`,
+      throw new InternalError('credential definition registration returned invalid state', {
+        issuerId: credentialDefinitionRequest.issuerId,
+        schemaId: credentialDefinitionRequest.schemaId,
+        state,
+        hasCredentialDefinitionId: credentialDefinitionId !== undefined,
+        hasCredentialDefinition: credentialDefinition !== undefined,
       })
     }
 

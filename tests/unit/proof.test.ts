@@ -822,7 +822,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden."
       )
     })
@@ -871,7 +872,7 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.include(
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-2)'
       )
     })
@@ -920,7 +921,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be hidden. The proof request or credential requires this attribute to be revealed."
       )
     })

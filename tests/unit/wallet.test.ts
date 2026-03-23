@@ -32,8 +32,8 @@ describe('WalletController', () => {
       spy.resolves(decryptResult)
 
       const params = {
-        jwe: 'test',
-        recipientPublicKey: 'key',
+        jwe: 'a.b.c.d.e',
+        recipientPublicKey: Buffer.alloc(32).toString('base64'),
         enc: 'A256GCM',
         alg: 'ECDH-ES',
       }

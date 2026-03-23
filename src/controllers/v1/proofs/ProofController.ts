@@ -173,7 +173,9 @@ export class ProofController extends Controller {
       return credentials
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`No matching credentials found for proof record ${proofRecordId}`)
+        throw new NotFoundError('No matching credentials found for proof record', {
+          proofRecordId,
+        })
       }
       throw error
     }
@@ -375,7 +377,10 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`proof record not found ${error}`)
+        throw new NotFoundError('proof record not found', {
+          connectionId,
+          cause: error.message,
+        })
       }
       throw error
     }
@@ -425,7 +430,6 @@ export class ProofController extends Controller {
           throw new BadRequest(
             'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.',
             {
-              code: 'missing_anoncreds_after_type_guard',
               proofRecordId,
             }
           )
@@ -443,7 +447,6 @@ export class ProofController extends Controller {
           (!fullFormatAnonCreds.predicates || Object.keys(fullFormatAnonCreds.predicates).length === 0)
         ) {
           throw new BadRequest('Invalid proof formats', {
-            code: 'invalid_proof_formats',
             errors: ['must have at least one attribute or predicate'],
           })
         }
@@ -485,7 +488,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`proof record not found`)
+        throw new NotFoundError('proof record not found', {
+          proofRecordId,
+        })
       }
       throw error
     }
@@ -545,9 +550,9 @@ export class ProofController extends Controller {
         requestedAnonCreds.attributes ?? {},
         requestedAnonCreds.predicates ?? {}
       )
-      throw new NotFoundError(
-        `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
-      )
+      throw new NotFoundError('Could not hydrate proof formats: no available credentials found', {
+        proofRecordId,
+      })
     }
 
     const { hydrated: hydratedAttributes, errors: attrErrors } = hydrateAnonCredsAttributes(
@@ -556,7 +561,6 @@ export class ProofController extends Controller {
     )
     if (attrErrors.length > 0) {
       throw new BadRequest('Proof format hydration failed', {
-        code: 'proof_format_hydration_failed',
         errors: attrErrors,
       })
     }
@@ -574,7 +578,14 @@ export class ProofController extends Controller {
         .join('; ')
 
       req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
-      throw new NotFoundError(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
+      throw new NotFoundError(
+        `Could not hydrate proof formats: no matching credentials found for requested ${details}`,
+        {
+          proofRecordId,
+          missingAttributes: missingAttributes.map((item) => item.name),
+          missingPredicates: missingPredicates.map((item) => item.name),
+        }
+      )
     }
 
     return {
