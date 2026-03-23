@@ -114,7 +114,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     const connection = await this.agent.connections.findById(connectionId)
 
@@ -133,8 +133,8 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/:connectionId')
-  @Response<BadRequest['message']>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<BadRequest>(400)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async closeConnection(
     @Request() req: express.Request,
@@ -149,7 +149,10 @@ export class ConnectionController extends Controller {
       const deleteAfter = Boolean(deleteConnectionRecord)
       if (alreadyDisconnected) {
         if (!deleteAfter) {
-          throw new BadRequest(`cannot send hangup to disconnected peer ${connectionId}`)
+          throw new BadRequest('Cannot send hangup to disconnected peer', {
+            code: 'connection_already_disconnected',
+            connectionId,
+          })
         }
         await this.agent.connections.deleteById(connectionId)
         req.log.info('connection record deleted %s', connectionId)
@@ -181,7 +184,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-request')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
@@ -208,7 +211,7 @@ export class ConnectionController extends Controller {
    */
   @Example<ConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-response')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
@@ -258,7 +261,10 @@ export class ConnectionController extends Controller {
       }
     } catch (error) {
       if (error instanceof CredoError) {
-        throw new BadRequest('invalid DID')
+        throw new BadRequest('Invalid DID', {
+          code: 'invalid_did',
+          did,
+        })
       }
       throw error
     }

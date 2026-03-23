@@ -24,7 +24,7 @@ export class WalletController extends Controller {
    * @returns decrypted data of the JWE as a base64 encoded string
    */
   @Post('/decrypt')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<HttpResponse>(500)
   public async decrypt(
     @Request() req: express.Request,
@@ -40,9 +40,27 @@ export class WalletController extends Controller {
     req.log.info('decrypting jwe for recipient public key %s', recipientPublicKey)
 
     if (!this.agent.context.wallet.directDecryptCompactJweEcdhEs) {
-      throw new HttpResponse({ message: 'Wallet not configured for ECDH-ES' })
+      throw new BadRequest('Wallet not configured for ECDH-ES', {
+        code: 'wallet_ecdh_es_not_configured',
+      })
     }
-    const recipientKey = new Key(TypedArrayEncoder.fromBase64(recipientPublicKey), KeyType.X25519)
+
+    if (!jwe || jwe.split('.').length !== 5) {
+      throw new BadRequest('Invalid compact JWE format', {
+        code: 'invalid_compact_jwe',
+        field: 'jwe',
+      })
+    }
+
+    let recipientKey: Key
+    try {
+      recipientKey = new Key(TypedArrayEncoder.fromBase64(recipientPublicKey), KeyType.X25519)
+    } catch {
+      throw new BadRequest('Invalid compact JWE recipient public key', {
+        code: 'invalid_recipient_public_key',
+        field: 'recipientPublicKey',
+      })
+    }
 
     const decrypt = await this.agent.context.wallet.directDecryptCompactJweEcdhEs({
       compactJwe: jwe,

@@ -4,7 +4,7 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, InternalError, NotFoundError } from '../../../error.js'
 import { CredentialDefinitionExample } from '../../examples.js'
 import type { AnonCredsCredentialDefinitionResponse, CredentialDefinitionId, DID, SchemaId } from '../../types/index.js'
 
@@ -26,7 +26,7 @@ export class CredentialDefinitionController extends Controller {
    */
   @Example<AnonCredsCredentialDefinitionResponse[]>([CredentialDefinitionExample])
   @Get('/')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<HttpResponse>(500)
   public async getCredentials(
     @Request() req: express.Request,
@@ -35,9 +35,7 @@ export class CredentialDefinitionController extends Controller {
     @Query('schemaId') schemaId?: SchemaId
   ): Promise<AnonCredsCredentialDefinitionResponse[]> {
     if (!createdLocally) {
-      throw new BadRequest(
-        `can only list credential definitions created locally. issuer ${issuerId}, schema ${schemaId}`
-      )
+      throw new BadRequest('can only list credential definitions created locally')
     }
 
     const credentialDefinitionResult = await this.agent.modules.anoncreds.getCreatedCredentialDefinitions({
@@ -63,8 +61,8 @@ export class CredentialDefinitionController extends Controller {
    */
   @Example<AnonCredsCredentialDefinitionResponse>(CredentialDefinitionExample)
   @Get('/:credentialDefinitionId')
-  @Response<BadRequest['message']>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<BadRequest>(400)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getCredentialDefinitionById(
     @Request() req: express.Request,
@@ -80,11 +78,14 @@ export class CredentialDefinitionController extends Controller {
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      throw new BadRequest(`credentialDefinitionId "${credentialDefinitionId}" has invalid structure.`)
+      throw new BadRequest('credentialDefinitionId has invalid structure.', {
+        credentialDefinitionId,
+        resolutionError: error,
+      })
     }
 
     if (error !== undefined || credentialDefinition === undefined) {
-      throw new Error(`${error}`)
+      throw new InternalError(`${error}`)
     }
 
     req.log.debug('returning %s credential definition %j', credentialDefinitionId, credentialDefinition)
@@ -103,7 +104,7 @@ export class CredentialDefinitionController extends Controller {
    */
   @Example<AnonCredsCredentialDefinitionResponse & { id: string }>(CredentialDefinitionExample)
   @Post('/')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async createCredentialDefinition(
     @Request() req: express.Request,
@@ -123,7 +124,7 @@ export class CredentialDefinitionController extends Controller {
       throw new NotFoundError('credential definition not found, invalid or unsupported')
     }
     if (error) {
-      throw new Error(`${error}`)
+      throw new InternalError(`${error}`)
     }
 
     req.log.info('registering a credential definition %j', credentialDefinitionRequest)

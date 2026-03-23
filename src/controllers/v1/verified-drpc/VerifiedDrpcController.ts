@@ -3,13 +3,13 @@ import {
   type CreateProofRequestOptions as CredoCreateProofRequestOptions,
   type ProofProtocol,
 } from '@credo-ts/core'
-import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags, ValidateError } from '@tsoa/runtime'
+import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules/verified-drpc/index.js'
 
 import { RestAgent } from '../../../agent.js'
-import { GatewayTimeout, NotFoundError } from '../../../error.js'
+import { GatewayTimeout, NotFoundError, UnprocessableEntityError } from '../../../error.js'
 import { transformProofFormats, validatePexV1Presentation } from '../../../utils/proofs.js'
 import type { CreateProofRequestOptions as ApiCreateProofRequestOptions, UUID } from '../../types/index.js'
 
@@ -37,8 +37,9 @@ export class VerifiedDrpcController extends Controller {
    * @param timeout The timeout for receiving a response
    */
   @Post('/request/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<GatewayTimeout>(504)
+  @Response<UnprocessableEntityError>(422)
   public async sendRequest(
     @Request() req: express.Request,
     @Path('connectionId') connectionId: UUID,
@@ -54,7 +55,7 @@ export class VerifiedDrpcController extends Controller {
 
       if (proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       proofOptions = {
@@ -92,7 +93,7 @@ export class VerifiedDrpcController extends Controller {
    * @param response the verified drpc response object to send
    */
   @Post('/response/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,

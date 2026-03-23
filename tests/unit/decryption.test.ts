@@ -91,6 +91,9 @@ describe('Decryption', () => {
     }
 
     const response = await request(app).post('/v1/wallet/decrypt').send(unknownKeyDecryptPayload).expect(500)
-    expect(response.body).to.equal('Key entry not found')
+    expect(response.body).to.deep.equal({
+      code: 500,
+      message: 'Key entry not found',
+    })
   })
 })

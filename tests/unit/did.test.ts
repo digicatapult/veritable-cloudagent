@@ -43,6 +43,10 @@ describe('DidController', () => {
     test('should give 400 when createdLocally = false', async () => {
       const response = await request(app).get(`/v1/dids?createdLocally=false`)
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'can only list DIDs created locally',
+      })
     })
   })
 
@@ -75,6 +79,12 @@ describe('DidController', () => {
       const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
       expect(response.statusCode).to.equal(400)
+      expect(response.body.code).to.equal(400)
+      expect(response.body.message).to.equal('error importing DID')
+      expect(response.body.details).to.deep.equal({
+        did: importRequest.did,
+        cause: 'Specified did has no receiver keys.'
+      })
     })
   })
 
@@ -109,6 +119,11 @@ describe('DidController', () => {
       }
       const response = await request(app).post(`/v1/dids/create`).send(createRequest)
       expect(response.statusCode).to.equal(400)
+      expect(response.body.code).to.equal(400)
+      expect(response.body.message).to.equal('error creating DID')
+      expect(response.body.details).to.deep.equal({
+        reason: 'Unable to create did with method foo'
+      })
     })
   })
 
