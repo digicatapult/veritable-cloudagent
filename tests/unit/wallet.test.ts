@@ -1,52 +1,61 @@
-import type { Server } from 'node:net'
-
-import { after, afterEach, before, describe, test } from 'mocha'
-import { restore as sinonRestore, stub } from 'sinon'
-import request from 'supertest'
-
-import { type Agent, Buffer } from '@credo-ts/core'
-
+import { Buffer, JsonEncoder, TypedArrayEncoder } from '@credo-ts/core'
 import { expect } from 'chai'
-import { getTestAgent, getTestServer } from './utils/helpers.js'
+import { afterEach, describe, test } from 'mocha'
+import { restore as sinonRestore, stub } from 'sinon'
+
+import { WalletController } from '../../src/controllers/v1/wallet/WalletController.js'
 
 describe('WalletController', () => {
-  let app: Server
-  let agent: Agent
-
-  before(async () => {
-    agent = await getTestAgent('DID REST Agent Test Alice', 3999)
-    app = await getTestServer(agent)
-  })
-
   afterEach(() => {
     sinonRestore()
   })
 
   describe('Decrypt JWE', () => {
     test('should return plaintext data from JWE', async () => {
+      const kms = {
+        decrypt: async () => ({ data: Buffer.from('test') }),
+      }
+      const agent = {
+        kms,
+        dids: {
+          getCreatedDids: async () => [],
+        },
+      }
+      const walletController = new WalletController(agent as never)
+
       const decryptResult = {
         data: Buffer.from('test'),
-        header: {},
       }
-      const spy = stub(agent.context.wallet, 'directDecryptCompactJweEcdhEs')
+      const spy = stub(kms, 'decrypt')
       spy.resolves(decryptResult)
 
+      const encodedHeader = JsonEncoder.toBase64URL({
+        epk: {
+          kty: 'OKP',
+          crv: 'X25519',
+          x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(1)),
+        },
+      })
+
+      const jwe = `${encodedHeader}..${TypedArrayEncoder.toBase64URL(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64URL(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64URL(new Uint8Array(16).fill(6))}`
+
       const params = {
-        jwe: 'test',
-        recipientPublicKey: 'key',
-        enc: 'A256GCM',
-        alg: 'ECDH-ES',
+        jwe,
+        recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(7)),
+        enc: 'A256GCM' as const,
+        alg: 'ECDH-ES' as const,
       }
-      const response = await request(app).post(`/v1/wallet/decrypt`).send(params)
 
-      expect(response.statusCode).to.equal(200)
-      expect(response.body).to.equal(decryptResult.data.toString('base64'))
+      const response = await walletController.decrypt(
+        {
+          log: {
+            info: () => {},
+          },
+        } as never,
+        params
+      )
+
+      expect(response).to.equal(decryptResult.data.toString('base64'))
     })
-  })
-
-  after(async () => {
-    await agent.shutdown()
-    await agent.wallet.delete()
-    app.close()
   })
 })

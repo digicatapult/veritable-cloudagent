@@ -15,39 +15,41 @@ import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
 
 import {
-  AgentMessage,
-  ProofEventTypes,
-  ProofExchangeRecord,
-  ProofRole,
-  ProofState,
-  type Agent,
+  DidCommMessage,
+  DidCommProofEventTypes,
+  DidCommProofExchangeRecord,
+  DidCommProofRole,
+  DidCommProofState,
+  type DidCommProofFormatPayload,
+  type DidCommProofStateChangedEvent,
   type GetProofFormatDataReturn,
-  type ProofFormatPayload,
-  type ProofStateChangedEvent,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 
 import request from 'supertest'
-import WebSocket from 'ws'
+import type WebSocket from 'ws'
+import { redactProofFormats } from '../../src/utils/proofs.js'
 
 import {
   closeWebSocket,
+  deleteAgentStore,
   getTestAgent,
   getTestProof,
   getTestProofResponse,
   getTestServer,
   objectToJson,
   openWebSocket,
+  type TestAgent,
 } from './utils/helpers.js'
 
 describe('ProofController', () => {
   let port: number
   let app: Server
   let socket: WebSocket
-  let aliceAgent: Agent
-  let bobAgent: Agent
-  let testMessage: AgentMessage
-  let testProof: ProofExchangeRecord
-  let testProofResponse: ProofExchangeRecord
+  let aliceAgent: TestAgent
+  let bobAgent: TestAgent
+  let testMessage: DidCommMessage
+  let testProof: DidCommProofExchangeRecord
+  let testProofResponse: DidCommProofExchangeRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Proof REST Agent Test Alice', 3032)
@@ -57,7 +59,7 @@ describe('ProofController', () => {
 
     testProof = getTestProof()
     testProofResponse = getTestProofResponse()
-    testMessage = new AgentMessage()
+    testMessage = new DidCommMessage()
   })
 
   afterEach(async () => {
@@ -67,9 +69,9 @@ describe('ProofController', () => {
 
   describe('Get all proofs', () => {
     test('should return all proofs', async () => {
-      const getAllStub = stub(bobAgent.proofs, 'getAll')
+      const getAllStub = stub(bobAgent.didcomm.proofs, 'getAll')
       getAllStub.resolves([testProof])
-      const getResult = (): Promise<ProofExchangeRecord[]> => getAllStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord[]> => getAllStub.firstCall.returnValue
 
       const response = await request(app).get('/v1/proofs')
       const result = await getResult()
@@ -79,9 +81,9 @@ describe('ProofController', () => {
     })
 
     test('should optionally filter on threadId', async () => {
-      const getAllStub = stub(bobAgent.proofs, 'getAll')
+      const getAllStub = stub(bobAgent.didcomm.proofs, 'getAll')
       getAllStub.resolves([testProof])
-      const getResult = (): Promise<ProofExchangeRecord[]> => getAllStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord[]> => getAllStub.firstCall.returnValue
 
       const response = await request(app).get('/v1/proofs').query({ threadId: testProof.threadId })
       const result = await getResult()
@@ -91,7 +93,7 @@ describe('ProofController', () => {
     })
 
     test('should return empty array if nothing found', async () => {
-      const getAllStub = stub(bobAgent.proofs, 'getAll')
+      const getAllStub = stub(bobAgent.didcomm.proofs, 'getAll')
       getAllStub.resolves([testProof])
 
       const response = await request(app).get('/v1/proofs').query({ threadId: 'aaaaaaaa-aaaa-4aaa-aaaa-222222222222' })
@@ -103,10 +105,10 @@ describe('ProofController', () => {
 
   describe('Get by proof by id', () => {
     test('should return proof record', async () => {
-      const getByIdStub = stub(bobAgent.proofs, 'getById')
+      const getByIdStub = stub(bobAgent.didcomm.proofs, 'getById')
       getByIdStub.resolves(testProof)
 
-      const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => getByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}`)
 
@@ -116,14 +118,14 @@ describe('ProofController', () => {
     })
 
     test('should return proof record with content when includeContent is true', async () => {
-      const getByIdStub = stub(bobAgent.proofs, 'getById')
+      const getByIdStub = stub(bobAgent.didcomm.proofs, 'getById')
       getByIdStub.resolves(testProof)
 
       const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
-      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      const getFormatDataStub = stub(bobAgent.didcomm.proofs, 'getFormatData')
       getFormatDataStub.resolves(formatData as unknown as GetProofFormatDataReturn)
 
-      const getResult = (): Promise<ProofExchangeRecord> => getByIdStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => getByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}`).query({ includeContent: true })
 
@@ -148,7 +150,7 @@ describe('ProofController', () => {
   describe('Get proof content', () => {
     test('should return proof content', async () => {
       const formatData = { proposal: { anoncreds: { attributes: {}, predicates: {} } } }
-      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      const getFormatDataStub = stub(bobAgent.didcomm.proofs, 'getFormatData')
       getFormatDataStub.resolves(formatData as unknown as GetProofFormatDataReturn)
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}/content`)
@@ -200,7 +202,7 @@ describe('ProofController', () => {
         },
       }
 
-      const getFormatDataStub = stub(bobAgent.proofs, 'getFormatData')
+      const getFormatDataStub = stub(bobAgent.didcomm.proofs, 'getFormatData')
       getFormatDataStub.resolves(formatData)
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}/content`).query({ view: 'simplified' })
@@ -255,13 +257,13 @@ describe('ProofController', () => {
         },
       }
 
-      const getCredentialsForRequestStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsForRequestStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsForRequestStub.resolves(credentials)
 
       const response = await request(app).get(`/v1/proofs/${testProof.id}/credentials`)
 
       expect(response.statusCode).to.be.equal(200)
-      expect(getCredentialsForRequestStub.calledWithMatch({ proofRecordId: testProof.id })).equals(true)
+      expect(getCredentialsForRequestStub.calledWithMatch({ proofExchangeRecordId: testProof.id })).equals(true)
       expect(response.body).to.deep.equal(JSON.parse(JSON.stringify(credentials)))
     })
 
@@ -298,9 +300,9 @@ describe('ProofController', () => {
       comment: 'test',
     }
     test('should return proof record', async () => {
-      const proposeProofStub = stub(bobAgent.proofs, 'proposeProof')
+      const proposeProofStub = stub(bobAgent.didcomm.proofs, 'proposeProof')
       proposeProofStub.resolves(testProof)
-      const getResult = (): Promise<ProofExchangeRecord> => proposeProofStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => proposeProofStub.firstCall.returnValue
 
       const response = await request(app).post('/v1/proofs/propose-proof').send(proposalRequest)
 
@@ -328,15 +330,15 @@ describe('ProofController', () => {
     }
 
     test('should return proof record', async () => {
-      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      const acceptProposalStub = stub(bobAgent.didcomm.proofs, 'acceptProposal')
       acceptProposalStub.resolves(testProof)
-      const getResult = (): Promise<ProofExchangeRecord> => acceptProposalStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => acceptProposalStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-proposal`).send(acceptRequest)
 
       expect(
         acceptProposalStub.calledWithMatch({
-          proofRecordId: testProof.id,
+          proofExchangeRecordId: testProof.id,
           ...acceptRequest,
         })
       ).equals(true)
@@ -351,7 +353,7 @@ describe('ProofController', () => {
     })
 
     test('should pass through presentation exchange accept-proposal options', async () => {
-      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      const acceptProposalStub = stub(bobAgent.didcomm.proofs, 'acceptProposal')
       acceptProposalStub.resolves(testProof)
 
       const body: AcceptProofProposalOptions = {
@@ -375,14 +377,14 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(200)
       expect(
         acceptProposalStub.calledWithMatch({
-          proofRecordId: testProof.id,
+          proofExchangeRecordId: testProof.id,
           ...body,
         })
       ).equals(true)
     })
 
     test('should reject anoncreds request-stage payload in accept-proposal (422)', async () => {
-      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      const acceptProposalStub = stub(bobAgent.didcomm.proofs, 'acceptProposal')
       acceptProposalStub.resolves(testProof)
 
       const response = await request(app)
@@ -406,7 +408,7 @@ describe('ProofController', () => {
     })
 
     test('should reject presentation definition in accept-proposal (422)', async () => {
-      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      const acceptProposalStub = stub(bobAgent.didcomm.proofs, 'acceptProposal')
       acceptProposalStub.resolves(testProof)
 
       const response = await request(app)
@@ -429,9 +431,9 @@ describe('ProofController', () => {
 
   describe('Negotiate proof proposal', () => {
     test('should transform anoncreds restrictions and return proof record', async () => {
-      const negotiateProposalStub = stub(bobAgent.proofs, 'negotiateProposal')
+      const negotiateProposalStub = stub(bobAgent.didcomm.proofs, 'negotiateProposal')
       negotiateProposalStub.resolves(testProof)
-      const getResult = (): Promise<ProofExchangeRecord> => negotiateProposalStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => negotiateProposalStub.firstCall.returnValue
 
       const body: NegotiateProofProposalOptions = {
         proofFormats: {
@@ -459,7 +461,7 @@ describe('ProofController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
       expect(
         negotiateProposalStub.calledWithMatch({
-          proofRecordId: testProof.id,
+          proofExchangeRecordId: testProof.id,
           proofFormats: {
             anoncreds: {
               name: 'string',
@@ -484,7 +486,7 @@ describe('ProofController', () => {
     })
 
     test('should reject presentation exchange proof format with unexpected top-level keys (422)', async () => {
-      const negotiateProposalStub = stub(bobAgent.proofs, 'negotiateProposal')
+      const negotiateProposalStub = stub(bobAgent.didcomm.proofs, 'negotiateProposal')
       negotiateProposalStub.resolves(testProof)
 
       // Intentionally bypass DTO typing here: we want to test runtime validation
@@ -526,7 +528,7 @@ describe('ProofController', () => {
 
     test('should return proof record', async () => {
       const mockValue = { message: testMessage, proofRecord: testProof }
-      const createRequestStub = stub(bobAgent.proofs, 'createRequest')
+      const createRequestStub = stub(bobAgent.didcomm.proofs, 'createRequest')
       createRequestStub.resolves(mockValue)
       const getResult = (): Promise<typeof mockValue> => createRequestStub.firstCall.returnValue
 
@@ -579,9 +581,9 @@ describe('ProofController', () => {
     }
 
     test('should return proof record', async () => {
-      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      const requestProofStub = stub(bobAgent.didcomm.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
-      const getResult = (): Promise<ProofExchangeRecord> => requestProofStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => requestProofStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/proofs/request-proof`).send(requestProofRequest)
 
@@ -590,7 +592,7 @@ describe('ProofController', () => {
     })
 
     test('should transform proof request attribute restrictions', async () => {
-      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      const requestProofStub = stub(bobAgent.didcomm.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
 
       const response = await request(app).post(`/v1/proofs/request-proof`).send(requestProofRequestWithAttr)
@@ -630,7 +632,7 @@ describe('ProofController', () => {
     })
 
     test('should pass through presentation exchange proof format', async () => {
-      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      const requestProofStub = stub(bobAgent.didcomm.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
 
       const requestWithPex: RequestProofOptions = {
@@ -664,7 +666,7 @@ describe('ProofController', () => {
     })
 
     test('should reject presentation exchange proof format with unexpected top-level keys (422)', async () => {
-      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      const requestProofStub = stub(bobAgent.didcomm.proofs, 'requestProof')
       requestProofStub.resolves(testProof)
 
       // Intentionally bypass DTO typing here: we want to test runtime validation
@@ -692,18 +694,18 @@ describe('ProofController', () => {
 
   describe('Accept proof request', () => {
     test('should accept proof request', async () => {
-      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
+      const selectCredentialForRequestStub = stub(bobAgent.didcomm.proofs, 'selectCredentialsForRequest')
       selectCredentialForRequestStub.resolves({ proofFormats: {} })
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
 
       acceptProofStub.resolves(testProofResponse)
-      const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
+      const getResult = async (): Promise<DidCommProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/proofs/${testProofResponse.id}/accept-request`).send({})
 
       expect(
         acceptProofStub.calledWithMatch({
-          proofRecordId: testProofResponse.id,
+          proofExchangeRecordId: testProofResponse.id,
         })
       ).equals(true)
       expect(response.statusCode).to.be.equal(200)
@@ -711,10 +713,10 @@ describe('ProofController', () => {
     })
 
     test('should accept proof request with provided proofFormats', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -738,9 +740,9 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
-      const getResult = async (): Promise<ProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
+      const getResult = async (): Promise<DidCommProofExchangeRecord> => await acceptProofStub.firstCall.returnValue
 
       const proofFormats = {
         anoncreds: {
@@ -757,7 +759,7 @@ describe('ProofController', () => {
 
       expect(
         acceptProofStub.calledWithMatch({
-          proofRecordId: testProofResponse.id,
+          proofExchangeRecordId: testProofResponse.id,
           // We expect the hydrated format here
           proofFormats: {
             anoncreds: {
@@ -779,10 +781,10 @@ describe('ProofController', () => {
     })
 
     test('should return 400 when prover tries to reveal an attribute that verifier wants proven in secret', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -806,7 +808,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -822,16 +824,17 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden."
       )
     })
 
     test('should return 404 when simplified proof format requests an attribute that is not available', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -855,7 +858,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -871,16 +874,16 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.include(
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-2)'
       )
     })
 
     test('should return 400 when verifier requests plaintext for an attribute that prover wants to keep secret', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -904,7 +907,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -920,16 +923,17 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be hidden. The proof request or credential requires this attribute to be revealed."
       )
     })
 
     test('should return 404 when requested credentialId not found in available credentials', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -953,7 +957,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -969,17 +973,17 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr1 (credId: cred-not-found)'
       )
     })
 
     test('should return 404 when requested attribute name not in the proof request', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -1003,7 +1007,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -1019,17 +1023,17 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: nonExistentAttr (credId: cred-1)'
       )
     })
 
     test('should return 404 when at least one requested credential is not found among available credentials', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -1068,7 +1072,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -1085,17 +1089,17 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-wrong)'
       )
     })
 
     test('should return 404 when predicate credentialId not found in available credentials', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -1134,7 +1138,7 @@ describe('ProofController', () => {
             },
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -1152,17 +1156,17 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested predicates: pred1 (credId: cred-not-found)'
       )
     })
 
     test('should return 404 when requested predicate name not in the proof request', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -1186,7 +1190,7 @@ describe('ProofController', () => {
             predicates: {},
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -1204,14 +1208,14 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested predicates: nonExistentPred (credId: cred-1)'
       )
     })
 
     test('should return 400 when format has empty attributes (treated as invalid full format)', async () => {
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.rejects(new Error('Invalid proof format'))
 
       const proofFormats = {
@@ -1284,7 +1288,7 @@ describe('ProofController', () => {
     })
 
     test('should use auto-selection when proofFormats is not provided', async () => {
-      const selectCredentialForRequestStub = stub(bobAgent.proofs, 'selectCredentialsForRequest')
+      const selectCredentialForRequestStub = stub(bobAgent.didcomm.proofs, 'selectCredentialsForRequest')
       selectCredentialForRequestStub.resolves({
         proofFormats: {
           anoncreds: {
@@ -1308,7 +1312,7 @@ describe('ProofController', () => {
           },
         },
       })
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
       const response = await request(app).post(`/v1/proofs/${testProofResponse.id}/accept-request`).send({})
@@ -1318,7 +1322,7 @@ describe('ProofController', () => {
     })
 
     test('should successfully hydrate when same credential is used for both attribute and predicate', async () => {
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       const sharedCredentialId = 'shared-cred-id'
 
       getCredentialsStub.resolves({
@@ -1359,9 +1363,9 @@ describe('ProofController', () => {
             },
           },
         },
-      } as unknown as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as unknown as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
-      const acceptProofStub = stub(bobAgent.proofs, 'acceptRequest')
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
       acceptProofStub.resolves(testProofResponse)
 
       const proofFormats = {
@@ -1385,16 +1389,17 @@ describe('ProofController', () => {
 
       // Verify that acceptRequest was called with the hydrated formats containing the same credential info
       const callArgs = acceptProofStub.firstCall.args[0]
-      const hydratedFormats = (callArgs.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>)?.anoncreds
+      const hydratedFormats = (callArgs.proofFormats as DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>)
+        ?.anoncreds
       expect(hydratedFormats?.attributes?.attr1.credentialId).to.equal(sharedCredentialId)
       expect(hydratedFormats?.predicates?.pred1.credentialId).to.equal(sharedCredentialId)
     })
 
     test('should return 404 when no available credentials found (anoncreds field missing)', async () => {
-      const getCredentialsStub = stub(bobAgent.proofs, 'getCredentialsForRequest')
+      const getCredentialsStub = stub(bobAgent.didcomm.proofs, 'getCredentialsForRequest')
       getCredentialsStub.resolves({
         proofFormats: {},
-      } as { proofFormats: ProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
+      } as { proofFormats: DidCommProofFormatPayload<ProofFormats, 'getCredentialsForRequest'> })
 
       const proofFormats = {
         anoncreds: {
@@ -1410,8 +1415,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no available credentials found')
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include('no available credentials found')
     })
 
     test('should reject simplified format with credentialInfo in attributes (security check)', async () => {
@@ -1476,6 +1481,26 @@ describe('ProofController', () => {
       expect(response.statusCode).to.be.equal(422)
     })
 
+    test('should return 422 when client supplies presentationExchange credentials for accept-request', async () => {
+      const acceptProofStub = stub(bobAgent.didcomm.proofs, 'acceptRequest')
+      acceptProofStub.resolves(testProofResponse)
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProofResponse.id}/accept-request`)
+        .send({
+          proofFormats: {
+            presentationExchange: {
+              credentials: {
+                descriptor1: [{ id: 'record-id-1' }],
+              },
+            },
+          },
+        })
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(acceptProofStub.called).to.equal(false)
+    })
+
     test('should give 404 not found when proof request is not found', async () => {
       const response = await request(app)
         .post('/v1/proofs/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-request')
@@ -1485,16 +1510,34 @@ describe('ProofController', () => {
     })
   })
 
+  describe('Proof format redaction', () => {
+    test('should redact presentationExchange credentials', async () => {
+      const redacted = redactProofFormats({
+        presentationExchange: {
+          credentials: {
+            descriptor1: [{ id: 'record-id-1', extra: 'value' }],
+          },
+        },
+      } as unknown as DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>)
+
+      expect(redacted).to.deep.equal({
+        presentationExchange: {
+          credentials: '[REDACTED]',
+        },
+      })
+    })
+  })
+
   describe('Accept proof presentation', () => {
     test('should return proof record', async () => {
-      const acceptPresentationStub = stub(bobAgent.proofs, 'acceptPresentation')
+      const acceptPresentationStub = stub(bobAgent.didcomm.proofs, 'acceptPresentation')
       acceptPresentationStub.resolves(testProof)
-      const getResult = (): Promise<ProofExchangeRecord> => acceptPresentationStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommProofExchangeRecord> => acceptPresentationStub.firstCall.returnValue
       const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-presentation`)
 
       expect(
         acceptPresentationStub.calledWithMatch({
-          proofRecordId: testProof.id,
+          proofExchangeRecordId: testProof.id,
         })
       ).equals(true)
       expect(response.statusCode).to.be.equal(200)
@@ -1512,13 +1555,13 @@ describe('ProofController', () => {
     test('should return proof event sent from test agent to websocket client', async () => {
       const now = new Date()
 
-      const proofRecord = new ProofExchangeRecord({
+      const proofRecord = new DidCommProofExchangeRecord({
         id: 'testest',
         protocolVersion: 'v2',
-        state: ProofState.ProposalSent,
+        state: DidCommProofState.ProposalSent,
         threadId: 'random',
         createdAt: now,
-        role: ProofRole.Verifier,
+        role: DidCommProofRole.Verifier,
       })
 
       // Start client and wait for it to be opened
@@ -1531,8 +1574,8 @@ describe('ProofController', () => {
         })
       )
 
-      bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
-        type: ProofEventTypes.ProofStateChanged,
+      bobAgent.events.emit<DidCommProofStateChangedEvent>(bobAgent.context, {
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           previousState: null,
           proofRecord,
@@ -1542,7 +1585,7 @@ describe('ProofController', () => {
       // Wait for event on WebSocket
       const event = await waitForEvent
       expect(event).to.deep.equal({
-        type: 'ProofStateChanged',
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           previousState: null,
           proofRecord: {
@@ -1553,7 +1596,7 @@ describe('ProofController', () => {
             createdAt: now.toISOString(),
             state: 'proposal-sent',
             threadId: 'random',
-            role: ProofRole.Verifier,
+            role: DidCommProofRole.Verifier,
           },
         },
         metadata: {
@@ -1565,9 +1608,9 @@ describe('ProofController', () => {
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
+    await deleteAgentStore(bobAgent)
     await closeWebSocket(socket)
     app.close()
   })

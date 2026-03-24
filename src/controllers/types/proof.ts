@@ -1,13 +1,18 @@
 /**
  * Proof Presentation (Request, Proposal) types.
+ *
+ * NOTE: Proof DTOs remain local controller-boundary types by design.
+ * We keep stage-specific request shapes and simplified accept-request payload support
+ * (`SimpleProofFormats`) to preserve API behaviour and avoid leaking deeper PEX/Sphereon
+ * model graphs into TSOA-generated schemas.
  */
 import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
 import type {
-  AutoAcceptProof,
-  ProofExchangeRecord,
-  ProofFormatPayload,
+  DidCommAutoAcceptProof,
+  DidCommProofExchangeRecord,
+  DidCommProofFormatPayload,
   ProofsProtocolVersionType,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 import type { AnonCredsRequestProofFormatOptions } from './anoncreds.js'
 import type { UUID } from './common.js'
 import type { PresentationExchangeAcceptProposal, PresentationExchangeCreateRequest } from './pex.js'
@@ -15,20 +20,25 @@ import type { ProofFormats, ProofProtocols } from './protocols.js'
 
 export interface ProofRequestMessageResponse {
   message: string
-  proofRecord: ProofExchangeRecord
+  proofRecord: DidCommProofExchangeRecord
 }
 
 export interface ProposeProofOptions {
   connectionId: UUID
   protocolVersion: ProofsProtocolVersionType<ProofProtocols>
-  proofFormats: ProofFormatPayload<ProofFormats, 'createProposal'>
+  proofFormats: DidCommProofFormatPayload<ProofFormats, 'createProposal'>
   goalCode?: string
   parentThreadId?: UUID
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
 export interface SimpleProofFormats {
+  /**
+   * API-friendly simplified credential selection input for accept-request.
+   * This intentionally diverges from full proof-format payloads and is validated
+   * via `isSimpleAnonCredsProofFormats` in `src/utils/proofs.ts`.
+   */
   anoncreds?: {
     attributes?: Record<
       string,
@@ -69,7 +79,7 @@ export interface AcceptProofProposalOptions {
   proofFormats?: {
     /**
      * Stage-correct accept-proposal payload.
-     * Credo TS v0.5.x expects only name/version here (not a full proof request).
+     * Credo TS v0.6.x expects only name/version here (not a full proof request).
      */
     anoncreds?: {
       name?: string
@@ -79,7 +89,7 @@ export interface AcceptProofProposalOptions {
   }
   goalCode?: string
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
@@ -90,7 +100,7 @@ export interface NegotiateProofProposalOptions {
   }
   goalCode?: string
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 
@@ -107,9 +117,9 @@ export interface AcceptProofRequestOptions {
   useReturnRoute?: boolean
   goalCode?: string
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
-  proofFormats?: ProofFormatPayload<ProofFormats, 'acceptRequest'> | SimpleProofFormats
+  proofFormats?: DidCommProofFormatPayload<ProofFormats, 'acceptRequest'> | SimpleProofFormats
 }
 
 export interface CreateProofRequestOptions {
@@ -121,7 +131,7 @@ export interface CreateProofRequestOptions {
   goalCode?: string
   parentThreadId?: UUID
   willConfirm?: boolean
-  autoAcceptProof?: AutoAcceptProof
+  autoAcceptProof?: DidCommAutoAcceptProof
   comment?: string
 }
 

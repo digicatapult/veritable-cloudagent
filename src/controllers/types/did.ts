@@ -1,60 +1,34 @@
 /**
  * DID Resolution, Creation, and Management types.
  */
-import type { DidDocument, DidDocumentMetadata, DidResolutionMetadata, KeyType } from '@credo-ts/core'
+import type { DidDocument, DidRegistrationSecretOptions } from '@credo-ts/core'
 import type { DID } from './common.js'
 
-export interface DidResolutionResultProps {
-  didResolutionMetadata: DidResolutionMetadata
-  didDocument: DidDocument | null
-  didDocumentMetadata: DidDocumentMetadata
-}
+export type { DidCreateOptions, DidResolutionResult, ImportDidOptions } from '@credo-ts/core'
 
-interface PrivateKey {
-  keyType: KeyType
-  privateKey: string
-}
+type DidDocumentLike = DidDocument | Record<string, unknown>
 
-export interface ImportDidOptions {
-  did: DID
-  didDocument?: DidDocument
-  privateKeys?: PrivateKey[]
-  overwrite?: boolean
-}
-
-export interface DidCreateOptions {
-  method?: string
+interface DidOperationStateBase {
   did?: DID
-  options?: { [x: string]: unknown }
-  secret?: { [x: string]: unknown }
-  didDocument?: DidDocument
+  secret?: DidRegistrationSecretOptions
+  didDocument?: DidDocumentLike
 }
 
-export interface DidOperationStateFinished {
+export interface DidOperationStateFinished extends Omit<DidOperationStateBase, 'didDocument'> {
   state: 'finished'
   did: DID
-  secret?: { [x: string]: unknown }
-  didDocument: { [x: string]: unknown }
+  didDocument: DidDocumentLike
 }
-export interface DidOperationStateFailed {
+export interface DidOperationStateFailed extends DidOperationStateBase {
   state: 'failed'
-  did?: DID
-  secret?: { [x: string]: unknown }
-  didDocument?: { [x: string]: unknown }
   reason: string
 }
-export interface DidOperationStateWait {
+export interface DidOperationStateWait extends DidOperationStateBase {
   state: 'wait'
-  did?: DID
-  secret?: { [x: string]: unknown }
-  didDocument?: { [x: string]: unknown }
 }
-export interface DidOperationStateActionBase {
+export interface DidOperationStateActionBase extends DidOperationStateBase {
   state: 'action'
   action: string
-  did?: DID
-  secret?: { [x: string]: unknown }
-  didDocument?: { [x: string]: unknown }
 }
 
 export type DidCreateResult = DidOperationStateWait | DidOperationStateActionBase | DidOperationStateFinished

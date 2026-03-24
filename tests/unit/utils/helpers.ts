@@ -1,44 +1,56 @@
 import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
+import { AskarStoreManager } from '@credo-ts/askar'
+import {
+  DidCommConnectionInvitationMessage,
+  DidCommConnectionRecord,
+  DidCommCredentialExchangeRecord,
+  DidCommDidExchangeRole,
+  DidCommDidExchangeState,
+  DidCommMessage,
+  DidCommOutOfBandInvitation,
+  DidCommOutOfBandRecord,
+  DidCommProofExchangeRecord,
+  DidCommTrustPingMessage,
+  type DidCommConnectionRecordProps,
+} from '@credo-ts/didcomm'
 import type { Socket } from 'node:net'
 
-import {
-  type ConnectionRecordProps,
-  type DidCreateResult,
-  AgentMessage,
-  ConnectionInvitationMessage,
-  ConnectionRecord,
-  CredentialExchangeRecord,
-  DidDocument,
-  DidExchangeRole,
-  DidExchangeState,
-  JsonTransformer,
-  OutOfBandInvitation,
-  OutOfBandRecord,
-  ProofExchangeRecord,
-  TrustPingMessage,
-} from '@credo-ts/core'
-import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
+import { DidDocument, JsonEncoder, JsonTransformer, type DidCreateResult } from '@credo-ts/core'
 import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
-import { WebSocket } from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
+export type TestAgent = RestAgent
+
+export async function deleteAgentStore(agent: RestAgent): Promise<void> {
+  await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
+}
+
 export async function getTestAgent(name: string, port: number) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
-  return await setupAgent({
+  const agent = await setupAgent({
     agentConfig: {
       // add some randomness to ensure test isolation
       label: `${name} (${randomUUID()})`,
       endpoints: [`http://localhost:${port}`],
-      walletConfig: { id: randomUUID(), key: name },
       useDidSovPrefixWhereAllowed: true,
       logger,
       autoUpdateStorageOnStartup: true,
       backupBeforeStorageUpdate: false,
+    },
+
+    askarStoreConfig: {
+      id: randomUUID(),
+      key: 'DZ9hPqFWTPxemcGea72C1X1nusqk5wFNLq6QPjwXGqAa',
+      keyDerivationMethod: 'raw',
+      database: {
+        type: 'sqlite',
+      },
     },
 
     inboundTransports: [
@@ -54,10 +66,12 @@ export async function getTestAgent(name: string, port: number) {
     ipfsTimeoutMs: 15000,
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
+
+  return agent
 }
 
 export async function getTestServer(agent: RestAgent) {
-  const socketServer = new WebSocket.Server({ noServer: true })
+  const socketServer = new WebSocketServer({ noServer: true })
   const app = await setupServer(agent, new PinoLogger('silent'), {
     socketServer,
   })
@@ -146,7 +160,7 @@ export function getTestOutOfBandInvitation() {
       },
     ],
   }
-  return JsonTransformer.fromJSON(json, OutOfBandInvitation)
+  return JsonTransformer.fromJSON(json, DidCommOutOfBandInvitation)
 }
 
 export function getTestOutOfBandLegacyInvitation() {
@@ -159,7 +173,7 @@ export function getTestOutOfBandLegacyInvitation() {
     routingKeys: [],
     imageUrl: 'https://example.com/image-url',
   }
-  return JsonTransformer.fromJSON(json, ConnectionInvitationMessage)
+  return JsonTransformer.fromJSON(json, DidCommConnectionInvitationMessage)
 }
 
 export function getTestOutOfBandRecord() {
@@ -193,7 +207,7 @@ export function getTestOutOfBandRecord() {
     state: 'await-response',
     reusable: false,
   }
-  return JsonTransformer.fromJSON(json, OutOfBandRecord)
+  return JsonTransformer.fromJSON(json, DidCommOutOfBandRecord)
 }
 
 export function getTestCredential() {
@@ -203,7 +217,7 @@ export function getTestCredential() {
       state: 'proposal-sent',
       threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
     },
-    type: 'CredentialRecord',
+    type: 'DidCommCredentialExchangeRecord',
     id: '222222aa-aa22-42a2-aa22-222a2aa22222',
     createdAt: '2021-01-01T00:00:00.000Z',
     state: 'proposal-sent',
@@ -246,7 +260,7 @@ export function getTestCredential() {
     ],
   }
 
-  return JsonTransformer.fromJSON(json, CredentialExchangeRecord)
+  return JsonTransformer.fromJSON(json, DidCommCredentialExchangeRecord)
 }
 
 export function getCredentialFormatData() {
@@ -332,13 +346,13 @@ export function getTestOffer() {
         },
       ],
     },
-    credentialRecord: {
+    credentialExchangeRecord: {
       _tags: {
         connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
         state: 'proposal-sent',
         threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
       },
-      type: 'CredentialRecord',
+      type: 'DidCommCredentialExchangeRecord',
       id: '222222aa-aa22-42a2-aa22-222a2aa22222',
       createdAt: '2021-01-01T00:00:00.000Z',
       state: 'proposal-sent',
@@ -383,8 +397,8 @@ export function getTestOffer() {
   }
 
   return {
-    message: JsonTransformer.fromJSON(json.message, AgentMessage),
-    credentialRecord: JsonTransformer.fromJSON(json.credentialRecord, CredentialExchangeRecord),
+    message: JsonTransformer.fromJSON(json.message, DidCommMessage),
+    credentialExchangeRecord: JsonTransformer.fromJSON(json.credentialExchangeRecord, DidCommCredentialExchangeRecord),
   }
 }
 
@@ -438,7 +452,7 @@ export function getTestProofResponse() {
     isVerified: true,
   }
 
-  return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+  return JsonTransformer.fromJSON(json, DidCommProofExchangeRecord)
 }
 
 export function getTestProof() {
@@ -488,20 +502,20 @@ export function getTestProof() {
       },
     },
   }
-  return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+  return JsonTransformer.fromJSON(json, DidCommProofExchangeRecord)
 }
 
 export function getTestTrustPingMessage({
   id = '00000000-1111-4c47-8a5a-111111111111',
   comment = 'test-comment',
   responseRequested = true,
-}: Partial<TrustPingMessage> = {}) {
-  return new TrustPingMessage({ id, comment, responseRequested })
+}: Partial<DidCommTrustPingMessage> = {}) {
+  return new DidCommTrustPingMessage({ id, comment, responseRequested })
 }
 
 export function getTestConnection({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   did = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000',
   threadId = '33333333-3333-4c47-8a5a-333333333333',
@@ -509,8 +523,8 @@ export function getTestConnection({
   tags = {},
   theirLabel,
   theirDid = 'did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     invitationDid,
     threadId,
@@ -525,8 +539,8 @@ export function getTestConnection({
 
 // Test doesn't like object destructuring to blank theirDid value
 export function getTestConnectionNoTheirDid({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   did = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000',
   threadId = '33333333-3333-4c47-8a5a-333333333333',
@@ -534,8 +548,8 @@ export function getTestConnectionNoTheirDid({
   tags = {},
   theirLabel,
   theirDid = '',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     invitationDid,
     threadId,
@@ -550,8 +564,8 @@ export function getTestConnectionNoTheirDid({
 
 // Test doesn't like object destructuring to blank Did value
 export function getTestConnectionNoDid({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   did = '',
   threadId = '33333333-3333-4c47-8a5a-333333333333',
@@ -559,8 +573,8 @@ export function getTestConnectionNoDid({
   tags = {},
   theirLabel,
   theirDid = 'did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     invitationDid,
     threadId,
@@ -576,7 +590,7 @@ export function getTestConnectionNoDid({
 export function getTestDidDocument() {
   return {
     '@context': [
-      'https://w3id.org/did/v1',
+      'https://www.w3.org/ns/did/v1',
       'https://w3id.org/security/suites/ed25519-2018/v1',
       'https://w3id.org/security/suites/x25519-2019/v1',
     ],
@@ -622,7 +636,7 @@ export function getTestDidCreate() {
       didDocument: JsonTransformer.fromJSON(
         {
           '@context': [
-            'https://w3id.org/did/v1',
+            'https://www.w3.org/ns/did/v1',
             'https://w3id.org/security/suites/ed25519-2018/v1',
             'https://w3id.org/security/suites/x25519-2019/v1',
           ],
@@ -672,12 +686,12 @@ export async function openWebSocket(port: number): Promise<WebSocket> {
   return ws
 }
 
-export async function closeWebSocket(ws: WebSocket) {
+export async function closeWebSocket(ws: WebSocket | undefined) {
   return new Promise<void>((resolve, reject) => {
     if (!ws || ws.readyState === ws.CLOSED) return resolve()
     ws.removeAllListeners()
     ws.once('close', () => resolve())
-    ws.once('error', (err) => reject(err))
+    ws.once('error', (err: Error) => reject(err))
     ws.close()
   })
 }

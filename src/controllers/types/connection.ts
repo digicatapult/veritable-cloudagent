@@ -1,7 +1,12 @@
 /**
  * Connection and Out-of-Band Invitation types.
  */
-import type { HandshakeProtocol, OutOfBandDidCommService, ReceiveOutOfBandInvitationConfig } from '@credo-ts/core'
+import type {
+  DidCommHandshakeProtocol,
+  DidCommRouting,
+  OutOfBandDidCommService,
+  ReceiveOutOfBandInvitationConfig,
+} from '@credo-ts/didcomm'
 import type { DID, UUID } from './common.js'
 
 type ReceiveOutOfBandInvitationProps = Omit<ReceiveOutOfBandInvitationConfig, 'routing'>
@@ -17,10 +22,12 @@ export interface ReceiveInvitationByUrlProps extends ReceiveOutOfBandInvitationP
 export interface AcceptInvitationConfig {
   autoAcceptConnection?: boolean
   reuseConnection?: boolean
-  label?: string
+  label: string
   alias?: string
   imageUrl?: string
-  mediatorId?: string
+  routing?: DidCommRouting
+  timeoutMs?: number
+  ourDid?: string
 }
 
 export interface OutOfBandInvitationSchema {
@@ -30,7 +37,7 @@ export interface OutOfBandInvitationSchema {
   goalCode?: string
   goal?: string
   accept?: string[]
-  handshake_protocols?: HandshakeProtocol[]
+  handshake_protocols?: DidCommHandshakeProtocol[]
   services: Array<OutOfBandDidCommService | string>
   imageUrl?: string
 }

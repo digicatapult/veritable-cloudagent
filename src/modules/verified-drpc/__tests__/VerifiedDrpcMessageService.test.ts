@@ -3,20 +3,19 @@ import { describe, it } from 'mocha'
 import type { SinonStubbedInstance } from 'sinon'
 import * as sinon from 'sinon'
 
-import type { AnonCredsProofFormatService } from '@credo-ts/anoncreds'
+import type { AnonCredsDidCommProofFormatService } from '@credo-ts/anoncreds'
+import { type AgentContext, EventEmitter } from '@credo-ts/core'
 import {
-  ConnectionRecord,
-  ConnectionRecordProps,
-  DidExchangeRole,
-  DidExchangeState,
-  EventEmitter,
-  InboundMessageContext,
-  ProofEventTypes,
-  ProofsApi,
-  ProofState,
-  type AgentContext,
-  type V2ProofProtocol,
-} from '@credo-ts/core'
+  DidCommConnectionRecord,
+  type DidCommConnectionRecordProps,
+  DidCommDidExchangeRole,
+  DidCommDidExchangeState,
+  DidCommInboundMessageContext,
+  DidCommProofEventTypes,
+  DidCommProofsApi,
+  DidCommProofState,
+  type DidCommProofV2Protocol,
+} from '@credo-ts/didcomm'
 
 import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'
@@ -31,16 +30,16 @@ import { VerifiedDrpcService } from '../services/index.js'
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
 export function getMockConnection({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'test',
   did = 'test-did',
   threadId = 'threadId',
   tags = {},
   theirLabel,
   theirDid = 'their-did',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     threadId,
     theirDid,
@@ -53,19 +52,21 @@ export function getMockConnection({
 }
 
 describe('VerifiedDrpcService', () => {
-  let verifiedDrpcMessageService: VerifiedDrpcService<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
-  const mockConnectionRecord = new ConnectionRecord({
+  let verifiedDrpcMessageService: VerifiedDrpcService<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
+  const mockConnectionRecord = new DidCommConnectionRecord({
     did: 'did:sov:C2SsBf5QUQpqSAQfhu3sd2',
     threadId: 'threadId',
     theirDid: 'their-did',
     id: 'd3849ac3-c981-455b-a1aa-a10bea6cead8',
-    role: DidExchangeRole.Requester,
-    state: DidExchangeState.Completed,
+    role: DidCommDidExchangeRole.Requester,
+    state: DidCommDidExchangeState.Completed,
     tags: {},
   })
   let mockVerifiedDrpcRepository: SinonStubbedInstance<VerifiedDrpcRepository>
   let mockEventEmitter: SinonStubbedInstance<EventEmitter>
-  let mockVerifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  let mockVerifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<
+    [DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]
+  >
   let agentContext: AgentContext
 
   beforeEach(() => {
@@ -121,24 +122,27 @@ describe('VerifiedDrpcService', () => {
       const testProofId = 'test-proof-id'
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Done,
+        state: DidCommProofState.Done,
       })
-      const mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> =
-        sinon.createStubInstance(ProofsApi)
+      const mockProofsApi: SinonStubbedInstance<
+        DidCommProofsApi<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
+      > = sinon.createStubInstance(DidCommProofsApi)
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsArgWith(1, proofEvent)
+      mockEventEmitter.on
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
       const verifiedDrpcMessage = new VerifiedDrpcRequestMessage({
         request: { jsonrpc: '2.0', method: 'hello', id: 1 },
       })
-      const messageContext = new InboundMessageContext(verifiedDrpcMessage, {
+      const messageContext = new DidCommInboundMessageContext(verifiedDrpcMessage, {
         agentContext,
         connection: mockConnectionRecord,
       })
@@ -165,12 +169,13 @@ describe('VerifiedDrpcService', () => {
 
   describe('verifyServer', async () => {
     const testProofId = 'test-proof-id'
-    let mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>> =
-      sinon.createStubInstance(ProofsApi)
+    let mockProofsApi: SinonStubbedInstance<
+      DidCommProofsApi<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
+    > = sinon.createStubInstance(DidCommProofsApi)
     let mockVerifiedDrpcRecord: VerifiedDrpcRecord
 
     beforeEach(async () => {
-      mockProofsApi = sinon.createStubInstance(ProofsApi)
+      mockProofsApi = sinon.createStubInstance(DidCommProofsApi)
       mockVerifiedDrpcRecord = withMockVerifiedDrpcRecord({
         connectionId: mockConnectionRecord.id,
         role: VerifiedDrpcRole.Client,
@@ -181,18 +186,20 @@ describe('VerifiedDrpcService', () => {
     it('should send a proof request to the server peer', async () => {
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Done,
+        state: DidCommProofState.Done,
       })
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsArgWith(1, proofEvent)
+      mockEventEmitter.on
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
 
       await verifiedDrpcMessageService.verifyServer(
         agentContext,
@@ -212,18 +219,20 @@ describe('VerifiedDrpcService', () => {
     it('should fail if the proof request fails', async () => {
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Abandoned,
+        state: DidCommProofState.Abandoned,
       })
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsArgWith(1, proofEvent)
+      mockEventEmitter.on
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
 
       await verifiedDrpcMessageService.verifyServer(
         agentContext,
@@ -240,12 +249,12 @@ describe('VerifiedDrpcService', () => {
       const testTimeout = 500
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Done,
+        state: DidCommProofState.Done,
       })
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
@@ -255,7 +264,7 @@ describe('VerifiedDrpcService', () => {
         },
       }
       mockEventEmitter.on
-        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
         .callsFake((_event, callback) => {
           setTimeout(() => callback(proofEvent), testTimeout + 100)
         })
@@ -275,11 +284,13 @@ describe('VerifiedDrpcService', () => {
 
   describe('verifyClient', async () => {
     const testProofId = 'test-proof-id'
-    let mockProofsApi: SinonStubbedInstance<ProofsApi<[V2ProofProtocol<[AnonCredsProofFormatService]>]>>
+    let mockProofsApi: SinonStubbedInstance<
+      DidCommProofsApi<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
+    >
     let mockVerifiedDrpcRecord: VerifiedDrpcRecord
 
     beforeEach(async () => {
-      mockProofsApi = sinon.createStubInstance(ProofsApi)
+      mockProofsApi = sinon.createStubInstance(DidCommProofsApi)
       mockVerifiedDrpcRecord = withMockVerifiedDrpcRecord({
         connectionId: mockConnectionRecord.id,
         role: VerifiedDrpcRole.Server,
@@ -290,18 +301,20 @@ describe('VerifiedDrpcService', () => {
     it('should send a proof request to the client peer', async () => {
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Done,
+        state: DidCommProofState.Done,
       })
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsArgWith(1, proofEvent)
+      mockEventEmitter.on
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
 
       await verifiedDrpcMessageService.verifyClient(
         agentContext,
@@ -321,18 +334,20 @@ describe('VerifiedDrpcService', () => {
     it('should fail if the proof request fails', async () => {
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Abandoned,
+        state: DidCommProofState.Abandoned,
       })
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
         },
       }
-      mockEventEmitter.on.withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func).callsArgWith(1, proofEvent)
+      mockEventEmitter.on
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
+        .callsArgWith(1, proofEvent)
 
       await verifiedDrpcMessageService.verifyClient(
         agentContext,
@@ -349,12 +364,12 @@ describe('VerifiedDrpcService', () => {
       const testTimeout = 500
       const testProofRecord = withMockProofExchangeRecord({
         id: testProofId,
-        state: ProofState.Done,
+        state: DidCommProofState.Done,
       })
       mockProofsApi.requestProof.resolves(testProofRecord)
-      agentContext.dependencyManager.resolve = sinon.stub().withArgs(ProofsApi).returns(mockProofsApi)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
       const proofEvent = {
-        type: ProofEventTypes.ProofStateChanged,
+        type: DidCommProofEventTypes.ProofStateChanged,
         payload: {
           proofRecord: testProofRecord,
           previousState: null,
@@ -364,7 +379,7 @@ describe('VerifiedDrpcService', () => {
         },
       }
       mockEventEmitter.on
-        .withArgs(ProofEventTypes.ProofStateChanged, sinon.match.func)
+        .withArgs(DidCommProofEventTypes.ProofStateChanged, sinon.match.func)
         .callsFake((_event, callback) => {
           setTimeout(() => callback(proofEvent), testTimeout + 100)
         })

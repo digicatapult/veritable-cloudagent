@@ -1,9 +1,10 @@
-import { Agent, DidDocument, JsonTransformer, KeyType } from '@credo-ts/core'
+import { Agent, DidDocument, JsonTransformer, Kms, TypedArrayEncoder } from '@credo-ts/core'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
   did: string
   didDocument: DidDocument
+  keys: Array<{ didDocumentRelativeKeyId: string; kmsKeyId: string }>
 }
 
 export class DidWebDocGenerator {
@@ -16,12 +17,51 @@ export class DidWebDocGenerator {
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
-    // Generate keys directly in the wallet
-    const signingKey = await this.agent.wallet.createKey({ keyType: KeyType.Ed25519 })
-    const encryptionKey = await this.agent.wallet.createKey({ keyType: KeyType.X25519 })
+    const kms = this.agent.kms
 
-    // Assemble the DID:web document
-    // This is a plain object that will be transformed and hydrated within credo-ts
+    const authenticationKey = await kms.createKey({ type: { kty: 'OKP', crv: 'Ed25519' } })
+    const assertionKey = await kms.createKey({ type: { kty: 'OKP', crv: 'Ed25519' } })
+    const keyAgreementKey = await kms.createKey({ type: { kty: 'OKP', crv: 'X25519' } })
+
+    if (!authenticationKey.publicJwk.x || !assertionKey.publicJwk.x || !keyAgreementKey.publicJwk.x) {
+      throw new Error('Invalid key material returned from KMS')
+    }
+
+    if (
+      authenticationKey.publicJwk.kty !== 'OKP' ||
+      authenticationKey.publicJwk.crv !== 'Ed25519' ||
+      assertionKey.publicJwk.kty !== 'OKP' ||
+      assertionKey.publicJwk.crv !== 'Ed25519' ||
+      keyAgreementKey.publicJwk.kty !== 'OKP' ||
+      keyAgreementKey.publicJwk.crv !== 'X25519'
+    ) {
+      throw new Error('Unexpected key type returned from KMS')
+    }
+
+    const authenticationPublicJwk = Kms.PublicJwk.fromUnknown(authenticationKey.publicJwk)
+    const assertionPublicJwk = Kms.PublicJwk.fromUnknown(assertionKey.publicJwk)
+
+    const authenticationVerificationMethod = {
+      id: `${didId}#auth-key`,
+      type: 'Ed25519VerificationKey2020',
+      controller: didId,
+      publicKeyMultibase: authenticationPublicJwk.fingerprint,
+    }
+
+    const assertionVerificationMethod = {
+      id: `${didId}#assertion-key`,
+      type: 'Ed25519VerificationKey2020',
+      controller: didId,
+      publicKeyMultibase: assertionPublicJwk.fingerprint,
+    }
+
+    const keyAgreementVerificationMethod = {
+      id: `${didId}#agreement-key`,
+      type: 'X25519KeyAgreementKey2019',
+      controller: didId,
+      publicKeyBase58: TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64(keyAgreementKey.publicJwk.x)),
+    }
+
     const didWebDocument = {
       '@context': [
         'https://www.w3.org/ns/did/v1',
@@ -30,28 +70,20 @@ export class DidWebDocGenerator {
       ],
       id: didId,
       verificationMethod: [
-        {
-          id: `${didId}#owner`,
-          type: 'Ed25519VerificationKey2020',
-          controller: didId,
-          publicKeyMultibase: signingKey.fingerprint,
-        },
-        {
-          id: `${didId}#encryption`,
-          type: 'X25519KeyAgreementKey2019',
-          controller: didId,
-          publicKeyBase58: encryptionKey.publicKeyBase58,
-        },
+        authenticationVerificationMethod,
+        assertionVerificationMethod,
+        keyAgreementVerificationMethod,
       ],
-      authentication: [`${didId}#owner`],
-      assertionMethod: [`${didId}#owner`],
-      keyAgreement: [`${didId}#encryption`],
+      authentication: [`${didId}#auth-key`],
+      assertionMethod: [`${didId}#assertion-key`],
+      keyAgreement: [`${didId}#agreement-key`],
+      capabilityInvocation: [`${didId}#auth-key`],
       service: [
         {
           id: `${didId}#did-communication`,
           type: 'did-communication',
           priority: 0,
-          recipientKeys: [`${didId}#owner`],
+          recipientKeys: [`${didId}#auth-key`],
           routingKeys: [],
           serviceEndpoint: serviceEndpoint,
         },
@@ -63,6 +95,20 @@ export class DidWebDocGenerator {
     return {
       did: didId,
       didDocument: JsonTransformer.fromJSON(didWebDocument, DidDocument),
+      keys: [
+        {
+          didDocumentRelativeKeyId: '#auth-key',
+          kmsKeyId: authenticationKey.keyId,
+        },
+        {
+          didDocumentRelativeKeyId: '#assertion-key',
+          kmsKeyId: assertionKey.keyId,
+        },
+        {
+          didDocumentRelativeKeyId: '#agreement-key',
+          kmsKeyId: keyAgreementKey.keyId,
+        },
+      ],
     }
   }
 
@@ -101,6 +147,7 @@ export class DidWebDocGenerator {
       await this.agent.dids.import({
         did: generated.did,
         didDocument: generated.didDocument,
+        keys: generated.keys,
         overwrite: true,
       })
       this.logger.info(`Successfully registered DID:web ${generated.did} with agent`)

@@ -1,39 +1,40 @@
+// Must import before @credo-ts/anoncreds
+import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+
 import {
-  AnonCredsCredentialFormatService,
+  AnonCredsDidCommCredentialFormatService,
+  AnonCredsDidCommProofFormatService,
   AnonCredsModule,
-  AnonCredsProofFormatService,
   AnonCredsRequestProofFormat,
 } from '@credo-ts/anoncreds'
 import {
-  type InitConfig,
   Agent,
-  AutoAcceptCredential,
-  AutoAcceptProof,
-  ConnectionsModule,
-  CredentialsModule,
   DidsModule,
-  DifPresentationExchangeProofFormatService,
-  HttpOutboundTransport,
-  JsonLdCredentialFormatService,
   KeyDidResolver,
-  MediatorModule,
-  ModulesMap,
   PeerDidResolver,
-  ProofsModule,
-  V2CredentialProtocol,
-  V2ProofProtocol,
   W3cCredentialsModule,
   WebDidResolver,
-  WsOutboundTransport,
+  type InitConfig,
+  type ModulesMap,
 } from '@credo-ts/core'
+import {
+  DidCommAutoAcceptCredential,
+  DidCommAutoAcceptProof,
+  DidCommCredentialV2Protocol,
+  DidCommDifPresentationExchangeProofFormatService,
+  DidCommHttpOutboundTransport,
+  DidCommJsonLdCredentialFormatService,
+  DidCommModule,
+  DidCommProofV2Protocol,
+  DidCommWsOutboundTransport,
+} from '@credo-ts/didcomm'
 import { DrpcModule } from '@credo-ts/drpc'
-import { agentDependencies, HttpInboundTransport, WsInboundTransport } from '@credo-ts/node'
-import { anoncreds } from '@hyperledger/anoncreds-nodejs'
+import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
+import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import { container } from 'tsyringe'
 
-import { MediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
-import { AskarModule } from '@credo-ts/askar'
-import { ariesAskar } from '@hyperledger/aries-askar-nodejs'
+import { DidCommMediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
+import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
 import type { CredentialDefinitionId, DID } from './controllers/types/index.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
@@ -47,114 +48,134 @@ export type InboundTransport = {
   port: number
 }
 
+type AgentProofProtocols = [
+  DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
+]
+
 const inboundTransportMapping = {
-  http: HttpInboundTransport,
-  ws: WsInboundTransport,
+  http: DidCommHttpInboundTransport,
+  ws: DidCommWsInboundTransport,
 } as const
 
 const outboundTransportMapping = {
-  http: HttpOutboundTransport,
-  ws: WsOutboundTransport,
+  http: DidCommHttpOutboundTransport,
+  ws: DidCommWsOutboundTransport,
 } as const
 
 export type AriesRestConfig = {
-  agentConfig: InitConfig
+  agentConfig: InitConfig & {
+    label?: string
+    endpoints: string[]
+    connectionImageUrl?: string
+    backupBeforeStorageUpdate?: boolean
+    autoUpdateStorageOnStartup?: boolean
+    useDidKeyInProtocols?: boolean
+    useDidSovPrefixWhereAllowed?: boolean
+  }
+  askarStoreConfig: AskarModuleConfigStoreOptions
 
   inboundTransports?: InboundTransport[]
   outboundTransports?: Transports[]
 
   autoAcceptConnections?: boolean
-  autoAcceptCredentials?: AutoAcceptCredential
+  autoAcceptCredentials?: DidCommAutoAcceptCredential
   autoAcceptMediationRequests?: boolean
-  autoAcceptProofs?: AutoAcceptProof
+  autoAcceptProofs?: DidCommAutoAcceptProof
   ipfsOrigin: string
   ipfsTimeoutMs: number
 
-  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<
-    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
-  >
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
 
   logger: PinoLogger
 }
 
 export interface RestAgentModules extends ModulesMap {
-  connections: ConnectionsModule
+  didcomm: DidCommModule
   dids: DidsModule
-  proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]>
-  credentials: CredentialsModule<
-    [V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>]
-  >
-  anoncreds: AnonCredsModule
   w3cCredentials: W3cCredentialsModule
+  anoncreds: AnonCredsModule
+  askar: AskarModule
   drpc: DrpcModule
-  verifiedDrpc: VerifiedDrpcModule<
-    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
-  >
-  media: MediaSharingModule
+  verifiedDrpc: VerifiedDrpcModule<AgentProofProtocols>
+  media: DidCommMediaSharingModule
 }
 
 export type RestAgent<
   modules extends RestAgentModules = {
-    connections: ConnectionsModule
+    didcomm: DidCommModule
     dids: DidsModule
-    proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]>
-    credentials: CredentialsModule<
-      [V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>]
-    >
-    anoncreds: AnonCredsModule
     w3cCredentials: W3cCredentialsModule
+    anoncreds: AnonCredsModule
+    askar: AskarModule
     drpc: DrpcModule
-    verifiedDrpc: VerifiedDrpcModule<
-      [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
-    >
-    media: MediaSharingModule
+    verifiedDrpc: VerifiedDrpcModule<AgentProofProtocols>
+    media: DidCommMediaSharingModule
   },
 > = Agent<modules>
 
 const getAgentModules = (options: {
+  didcommConfig: {
+    endpoints: string[]
+    useDidSovPrefixWhereAllowed?: boolean
+    useDidKeyInProtocols?: boolean
+  }
   autoAcceptConnections: boolean
-  autoAcceptProofs: AutoAcceptProof
-  autoAcceptCredentials: AutoAcceptCredential
+  autoAcceptProofs: DidCommAutoAcceptProof
+  autoAcceptCredentials: DidCommAutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
   ipfsTimeoutMs: number
-  verifiedDrpcOptions: { credDefId?: CredentialDefinitionId; issuerDid?: DID } & VerifiedDrpcModuleConfigOptions<
-    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
-  >
+  verifiedDrpcOptions: {
+    credDefId?: CredentialDefinitionId
+    issuerDid?: DID
+  } & VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
+  askarStoreConfig: AskarModuleConfigStoreOptions
 }): RestAgentModules => {
   return {
-    connections: new ConnectionsModule({
-      autoAcceptConnections: options.autoAcceptConnections,
+    askar: new AskarModule({
+      askar: askarNodeJS,
+      store: options.askarStoreConfig,
+    }),
+    didcomm: new DidCommModule({
+      endpoints: options.didcommConfig.endpoints,
+      useDidSovPrefixWhereAllowed: options.didcommConfig.useDidSovPrefixWhereAllowed,
+      useDidKeyInProtocols: options.didcommConfig.useDidKeyInProtocols,
+      connections: {
+        autoAcceptConnections: options.autoAcceptConnections,
+      },
+      proofs: {
+        autoAcceptProofs: options.autoAcceptProofs,
+        proofProtocols: [
+          new DidCommProofV2Protocol({
+            proofFormats: [
+              new AnonCredsDidCommProofFormatService(),
+              new DidCommDifPresentationExchangeProofFormatService(),
+            ],
+          }),
+        ],
+      },
+      credentials: {
+        autoAcceptCredentials: options.autoAcceptCredentials,
+        credentialProtocols: [
+          new DidCommCredentialV2Protocol({
+            credentialFormats: [
+              new AnonCredsDidCommCredentialFormatService(),
+              new DidCommJsonLdCredentialFormatService(),
+            ],
+          }),
+        ],
+      },
+      mediator: {
+        autoAcceptMediationRequests: options.autoAcceptMediationRequests,
+      },
     }),
     dids: new DidsModule({
       resolvers: [new WebDidResolver(), new PeerDidResolver(), new KeyDidResolver()],
-    }),
-    proofs: new ProofsModule({
-      autoAcceptProofs: options.autoAcceptProofs,
-      proofProtocols: [
-        new V2ProofProtocol({
-          proofFormats: [new AnonCredsProofFormatService(), new DifPresentationExchangeProofFormatService()],
-        }),
-      ],
-    }),
-    credentials: new CredentialsModule({
-      autoAcceptCredentials: options.autoAcceptCredentials,
-      credentialProtocols: [
-        new V2CredentialProtocol({
-          credentialFormats: [new AnonCredsCredentialFormatService(), new JsonLdCredentialFormatService()],
-        }),
-      ],
     }),
     w3cCredentials: new W3cCredentialsModule(),
     anoncreds: new AnonCredsModule({
       registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin, options.ipfsTimeoutMs))],
       anoncreds,
-    }),
-    askar: new AskarModule({
-      ariesAskar,
-    }),
-    mediator: new MediatorModule({
-      autoAcceptMediationRequests: options.autoAcceptMediationRequests,
     }),
     drpc: new DrpcModule(),
     verifiedDrpc: new VerifiedDrpcModule(
@@ -182,7 +203,7 @@ const getAgentModules = (options: {
         return rest
       })()
     ),
-    media: new MediaSharingModule(),
+    media: new DidCommMediaSharingModule(),
   }
 }
 
@@ -192,17 +213,23 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     outboundTransports = [],
 
     autoAcceptConnections = true,
-    autoAcceptCredentials = AutoAcceptCredential.ContentApproved,
+    autoAcceptCredentials = DidCommAutoAcceptCredential.ContentApproved,
     autoAcceptMediationRequests = true,
-    autoAcceptProofs = AutoAcceptProof.ContentApproved,
+    autoAcceptProofs = DidCommAutoAcceptProof.ContentApproved,
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
 
     agentConfig,
+    askarStoreConfig,
   } = restConfig
 
   const modules = getAgentModules({
+    didcommConfig: {
+      endpoints: agentConfig.endpoints,
+      useDidSovPrefixWhereAllowed: agentConfig.useDidSovPrefixWhereAllowed,
+      useDidKeyInProtocols: agentConfig.useDidKeyInProtocols,
+    },
     autoAcceptConnections,
     autoAcceptProofs,
     autoAcceptCredentials,
@@ -210,6 +237,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
+    askarStoreConfig,
   })
 
   const agent: RestAgent = new Agent({
@@ -221,13 +249,13 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   // Register outbound transports
   for (const outboundTransport of outboundTransports) {
     const OutboundTransport = outboundTransportMapping[outboundTransport]
-    agent.registerOutboundTransport(new OutboundTransport())
+    agent.didcomm.registerOutboundTransport(new OutboundTransport())
   }
 
   // Register inbound transports
   for (const inboundTransport of inboundTransports) {
     const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.registerInboundTransport(
+    agent.didcomm.registerInboundTransport(
       new InboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
     )
   }
@@ -246,7 +274,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
 
   const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
-  await drpcReceiveHandler.start()
+  drpcReceiveHandler.start()
 
   return agent
 }

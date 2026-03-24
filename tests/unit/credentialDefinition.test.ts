@@ -13,7 +13,7 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import { schema } from './utils/fixtures.js'
-import { getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('CredentialDefinitionController', () => {
   let app: Server
@@ -73,6 +73,10 @@ describe('CredentialDefinitionController', () => {
       const response = await request(app).get(`/v1/credential-definitions?createdLocally=false`)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'can only list credential definitions created locally',
+      })
     })
   })
 
@@ -112,6 +116,14 @@ describe('CredentialDefinitionController', () => {
 
       const response = await request(app).get(`/v1/credential-definitions/x`)
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'credentialDefinitionId has invalid structure.',
+        details: {
+          credentialDefinitionId: 'x',
+          resolutionError: 'invalid',
+        },
+      })
     })
 
     test('should return 400 BadRequest when id has invalid anoncreds method', async () => {
@@ -126,6 +138,14 @@ describe('CredentialDefinitionController', () => {
 
       const response = await request(app).get(`/v1/credential-definitions/x`)
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'credentialDefinitionId has invalid structure.',
+        details: {
+          credentialDefinitionId: 'x',
+          resolutionError: 'unsupportedAnonCredsMethod',
+        },
+      })
     })
 
     test('should return 404 NotFoundError when credential definition not found', async () => {
@@ -264,7 +284,7 @@ describe('CredentialDefinitionController', () => {
 
   after(async () => {
     await agent.shutdown()
-    await agent.wallet.delete()
+    await deleteAgentStore(agent)
     app.close()
   })
 })

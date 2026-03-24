@@ -2,20 +2,20 @@ import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
 import { match, restore as sinonRestore, spy, stub } from 'sinon'
 
+import { JsonTransformer } from '@credo-ts/core'
 import {
-  AgentMessage,
-  JsonTransformer,
-  type Agent,
-  type ConnectionInvitationMessage,
-  type ConnectionRecord,
-  type OutOfBandInvitation,
-  type OutOfBandRecord,
+  DidCommMessage,
+  type DidCommConnectionInvitationMessage,
+  type DidCommConnectionRecord,
+  type DidCommOutOfBandInvitation,
+  type DidCommOutOfBandRecord,
   type ReceiveOutOfBandImplicitInvitationConfig,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 import type { Server } from 'node:net'
 import request from 'supertest'
 
 import {
+  deleteAgentStore,
   getTestAgent,
   getTestConnection,
   getTestOutOfBandInvitation,
@@ -23,16 +23,17 @@ import {
   getTestOutOfBandRecord,
   getTestServer,
   objectToJson,
+  type TestAgent,
 } from './utils/helpers.js'
 
 describe('OutOfBandController', () => {
   let app: Server
-  let aliceAgent: Agent
-  let bobAgent: Agent
-  let outOfBandRecord: OutOfBandRecord
-  let outOfBandInvitation: OutOfBandInvitation
-  let outOfBandLegacyInvitation: ConnectionInvitationMessage
-  let connectionRecord: ConnectionRecord
+  let aliceAgent: TestAgent
+  let bobAgent: TestAgent
+  let outOfBandRecord: DidCommOutOfBandRecord
+  let outOfBandInvitation: DidCommOutOfBandInvitation
+  let outOfBandLegacyInvitation: DidCommConnectionInvitationMessage
+  let connectionRecord: DidCommConnectionRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('OutOfBand REST Agent Test Alice', 3014)
@@ -50,8 +51,8 @@ describe('OutOfBandController', () => {
 
   describe('Get all out of band records', () => {
     test('should return all out of band records', async () => {
-      const getAllSpy = spy(bobAgent.oob, 'getAll')
-      const getResult = (): Promise<OutOfBandRecord[]> => getAllSpy.firstCall.returnValue
+      const getAllSpy = spy(bobAgent.didcomm.oob, 'getAll')
+      const getResult = (): Promise<DidCommOutOfBandRecord[]> => getAllSpy.firstCall.returnValue
 
       const response = await request(app).get('/v1/oob')
       const result = await getResult()
@@ -60,7 +61,7 @@ describe('OutOfBandController', () => {
       expect(response.body).to.deep.equal(result.map(objectToJson))
     })
     test('should return filtered out of band records if query is passed', async () => {
-      const getAllStub = stub(bobAgent.oob, 'getAll')
+      const getAllStub = stub(bobAgent.didcomm.oob, 'getAll')
       getAllStub.resolves([outOfBandRecord])
       const response = await request(app).get('/v1/oob?invitationId=aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa')
 
@@ -71,9 +72,9 @@ describe('OutOfBandController', () => {
 
   describe('Get out of band record by id', () => {
     test('should return out of band record with correct id', async () => {
-      const findByIdStub = stub(bobAgent.oob, 'findById')
+      const findByIdStub = stub(bobAgent.didcomm.oob, 'findById')
       findByIdStub.resolves(outOfBandRecord)
-      const getResult = (): Promise<OutOfBandRecord | null> => findByIdStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommOutOfBandRecord | null> => findByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/oob/${outOfBandRecord.id}`)
 
@@ -90,7 +91,7 @@ describe('OutOfBandController', () => {
 
   describe('Create out of band invitation', () => {
     test('should return out of band invitation', async () => {
-      const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
+      const createInvitationStub = stub(bobAgent.didcomm.oob, 'createInvitation')
       createInvitationStub.resolves(outOfBandRecord)
 
       const response = await request(app).post('/v1/oob/create-invitation')
@@ -101,7 +102,7 @@ describe('OutOfBandController', () => {
         JSON.parse(
           JSON.stringify({
             invitationUrl: outOfBandRecord.outOfBandInvitation.toUrl({
-              domain: bobAgent.config.endpoints[0],
+              domain: bobAgent.didcomm.config.endpoints?.[0] ?? '',
             }),
             invitation: outOfBandRecord.outOfBandInvitation.toJSON(),
             outOfBandRecord: outOfBandRecord.toJSON(),
@@ -110,7 +111,7 @@ describe('OutOfBandController', () => {
       )
     })
     test('should use parameters', async () => {
-      const createInvitationStub = stub(bobAgent.oob, 'createInvitation')
+      const createInvitationStub = stub(bobAgent.didcomm.oob, 'createInvitation')
       createInvitationStub.resolves(outOfBandRecord)
 
       // todo: add tests for routing param
@@ -134,7 +135,7 @@ describe('OutOfBandController', () => {
 
   describe('Create legacy invitation', () => {
     test('should return out of band invitation', async () => {
-      const createLegacyInvitation = stub(bobAgent.oob, 'createLegacyInvitation')
+      const createLegacyInvitation = stub(bobAgent.didcomm.oob, 'createLegacyInvitation')
       createLegacyInvitation.resolves({
         outOfBandRecord: outOfBandRecord,
         invitation: outOfBandLegacyInvitation,
@@ -148,11 +149,11 @@ describe('OutOfBandController', () => {
         JSON.parse(
           JSON.stringify({
             invitationUrl: outOfBandLegacyInvitation.toUrl({
-              domain: bobAgent.config.endpoints[0],
-              useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
+              domain: bobAgent.didcomm.config.endpoints?.[0] ?? '',
+              useDidSovPrefixWhereAllowed: bobAgent.didcomm.config.useDidSovPrefixWhereAllowed,
             }),
             invitation: outOfBandLegacyInvitation.toJSON({
-              useDidSovPrefixWhereAllowed: bobAgent.config.useDidSovPrefixWhereAllowed,
+              useDidSovPrefixWhereAllowed: bobAgent.didcomm.config.useDidSovPrefixWhereAllowed,
             }),
             outOfBandRecord: outOfBandRecord.toJSON(),
           })
@@ -160,7 +161,7 @@ describe('OutOfBandController', () => {
       )
     })
     test('should use parameters', async () => {
-      const createLegacyInvitationStub = stub(bobAgent.oob, 'createLegacyInvitation')
+      const createLegacyInvitationStub = stub(bobAgent.didcomm.oob, 'createLegacyInvitation')
       createLegacyInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         invitation: outOfBandLegacyInvitation,
@@ -186,7 +187,7 @@ describe('OutOfBandController', () => {
         '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
         '@type': 'https://didcomm.org/connections/1.x/invitation',
       },
-      AgentMessage
+      DidCommMessage
     )
 
     const inputParams = {
@@ -199,7 +200,10 @@ describe('OutOfBandController', () => {
     }
 
     test('should return out of band invitation', async () => {
-      const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
+      const createLegacyConnectionlessInvitationStub = stub(
+        bobAgent.didcomm.oob,
+        'createLegacyConnectionlessInvitation'
+      )
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
@@ -214,7 +218,10 @@ describe('OutOfBandController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
     test('should use parameters', async () => {
-      const createLegacyConnectionlessInvitationStub = stub(bobAgent.oob, 'createLegacyConnectionlessInvitation')
+      const createLegacyConnectionlessInvitationStub = stub(
+        bobAgent.didcomm.oob,
+        'createLegacyConnectionlessInvitation'
+      )
       createLegacyConnectionlessInvitationStub.resolves({
         message: msg,
         invitationUrl: 'https://example.com/invitation',
@@ -233,7 +240,7 @@ describe('OutOfBandController', () => {
 
   describe('Receive out of band invitation', () => {
     test('should return out of band invitation', async () => {
-      const receiveInvitationStub = stub(bobAgent.oob, 'receiveInvitation')
+      const receiveInvitationStub = stub(bobAgent.didcomm.oob, 'receiveInvitation')
       receiveInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -242,13 +249,13 @@ describe('OutOfBandController', () => {
 
       const response = await request(app)
         .post('/v1/oob/receive-invitation')
-        .send({ invitation: outOfBandRecord.outOfBandInvitation })
+        .send({ invitation: outOfBandRecord.outOfBandInvitation, label: 'Bob' })
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
     test('should use parameters', async () => {
-      const receiveInvitationStub = stub(bobAgent.oob, 'receiveInvitation')
+      const receiveInvitationStub = stub(bobAgent.didcomm.oob, 'receiveInvitation')
       receiveInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -286,14 +293,26 @@ describe('OutOfBandController', () => {
         )
       ).equals(true)
     })
+
+    test('should return 422 when label is omitted', async () => {
+      const receiveInvitationStub = stub(bobAgent.didcomm.oob, 'receiveInvitation')
+
+      const response = await request(app)
+        .post('/v1/oob/receive-invitation')
+        .send({ invitation: outOfBandRecord.outOfBandInvitation })
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(receiveInvitationStub.called).to.equal(false)
+    })
   })
 
   describe('Receive out of band implicit invitation', () => {
     const config: ReceiveOutOfBandImplicitInvitationConfig = {
       did: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
+      label: 'Bob',
     }
     test('should return out of band invitation', async () => {
-      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      const receiveImplicitInvitationStub = stub(bobAgent.didcomm.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -306,7 +325,7 @@ describe('OutOfBandController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
     test('should use parameters', async () => {
-      const receiveImplicitInvitationStub = stub(bobAgent.oob, 'receiveImplicitInvitation')
+      const receiveImplicitInvitationStub = stub(bobAgent.didcomm.oob, 'receiveImplicitInvitation')
       receiveImplicitInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -345,7 +364,7 @@ describe('OutOfBandController', () => {
 
   describe('Receive out of band invitation by url', () => {
     test('should return out of band invitation', async () => {
-      const receiveInvitationFromUrlStub = stub(bobAgent.oob, 'receiveInvitationFromUrl')
+      const receiveInvitationFromUrlStub = stub(bobAgent.didcomm.oob, 'receiveInvitationFromUrl')
       receiveInvitationFromUrlStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -354,13 +373,13 @@ describe('OutOfBandController', () => {
 
       const response = await request(app)
         .post('/v1/oob/receive-invitation-url')
-        .send({ invitationUrl: 'https://example.com/test' })
+        .send({ invitationUrl: 'https://example.com/test', label: 'Bob' })
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
     test('should use parameters', async () => {
-      const receiveInvitationFromUrlStub = stub(bobAgent.oob, 'receiveInvitationFromUrl')
+      const receiveInvitationFromUrlStub = stub(bobAgent.didcomm.oob, 'receiveInvitationFromUrl')
       receiveInvitationFromUrlStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -399,7 +418,7 @@ describe('OutOfBandController', () => {
 
   describe('Accept out of band invitation', () => {
     test('should return record from accepted invitation', async () => {
-      const acceptInvitationStub = stub(bobAgent.oob, 'acceptInvitation')
+      const acceptInvitationStub = stub(bobAgent.didcomm.oob, 'acceptInvitation')
       acceptInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -413,7 +432,8 @@ describe('OutOfBandController', () => {
         label: 'test',
         alias: 'test',
         imageUrl: 'test',
-        mediatorId: 'test',
+        timeoutMs: 15000,
+        ourDid: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
       }
 
       const response = await request(app)
@@ -424,7 +444,7 @@ describe('OutOfBandController', () => {
       expect(response.body).to.deep.equal(objectToJson(await getResult()))
     })
     test('should use parameters', async () => {
-      const acceptInvitationStub = stub(bobAgent.oob, 'acceptInvitation')
+      const acceptInvitationStub = stub(bobAgent.didcomm.oob, 'acceptInvitation')
       acceptInvitationStub.resolves({
         outOfBandRecord: outOfBandRecord,
         connectionRecord: connectionRecord,
@@ -437,7 +457,8 @@ describe('OutOfBandController', () => {
         label: 'test',
         alias: 'test',
         imageUrl: 'test',
-        mediatorId: 'test',
+        timeoutMs: 15000,
+        ourDid: 'did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL',
       }
 
       const response = await request(app)
@@ -450,7 +471,7 @@ describe('OutOfBandController', () => {
     test('should throw 404 if out of band record is not found', async () => {
       const response = await request(app)
         .post('/v1/oob/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/accept-invitation')
-        .send({})
+        .send({ label: 'test' })
 
       expect(response.statusCode).to.be.equal(404)
     })
@@ -458,7 +479,7 @@ describe('OutOfBandController', () => {
 
   describe('Delete out of band record', () => {
     test('should return 204 if record is successfully deleted', async () => {
-      const deleteByIdStub = stub(bobAgent.oob, 'deleteById')
+      const deleteByIdStub = stub(bobAgent.didcomm.oob, 'deleteById')
       deleteByIdStub.resolves()
 
       const response = await request(app).delete('/v1/oob/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa')
@@ -469,9 +490,9 @@ describe('OutOfBandController', () => {
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
+    await deleteAgentStore(bobAgent)
     app.close()
   })
 })

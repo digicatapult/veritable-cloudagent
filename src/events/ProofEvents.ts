@@ -1,11 +1,12 @@
-import { type Agent, type ProofStateChangedEvent, ProofEventTypes } from '@credo-ts/core'
+import type { Agent } from '@credo-ts/core'
+import { DidCommProofEventTypes, type DidCommProofStateChangedEvent } from '@credo-ts/didcomm'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const proofEvents = async (agent: Agent, config: ServerConfig) => {
-  agent.events.on(ProofEventTypes.ProofStateChanged, async (event: ProofStateChangedEvent) => {
+  agent.events.on(DidCommProofEventTypes.ProofStateChanged, async (event: DidCommProofStateChangedEvent) => {
     const record = event.payload.proofRecord
 
     // Noise reduction: filter out events where the proof state hasn't changed.

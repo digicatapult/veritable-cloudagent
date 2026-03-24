@@ -1,18 +1,15 @@
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 
+import { type AgentContext, EventEmitter, injectable, type Query } from '@credo-ts/core'
 import {
-  type AgentContext,
   type CreateProofRequestOptions,
-  EventEmitter,
-  type InboundMessageContext,
-  injectable,
-  ProofEventTypes,
-  ProofProtocol,
-  ProofsApi,
-  ProofState,
-  type ProofStateChangedEvent,
-  type Query,
-} from '@credo-ts/core'
+  type DidCommInboundMessageContext,
+  DidCommProofEventTypes,
+  type DidCommProofProtocol,
+  DidCommProofsApi,
+  DidCommProofState,
+  type DidCommProofStateChangedEvent,
+} from '@credo-ts/didcomm'
 
 import type { UUID } from '../../../controllers/types/index.js'
 import { BadRequest, NotFoundError } from '../../../error.js'
@@ -39,7 +36,7 @@ import {
 import { VerifiedDrpcRecord, VerifiedDrpcRepository } from '../repository/index.js'
 
 @injectable()
-export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
+export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   private config: VerifiedDrpcModuleConfig<PPs>
   private verifiedDrpcMessageRepository: VerifiedDrpcRepository
   private eventEmitter: EventEmitter
@@ -74,36 +71,47 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
   private async verifyConnection(
     agentContext: AgentContext,
     connectionId: UUID,
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]>,
+    proofOptions: CreateProofRequestOptions<PPs>,
     timeoutMs: number
   ) {
-    const proofsApi = agentContext.dependencyManager.resolve(ProofsApi) as ProofsApi<ProofProtocol[]>
+    const proofsApi = agentContext.dependencyManager.resolve(DidCommProofsApi) as DidCommProofsApi<PPs>
     const { id: proofRecordId } = await proofsApi.requestProof({ ...proofOptions, connectionId })
     await new Promise<void>((resolve, reject) => {
-      const proofFailed = () => {
-        this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
-        reject('Proof verification timed out')
+      let settled = false
+
+      const proofFailed = (error: Error) => {
+        if (settled) return
+        settled = true
+        clearTimeout(proofTimeout)
+        this.eventEmitter.off(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
+        reject(error)
       }
-      const proofTimeout = setTimeout(proofFailed, timeoutMs)
-      const onProofStateChanged = async ({ payload: { proofRecord } }: ProofStateChangedEvent) => {
+
+      const proofTimeout = setTimeout(() => {
+        proofFailed(new Error('Proof verification timed out'))
+      }, timeoutMs)
+
+      const onProofStateChanged = async ({ payload: { proofRecord } }: DidCommProofStateChangedEvent) => {
         if (proofRecord.id === proofRecordId) {
-          if (proofRecord.state === ProofState.Done) {
+          if (proofRecord.state === DidCommProofState.Done) {
+            if (settled) return
+            settled = true
             clearTimeout(proofTimeout)
-            this.eventEmitter.off(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+            this.eventEmitter.off(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
             resolve()
-          } else if (proofRecord.state === ProofState.Abandoned) {
-            proofFailed()
+          } else if (proofRecord.state === DidCommProofState.Abandoned) {
+            proofFailed(new Error('Proof verification abandoned'))
           }
         }
       }
-      this.eventEmitter.on(ProofEventTypes.ProofStateChanged, onProofStateChanged)
+      this.eventEmitter.on(DidCommProofEventTypes.ProofStateChanged, onProofStateChanged)
     })
   }
 
   public async verifyServer(
     agentContext: AgentContext,
     connectionId: UUID,
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]>,
+    proofOptions: CreateProofRequestOptions<PPs>,
     verifiedDrpcRecord: VerifiedDrpcRecord,
     timeoutMs: number = 5000
   ) {
@@ -120,7 +128,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
   public async verifyClient(
     agentContext: AgentContext,
     connectionId: UUID,
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]>,
+    proofOptions: CreateProofRequestOptions<PPs>,
     verifiedDrpcRecord: VerifiedDrpcRecord,
     timeoutMs: number = 5000
   ) {
@@ -192,7 +200,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
     }
   }
 
-  public async receiveResponse(messageContext: InboundMessageContext<VerifiedDrpcResponseMessage>) {
+  public async receiveResponse(messageContext: DidCommInboundMessageContext<VerifiedDrpcResponseMessage>) {
     const connection = messageContext.assertReadyConnection()
     const verifiedDrpcMessageRecord = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -213,7 +221,7 @@ export class VerifiedDrpcService<PPs extends ProofProtocol[]> {
     return verifiedDrpcMessageRecord
   }
 
-  public async receiveRequest(messageContext: InboundMessageContext<VerifiedDrpcRequestMessage>) {
+  public async receiveRequest(messageContext: DidCommInboundMessageContext<VerifiedDrpcRequestMessage>) {
     const connection = messageContext.assertReadyConnection()
     const record = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
