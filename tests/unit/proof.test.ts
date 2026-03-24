@@ -825,9 +825,7 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(400)
       expect(response.body.message).to.equal('Proof format hydration failed')
-      expect(response.body.details?.code).to.equal('proof_format_hydration_failed')
-      expect(response.body.details?.errors).to.be.an('array')
-      expect(response.body.details?.errors[0]).to.include(
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden."
       )
     })
@@ -926,9 +924,7 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(400)
       expect(response.body.message).to.equal('Proof format hydration failed')
-      expect(response.body.details?.code).to.equal('proof_format_hydration_failed')
-      expect(response.body.details?.errors).to.be.an('array')
-      expect(response.body.details?.errors[0]).to.include(
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be hidden. The proof request or credential requires this attribute to be revealed."
       )
     })

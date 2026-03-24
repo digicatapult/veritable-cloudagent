@@ -4,7 +4,7 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, InternalError, NotFoundError } from '../../../error.js'
 import { SchemaExample } from '../../examples.js'
 import type { AnonCredsSchemaResponse, DID, SchemaId, Version } from '../../types/index.js'
 
@@ -82,7 +82,10 @@ export class SchemaController {
     }
 
     if (error !== undefined || schema === undefined) {
-      throw new HttpResponse({ message: `something went wrong: schema may be undefined ${error}` })
+      throw new InternalError('schema resolution failed', {
+        schemaId,
+        resolutionError: error ?? 'unknown',
+      })
     }
 
     req.log.debug('schema %s has been found %j', schemaId, schema)
@@ -124,11 +127,20 @@ export class SchemaController {
     })
 
     if (schemaState.state === 'failed') {
-      throw new HttpResponse({ message: `schema registration failed: ${schemaState.reason}` })
+      throw new InternalError('schema registration failed', {
+        issuerId: schema.issuerId,
+        schemaName: schema.name,
+        schemaVersion: schema.version,
+        reason: schemaState.reason,
+      })
     }
 
     if (schemaState.state !== 'finished' || schemaState.schemaId === undefined || schemaState.schema === undefined) {
-      throw new HttpResponse({ message: `something went wrong creating schema: unknown. state ${schemaState.state}` })
+      throw new InternalError('schema registration returned invalid state', {
+        state: schemaState.state,
+        hasSchemaId: schemaState.schemaId !== undefined,
+        hasSchema: schemaState.schema !== undefined,
+      })
     }
 
     req.log.info('%s schema has been created %j', schemaState.schemaId, schemaState)

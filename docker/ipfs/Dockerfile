@@ -1,4 +1,4 @@
-FROM ipfs/kubo:v0.39.0
+FROM ipfs/kubo:v0.40.1
 
 # Enforce private network
 ENV LIBP2P_FORCE_PNET=1

@@ -4,7 +4,7 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, InternalError, NotFoundError } from '../../../error.js'
 import { DidRecordExample, DidStateExample } from '../../examples.js'
 import type {
   DID,
@@ -59,7 +59,10 @@ export class DidController extends Controller {
     const rejected = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason)
 
     if (rejected.length > 0) {
-      throw new Error(`${rejected.length} DIDs were rejected with Error: ${rejected[0]}`)
+      throw new InternalError('one or more DID resolutions failed', {
+        rejectedCount: rejected.length,
+        firstError: rejected[0] instanceof Error ? rejected[0].message : String(rejected[0]),
+      })
     }
     return fulfilled
   }
@@ -77,7 +80,9 @@ export class DidController extends Controller {
 
     req.log.info('retrieving DID document for %s', did)
     if (!resolveResult.didDocument) {
-      throw new NotFoundError('DID document not found')
+      throw new NotFoundError('DID document not found', {
+        did,
+      })
     }
 
     req.log.debug('returning DID document %j', resolveResult.didDocument.toJSON())

@@ -1,4 +1,4 @@
-import { Agent, utils } from '@credo-ts/core'
+import { Agent, RecordNotFoundError, utils } from '@credo-ts/core'
 import type { DrpcResponseObject } from '@credo-ts/drpc'
 import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
@@ -62,23 +62,25 @@ export class DrpcController extends Controller {
     @Path('connectionId') connectionId: UUID,
     @Body() requestOptions: DrpcRequestOptions,
     @Query('timeout') timeout = 5000
-  ): Promise<DrpcResponseObject | undefined> {
-    const responseListener = await this.agent.modules.drpc.sendRequest(connectionId, {
-      id: utils.uuid(),
-      ...requestOptions,
-    })
+  ): Promise<DrpcResponseObject> {
+    let responseListener: (timeout?: number) => Promise<unknown>
+    try {
+      responseListener = await this.agent.modules.drpc.sendRequest(connectionId, {
+        id: utils.uuid(),
+        ...requestOptions,
+      })
+    } catch (error) {
+      if (error instanceof RecordNotFoundError) {
+        throw new NotFoundError('connection not found', {
+          connectionId,
+        })
+      }
+      throw error
+    }
 
-    const response = await Promise.race([
-      responseListener(),
-      new Promise<never>((_, reject) =>
-        setTimeout(reject, timeout, new GatewayTimeout('Response from peer timed out'))
-      ),
-    ])
-
+    const response = await responseListener(timeout)
     if (response === undefined) {
-      req.log.warn('received %s from DRPC response listener', response)
-      this.setStatus(204)
-      return
+      throw new GatewayTimeout('Response from peer timed out')
     }
 
     let validatedResponse: DrpcResponseObject
@@ -86,7 +88,9 @@ export class DrpcController extends Controller {
       req.log.info('validating DRPC response %j', response)
       validatedResponse = rpcResponseParser.parse(response)
     } catch {
-      throw new BadGatewayError(`invalid response to RPC call`)
+      throw new BadGatewayError('invalid response to RPC call', {
+        method: requestOptions.method,
+      })
     }
 
     req.log.debug('returning validated response %j', validatedResponse)
@@ -100,7 +104,6 @@ export class DrpcController extends Controller {
    */
   @Post('/:requestId/response')
   @Response<NotFoundError>(404)
-  @Response<GatewayTimeout>(504)
   public async sendResponse(
     @Request() req: express.Request,
     @Path('requestId') requestId: UUID,

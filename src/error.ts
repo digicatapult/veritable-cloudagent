@@ -26,8 +26,8 @@ export class HttpResponse extends Error {
 }
 
 export class NotFoundError extends HttpResponse {
-  constructor(message = 'not found') {
-    super({ code: 404, message })
+  constructor(message = 'not found', details?: unknown) {
+    super({ code: 404, message, details })
   }
 }
 
@@ -44,63 +44,75 @@ export class UnprocessableEntityError extends HttpResponse {
 }
 
 export class GatewayTimeout extends HttpResponse {
-  constructor(message = 'gateway timeout') {
-    super({ code: 504, message })
+  constructor(message = 'gateway timeout', details?: unknown) {
+    super({ code: 504, message, details })
   }
 }
 
 export class BadGatewayError extends HttpResponse {
-  constructor(message = 'bad gateway error') {
-    super({ code: 502, message })
+  constructor(message = 'bad gateway error', details?: unknown) {
+    super({ code: 502, message, details })
   }
 }
 
 export class InternalError extends HttpResponse {
-  constructor(message = 'internal error') {
-    super({ code: 500, message })
+  constructor(message = 'internal error', details?: unknown) {
+    super({ code: 500, message, details })
   }
+}
+
+type ErrorBody = {
+  code: number
+  message: string
+  details?: unknown
+}
+
+const toErrorBody = (error: HttpResponse): ErrorBody => ({
+  code: error.code,
+  message: error.message,
+  ...(error.details !== undefined ? { details: error.details } : {}),
+})
+
+const normalizeError = (err: unknown): HttpResponse => {
+  if (err instanceof ValidateError) {
+    return new UnprocessableEntityError('Validation Failed', err.fields)
+  }
+
+  if (err instanceof HttpResponse) {
+    return err
+  }
+
+  if (isHttpError(err)) {
+    return new HttpResponse({
+      code: err.statusCode,
+      message: err.message,
+    })
+  }
+
+  if (err instanceof Error) {
+    return new InternalError(err.message)
+  }
+
+  return new InternalError('Unknown error')
 }
 
 export const errorHandler =
   (logger: Logger) =>
-  (err: unknown, req: ExRequest, res: ExResponse, next: NextFunction): void => {
-    if (err instanceof ValidateError) {
-      logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
-      res.status(422).json({
-        code: 422,
-        message: 'Validation Failed',
-        details: err?.fields,
-      })
-      return
+  (err: unknown, req: ExRequest, res: ExResponse, _next: NextFunction): void => {
+    const normalized = normalizeError(err)
+
+    if (normalized.code >= 500) {
+      logger.error(`Unexpected error thrown in handler: ${normalized.message}`)
+      if (err instanceof Error) {
+        logger.debug(`Stack: ${err.stack}`)
+      }
+    } else {
+      logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${normalized.message}`)
+      if (err instanceof ValidateError) {
+        logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
+      }
     }
 
-    if (err instanceof HttpResponse) {
-      logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${err.message}`)
-      res.status(err.code).json({
-        code: err.code,
-        message: err.message,
-        ...(err.details !== undefined ? { details: err.details } : {}),
-      })
-      return
-    }
-    // capture body parser errors
-    if (isHttpError(err)) {
-      logger.warn(`HTTPError in request for ${req.method} ${req.path}: ${err.message}`)
-      res.status(err.statusCode).json({
-        code: err.statusCode,
-        message: err.message,
-      })
-      return
-    }
-    if (err instanceof Error) {
-      logger.error(`Unexpected error thrown in handler: ${err.message}`)
-      logger.debug(`Stack: ${err.stack}`)
-      res.status(500).json({
-        code: 500,
-        message: err.message,
-      })
-      return
-    }
-
-    next(err)
+    res.status(normalized.code).json(toErrorBody(normalized))
+    return
   }

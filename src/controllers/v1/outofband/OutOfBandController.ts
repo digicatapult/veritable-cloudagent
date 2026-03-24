@@ -92,7 +92,9 @@ export class OutOfBandController extends Controller {
     const outOfBandRecord = await this.agent.didcomm.oob.findById(outOfBandId)
 
     if (!outOfBandRecord) {
-      throw new NotFoundError('OOB record not found')
+      throw new NotFoundError('OOB record not found', {
+        outOfBandId,
+      })
     }
 
     req.log.debug('returning OOB record %j', outOfBandRecord.toJSON())
@@ -205,7 +207,9 @@ export class OutOfBandController extends Controller {
       })
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('invitation not found')
+        throw new NotFoundError('invitation not found', {
+          recordId: config.recordId,
+        })
       }
       throw error
     }
@@ -341,7 +345,9 @@ export class OutOfBandController extends Controller {
       }
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('OOB invitation not found')
+        throw new NotFoundError('OOB invitation not found', {
+          outOfBandId,
+        })
       }
       throw error
     }
@@ -362,7 +368,9 @@ export class OutOfBandController extends Controller {
       await this.agent.didcomm.oob.deleteById(outOfBandId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('OOB record not found')
+        throw new NotFoundError('OOB record not found', {
+          outOfBandId,
+        })
       }
       throw error
     }

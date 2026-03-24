@@ -100,7 +100,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential record not found')
+        throw new NotFoundError('credential record not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -127,7 +129,9 @@ export class CredentialController extends Controller {
       return transformToCredentialFormatData(formatData)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('format data not found')
+        throw new NotFoundError('format data not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -148,7 +152,9 @@ export class CredentialController extends Controller {
       await this.agent.didcomm.credentials.deleteById(credentialRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential record not found')
+        throw new NotFoundError('credential record not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -163,7 +169,6 @@ export class CredentialController extends Controller {
    */
   @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
-  @Response<BadRequest>(400)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
@@ -180,7 +185,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('connection not found')
+        throw new NotFoundError('connection not found', {
+          connectionId: options.connectionId,
+        })
       }
       throw error
     }
@@ -252,7 +259,6 @@ export class CredentialController extends Controller {
    */
   @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/offer-credential')
-  @Response<BadRequest>(400)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {
@@ -264,7 +270,9 @@ export class CredentialController extends Controller {
     req.log.debug('checking if connection %s exists', options.connectionId)
     const connection = await this.agent.didcomm.connections.findById(options.connectionId)
     if (!connection) {
-      throw new NotFoundError('connection not found')
+      throw new NotFoundError('connection not found', {
+        connectionId: options.connectionId,
+      })
     }
 
     try {
@@ -274,9 +282,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(
-          `credential definition "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found`
-        )
+        throw new NotFoundError('credential definition not found', {
+          credentialDefinitionId: options.credentialFormats.anoncreds?.credentialDefinitionId,
+        })
       }
       throw error
     }
@@ -309,7 +317,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential offer not found')
+        throw new NotFoundError('credential offer not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -342,7 +352,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential request not found')
+        throw new NotFoundError('credential request not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -369,7 +381,9 @@ export class CredentialController extends Controller {
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential not found')
+        throw new NotFoundError('credential not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -403,7 +417,9 @@ export class CredentialController extends Controller {
       return problemReport.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential record not found')
+        throw new NotFoundError('credential record not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }

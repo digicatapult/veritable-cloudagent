@@ -51,6 +51,10 @@ describe('DidController', () => {
     test('should give 400 when createdLocally = false', async () => {
       const response = await request(app).get(`/v1/dids?createdLocally=false`)
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'can only list DIDs created locally',
+      })
     })
   })
 
@@ -83,6 +87,11 @@ describe('DidController', () => {
       const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
       expect(response.statusCode).to.equal(400)
+      expect(response.body.code).to.equal(400)
+      expect(response.body.message).to.equal('error importing DID')
+      expect(response.body.details.did).to.equal(importRequest.did)
+      expect(response.body.details.cause).to.be.a('string')
+      expect(response.body.details.cause.length).to.be.greaterThan(0)
     })
   })
 
@@ -127,6 +136,10 @@ describe('DidController', () => {
       }
       const response = await request(app).post(`/v1/dids/create`).send(createRequest)
       expect(response.statusCode).to.equal(400)
+      expect(response.body.code).to.equal(400)
+      expect(response.body.message).to.equal('error creating DID')
+      expect(response.body.details.reason).to.be.a('string')
+      expect(response.body.details.reason).to.include('foo')
     })
   })
 
