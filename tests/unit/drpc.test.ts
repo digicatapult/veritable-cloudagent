@@ -6,7 +6,8 @@ import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub, useFakeTimers, type SinonFakeTimers } from 'sinon'
 import request from 'supertest'
 
-import { DidCommConnectionRecord as ConnectionRecord } from '@credo-ts/didcomm'
+import { RecordNotFoundError } from '@credo-ts/core'
+import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import { NotFoundError } from '../../src/error.js'
@@ -15,7 +16,7 @@ import { deleteAgentStore, getTestAgent, getTestConnection, getTestServer } from
 describe('DrpcController', () => {
   let app: Server
   let agent: RestAgent
-  let connection: ConnectionRecord
+  let connection: DidCommConnectionRecord
   let clock: SinonFakeTimers
   let receiveHandler: DrpcReceiveHandler
 

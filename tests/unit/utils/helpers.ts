@@ -1,17 +1,17 @@
 import type { AnonCredsCredentialDefinition, AnonCredsSchema } from '@credo-ts/anoncreds'
 import { AskarStoreManager } from '@credo-ts/askar'
 import {
-  DidCommMessage as AgentMessage,
-  DidCommConnectionInvitationMessage as ConnectionInvitationMessage,
-  DidCommConnectionRecord as ConnectionRecord,
-  DidCommCredentialExchangeRecord as CredentialExchangeRecord,
-  DidCommDidExchangeRole as DidExchangeRole,
-  DidCommDidExchangeState as DidExchangeState,
-  DidCommOutOfBandInvitation as OutOfBandInvitation,
-  DidCommOutOfBandRecord as OutOfBandRecord,
-  DidCommProofExchangeRecord as ProofExchangeRecord,
-  DidCommTrustPingMessage as TrustPingMessage,
-  type DidCommConnectionRecordProps as ConnectionRecordProps,
+  DidCommConnectionInvitationMessage,
+  DidCommConnectionRecord,
+  DidCommCredentialExchangeRecord,
+  DidCommDidExchangeRole,
+  DidCommDidExchangeState,
+  DidCommMessage,
+  DidCommOutOfBandInvitation,
+  DidCommOutOfBandRecord,
+  DidCommProofExchangeRecord,
+  DidCommTrustPingMessage,
+  type DidCommConnectionRecordProps,
 } from '@credo-ts/didcomm'
 import type { Socket } from 'node:net'
 
@@ -160,7 +160,7 @@ export function getTestOutOfBandInvitation() {
       },
     ],
   }
-  return JsonTransformer.fromJSON(json, OutOfBandInvitation)
+  return JsonTransformer.fromJSON(json, DidCommOutOfBandInvitation)
 }
 
 export function getTestOutOfBandLegacyInvitation() {
@@ -173,7 +173,7 @@ export function getTestOutOfBandLegacyInvitation() {
     routingKeys: [],
     imageUrl: 'https://example.com/image-url',
   }
-  return JsonTransformer.fromJSON(json, ConnectionInvitationMessage)
+  return JsonTransformer.fromJSON(json, DidCommConnectionInvitationMessage)
 }
 
 export function getTestOutOfBandRecord() {
@@ -207,7 +207,7 @@ export function getTestOutOfBandRecord() {
     state: 'await-response',
     reusable: false,
   }
-  return JsonTransformer.fromJSON(json, OutOfBandRecord)
+  return JsonTransformer.fromJSON(json, DidCommOutOfBandRecord)
 }
 
 export function getTestCredential() {
@@ -217,7 +217,7 @@ export function getTestCredential() {
       state: 'proposal-sent',
       threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
     },
-    type: 'CredentialExchangeRecord',
+    type: 'DidCommCredentialExchangeRecord',
     id: '222222aa-aa22-42a2-aa22-222a2aa22222',
     createdAt: '2021-01-01T00:00:00.000Z',
     state: 'proposal-sent',
@@ -260,7 +260,7 @@ export function getTestCredential() {
     ],
   }
 
-  return JsonTransformer.fromJSON(json, CredentialExchangeRecord)
+  return JsonTransformer.fromJSON(json, DidCommCredentialExchangeRecord)
 }
 
 export function getCredentialFormatData() {
@@ -352,7 +352,7 @@ export function getTestOffer() {
         state: 'proposal-sent',
         threadId: '111111aa-aa11-41a1-aa11-111a1aa11111',
       },
-      type: 'CredentialExchangeRecord',
+      type: 'DidCommCredentialExchangeRecord',
       id: '222222aa-aa22-42a2-aa22-222a2aa22222',
       createdAt: '2021-01-01T00:00:00.000Z',
       state: 'proposal-sent',
@@ -397,8 +397,8 @@ export function getTestOffer() {
   }
 
   return {
-    message: JsonTransformer.fromJSON(json.message, AgentMessage),
-    credentialExchangeRecord: JsonTransformer.fromJSON(json.credentialExchangeRecord, CredentialExchangeRecord),
+    message: JsonTransformer.fromJSON(json.message, DidCommMessage),
+    credentialExchangeRecord: JsonTransformer.fromJSON(json.credentialExchangeRecord, DidCommCredentialExchangeRecord),
   }
 }
 
@@ -452,7 +452,7 @@ export function getTestProofResponse() {
     isVerified: true,
   }
 
-  return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+  return JsonTransformer.fromJSON(json, DidCommProofExchangeRecord)
 }
 
 export function getTestProof() {
@@ -502,20 +502,20 @@ export function getTestProof() {
       },
     },
   }
-  return JsonTransformer.fromJSON(json, ProofExchangeRecord)
+  return JsonTransformer.fromJSON(json, DidCommProofExchangeRecord)
 }
 
 export function getTestTrustPingMessage({
   id = '00000000-1111-4c47-8a5a-111111111111',
   comment = 'test-comment',
   responseRequested = true,
-}: Partial<TrustPingMessage> = {}) {
-  return new TrustPingMessage({ id, comment, responseRequested })
+}: Partial<DidCommTrustPingMessage> = {}) {
+  return new DidCommTrustPingMessage({ id, comment, responseRequested })
 }
 
 export function getTestConnection({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   did = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000',
   threadId = '33333333-3333-4c47-8a5a-333333333333',
@@ -523,8 +523,8 @@ export function getTestConnection({
   tags = {},
   theirLabel,
   theirDid = 'did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     invitationDid,
     threadId,
@@ -539,8 +539,8 @@ export function getTestConnection({
 
 // Test doesn't like object destructuring to blank theirDid value
 export function getTestConnectionNoTheirDid({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   did = 'did:key:z6MkpGuzuD38tpgZKPfmLmmD8R6gihP9KJhuopMu00000000',
   threadId = '33333333-3333-4c47-8a5a-333333333333',
@@ -548,8 +548,8 @@ export function getTestConnectionNoTheirDid({
   tags = {},
   theirLabel,
   theirDid = '',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     invitationDid,
     threadId,
@@ -564,8 +564,8 @@ export function getTestConnectionNoTheirDid({
 
 // Test doesn't like object destructuring to blank Did value
 export function getTestConnectionNoDid({
-  state = DidExchangeState.InvitationReceived,
-  role = DidExchangeRole.Requester,
+  state = DidCommDidExchangeState.InvitationReceived,
+  role = DidCommDidExchangeRole.Requester,
   id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
   did = '',
   threadId = '33333333-3333-4c47-8a5a-333333333333',
@@ -573,8 +573,8 @@ export function getTestConnectionNoDid({
   tags = {},
   theirLabel,
   theirDid = 'did:key:z6MkmTBHTWrvLPN8pBmUj7Ye5ww9GiacXCYMNVvpScSpf1DM',
-}: Partial<ConnectionRecordProps> = {}) {
-  return new ConnectionRecord({
+}: Partial<DidCommConnectionRecordProps> = {}) {
+  return new DidCommConnectionRecord({
     did,
     invitationDid,
     threadId,

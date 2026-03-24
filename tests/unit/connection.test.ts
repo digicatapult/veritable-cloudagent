@@ -4,11 +4,11 @@ import type { AddressInfo, Server } from 'node:net'
 import { restore as sinonRestore, stub } from 'sinon'
 
 import {
-  DidCommConnectionRepository as ConnectionRepository,
   DidCommConnectionEventTypes,
-  type DidCommConnectionRecord as ConnectionRecord,
-  type DidCommOutOfBandRecord as OutOfBandRecord,
-  type DidCommTrustPingMessage as TrustPingMessage,
+  DidCommConnectionRepository,
+  type DidCommConnectionRecord,
+  type DidCommOutOfBandRecord,
+  type DidCommTrustPingMessage,
 } from '@credo-ts/didcomm'
 import request from 'supertest'
 import type WebSocket from 'ws'
@@ -34,8 +34,8 @@ describe('ConnectionController', () => {
   let socket: WebSocket
   let aliceAgent: TestAgent
   let bobAgent: TestAgent
-  let connection: ConnectionRecord
-  let outOfBandRecord: OutOfBandRecord
+  let connection: DidCommConnectionRecord
+  let outOfBandRecord: DidCommOutOfBandRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3012)
@@ -56,7 +56,7 @@ describe('ConnectionController', () => {
       const sendPingStub = stub(bobAgent.didcomm.connections, 'sendPing')
       const message = getTestTrustPingMessage()
       sendPingStub.resolves(message)
-      const getResult = (): Promise<TrustPingMessage> => sendPingStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommTrustPingMessage> => sendPingStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/connections/${connection.id}/send-ping`)
 
@@ -68,7 +68,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections', () => {
     test('should return all connections', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -81,7 +81,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections by state', () => {
     test('should return all credentials by specified state', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -100,7 +100,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections by outOfBandId', () => {
     test('should return all credentials by specified outOfBandId', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -119,7 +119,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections by alias', () => {
     test('should return all credentials by specified alias', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -138,7 +138,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections by myDid', () => {
     test('should return all credentials by specified peer DID', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -157,7 +157,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections by theirDid', () => {
     test('should return all credentials by specified peer DID', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -176,7 +176,7 @@ describe('ConnectionController', () => {
 
   describe('Get all connections by theirLabel', () => {
     test('should return all credentials by specified peer label', async () => {
-      const connectionRepository = bobAgent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = bobAgent.dependencyManager.resolve(DidCommConnectionRepository)
       const findByQueryStub = stub(connectionRepository, 'findByQuery')
       findByQueryStub.resolves([connection])
 
@@ -197,7 +197,7 @@ describe('ConnectionController', () => {
     test('should return connection record', async () => {
       const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
       findByIdStub.resolves(connection)
-      const getResult = (): Promise<ConnectionRecord | null> => findByIdStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommConnectionRecord | null> => findByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/connections/${connection.id}`)
 
@@ -217,7 +217,7 @@ describe('ConnectionController', () => {
     test('should return accepted connection record', async () => {
       const acceptRequestStub = stub(bobAgent.didcomm.connections, 'acceptRequest')
       acceptRequestStub.resolves(connection)
-      const getResult = (): Promise<ConnectionRecord> => acceptRequestStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommConnectionRecord> => acceptRequestStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/connections/${connection.id}/accept-request`)
 
@@ -237,7 +237,7 @@ describe('ConnectionController', () => {
     test('should return accepted connection record', async () => {
       const acceptResponseStub = stub(bobAgent.didcomm.connections, 'acceptResponse')
       acceptResponseStub.resolves(connection)
-      const getResult = (): Promise<ConnectionRecord | null> => acceptResponseStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommConnectionRecord | null> => acceptResponseStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/connections/${connection.id}/accept-response`)
 

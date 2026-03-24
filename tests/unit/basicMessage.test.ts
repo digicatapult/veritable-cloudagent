@@ -4,8 +4,8 @@ import { restore as sinonRestore, spy } from 'sinon'
 
 import {
   DidCommBasicMessageEventTypes,
-  type DidCommBasicMessageRecord as BasicMessageRecord,
-  type DidCommConnectionRecord as ConnectionRecord,
+  type DidCommBasicMessageRecord,
+  type DidCommConnectionRecord,
 } from '@credo-ts/didcomm'
 import { AddressInfo, Server } from 'node:net'
 import request from 'supertest'
@@ -27,7 +27,7 @@ describe('BasicMessageController', () => {
   let socket: WebSocket
   let aliceAgent: TestAgent
   let bobAgent: TestAgent
-  let bobConnectionToAlice: ConnectionRecord
+  let bobConnectionToAlice: DidCommConnectionRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Basic Message REST Agent Test Alice', 3002)
@@ -91,7 +91,7 @@ describe('BasicMessageController', () => {
   describe('Get basic messages', () => {
     test('should return list of basic messages filtered by connection id', async () => {
       const findAllByQuerySpy = spy(bobAgent.didcomm.basicMessages, 'findAllByQuery')
-      const getResult = (): Promise<BasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
+      const getResult = (): Promise<DidCommBasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
 
       const response = await request(server).get(`/v1/basic-messages/${bobConnectionToAlice.id}`)
       const result = await getResult()

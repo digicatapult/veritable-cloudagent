@@ -1,18 +1,18 @@
-import type { AnonCredsDidCommCredentialFormat as AnonCredsCredentialFormat } from '@credo-ts/anoncreds'
+import type { AnonCredsDidCommCredentialFormat } from '@credo-ts/anoncreds'
 import { JsonTransformer } from '@credo-ts/core'
 import {
-  DidCommMessage as AgentMessage,
-  DidCommCredentialExchangeRecord as CredentialExchangeRecord,
-  DidCommCredentialPreviewAttribute as CredentialPreviewAttribute,
-  DidCommCredentialExchangeRepository as CredentialRepository,
-  DidCommCredentialRole as CredentialRole,
-  DidCommCredentialState as CredentialState,
   DidCommAutoAcceptCredential,
   DidCommCredentialEventTypes,
-  type DidCommConnectionRecord as ConnectionRecord,
-  type DidCommCredentialStateChangedEvent as CredentialStateChangedEvent,
+  DidCommCredentialExchangeRecord,
+  DidCommCredentialExchangeRepository,
+  DidCommCredentialPreviewAttribute,
+  DidCommCredentialRole,
+  DidCommCredentialState,
+  DidCommMessage,
+  type DidCommConnectionRecord,
+  type DidCommCredentialStateChangedEvent,
+  type DidCommOutOfBandRecord,
   type GetCredentialFormatDataReturn,
-  type DidCommOutOfBandRecord as OutOfBandRecord,
 } from '@credo-ts/didcomm'
 import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
@@ -47,14 +47,14 @@ describe('CredentialController', () => {
   let socket: WebSocket
   let aliceAgent: TestAgent
   let bobAgent: TestAgent
-  let testCredential: CredentialExchangeRecord
-  let testFormatData: GetCredentialFormatDataReturn<[AnonCredsCredentialFormat]>
+  let testCredential: DidCommCredentialExchangeRecord
+  let testFormatData: GetCredentialFormatDataReturn<[AnonCredsDidCommCredentialFormat]>
   let testOffer: {
-    message: AgentMessage
-    credentialExchangeRecord: CredentialExchangeRecord
+    message: DidCommMessage
+    credentialExchangeRecord: DidCommCredentialExchangeRecord
   }
-  let outOfBandRecord: OutOfBandRecord
-  let connection: ConnectionRecord
+  let outOfBandRecord: DidCommOutOfBandRecord
+  let connection: DidCommConnectionRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Credential REST Agent Test Alice', 3022)
@@ -62,7 +62,7 @@ describe('CredentialController', () => {
     app = await getTestServer(bobAgent)
     port = (app.address() as AddressInfo).port
 
-    testCredential = getTestCredential() as CredentialExchangeRecord
+    testCredential = getTestCredential() as DidCommCredentialExchangeRecord
     testFormatData = getCredentialFormatData()
     const helperOffer = getTestOffer()
     testOffer = {
@@ -80,7 +80,7 @@ describe('CredentialController', () => {
 
   describe('Get all credentials', () => {
     test('should return all credentials', async () => {
-      const credentialRepository = bobAgent.dependencyManager.resolve(CredentialRepository)
+      const credentialRepository = bobAgent.dependencyManager.resolve(DidCommCredentialExchangeRepository)
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
@@ -93,7 +93,7 @@ describe('CredentialController', () => {
 
   describe('Get all credentials by state', () => {
     test('should return all credentials by specified state', async () => {
-      const credentialRepository = bobAgent.dependencyManager.resolve(CredentialRepository)
+      const credentialRepository = bobAgent.dependencyManager.resolve(DidCommCredentialExchangeRepository)
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
@@ -112,7 +112,7 @@ describe('CredentialController', () => {
 
   describe('Get all credentials by threadId', () => {
     test('should return all credentials by specified threadId', async () => {
-      const credentialRepository = bobAgent.dependencyManager.resolve(CredentialRepository)
+      const credentialRepository = bobAgent.dependencyManager.resolve(DidCommCredentialExchangeRepository)
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
@@ -131,7 +131,7 @@ describe('CredentialController', () => {
 
   describe('Get all credentials by connectionId', () => {
     test('should return all credentials by connectionId', async () => {
-      const credentialRepository = bobAgent.dependencyManager.resolve(CredentialRepository)
+      const credentialRepository = bobAgent.dependencyManager.resolve(DidCommCredentialExchangeRepository)
       const findByQueryStub = stub(credentialRepository, 'findByQuery')
       findByQueryStub.resolves([testCredential])
 
@@ -153,7 +153,7 @@ describe('CredentialController', () => {
       const getByIdStub = stub(bobAgent.didcomm.credentials, 'getById')
       getByIdStub.resolves(testCredential)
 
-      const getResult = (): Promise<CredentialExchangeRecord> => {
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => {
         return getByIdStub.firstCall.returnValue
       }
 
@@ -203,7 +203,7 @@ describe('CredentialController', () => {
         proposal: {
           invalid: () => 'not-json-compatible',
         },
-      } as unknown as GetCredentialFormatDataReturn<[AnonCredsCredentialFormat]>)
+      } as unknown as GetCredentialFormatDataReturn<[AnonCredsDidCommCredentialFormat]>)
 
       const response = await request(app).get(`/v1/credentials/${testCredential.id}/format-data`)
 
@@ -223,7 +223,7 @@ describe('CredentialController', () => {
     test('should return credential record', async () => {
       const proposeCredentialStub = stub(bobAgent.didcomm.credentials, 'proposeCredential')
       proposeCredentialStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => proposeCredentialStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => proposeCredentialStub.firstCall.returnValue
 
       const proposalRequest: ProposeCredentialOptions = {
         connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
@@ -372,7 +372,7 @@ describe('CredentialController', () => {
     test('should return credential record', async () => {
       const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
       const proposalRequest: AcceptCredentialProposalOptions = {
         credentialFormats: {
           anoncreds: {
@@ -406,7 +406,7 @@ describe('CredentialController', () => {
     test('should work without optional parameters', async () => {
       const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
       //added proposal request - credentialFormats is required even if empty
       const proposalRequest = {
         credentialFormats: {},
@@ -450,18 +450,18 @@ describe('CredentialController', () => {
       )
 
       // Emit event
-      bobAgent.events.emit<CredentialStateChangedEvent>(bobAgent.context, {
+      bobAgent.events.emit<DidCommCredentialStateChangedEvent>(bobAgent.context, {
         type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
         payload: {
-          credentialExchangeRecord: new CredentialExchangeRecord({
+          credentialExchangeRecord: new DidCommCredentialExchangeRecord({
             protocolVersion: 'v1',
-            state: CredentialState.OfferSent,
+            state: DidCommCredentialState.OfferSent,
             threadId: 'thread-id',
             autoAcceptCredential: DidCommAutoAcceptCredential.ContentApproved,
             connectionId: 'connection-id',
             createdAt: now,
             credentialAttributes: [
-              new CredentialPreviewAttribute({
+              new DidCommCredentialPreviewAttribute({
                 name: 'name',
                 value: 'test',
               }),
@@ -478,9 +478,9 @@ describe('CredentialController', () => {
               revocationDate: now,
               comment: 'test',
             },
-            role: CredentialRole.Holder,
+            role: DidCommCredentialRole.Holder,
           }),
-          previousState: CredentialState.CredentialIssued,
+          previousState: DidCommCredentialState.CredentialIssued,
         },
       })
 
@@ -492,7 +492,7 @@ describe('CredentialController', () => {
         payload: {
           credentialExchangeRecord: {
             protocolVersion: 'v1',
-            state: CredentialState.OfferSent,
+            state: DidCommCredentialState.OfferSent,
             threadId: 'thread-id',
             autoAcceptCredential: DidCommAutoAcceptCredential.ContentApproved,
             connectionId: 'connection-id',
@@ -517,9 +517,9 @@ describe('CredentialController', () => {
               revocationDate: now.toISOString(),
               comment: 'test',
             },
-            role: CredentialRole.Holder,
+            role: DidCommCredentialRole.Holder,
           },
-          previousState: CredentialState.CredentialIssued,
+          previousState: DidCommCredentialState.CredentialIssued,
         },
         metadata: {
           contextCorrelationId: 'default',
@@ -532,8 +532,10 @@ describe('CredentialController', () => {
     test('should return single credential record with attached offer message', async () => {
       const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
-      const getResult = (): Promise<{ message: AgentMessage; credentialExchangeRecord: CredentialExchangeRecord }> =>
-        createOfferStub.firstCall.returnValue
+      const getResult = (): Promise<{
+        message: DidCommMessage
+        credentialExchangeRecord: DidCommCredentialExchangeRecord
+      }> => createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
         protocolVersion: 'v2',
@@ -630,8 +632,10 @@ describe('CredentialController', () => {
     test('should return single credential record with attached offer message', async () => {
       const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
-      const getResult = (): Promise<{ message: AgentMessage; credentialExchangeRecord: CredentialExchangeRecord }> =>
-        createOfferStub.firstCall.returnValue
+      const getResult = (): Promise<{
+        message: DidCommMessage
+        credentialExchangeRecord: DidCommCredentialExchangeRecord
+      }> => createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
         protocolVersion: 'v2',
@@ -681,8 +685,10 @@ describe('CredentialController', () => {
     test('should return single credential record with attached offer message', async () => {
       const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
       createOfferStub.resolves(testOffer)
-      const getResult = (): Promise<{ message: AgentMessage; credentialExchangeRecord: CredentialExchangeRecord }> =>
-        createOfferStub.firstCall.returnValue
+      const getResult = (): Promise<{
+        message: DidCommMessage
+        credentialExchangeRecord: DidCommCredentialExchangeRecord
+      }> => createOfferStub.firstCall.returnValue
 
       const createOfferRequest = {
         protocolVersion: 'v2',
@@ -713,7 +719,7 @@ describe('CredentialController', () => {
           '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
           '@type': 'https://didcomm.org/connections/1.x/invitation',
         },
-        AgentMessage
+        DidCommMessage
       )
 
       const inputParams = {
@@ -770,7 +776,7 @@ describe('CredentialController', () => {
       const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
       offerCredentialStub.resolves(testCredential)
 
-      const getResult = (): Promise<CredentialExchangeRecord> => offerCredentialStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => offerCredentialStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/credentials/offer-credential`).send(offerRequest)
       const result = await getResult()
@@ -880,7 +886,7 @@ describe('CredentialController', () => {
     test('should return credential record', async () => {
       const acceptOfferStub = stub(bobAgent.didcomm.credentials, 'acceptOffer')
       acceptOfferStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => acceptOfferStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptOfferStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-offer`)
       const result = await getResult()
@@ -901,7 +907,7 @@ describe('CredentialController', () => {
     test('should return credential record', async () => {
       const acceptRequestStub = stub(bobAgent.didcomm.credentials, 'acceptRequest')
       acceptRequestStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => acceptRequestStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptRequestStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-request`)
       const result = await getResult()
@@ -922,7 +928,7 @@ describe('CredentialController', () => {
     test('should return credential record', async () => {
       const acceptCredentialStub = stub(bobAgent.didcomm.credentials, 'acceptCredential')
       acceptCredentialStub.resolves(testCredential)
-      const getResult = (): Promise<CredentialExchangeRecord> => acceptCredentialStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptCredentialStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-credential`)
       const result = await getResult()
@@ -944,7 +950,7 @@ describe('CredentialController', () => {
       const problemRecordStub = stub(bobAgent.didcomm.credentials, 'sendProblemReport')
       problemRecordStub.resolves(testCredential)
 
-      const getResult = (): Promise<CredentialExchangeRecord> => problemRecordStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommCredentialExchangeRecord> => problemRecordStub.firstCall.returnValue
 
       const response = await request(app).post(`/v1/credentials/${testCredential.id}/send-problem-report`).send({
         description: 'some Error report',

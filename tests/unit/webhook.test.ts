@@ -4,16 +4,16 @@ import { after, before, describe, test } from 'mocha'
 import type { Server } from 'net'
 
 import {
-  DidCommCredentialExchangeRecord as CredentialExchangeRecord,
-  DidCommCredentialRole as CredentialRole,
-  DidCommCredentialState as CredentialState,
   DidCommCredentialEventTypes,
+  DidCommCredentialExchangeRecord,
+  DidCommCredentialRole,
+  DidCommCredentialState,
   DidCommProofEventTypes,
-  DidCommProofExchangeRecord as ProofExchangeRecord,
-  DidCommProofRole as ProofRole,
-  DidCommProofState as ProofState,
-  type DidCommCredentialStateChangedEvent as CredentialStateChangedEvent,
-  type DidCommProofStateChangedEvent as ProofStateChangedEvent,
+  DidCommProofExchangeRecord,
+  DidCommProofRole,
+  DidCommProofState,
+  type DidCommCredentialStateChangedEvent,
+  type DidCommProofStateChangedEvent,
 } from '@credo-ts/didcomm'
 
 import { setupServer } from '../../src/server.js'
@@ -90,15 +90,15 @@ describe('WebhookTests', () => {
   })
 
   test('should return a webhook event when credential state changed', async () => {
-    const credentialRecord = new CredentialExchangeRecord({
+    const credentialRecord = new DidCommCredentialExchangeRecord({
       id: 'testest',
-      state: CredentialState.OfferSent,
+      state: DidCommCredentialState.OfferSent,
       threadId: 'random',
       protocolVersion: 'v1',
-      role: CredentialRole.Holder,
+      role: DidCommCredentialRole.Holder,
     })
 
-    bobAgent.events.emit<CredentialStateChangedEvent>(bobAgent.context, {
+    bobAgent.events.emit<DidCommCredentialStateChangedEvent>(bobAgent.context, {
       type: DidCommCredentialEventTypes.DidCommCredentialStateChanged,
       payload: {
         previousState: null,
@@ -120,15 +120,15 @@ describe('WebhookTests', () => {
   })
 
   test('should return a webhook event when proof state changed', async () => {
-    const proofRecord = new ProofExchangeRecord({
+    const proofRecord = new DidCommProofExchangeRecord({
       id: 'testest',
       protocolVersion: 'v2',
-      state: ProofState.ProposalSent,
+      state: DidCommProofState.ProposalSent,
       threadId: 'random',
-      role: ProofRole.Prover,
+      role: DidCommProofRole.Prover,
     })
 
-    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+    bobAgent.events.emit<DidCommProofStateChangedEvent>(bobAgent.context, {
       type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
         previousState: null,
@@ -146,36 +146,36 @@ describe('WebhookTests', () => {
   })
 
   test('should NOT return a webhook event when proof state has NOT changed (noise reduction)', async () => {
-    const proofRecord = new ProofExchangeRecord({
+    const proofRecord = new DidCommProofExchangeRecord({
       id: 'noise-test',
       protocolVersion: 'v2',
-      state: ProofState.RequestReceived,
+      state: DidCommProofState.RequestReceived,
       threadId: 'noise-thread',
-      role: ProofRole.Prover,
+      role: DidCommProofRole.Prover,
     })
 
     // Emit event where previousState === state
-    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+    bobAgent.events.emit<DidCommProofStateChangedEvent>(bobAgent.context, {
       type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
-        previousState: ProofState.RequestReceived,
+        previousState: DidCommProofState.RequestReceived,
         proofRecord,
       },
     })
 
     // Emit a marker event (Valid Proof Change) to ensure async processing is done
-    const markerProofRecord = new ProofExchangeRecord({
+    const markerProofRecord = new DidCommProofExchangeRecord({
       id: 'marker-proof',
       protocolVersion: 'v2',
-      state: ProofState.PresentationSent,
+      state: DidCommProofState.PresentationSent,
       threadId: 'marker-thread',
-      role: ProofRole.Prover,
+      role: DidCommProofRole.Prover,
     })
 
-    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+    bobAgent.events.emit<DidCommProofStateChangedEvent>(bobAgent.context, {
       type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
-        previousState: ProofState.RequestReceived,
+        previousState: DidCommProofState.RequestReceived,
         proofRecord: markerProofRecord,
       },
     })
@@ -189,19 +189,19 @@ describe('WebhookTests', () => {
   })
 
   test('should return a webhook event when proof state HAS changed (positive noise reduction test)', async () => {
-    const proofRecord = new ProofExchangeRecord({
+    const proofRecord = new DidCommProofExchangeRecord({
       id: 'valid-change-test',
       protocolVersion: 'v2',
-      state: ProofState.PresentationSent,
+      state: DidCommProofState.PresentationSent,
       threadId: 'valid-thread',
-      role: ProofRole.Prover,
+      role: DidCommProofRole.Prover,
     })
 
     // Emit event where previousState !== state
-    bobAgent.events.emit<ProofStateChangedEvent>(bobAgent.context, {
+    bobAgent.events.emit<DidCommProofStateChangedEvent>(bobAgent.context, {
       type: DidCommProofEventTypes.ProofStateChanged,
       payload: {
-        previousState: ProofState.RequestReceived,
+        previousState: DidCommProofState.RequestReceived,
         proofRecord,
       },
     })
@@ -211,7 +211,7 @@ describe('WebhookTests', () => {
       (webhook) =>
         webhook.topic === 'proofs' &&
         webhook.body.id === 'valid-change-test' &&
-        webhook.body.state === ProofState.PresentationSent
+        webhook.body.state === DidCommProofState.PresentationSent
     )
 
     expect(webhook).to.not.equal(undefined)

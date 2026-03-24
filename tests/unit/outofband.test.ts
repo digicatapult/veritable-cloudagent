@@ -4,11 +4,11 @@ import { match, restore as sinonRestore, spy, stub } from 'sinon'
 
 import { JsonTransformer } from '@credo-ts/core'
 import {
-  DidCommMessage as AgentMessage,
-  type DidCommConnectionInvitationMessage as ConnectionInvitationMessage,
-  type DidCommConnectionRecord as ConnectionRecord,
-  type DidCommOutOfBandInvitation as OutOfBandInvitation,
-  type DidCommOutOfBandRecord as OutOfBandRecord,
+  DidCommMessage,
+  type DidCommConnectionInvitationMessage,
+  type DidCommConnectionRecord,
+  type DidCommOutOfBandInvitation,
+  type DidCommOutOfBandRecord,
   type ReceiveOutOfBandImplicitInvitationConfig,
 } from '@credo-ts/didcomm'
 import type { Server } from 'node:net'
@@ -30,10 +30,10 @@ describe('OutOfBandController', () => {
   let app: Server
   let aliceAgent: TestAgent
   let bobAgent: TestAgent
-  let outOfBandRecord: OutOfBandRecord
-  let outOfBandInvitation: OutOfBandInvitation
-  let outOfBandLegacyInvitation: ConnectionInvitationMessage
-  let connectionRecord: ConnectionRecord
+  let outOfBandRecord: DidCommOutOfBandRecord
+  let outOfBandInvitation: DidCommOutOfBandInvitation
+  let outOfBandLegacyInvitation: DidCommConnectionInvitationMessage
+  let connectionRecord: DidCommConnectionRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('OutOfBand REST Agent Test Alice', 3014)
@@ -52,7 +52,7 @@ describe('OutOfBandController', () => {
   describe('Get all out of band records', () => {
     test('should return all out of band records', async () => {
       const getAllSpy = spy(bobAgent.didcomm.oob, 'getAll')
-      const getResult = (): Promise<OutOfBandRecord[]> => getAllSpy.firstCall.returnValue
+      const getResult = (): Promise<DidCommOutOfBandRecord[]> => getAllSpy.firstCall.returnValue
 
       const response = await request(app).get('/v1/oob')
       const result = await getResult()
@@ -74,7 +74,7 @@ describe('OutOfBandController', () => {
     test('should return out of band record with correct id', async () => {
       const findByIdStub = stub(bobAgent.didcomm.oob, 'findById')
       findByIdStub.resolves(outOfBandRecord)
-      const getResult = (): Promise<OutOfBandRecord | null> => findByIdStub.firstCall.returnValue
+      const getResult = (): Promise<DidCommOutOfBandRecord | null> => findByIdStub.firstCall.returnValue
 
       const response = await request(app).get(`/v1/oob/${outOfBandRecord.id}`)
 
@@ -187,7 +187,7 @@ describe('OutOfBandController', () => {
         '@id': 'eac4ff4e-b4fb-4c1d-aef3-b29c89d1cc00',
         '@type': 'https://didcomm.org/connections/1.x/invitation',
       },
-      AgentMessage
+      DidCommMessage
     )
 
     const inputParams = {
