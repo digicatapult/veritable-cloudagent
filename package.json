@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.18.20",
+  "version": "0.18.21",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -24,6 +24,7 @@
   },
   "scripts": {
     "depcheck": "depcheck",
+    "setup:certs": "bash scripts/setup-certs.sh",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check": "npm run tsoa:build && tsc --noEmit",
