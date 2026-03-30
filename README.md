@@ -67,7 +67,7 @@ Bellow you will find commands for starting up the containers in docker (see the 
 This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Since `did:web` always [resolves to HTTPS](https://w3c-ccg.github.io/did-method-web/#read-resolve/), the server runs as HTTPS in dev mode. A local trusted certificate and key must be generated before it can be accessed in your browser.
 
 - Install [mkcert](https://github.com/FiloSottile/mkcert#installation).
-- Run the following command:
+- Run the following commands:
 
 ```bash
 npm run setup:certs
