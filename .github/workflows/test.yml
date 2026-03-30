@@ -60,11 +60,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libnss3-tools mkcert
       - name: Generate HTTPS certificates
-        run: |
-          mkcert -install
-          mkcert alice localhost
-          mkcert bob localhost
-          mkcert charlie localhost
+        run: npm run setup:certs
 
       - name: Set root CA path
         run: echo "NODE_EXTRA_CA_CERTS=$(mkcert -CAROOT)/rootCA.pem" >> $GITHUB_ENV
