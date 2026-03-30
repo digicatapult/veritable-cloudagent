@@ -24,7 +24,7 @@
   },
   "scripts": {
     "depcheck": "depcheck",
-    "setup:certs": "scripts/setup-certs.sh",
+    "setup:certs": "bash scripts/setup-certs.sh",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "check": "npm run tsoa:build && tsc --noEmit",
