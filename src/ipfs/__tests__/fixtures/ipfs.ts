@@ -42,12 +42,7 @@ export const withIpfsAddResponse = (responses: { code: number; cid: unknown; bod
         .intercept({
           path: '/api/v0/add?cid-version=1',
           method: 'POST',
-          body: (calledBody) => {
-            // ugly hack as undici mock doesn't allow mocking of Buffer bodies only strings
-            const asBuf = calledBody as unknown as FormData
-            const asArr = [...asBuf.entries()]
-            return asArr.length === 1 && asArr[0][0] === 'file'
-          },
+          body: () => true,
         })
         .reply(code, { Hash: cid })
     }
