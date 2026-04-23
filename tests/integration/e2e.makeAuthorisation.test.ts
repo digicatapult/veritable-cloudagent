@@ -26,7 +26,7 @@ describe('Register makeAuthorisation schema', function () {
       throw new Error(`Failed registering schema: ${res.status} ${text}`)
     }
 
-    const json = await res.json()
+    const json = (await res.json()) as { id: string }
     schemaId = json.id
 
     expect(schemaId).to.match(/^ipfs:\/\//)
