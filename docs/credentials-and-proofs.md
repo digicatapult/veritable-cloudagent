@@ -112,7 +112,8 @@ AnonCreds provide strong privacy guarantees. This flow requires registering Sche
 ### Prerequisites
 
 Before issuing, you must register a Schema and Credential Definition.
-See `scripts/register-schema.ts` for examples of how to perform this setup.
+For an end-to-end scripted demo setup, see
+[`veritable-cloudagent-demo`](https://github.com/digicatapult/veritable-cloudagent-demo).
 
 ### 1. Issuance (AnonCreds)
 

@@ -752,126 +752,17 @@ The proof must now be accepted by Bob - POST `http://localhost:3001/proofs/{proo
 ]
 ```
 
-## Registering Anoncred Schemas
+## Demo repository
 
-This project ships with a registration helper script that:
+The script-driven Alice/Bob/Charlie demonstration has moved to a dedicated repository:
 
-1. Registers a schema (from a JSON file under `scripts/schemas/<schemaFileName>.json`)
-2. Automatically (by default) registers or reuses a credential definition for that schema
-3. Prints the IDs to stdout (first line = schemaId, second line = credentialDefinitionId)
+- [veritable-cloudagent-demo](https://github.com/digicatapult/veritable-cloudagent-demo)
 
-### Script Location
+That repository contains:
 
-`scripts/register-schema.ts`
-
-### JSON Schema Definition Layout
-
-Each schema JSON file MUST contain at minimum:
-
-```json
-{
-  "name": "mod_make_authorisation",
-  "version": "1.0.0",
-  "attrNames": ["attr_one", "attr_two", "..."]
-}
-```
-
-The `issuerId` is NOT stored in the JSON file – it is injected at runtime.
-
-### Command Line Flags
-
-| Flag               | Alias | Required | Default                 | Description                             |
-| ------------------ | ----- | -------- | ----------------------- | --------------------------------------- |
-| `<schemaFileName>` | –     | Yes      | –                       | The base filename in `scripts/schemas/` |
-| `--issuer <did>`   | `-i`  | No       | `did:web:alice%3A8443`  | Explicit issuer DID                     |
-| `--base-url <url>` | `-b`  | No       | `http://localhost:3000` | REST base URL for the cloudagent        |
-| `--help`           | `-h`  | No       | –                       | Show usage                              |
-
-### Output Format
-
-Stdout lines:
-
-```bash
-<schemaId>
-<credentialDefinitionId>
-```
-
-### Examples
-
-Register the default Make Authorisation schema for Alice:
-
-```bash
-node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json
-```
-
-Explicit DID (if already known):
-
-```bash
-node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json \
-  --issuer did:web:bob%3A8443 \
-  --base-url http://localhost:3001
-```
-
-## Demoing
-
-In docker-compose-testnet.yml add `WEBHOOK_URL=http://host.docker.internal:3003` for Bob's cloudagent and `WEBHOOK_URL=http://host.docker.internal:3004` for Charlie's.
-
-Bring up testnet, have the certs etc ready
-
-```bash
-docker compose -f docker-compose-testnet.yml up --build -d
-```
-
-Connect peers
-
-```bash
-bash scripts/connection-setup.sh
-```
-
-Register schema
-
-```bash
-node --experimental-strip-types scripts/register-schema.ts makeAuthorisation.json
-```
-
-In a different terminal start up a server that listens for credentialEvents emitted by Bob and in another one Charlie's listener.
-(Make sure you have `tsx` installed.)
-
-```bash
-node bob-listener.js
-```
-
-```bash
-node charlie-listener.js
-```
-
-Then in your previous terminal you will issue credential from Alice to Bob. Bob will resolve the did that is present and will automatically connect to Charlie based on the did.
-
-```bash
-node --experimental-strip-types scripts/issue-credential.ts --cred-def-id < Paste cred def ID from schema registration >
-```
-
-You can then watch in the progression in the terminal window where your listeners are running.
-
-### Scripts run by the listeners
-
-The following scripts are run by the listeners
-
-```bash
-npx tsx scripts/maker-connect-to-oem.ts --credential-id < credential ID >
-```
-
-```bash
-npx tsx scripts/oem-accept-connection.ts --connection-id < connection ID >
-```
-
-```bash
-npx tsx scripts/maker-propose-proof-to-oem.ts --credential-id < credential ID > --connection-id < connection ID >
-```
-
-```bash
-npx tsx scripts/maker-respond-proof-request.ts --proof-id < proof ID >
-```
+- Demo listeners and orchestration scripts
+- Demo-focused Docker Compose setup
+- IPFS demo Dockerfiles and schema fixtures
 
 ## Credentials and Proofs
 

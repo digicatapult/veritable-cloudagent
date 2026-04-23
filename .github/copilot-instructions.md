@@ -62,7 +62,7 @@
 - **Build Output:** `build/` (compiled JS + auto-generated TSOA routes/swagger from controllers)
 - **Tests:** `tests/unit/`, `tests/integration/`, `tests/test.env`
 - **Samples:** `samples/` (sample agent configs, usage)
-- **Schema:** `scripts/schemas/makeAuthorisation.json` (example credential schema)
+- **Schema:** `tests/integration/fixtures/makeAuthorisation.json` (example credential schema fixture)
 - **Scripts:** `scripts/` (check-version.sh for CI version checks)
 - **Docker Compose:**
   - `docker-compose.yml` (single agent)

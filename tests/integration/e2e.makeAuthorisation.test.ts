@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import makerAuthorisationSchema from '../../scripts/schemas/makeAuthorisation.json' with { type: 'json' }
+import makerAuthorisationSchema from './fixtures/makeAuthorisation.json' with { type: 'json' }
 import { ALICE_BASE_URL, BOB_BASE_URL, ISSUER_DID_KEY } from './utils/fixtures.js'
 
 // This test validates the registration via API, then checks Bob (maker) can fetch the schema.
