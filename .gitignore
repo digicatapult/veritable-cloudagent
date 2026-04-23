@@ -4,6 +4,7 @@ node_modules/
 build
 public/dids
 src/routes/routes.ts
+certs/
 dist
 coverage
 .tsimp
