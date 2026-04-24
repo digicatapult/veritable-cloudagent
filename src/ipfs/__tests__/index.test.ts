@@ -10,7 +10,7 @@ const shortTimeoutMs = 1
 
 const stubHangingFetch = () => {
   // Simulate a fetch request that never resolves unless explicitly aborted.
-  stub(globalThis, 'fetch').callsFake((_request: URL | RequestInfo, init?: RequestInit) => {
+  stub(globalThis, 'fetch').callsFake((_request: Parameters<typeof fetch>[0], init?: RequestInit) => {
     return new Promise<Response>((_, reject) => {
       const rejectOnAbort = () => reject(init?.signal?.reason ?? new Error('The operation was aborted.'))
 
