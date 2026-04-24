@@ -1,13 +1,7 @@
 import { after, before } from 'mocha'
 import { Dispatcher, getGlobalDispatcher, MockAgent, setGlobalDispatcher } from 'undici'
 
-type IpfsMockResponse = {
-  code: number
-  body?: string | object | Buffer
-  delayMs?: number
-}
-
-export const withIpfsCatResponse = (responses: ({ cid: string } & IpfsMockResponse)[]) => {
+export const withIpfsCatResponse = (responses: { cid: string; code: number; body: string | object | Buffer }[]) => {
   const ipfsOrigin = `http://ipfs`
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent
@@ -18,17 +12,13 @@ export const withIpfsCatResponse = (responses: ({ cid: string } & IpfsMockRespon
     setGlobalDispatcher(mockAgent)
     const mockIpfs = mockAgent.get(`http://ipfs`)
 
-    for (const { cid, code, body, delayMs } of responses) {
-      const scope = mockIpfs
+    for (const { cid, code, body } of responses) {
+      mockIpfs
         .intercept({
           path: `/api/v0/cat?arg=${cid}`,
           method: 'POST',
         })
-        .reply(code, body ?? '')
-
-      if (delayMs !== undefined) {
-        scope.delay(delayMs)
-      }
+        .reply(code, body)
     }
   })
 
@@ -43,7 +33,7 @@ export const withIpfsCatResponse = (responses: ({ cid: string } & IpfsMockRespon
 
   return { ipfsOrigin }
 }
-export const withIpfsAddResponse = (responses: ({ cid: unknown } & IpfsMockResponse)[]) => {
+export const withIpfsAddResponse = (responses: { code: number; cid: unknown; body: Buffer }[]) => {
   const ipfsOrigin = `http://ipfs`
   let originalDispatcher: Dispatcher
   let mockAgent: MockAgent
@@ -54,8 +44,8 @@ export const withIpfsAddResponse = (responses: ({ cid: unknown } & IpfsMockRespo
     setGlobalDispatcher(mockAgent)
     const mockIpfs = mockAgent.get(`http://ipfs`)
 
-    for (const { code, cid, body, delayMs } of responses) {
-      const scope = mockIpfs
+    for (const { code, cid } of responses) {
+      mockIpfs
         .intercept({
           path: '/api/v0/add?cid-version=1',
           method: 'POST',
@@ -66,11 +56,7 @@ export const withIpfsAddResponse = (responses: ({ cid: unknown } & IpfsMockRespo
             return asArr.length === 1 && asArr[0][0] === 'file'
           },
         })
-        .reply(code, body ?? { Hash: cid })
-
-      if (delayMs !== undefined) {
-        scope.delay(delayMs)
-      }
+        .reply(code, { Hash: cid })
     }
   })
 
