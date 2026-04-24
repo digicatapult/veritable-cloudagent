@@ -8,6 +8,7 @@ export const withIpfsCatResponse = (responses: { cid: string; code: number; body
   before(function () {
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
+    mockAgent.disableNetConnect()
     setGlobalDispatcher(mockAgent)
     const mockIpfs = mockAgent.get(`http://ipfs`)
 
@@ -21,8 +22,13 @@ export const withIpfsCatResponse = (responses: { cid: string; code: number; body
     }
   })
 
-  after(function () {
-    setGlobalDispatcher(originalDispatcher)
+  after(async function () {
+    try {
+      mockAgent.assertNoPendingInterceptors()
+    } finally {
+      setGlobalDispatcher(originalDispatcher)
+      await mockAgent.close()
+    }
   })
 
   return { ipfsOrigin }
@@ -34,6 +40,7 @@ export const withIpfsAddResponse = (responses: { code: number; cid: unknown; bod
   before(function () {
     originalDispatcher = getGlobalDispatcher()
     mockAgent = new MockAgent()
+    mockAgent.disableNetConnect()
     setGlobalDispatcher(mockAgent)
     const mockIpfs = mockAgent.get(`http://ipfs`)
 
@@ -53,8 +60,13 @@ export const withIpfsAddResponse = (responses: { code: number; cid: unknown; bod
     }
   })
 
-  after(function () {
-    setGlobalDispatcher(originalDispatcher)
+  after(async function () {
+    try {
+      mockAgent.assertNoPendingInterceptors()
+    } finally {
+      setGlobalDispatcher(originalDispatcher)
+      await mockAgent.close()
+    }
   })
 
   return { ipfsOrigin }

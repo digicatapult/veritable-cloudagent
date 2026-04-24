@@ -5,6 +5,7 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
+    "lib": ["ESNext"],
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "sourceMap": true,

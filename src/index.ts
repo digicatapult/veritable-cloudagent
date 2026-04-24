@@ -102,7 +102,7 @@ const socketServer = new WebSocketServer({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
 const interval = setInterval(() => {
   logger.trace(`WebSocket PING (socket count = ${socketServer.clients.size})`)
-  socketServer.clients.forEach((ws) => {
+  socketServer.clients.forEach((ws: WebSocket) => {
     ws.once('pong', () => {
       logger.debug('WebSocket PONG')
       zombieSockets.delete(ws)
