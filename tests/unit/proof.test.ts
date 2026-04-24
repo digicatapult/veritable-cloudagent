@@ -1,10 +1,10 @@
-import type { AnonCredsCredentialInfo, AnonCredsProofRequest } from '@credo-ts/anoncreds'
+import type { AnonCredsCredentialInfo, AnonCredsProof, AnonCredsProofRequest } from '@credo-ts/anoncreds'
 import type { AddressInfo, Server } from 'node:net'
 import type {
   AcceptProofProposalOptions,
-  AnonCredsPresentation,
   CreateProofRequestOptions,
   MatchingCredentialsResponse,
+  NegotiateProofProposalOptions,
   ProofFormats,
   ProposeProofOptions,
   RequestProofOptions,
@@ -196,7 +196,7 @@ describe('ProofController', () => {
               predicates: {},
             },
             identifiers: [],
-          } as unknown as AnonCredsPresentation,
+          } as unknown as AnonCredsProof,
         },
       }
 
@@ -349,6 +349,163 @@ describe('ProofController', () => {
 
       expect(response.statusCode).to.be.equal(404)
     })
+
+    test('should pass through presentation exchange accept-proposal options', async () => {
+      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      acceptProposalStub.resolves(testProof)
+
+      const body: AcceptProofProposalOptions = {
+        proofFormats: {
+          anoncreds: {
+            name: 'proof-name',
+            version: '1.0',
+          },
+          presentationExchange: {
+            options: {
+              challenge: 'challenge',
+              domain: 'domain',
+            },
+          },
+        },
+        comment: 'string',
+      }
+
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/accept-proposal`).send(body)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        acceptProposalStub.calledWithMatch({
+          proofRecordId: testProof.id,
+          ...body,
+        })
+      ).equals(true)
+    })
+
+    test('should reject anoncreds request-stage payload in accept-proposal (422)', async () => {
+      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      acceptProposalStub.resolves(testProof)
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProof.id}/accept-proposal`)
+        .send({
+          proofFormats: {
+            anoncreds: {
+              name: 'proof-name',
+              version: '1.0',
+              requested_attributes: {
+                additionalProp1: {
+                  name: 'string',
+                },
+              },
+            },
+          },
+        })
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(acceptProposalStub.called).equals(false)
+    })
+
+    test('should reject presentation definition in accept-proposal (422)', async () => {
+      const acceptProposalStub = stub(bobAgent.proofs, 'acceptProposal')
+      acceptProposalStub.resolves(testProof)
+
+      const response = await request(app)
+        .post(`/v1/proofs/${testProof.id}/accept-proposal`)
+        .send({
+          proofFormats: {
+            presentationExchange: {
+              presentationDefinition: {
+                id: 'pd-id',
+                input_descriptors: [],
+              },
+            },
+          },
+        })
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(acceptProposalStub.called).equals(false)
+    })
+  })
+
+  describe('Negotiate proof proposal', () => {
+    test('should transform anoncreds restrictions and return proof record', async () => {
+      const negotiateProposalStub = stub(bobAgent.proofs, 'negotiateProposal')
+      negotiateProposalStub.resolves(testProof)
+      const getResult = (): Promise<ProofExchangeRecord> => negotiateProposalStub.firstCall.returnValue
+
+      const body: NegotiateProofProposalOptions = {
+        proofFormats: {
+          anoncreds: {
+            name: 'string',
+            version: '1.0',
+            requested_attributes: {
+              additionalProp1: {
+                name: 'string',
+                restrictions: [
+                  {
+                    attributeMarkers: { a: true, b: false },
+                    attributeValues: { c: 'd', e: 'f' },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/negotiate-proposal`).send(body)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(response.body).to.deep.equal(objectToJson(await getResult()))
+      expect(
+        negotiateProposalStub.calledWithMatch({
+          proofRecordId: testProof.id,
+          proofFormats: {
+            anoncreds: {
+              name: 'string',
+              version: '1.0',
+              requested_attributes: {
+                additionalProp1: {
+                  name: 'string',
+                  restrictions: [
+                    {
+                      'attr::a::marker': '1',
+                      'attr::b::marker': '0',
+                      'attr::c::value': 'd',
+                      'attr::e::value': 'f',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        })
+      ).equals(true)
+    })
+
+    test('should reject presentation exchange proof format with unexpected top-level keys (422)', async () => {
+      const negotiateProposalStub = stub(bobAgent.proofs, 'negotiateProposal')
+      negotiateProposalStub.resolves(testProof)
+
+      // Intentionally bypass DTO typing here: we want to test runtime validation
+      // when a client sends unexpected PEX keys.
+      const body = {
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'test-id',
+              input_descriptors: [],
+              unexpected: 'nope',
+            },
+          },
+        },
+      } as unknown as NegotiateProofProposalOptions
+
+      const response = await request(app).post(`/v1/proofs/${testProof.id}/negotiate-proposal`).send(body)
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(negotiateProposalStub.called).to.equal(false)
+    })
   })
 
   describe('Request out of band proof', () => {
@@ -470,6 +627,66 @@ describe('ProofController', () => {
       const response = await request(app).post(`/v1/proofs/request-proof`).send(requestProofRequest)
 
       expect(response.statusCode).to.be.equal(404)
+    })
+
+    test('should pass through presentation exchange proof format', async () => {
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+
+      const requestWithPex: RequestProofOptions = {
+        connectionId: 'aaaaaaaa-aaaa-4aaa-aaaa-000000000000',
+        protocolVersion: 'v2',
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'test-id',
+              input_descriptors: [],
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/proofs/request-proof`).send(requestWithPex)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        requestProofStub.calledWithMatch({
+          proofFormats: {
+            presentationExchange: {
+              presentationDefinition: {
+                id: 'test-id',
+                input_descriptors: [],
+              },
+            },
+          },
+        })
+      ).to.equal(true)
+    })
+
+    test('should reject presentation exchange proof format with unexpected top-level keys (422)', async () => {
+      const requestProofStub = stub(bobAgent.proofs, 'requestProof')
+      requestProofStub.resolves(testProof)
+
+      // Intentionally bypass DTO typing here: we want to test runtime validation
+      // when a client sends unexpected PEX keys.
+      const requestWithPex = {
+        connectionId: 'aaaaaaaa-aaaa-4aaa-aaaa-000000000000',
+        protocolVersion: 'v2',
+        proofFormats: {
+          presentationExchange: {
+            presentationDefinition: {
+              id: 'test-id',
+              input_descriptors: [],
+              unexpected: 'nope',
+            },
+          },
+        },
+      } as unknown as RequestProofOptions
+
+      const response = await request(app).post(`/v1/proofs/request-proof`).send(requestWithPex)
+
+      expect(response.statusCode).to.be.equal(422)
+      expect(requestProofStub.called).to.equal(false)
     })
   })
 
@@ -605,7 +822,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden."
       )
     })
@@ -654,7 +872,7 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.include(
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-2)'
       )
     })
@@ -703,7 +921,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be hidden. The proof request or credential requires this attribute to be revealed."
       )
     })
@@ -752,8 +971,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr1 (credId: cred-not-found)'
       )
     })
@@ -802,8 +1021,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: nonExistentAttr (credId: cred-1)'
       )
     })
@@ -868,8 +1087,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-wrong)'
       )
     })
@@ -935,8 +1154,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested predicates: pred1 (credId: cred-not-found)'
       )
     })
@@ -987,8 +1206,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested predicates: nonExistentPred (credId: cred-1)'
       )
     })
@@ -1193,8 +1412,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no available credentials found')
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include('no available credentials found')
     })
 
     test('should reject simplified format with credentialInfo in attributes (security check)', async () => {

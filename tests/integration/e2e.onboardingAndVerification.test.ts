@@ -1,20 +1,30 @@
-import type { ProofExchangeRecordProps } from '@credo-ts/core'
 import { expect } from 'chai'
-import { afterEach, beforeEach, describe, it } from 'mocha'
+import { beforeEach, describe, it } from 'mocha'
 import request from 'supertest'
 import type { CredentialDefinitionId, SchemaId, UUID } from '../../src/controllers/types/index.js'
+import {
+  ALICE_BASE_URL,
+  BOB_BASE_URL,
+  CHARLIE_BASE_URL,
+  ISSUER_DID_KEY,
+  OOB_INVITATION_PAYLOAD,
+} from './utils/fixtures.js'
+import {
+  acceptCredential,
+  acceptPresentation,
+  waitForConnectionByOob,
+  waitForCredentialRecord,
+  waitForCredentialState,
+  waitForProofRecordByThread,
+  waitForProofState,
+} from './utils/helpers.js'
 
-const ISSUER_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const HOLDER_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
-const VERIFIER_BASE_URL = process.env.CHARLIE_BASE_URL ?? 'http://localhost:3002'
-
-describe('Onboarding & Verification flow', function () {
+describe('Onboarding & Verification flow with AnonCreds', function () {
   this.timeout(60000)
-
-  const issuerClient = request(ISSUER_BASE_URL)
-  const holderClient = request(HOLDER_BASE_URL)
-  const verifierClient = request(VERIFIER_BASE_URL)
-  const issuerId = 'did:key:z6MkrDn3MqmedCnj4UPBwZ7nLTBmK9T9BwB3njFmQRUqoFn1'
+  const issuerClient = request(ALICE_BASE_URL)
+  const holderClient = request(BOB_BASE_URL)
+  const verifierClient = request(CHARLIE_BASE_URL)
+  const issuerId = ISSUER_DID_KEY
   let schemaId: SchemaId
   let credentialDefinitionId: CredentialDefinitionId
   let issuerToHolderOobRecordId: UUID
@@ -28,22 +38,14 @@ describe('Onboarding & Verification flow', function () {
   let issuerCredentialRecordId: UUID
   let holderCredentialRecordId: UUID
   let holderProofRequestId: UUID
+  let verifierProofRequestId: UUID
   let threadIdOnVerifier: UUID
-  let failed = false
 
   beforeEach(function (done) {
-    // abort remaining tests in suite if one fails
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    failed && this.skip()
     // pause between tests/retries to allow state to resolve on peers
     setTimeout(function () {
       done()
     }, 200)
-  })
-
-  afterEach(function () {
-    // flag to track suite failure
-    failed = failed || this?.currentTest?.state === 'failed'
   })
 
   it('should allow an Issuer to create a Schema', async function () {
@@ -82,15 +84,9 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow an Issuer to create an OOB invitation', async function () {
-    const createInvitationPayload = {
-      handshake: true,
-      handshakeProtocols: ['https://didcomm.org/connections/1.x'],
-      autoAcceptConnection: true,
-    }
-
     const response = await issuerClient
       .post('/v1/oob/create-invitation')
-      .send(createInvitationPayload)
+      .send(OOB_INVITATION_PAYLOAD)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -123,20 +119,8 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should create a connection record on the Issuer', async function () {
-    let body: { id: string }[] = []
-    for (let i = 0; i < 10; i++) {
-      const response = await issuerClient
-        .get('/v1/connections')
-        .query({ outOfBandId: issuerToHolderOobRecordId })
-        .expect('Content-Type', /json/)
-        .expect(200)
-      body = response.body
-      if (body.length > 0) break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-
-    expect(body).to.be.an('array').that.has.length(1)
-    issuerToHolderConnectionRecordId = body[0].id
+    issuerToHolderConnectionRecordId = await waitForConnectionByOob(issuerClient, issuerToHolderOobRecordId)
+    expect(issuerToHolderConnectionRecordId).to.be.a('string')
   })
 
   it('should allow an Issuer to offer credentials to a Holder', async function () {
@@ -169,7 +153,7 @@ describe('Onboarding & Verification flow', function () {
           ],
         },
       },
-      autoAcceptCredential: 'always',
+      autoAcceptCredential: 'never',
       connectionId: issuerToHolderConnectionRecordId,
     }
 
@@ -185,25 +169,13 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should allow the Holder to fetch a record of the credential offered', async function () {
-    let body: { id: string; state: string }[] = []
-    for (let i = 0; i < 10; i++) {
-      const response = await holderClient
-        .get('/v1/credentials')
-        .query({ connectionId: holderToIssuerConnectionRecordId })
-        .expect('Content-Type', /json/)
-        .expect(200)
-      body = response.body
-      if (body.length > 0 && body[0].state === 'offer-received') break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-
-    expect(body).to.be.an('array').that.has.length(1)
-    expect(body[0]).to.have.property('state', 'offer-received')
-    holderCredentialRecordId = body[0].id
+    const record = await waitForCredentialRecord(holderClient, holderToIssuerConnectionRecordId, 'offer-received')
+    expect(record).to.have.property('state', 'offer-received')
+    holderCredentialRecordId = record.id
   })
 
   it('should allow the Holder to accept the credential offered', async function () {
-    const acceptCredentialOfferPayload = { autoAcceptCredential: 'always' }
+    const acceptCredentialOfferPayload = { autoAcceptCredential: 'never' }
 
     const response = await holderClient
       .post(`/v1/credentials/${holderCredentialRecordId}/accept-offer`)
@@ -214,48 +186,34 @@ describe('Onboarding & Verification flow', function () {
     expect(response.body).to.have.property('state', 'request-sent')
   })
 
+  it('should allow the Issuer to accept the credential request', async function () {
+    const record = await waitForCredentialRecord(issuerClient, issuerToHolderConnectionRecordId, 'request-received')
+    await issuerClient.post(`/v1/credentials/${record.id}/accept-request`).send({}).expect(200)
+  })
+
+  it('should allow the Holder to accept the issued credential', async function () {
+    const record = await waitForCredentialRecord(holderClient, holderToIssuerConnectionRecordId, 'credential-received')
+    holderCredentialRecordId = record.id
+
+    await acceptCredential(holderClient, holderCredentialRecordId)
+  })
+
   it('should let the Issuer see the credential as issued', async function () {
-    let body: { state: string } = { state: '' }
-    for (let i = 0; i < 10; i++) {
-      const response = await issuerClient
-        .get(`/v1/credentials/${issuerCredentialRecordId}`)
-        .expect('Content-Type', /json/)
-        .expect(200)
-      body = response.body
-      if (body.state === 'done') break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-    expect(body).to.have.property('state', 'done')
+    const state = await waitForCredentialState(issuerClient, issuerCredentialRecordId, 'done')
+    expect(state).to.equal('done')
   })
 
   it('should let the Holder see the credential as issued', async function () {
-    let body: { id: string; state: string }[] = []
-    for (let i = 0; i < 10; i++) {
-      const response = await holderClient
-        .get('/v1/credentials')
-        .query({ connectionId: holderToIssuerConnectionRecordId })
-        .expect('Content-Type', /json/)
-        .expect(200)
-      body = response.body
-      if (body.length > 0 && body[0].state === 'done') break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-    expect(body).to.be.an('array').that.has.length(1)
-    expect(body[0]).to.have.property('state', 'done')
-    holderCredentialRecordId = body[0].id
+    const record = await waitForCredentialRecord(holderClient, holderToIssuerConnectionRecordId, 'done')
+    expect(record).to.have.property('state', 'done')
+    holderCredentialRecordId = record.id
   })
 
   //   ===================== following the connection and credential issuance =============================
   it('should allow a Verifier to create an OOB invitation', async function () {
-    const createInvitationPayload = {
-      handshake: true,
-      handshakeProtocols: ['https://didcomm.org/connections/1.x'],
-      autoAcceptConnection: true,
-    }
-
     const response = await verifierClient
       .post('/v1/oob/create-invitation')
-      .send(createInvitationPayload)
+      .send(OOB_INVITATION_PAYLOAD)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -288,20 +246,8 @@ describe('Onboarding & Verification flow', function () {
   })
 
   it('should create a connection record on the Verifier', async function () {
-    let body: { id: string }[] = []
-    for (let i = 0; i < 10; i++) {
-      const response = await verifierClient
-        .get('/v1/connections')
-        .query({ outOfBandId: verifierToHolderOobRecordId })
-        .expect('Content-Type', /json/)
-        .expect(200)
-      body = response.body
-      if (body.length > 0) break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-
-    expect(body).to.be.an('array').that.has.length(1)
-    verifierToHolderConnectionRecordId = body[0].id
+    verifierToHolderConnectionRecordId = await waitForConnectionByOob(verifierClient, verifierToHolderOobRecordId)
+    expect(verifierToHolderConnectionRecordId).to.be.a('string')
   })
 
   it('should let Verifier request proof of credential from holder', async function () {
@@ -325,7 +271,7 @@ describe('Onboarding & Verification flow', function () {
         },
       },
       willConfirm: true,
-      autoAcceptProof: 'always',
+      autoAcceptProof: 'never',
       connectionId: verifierToHolderConnectionRecordId,
     }
     const response = await verifierClient
@@ -334,24 +280,14 @@ describe('Onboarding & Verification flow', function () {
       .expect('Content-Type', /json/)
       .expect(200)
     expect(response.body).to.have.property('state', 'request-sent')
+    verifierProofRequestId = response.body.id
     threadIdOnVerifier = response.body.threadId
   })
 
   it('should let the Holder see all proof requests they received', async function () {
-    let result: ProofExchangeRecordProps | undefined
-    for (let i = 0; i < 10; i++) {
-      const response = await holderClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
-      if (response.body.length > 0) {
-        result = response.body.find(({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier)
-        if (result) break
-      }
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-
-    expect(result).to.not.equal(undefined)
-    if (result && result.id) {
-      holderProofRequestId = result.id
-    }
+    const record = await waitForProofRecordByThread(holderClient, threadIdOnVerifier, 'request-received')
+    expect(record).to.not.equal(undefined)
+    holderProofRequestId = record.id
   })
 
   it('should let the Holder see specific proof requests', async function () {
@@ -411,17 +347,13 @@ describe('Onboarding & Verification flow', function () {
     expect(response.body.state).to.be.equal('presentation-sent')
   })
 
-  it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
-    // We need to wait for the state to become 'done' as the Verifier processes the presentation asynchronously.
-    // This polling loop prevents race conditions where the test checks before the background process completes.
-    let result: ProofExchangeRecordProps | undefined
-    for (let i = 0; i < 10; i++) {
-      const response = await verifierClient.get(`/v1/proofs`).expect('Content-Type', /json/).expect(200)
-      result = response.body.find(({ threadId }: { threadId: string }) => threadId === threadIdOnVerifier)
-      if (result && result.state === 'done') break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
+  it('should allow the Verifier to accept the presentation', async function () {
+    await waitForProofState(verifierClient, verifierProofRequestId, 'presentation-received')
+    await acceptPresentation(verifierClient, verifierProofRequestId)
+  })
 
-    expect(result?.state).to.be.equal('done')
+  it('should let the Verifier see all proof requests and check the one with correct threadId is in done state', async function () {
+    const state = await waitForProofState(verifierClient, verifierProofRequestId, 'done')
+    expect(state).to.equal('done')
   })
 })

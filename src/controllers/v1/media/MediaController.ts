@@ -38,7 +38,7 @@ export class MediaController extends Controller {
   })
   @Hidden()
   @Post('/share')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async share(@Request() req: express.Request, @Body() body: MediaShareRequest) {
     req.log.info('sharing media to connection %s: %j', body.connectionId, body)

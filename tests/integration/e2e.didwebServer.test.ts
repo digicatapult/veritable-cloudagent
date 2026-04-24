@@ -1,8 +1,16 @@
 import { expect } from 'chai'
 import { fetch } from 'undici'
+import {
+  ALICE_DID_WEB_URL,
+  BOB_DID_WEB_URL,
+  CHARLIE_DID_WEB_URL,
+  DID_WEB_ALICE,
+  DID_WEB_BOB,
+  DID_WEB_CHARLIE,
+} from './utils/fixtures.js'
 
-const agents = ['https://alice:8443', 'https://bob:8443', 'https://charlie:8443']
-const dids = ['did:web:alice%3A8443', 'did:web:bob%3A8443', 'did:web:charlie%3A8443']
+const agents = [ALICE_DID_WEB_URL, BOB_DID_WEB_URL, CHARLIE_DID_WEB_URL]
+const dids = [DID_WEB_ALICE, DID_WEB_BOB, DID_WEB_CHARLIE]
 
 describe('DID:web server', function () {
   agents.forEach((baseUrl, index) => {

@@ -20,7 +20,7 @@ import {
 import { JsonEncoder } from '@credo-ts/core/build/utils/JsonEncoder.js'
 import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
-import { WebSocket } from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
@@ -51,12 +51,13 @@ export async function getTestAgent(name: string, port: number) {
 
     logger,
     ipfsOrigin: 'https://localhost:5001',
+    ipfsTimeoutMs: 15000,
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
 }
 
 export async function getTestServer(agent: RestAgent) {
-  const socketServer = new WebSocket.Server({ noServer: true })
+  const socketServer = new WebSocketServer({ noServer: true })
   const app = await setupServer(agent, new PinoLogger('silent'), {
     socketServer,
   })

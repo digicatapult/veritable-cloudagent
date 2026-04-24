@@ -12,7 +12,9 @@ import {
   ConnectionsModule,
   CredentialsModule,
   DidsModule,
+  DifPresentationExchangeProofFormatService,
   HttpOutboundTransport,
+  JsonLdCredentialFormatService,
   KeyDidResolver,
   MediatorModule,
   ModulesMap,
@@ -20,6 +22,7 @@ import {
   ProofsModule,
   V2CredentialProtocol,
   V2ProofProtocol,
+  W3cCredentialsModule,
   WebDidResolver,
   WsOutboundTransport,
 } from '@credo-ts/core'
@@ -65,8 +68,11 @@ export type AriesRestConfig = {
   autoAcceptMediationRequests?: boolean
   autoAcceptProofs?: AutoAcceptProof
   ipfsOrigin: string
+  ipfsTimeoutMs: number
 
-  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<
+    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+  >
 
   logger: PinoLogger
 }
@@ -74,11 +80,16 @@ export type AriesRestConfig = {
 export interface RestAgentModules extends ModulesMap {
   connections: ConnectionsModule
   dids: DidsModule
-  proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
-  credentials: CredentialsModule<[V2CredentialProtocol<[AnonCredsCredentialFormatService]>]>
+  proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]>
+  credentials: CredentialsModule<
+    [V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>]
+  >
   anoncreds: AnonCredsModule
+  w3cCredentials: W3cCredentialsModule
   drpc: DrpcModule
-  verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+  verifiedDrpc: VerifiedDrpcModule<
+    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+  >
   media: MediaSharingModule
 }
 
@@ -86,11 +97,16 @@ export type RestAgent<
   modules extends RestAgentModules = {
     connections: ConnectionsModule
     dids: DidsModule
-    proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
-    credentials: CredentialsModule<[V2CredentialProtocol]>
+    proofs: ProofsModule<[V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]>
+    credentials: CredentialsModule<
+      [V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>]
+    >
     anoncreds: AnonCredsModule
+    w3cCredentials: W3cCredentialsModule
     drpc: DrpcModule
-    verifiedDrpc: VerifiedDrpcModule<[V2ProofProtocol<[AnonCredsProofFormatService]>]>
+    verifiedDrpc: VerifiedDrpcModule<
+      [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+    >
     media: MediaSharingModule
   },
 > = Agent<modules>
@@ -101,8 +117,9 @@ const getAgentModules = (options: {
   autoAcceptCredentials: AutoAcceptCredential
   autoAcceptMediationRequests: boolean
   ipfsOrigin: string
+  ipfsTimeoutMs: number
   verifiedDrpcOptions: { credDefId?: CredentialDefinitionId; issuerDid?: DID } & VerifiedDrpcModuleConfigOptions<
-    [V2ProofProtocol<[AnonCredsProofFormatService]>]
+    [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
   >
 }): RestAgentModules => {
   return {
@@ -116,7 +133,7 @@ const getAgentModules = (options: {
       autoAcceptProofs: options.autoAcceptProofs,
       proofProtocols: [
         new V2ProofProtocol({
-          proofFormats: [new AnonCredsProofFormatService()],
+          proofFormats: [new AnonCredsProofFormatService(), new DifPresentationExchangeProofFormatService()],
         }),
       ],
     }),
@@ -124,12 +141,13 @@ const getAgentModules = (options: {
       autoAcceptCredentials: options.autoAcceptCredentials,
       credentialProtocols: [
         new V2CredentialProtocol({
-          credentialFormats: [new AnonCredsCredentialFormatService()],
+          credentialFormats: [new AnonCredsCredentialFormatService(), new JsonLdCredentialFormatService()],
         }),
       ],
     }),
+    w3cCredentials: new W3cCredentialsModule(),
     anoncreds: new AnonCredsModule({
-      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin))],
+      registries: [new VeritableAnonCredsRegistry(new Ipfs(options.ipfsOrigin, options.ipfsTimeoutMs))],
       anoncreds,
     }),
     askar: new AskarModule({
@@ -178,6 +196,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     autoAcceptMediationRequests = true,
     autoAcceptProofs = AutoAcceptProof.ContentApproved,
     ipfsOrigin,
+    ipfsTimeoutMs,
     verifiedDrpcOptions,
 
     agentConfig,
@@ -189,6 +208,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     autoAcceptCredentials,
     autoAcceptMediationRequests,
     ipfsOrigin,
+    ipfsTimeoutMs,
     verifiedDrpcOptions,
   })
 

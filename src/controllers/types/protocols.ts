@@ -7,10 +7,19 @@ import type {
   AnonCredsProofFormat,
   AnonCredsProofFormatService,
 } from '@credo-ts/anoncreds'
-import type { V2CredentialProtocol, V2ProofProtocol } from '@credo-ts/core'
+import type {
+  DifPresentationExchangeProofFormatService,
+  JsonLdCredentialFormat,
+  JsonLdCredentialFormatService,
+  V2CredentialProtocol,
+  V2ProofProtocol,
+} from '@credo-ts/core'
+import type { DifPresentationExchangeProofFormat } from './pex.js'
 
-export type CredentialProtocols = [V2CredentialProtocol<[AnonCredsCredentialFormatService]>]
-export type CredentialFormats = [AnonCredsCredentialFormat]
+export type CredentialProtocols = [
+  V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>,
+]
+export type CredentialFormats = [AnonCredsCredentialFormat, JsonLdCredentialFormat]
 
-export type ProofProtocols = [V2ProofProtocol<[AnonCredsProofFormatService]>]
-export type ProofFormats = [AnonCredsProofFormat]
+export type ProofProtocols = [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
+export type ProofFormats = [AnonCredsProofFormat, DifPresentationExchangeProofFormat]

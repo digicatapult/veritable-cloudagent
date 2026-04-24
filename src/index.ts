@@ -3,7 +3,7 @@ import 'reflect-metadata'
 
 import type { Socket } from 'node:net'
 
-import WebSocket from 'ws'
+import WebSocket, { WebSocketServer } from 'ws'
 
 import { AutoAcceptCredential, AutoAcceptProof } from '@credo-ts/core'
 import { clearInterval } from 'node:timers'
@@ -61,6 +61,7 @@ const agent = await setupAgent({
   autoAcceptProofs: env.get('AUTO_ACCEPT_PROOFS') as AutoAcceptProof,
   autoAcceptMediationRequests: env.get('AUTO_ACCEPT_MEDIATION_REQUESTS'),
   ipfsOrigin: env.get('IPFS_ORIGIN'),
+  ipfsTimeoutMs: env.get('IPFS_TIMEOUT_MS'),
 
   verifiedDrpcOptions: {
     proofTimeoutMs: env.get('VERIFIED_DRPC_OPTIONS_PROOF_TIMEOUT_MS'),
@@ -96,11 +97,11 @@ await didWebGenerator.generateAndRegister(
   (document) => didWebServer.upsertDid(document)
 )
 
-const socketServer = new WebSocket.Server({ noServer: true })
+const socketServer = new WebSocketServer({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
 const interval = setInterval(() => {
   logger.trace(`WebSocket PING (socket count = ${socketServer.clients.size})`)
-  socketServer.clients.forEach((ws) => {
+  socketServer.clients.forEach((ws: WebSocket) => {
     ws.once('pong', () => {
       logger.debug('WebSocket PONG')
       zombieSockets.delete(ws)

@@ -14,6 +14,7 @@ The project aims to enable supply chains to share insights and data across multi
 - [Verified DRPC](#verified-drpc)
 - [Schema Definition](#schema-definition)
 - [Demoing credential issuance and verification](#demoing-credential-issuance-and-verification)
+- [Credentials and Proofs](#credentials-and-proofs)
 - [Explicit Credential Selection](#explicit-credential-selection)
 
 ## Attribution
@@ -66,15 +67,16 @@ Bellow you will find commands for starting up the containers in docker (see the 
 This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Since `did:web` always [resolves to HTTPS](https://w3c-ccg.github.io/did-method-web/#read-resolve/), the server runs as HTTPS in dev mode. A local trusted certificate and key must be generated before it can be accessed in your browser.
 
 - Install [mkcert](https://github.com/FiloSottile/mkcert#installation).
-- Run the following commands at root:
+- Run the following commands:
 
 ```bash
-mkcert -install
-mkcert alice localhost
+npm run setup:certs
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 ```
 
-This will create `alice+1.pem` and `alice+1-key.pem` at root. These are mounted in the docker compose to `alice.pem` and `alice-key.pem`, the default paths for `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs.
+This will create `certs/dev-cert.pem` and `certs/dev-key.pem`, covered by a single SAN certificate valid for `alice`, `bob`, `charlie`, and `localhost`. These are mounted into each agent container and referenced by the `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs.
+
+If you also want browser/system trust for the local CA, run `mkcert -install` once (this may prompt for sudo).
 
 `NODE_EXTRA_CA_CERTS` is set to the root CA so that dev certificates are trusted when the agent resolves to `https`.
 
@@ -237,6 +239,7 @@ The Envs are defined under `src > env.ts` They are used to start up a container.
 | ADMIN_PORT                                  | N        | 3000                                                                                                                                                                                                   | The port for the app                                                                                                               |
 | ADMIN_PING_INTERVAL_MS                      | N        | 10000                                                                                                                                                                                                  | The time interval in ms on which to perform WebSocket ping checks                                                                  |
 | IPFS_ORIGIN                                 | Y        | "<http://ipfs0:5001>"                                                                                                                                                                                    | The IPFS url endpoint                                                                                                              |
+| IPFS_TIMEOUT_MS                             | N        | 15000                                                                                                                                                                                                  | Universal timeout in ms for IPFS network requests (upload and download)                                                           |
 | PERSONA_TITLE                               | N        | "Veritable Cloudagent"                                                                                                                                                                                 | Tab name which you can see in your browser                                                                                         |
 | PERSONA_COLOR                               | N        | "white"                                                                                                                                                                                                | Defines the background colour of swagger documentation                                                                             |
 | STORAGE_TYPE                                | Y        | "postgres"                                                                                                                                                                                             | The type of storage to be used by the app                                                                                          |
@@ -267,14 +270,11 @@ Unit tests can be run with `npm run test:unit`.
 
 ### Integration
 
-Integration tests require certificates for each persona + setting an env for the path to the root CA:
+Integration tests require certificates + setting an env for the path to the root CA:
 
 ```bash
-mkcert -install
+npm run setup:certs
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
-mkcert alice localhost
-mkcert bob localhost
-mkcert charlie localhost
 ```
 
 Then the testnet orchestration can be deployed.
@@ -870,6 +870,10 @@ npx tsx scripts/maker-propose-proof-to-oem.ts --credential-id < credential ID > 
 ```bash
 npx tsx scripts/maker-respond-proof-request.ts --proof-id < proof ID >
 ```
+
+## Credentials and Proofs
+
+For a comprehensive guide on the supported credential formats (AnonCreds and W3C Verifiable Credentials), including detailed API payloads for issuance and verification, see the [Credentials and Proofs Guide](docs/credentials-and-proofs.md).
 
 ## Explicit Credential Selection
 

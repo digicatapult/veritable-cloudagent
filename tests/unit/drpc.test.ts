@@ -6,7 +6,7 @@ import { afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub, useFakeTimers, type SinonFakeTimers } from 'sinon'
 import request from 'supertest'
 
-import { ConnectionRecord } from '@credo-ts/core'
+import { ConnectionRecord, RecordNotFoundError } from '@credo-ts/core'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import { NotFoundError } from '../../src/error.js'
@@ -36,7 +36,7 @@ describe('DrpcController', () => {
   })
 
   describe('create drpc request', () => {
-    test("should return undefined if there's no response", async () => {
+    test('should return gateway timeout when response listener resolves undefined', async () => {
       const spy = stub(agent.modules.drpc, 'sendRequest')
       spy.resolves(stub().resolves(undefined))
       const response = await request(app).post(`/v1/drpc/${connection.id}/request`).send({
@@ -44,7 +44,27 @@ describe('DrpcController', () => {
         method: 'test',
         params: [],
       })
-      expect(response.statusCode).to.be.equal(204)
+      expect(response.statusCode).to.be.equal(504)
+    })
+
+    test('should return not found when connection id does not exist', async () => {
+      const spy = stub(agent.modules.drpc, 'sendRequest')
+      spy.rejects(new RecordNotFoundError('connection not found', { recordType: 'ConnectionRecord' }))
+
+      const response = await request(app).post(`/v1/drpc/${connection.id}/request`).send({
+        jsonrpc: '2.0',
+        method: 'test',
+        params: [],
+      })
+
+      expect(response.statusCode).to.be.equal(404)
+      expect(response.body).to.deep.equal({
+        code: 404,
+        message: 'connection not found',
+        details: {
+          connectionId: connection.id,
+        },
+      })
     })
 
     test('should return response if format is valid', async () => {
@@ -93,9 +113,11 @@ describe('DrpcController', () => {
       })
 
       spy.resolves(
-        stub().callsFake(() => {
+        stub().callsFake((timeoutMs?: number) => {
           waitResolve()
-          return new Promise(() => {})
+          return new Promise((resolve) => {
+            setTimeout(() => resolve(undefined), timeoutMs)
+          })
         })
       )
 

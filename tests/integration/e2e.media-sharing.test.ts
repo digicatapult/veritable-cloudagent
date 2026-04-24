@@ -1,9 +1,8 @@
 import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import request from 'supertest'
-
-const ALICE_BASE_URL = process.env.ALICE_BASE_URL ?? 'http://localhost:3000'
-const BOB_BASE_URL = process.env.BOB_BASE_URL ?? 'http://localhost:3001'
+import { ALICE_BASE_URL, BOB_BASE_URL, OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
+import { waitForConnectionByOob } from './utils/helpers.js'
 
 // End-to-end test: A (Alice) shares media with B (Bob), and Bob can see the record
 // and download the file from the provided URL (mocked).
@@ -18,11 +17,7 @@ describe('Media Sharing A→B', function () {
   it('Alice creates invitation', async function () {
     const res = await alice
       .post('/v1/oob/create-invitation')
-      .send({
-        handshake: true,
-        handshakeProtocols: ['https://didcomm.org/connections/1.x'],
-        autoAcceptConnection: true,
-      })
+      .send(OOB_INVITATION_PAYLOAD)
       .expect('Content-Type', /json/)
       .expect(200)
 
@@ -39,15 +34,8 @@ describe('Media Sharing A→B', function () {
   })
 
   it('Alice sees her connection', async function () {
-    let body: { id: string }[] = []
-    for (let i = 0; i < 10; i++) {
-      const res = await alice.get('/v1/connections').query({ outOfBandId: oobRecordId }).expect(200)
-      body = res.body
-      if (body.length > 0 && body[0].id) break
-      await new Promise((resolve) => setTimeout(resolve, 500))
-    }
-    expect(body).to.be.an('array').that.has.length(1)
-    aliceConnectionId = body[0].id
+    aliceConnectionId = await waitForConnectionByOob(alice, oobRecordId, { maxAttempts: 10, intervalMs: 500 })
+    expect(aliceConnectionId).to.be.a('string')
   })
 
   it('Alice shares media to Bob', async function () {

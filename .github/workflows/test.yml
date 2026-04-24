@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Login to GitHub Container Registry'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -49,7 +49,7 @@ jobs:
 
       - name: Setup Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           buildkitd-flags: '--debug'
 
@@ -60,17 +60,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libnss3-tools mkcert
       - name: Generate HTTPS certificates
-        run: |
-          mkcert -install
-          mkcert alice localhost
-          mkcert bob localhost
-          mkcert charlie localhost
+        run: bash scripts/setup-certs.sh
 
       - name: Set root CA path
         run: echo "NODE_EXTRA_CA_CERTS=$(mkcert -CAROOT)/rootCA.pem" >> $GITHUB_ENV
 
       - name: Build testnet and integration images
-        uses: docker/bake-action@v6
+        uses: docker/bake-action@v7
         with:
           builder: ${{ steps.buildx.outputs.name }}
           files: |

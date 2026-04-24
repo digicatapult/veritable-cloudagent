@@ -105,6 +105,7 @@ export const envConfig = {
   ADMIN_PORT: envalid.num({ default: 3000, devDefault: 3000 }),
   ADMIN_PING_INTERVAL_MS: envalid.num({ default: 10000 }),
   IPFS_ORIGIN: envalid.str({ default: 'http://ipfs0:5001', devDefault: 'http://localhost:5001' }),
+  IPFS_TIMEOUT_MS: envalid.num({ default: 15000, devDefault: 15000 }),
   PERSONA_TITLE: envalid.str({ default: 'Veritable Cloudagent' }),
   PERSONA_COLOR: envalid.str({ default: 'white' }),
   STORAGE_TYPE: envalid.str({ default: 'postgres', choices: ['sqlite', 'postgres'] }),
@@ -125,8 +126,8 @@ export const envConfig = {
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),
   DID_WEB_USE_DEV_CERT: envalid.bool({ default: false, devDefault: true }),
-  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'alice+1.pem' }),
-  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'alice+1-key.pem' }),
+  DID_WEB_DEV_CERT_PATH: envalid.str({ default: '', devDefault: 'certs/dev-cert.pem' }),
+  DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'certs/dev-key.pem' }),
   DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
   DID_WEB_DOMAIN: envalid.str({ default: '', devDefault: 'localhost%3A8443' }),
 }
