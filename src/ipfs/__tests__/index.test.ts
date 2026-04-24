@@ -121,20 +121,25 @@ describe('ipfs', function () {
 
     it('throws timeout when request exceeds timeout', async function () {
       clock = useFakeTimers({ toFake: ['setTimeout'] })
-      await withDelayedIpfsMock('/api/v0/cat?arg=timeoutCid', Buffer.from('1234', 'hex'), delayedBeyondTimeoutMs, async () => {
-        const ipfs = new Ipfs(ipfsOrigin, shortTimeoutMs)
-        const errorPromise = ipfs.getFile('timeoutCid').then(
-          () => {
-            throw new Error('Expected an error')
-          },
-          (caughtError: unknown) => caughtError as Error
-        )
+      await withDelayedIpfsMock(
+        '/api/v0/cat?arg=timeoutCid',
+        Buffer.from('1234', 'hex'),
+        delayedBeyondTimeoutMs,
+        async () => {
+          const ipfs = new Ipfs(ipfsOrigin, shortTimeoutMs)
+          const errorPromise = ipfs.getFile('timeoutCid').then(
+            () => {
+              throw new Error('Expected an error')
+            },
+            (caughtError: unknown) => caughtError as Error
+          )
 
-        await clock?.tickAsync(shortTimeoutMs)
-        const error = await errorPromise
+          await clock?.tickAsync(shortTimeoutMs)
+          const error = await errorPromise
 
-        expect(error.message).to.equal('Timeout fetching file timeoutCid from IPFS')
-      })
+          expect(error.message).to.equal('Timeout fetching file timeoutCid from IPFS')
+        }
+      )
     })
   })
 
