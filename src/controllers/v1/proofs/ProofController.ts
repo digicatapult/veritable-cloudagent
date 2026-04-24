@@ -12,12 +12,11 @@ import {
   Response,
   Route,
   Tags,
-  ValidateError,
 } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, NotFoundError, UnprocessableEntityError } from '../../../error.js'
 import {
   getMissingAnonCredsCredentials,
   hydrateAnonCredsAttributes,
@@ -89,7 +88,7 @@ export class ProofController extends Controller {
    * @returns ProofExchangeRecordProps
    */
   @Get('/:proofRecordId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
   public async getProofById(
@@ -126,7 +125,7 @@ export class ProofController extends Controller {
    * @returns Record<string, unknown>
    */
   @Get('/:proofRecordId/content')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getProofContent(
     @Request() req: express.Request,
@@ -158,7 +157,7 @@ export class ProofController extends Controller {
    * @returns MatchingCredentialsResponse
    */
   @Get('/:proofRecordId/credentials')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getMatchingCredentials(
     @Request() req: express.Request,
@@ -174,7 +173,9 @@ export class ProofController extends Controller {
       return credentials
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`No matching credentials found for proof record ${proofRecordId}`)
+        throw new NotFoundError('No matching credentials found for proof record', {
+          proofRecordId,
+        })
       }
       throw error
     }
@@ -186,7 +187,7 @@ export class ProofController extends Controller {
    * @param proofRecordId
    */
   @Delete('/:proofRecordId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async deleteProof(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
@@ -210,13 +211,14 @@ export class ProofController extends Controller {
    */
   @Post('/propose-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
+  @Response<UnprocessableEntityError>(422)
   public async proposeProof(@Request() req: express.Request, @Body() proposal: ProposeProofOptions) {
     try {
       if (proposal.proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(proposal.proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       const proof = await this.agent.proofs.proposeProof({
@@ -244,7 +246,7 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-proposal')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
     @Request() req: express.Request,
@@ -280,9 +282,9 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/negotiate-proposal')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
-  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
+  @Response<UnprocessableEntityError>(422)
   public async negotiateProposal(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -293,7 +295,7 @@ export class ProofController extends Controller {
 
       if (options.proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(options.proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       const proof = await this.agent.proofs.negotiateProposal({
@@ -323,12 +325,13 @@ export class ProofController extends Controller {
     message: {},
     proofRecord: ProofRecordExample,
   })
+  @Response<UnprocessableEntityError>(422)
   public async createRequest(@Request() req: express.Request, @Body() request: CreateProofRequestOptions) {
     const { proofFormats, ...rest } = request
     req.log.debug('creating proof request %j', { proofFormats, ...rest })
     if (proofFormats.presentationExchange?.presentationDefinition) {
       const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
-      if (errors) throw new ValidateError(errors, 'Validation Failed')
+      if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
     }
 
     const { message, proofRecord } = await this.agent.proofs.createRequest({
@@ -352,15 +355,16 @@ export class ProofController extends Controller {
    */
   @Post('/request-proof')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
+  @Response<UnprocessableEntityError>(422)
   public async requestProof(@Request() req: express.Request, @Body() body: RequestProofOptions) {
     const { connectionId, proofFormats, ...rest } = body
     try {
       req.log.info('requesting proof for %s connection %j', connectionId, body)
       if (proofFormats.presentationExchange?.presentationDefinition) {
         const errors = validatePexV1Presentation(proofFormats.presentationExchange.presentationDefinition)
-        if (errors) throw new ValidateError(errors, 'Validation Failed')
+        if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
       const proof = await this.agent.proofs.requestProof({
@@ -373,7 +377,10 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`proof record not found ${error}`)
+        throw new NotFoundError('proof record not found', {
+          connectionId,
+          cause: error.message,
+        })
       }
       throw error
     }
@@ -393,10 +400,10 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-request')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
-  @Response<BadRequest['message']>(400)
-  @Response<{ message: string; details?: unknown }>(422, 'Validation Failed')
+  @Response<BadRequest>(400)
+  @Response<UnprocessableEntityError>(422)
   public async acceptRequest(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -421,7 +428,10 @@ export class ProofController extends Controller {
 
         if (!requestedAnonCreds) {
           throw new BadRequest(
-            'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.'
+            'Internal error: simplified proof formats missing anoncreds after type guard. This indicates an unexpected internal state; please contact support.',
+            {
+              proofRecordId,
+            }
           )
         }
 
@@ -436,7 +446,9 @@ export class ProofController extends Controller {
           (!fullFormatAnonCreds.attributes || Object.keys(fullFormatAnonCreds.attributes).length === 0) &&
           (!fullFormatAnonCreds.predicates || Object.keys(fullFormatAnonCreds.predicates).length === 0)
         ) {
-          throw new BadRequest('Invalid proof formats: must have at least one attribute or predicate')
+          throw new BadRequest('Invalid proof formats', {
+            errors: ['must have at least one attribute or predicate'],
+          })
         }
 
         req.log.info('using provided proof formats for %s proof', proofRecordId)
@@ -476,7 +488,9 @@ export class ProofController extends Controller {
       return proof.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(`proof record not found`)
+        throw new NotFoundError('proof record not found', {
+          proofRecordId,
+        })
       }
       throw error
     }
@@ -491,7 +505,7 @@ export class ProofController extends Controller {
    */
   @Post('/:proofRecordId/accept-presentation')
   @Example<ProofExchangeRecordProps>(ProofRecordExample)
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
@@ -536,9 +550,9 @@ export class ProofController extends Controller {
         requestedAnonCreds.attributes ?? {},
         requestedAnonCreds.predicates ?? {}
       )
-      throw new NotFoundError(
-        `Could not hydrate proof formats: no available credentials found for proofRecordId=${proofRecordId}`
-      )
+      throw new NotFoundError('Could not hydrate proof formats: no available credentials found', {
+        proofRecordId,
+      })
     }
 
     const { hydrated: hydratedAttributes, errors: attrErrors } = hydrateAnonCredsAttributes(
@@ -546,7 +560,9 @@ export class ProofController extends Controller {
       availableAnonCreds.attributes
     )
     if (attrErrors.length > 0) {
-      throw new BadRequest(attrErrors.join('; '))
+      throw new BadRequest('Proof format hydration failed', {
+        errors: attrErrors,
+      })
     }
     const hydratedPredicates = hydrateAnonCredsPredicates(requestedAnonCreds.predicates, availableAnonCreds.predicates)
 
@@ -562,7 +578,14 @@ export class ProofController extends Controller {
         .join('; ')
 
       req.log.warn(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
-      throw new NotFoundError(`Could not hydrate proof formats: no matching credentials found for requested ${details}`)
+      throw new NotFoundError(
+        `Could not hydrate proof formats: no matching credentials found for requested ${details}`,
+        {
+          proofRecordId,
+          missingAttributes: missingAttributes.map((item) => item.name),
+          missingPredicates: missingPredicates.map((item) => item.name),
+        }
+      )
     }
 
     return {

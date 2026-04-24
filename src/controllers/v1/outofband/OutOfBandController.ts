@@ -76,12 +76,14 @@ export class OutOfBandController extends Controller {
    */
   @Example<OutOfBandRecordWithInvitationProps>(outOfBandRecordExample)
   @Get('/:outOfBandId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   public async getOutOfBandRecordById(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: UUID) {
     const outOfBandRecord = await this.agent.oob.findById(outOfBandId)
 
     if (!outOfBandRecord) {
-      throw new NotFoundError('OOB record not found')
+      throw new NotFoundError('OOB record not found', {
+        outOfBandId,
+      })
     }
 
     req.log.debug('returning OOB record %j', outOfBandRecord.toJSON())
@@ -169,7 +171,7 @@ export class OutOfBandController extends Controller {
     invitationUrl: 'http://example.com/invitation_url',
   })
   @Post('/create-legacy-connectionless-invitation')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async createLegacyConnectionlessInvitation(
     @Request() req: express.Request,
@@ -190,7 +192,9 @@ export class OutOfBandController extends Controller {
       })
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('invitation not found')
+        throw new NotFoundError('invitation not found', {
+          recordId: config.recordId,
+        })
       }
       throw error
     }
@@ -299,7 +303,7 @@ export class OutOfBandController extends Controller {
     connectionRecord: ConnectionRecordExample,
   })
   @Post('/:outOfBandId/accept-invitation')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptInvitation(
     @Request() req: express.Request,
@@ -323,7 +327,9 @@ export class OutOfBandController extends Controller {
       }
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('OOB invitation not found')
+        throw new NotFoundError('OOB invitation not found', {
+          outOfBandId,
+        })
       }
       throw error
     }
@@ -335,7 +341,7 @@ export class OutOfBandController extends Controller {
    * @param outOfBandId Record identifier
    */
   @Delete('/:outOfBandId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async deleteOutOfBandRecord(@Request() req: express.Request, @Path('outOfBandId') outOfBandId: UUID) {
     try {
@@ -344,7 +350,9 @@ export class OutOfBandController extends Controller {
       await this.agent.oob.deleteById(outOfBandId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('OOB record not found')
+        throw new NotFoundError('OOB record not found', {
+          outOfBandId,
+        })
       }
       throw error
     }

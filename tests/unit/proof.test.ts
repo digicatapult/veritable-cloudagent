@@ -822,7 +822,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be revealed. The proof request or credential requires this attribute to be hidden."
       )
     })
@@ -871,7 +872,7 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.include(
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-2)'
       )
     })
@@ -920,7 +921,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(400)
-      expect(response.body).to.include(
+      expect(response.body.message).to.equal('Proof format hydration failed')
+      expect(response.body.details.errors[0]).to.include(
         "Attribute 'attr1' cannot be hidden. The proof request or credential requires this attribute to be revealed."
       )
     })
@@ -969,8 +971,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr1 (credId: cred-not-found)'
       )
     })
@@ -1019,8 +1021,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: nonExistentAttr (credId: cred-1)'
       )
     })
@@ -1085,8 +1087,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested attributes: attr2 (credId: cred-wrong)'
       )
     })
@@ -1152,8 +1154,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested predicates: pred1 (credId: cred-not-found)'
       )
     })
@@ -1204,8 +1206,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include(
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include(
         'Could not hydrate proof formats: no matching credentials found for requested predicates: nonExistentPred (credId: cred-1)'
       )
     })
@@ -1410,8 +1412,8 @@ describe('ProofController', () => {
         .send({ proofFormats })
 
       expect(response.statusCode).to.be.equal(404)
-      expect(response.body).to.be.a('string')
-      expect(response.body).to.include('no available credentials found')
+      expect(response.body).to.be.an('object')
+      expect(response.body.message).to.include('no available credentials found')
     })
 
     test('should reject simplified format with credentialInfo in attributes (security check)', async () => {

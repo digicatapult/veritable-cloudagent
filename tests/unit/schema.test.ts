@@ -62,6 +62,10 @@ describe('SchemaController', () => {
       const response = await request(app).get(`/v1/schemas?createdLocally=false`)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'Can only list schemas created locally',
+      })
     })
   })
 
@@ -100,6 +104,14 @@ describe('SchemaController', () => {
       const response = await request(app).get(`/v1/schemas/x`)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'schemaId has invalid structure.',
+        details: {
+          schemaId: 'x',
+          resolutionError: 'invalid',
+        },
+      })
     })
 
     test('should return 400 BadRequest when id has invalid structure', async () => {
@@ -115,6 +127,14 @@ describe('SchemaController', () => {
       const response = await request(app).get(`/v1/schemas/x`)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'schemaId has invalid structure.',
+        details: {
+          schemaId: 'x',
+          resolutionError: 'unsupportedAnonCredsMethod',
+        },
+      })
     })
 
     test('should return 404 NotFoundError when schema not found', async () => {
