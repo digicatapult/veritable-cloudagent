@@ -28,8 +28,8 @@ const withDelayedIpfsMock = async (
     method: 'POST',
     ...(route === '/api/v0/add?cid-version=1'
       ? {
-          body: (calledBody: string) => {
-            const asBuf = calledBody as unknown as FormData
+          body: (calledBody: unknown) => {
+            const asBuf = calledBody as FormData
             const asArr = [...asBuf.entries()]
             return asArr.length === 1 && asArr[0][0] === 'file'
           },
@@ -59,8 +59,8 @@ const withIpfsAddStatusMock = async (statusCode: number, body: string, run: () =
     .intercept({
       path: '/api/v0/add?cid-version=1',
       method: 'POST',
-      body: (calledBody: string) => {
-        const asBuf = calledBody as unknown as FormData
+      body: (calledBody: unknown) => {
+        const asBuf = calledBody as FormData
         const asArr = [...asBuf.entries()]
         return asArr.length === 1 && asArr[0][0] === 'file'
       },
