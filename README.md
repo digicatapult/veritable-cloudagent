@@ -67,15 +67,16 @@ Bellow you will find commands for starting up the containers in docker (see the 
 This service includes an optional `did:web` server (`DID_WEB_ENABLED` env). Since `did:web` always [resolves to HTTPS](https://w3c-ccg.github.io/did-method-web/#read-resolve/), the server runs as HTTPS in dev mode. A local trusted certificate and key must be generated before it can be accessed in your browser.
 
 - Install [mkcert](https://github.com/FiloSottile/mkcert#installation).
-- Run the following commands at root:
+- Run the following commands:
 
 ```bash
-mkcert -install
-mkcert alice localhost
+npm run setup:certs
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 ```
 
-This will create `alice+1.pem` and `alice+1-key.pem` at root. These are mounted in the docker compose to `alice.pem` and `alice-key.pem`, the default paths for `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs.
+This will create `certs/dev-cert.pem` and `certs/dev-key.pem`, covered by a single SAN certificate valid for `alice`, `bob`, `charlie`, and `localhost`. These are mounted into each agent container and referenced by the `DID_WEB_DEV_CERT_PATH` and `DID_WEB_DEV_KEY_PATH` envs.
+
+If you also want browser/system trust for the local CA, run `mkcert -install` once (this may prompt for sudo).
 
 `NODE_EXTRA_CA_CERTS` is set to the root CA so that dev certificates are trusted when the agent resolves to `https`.
 
@@ -269,14 +270,11 @@ Unit tests can be run with `npm run test:unit`.
 
 ### Integration
 
-Integration tests require certificates for each persona + setting an env for the path to the root CA:
+Integration tests require certificates + setting an env for the path to the root CA:
 
 ```bash
-mkcert -install
+npm run setup:certs
 export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
-mkcert alice localhost
-mkcert bob localhost
-mkcert charlie localhost
 ```
 
 Then the testnet orchestration can be deployed.
