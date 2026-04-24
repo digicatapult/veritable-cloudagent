@@ -1,3 +1,4 @@
+import { fetch, FormData } from 'undici'
 import { addResponseParser } from './responseParser.js'
 
 export interface MetadataFile {
