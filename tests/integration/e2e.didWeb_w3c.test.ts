@@ -109,6 +109,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
     const offerCredentialPayload = {
       protocolVersion: 'v2',
       connectionId: aliceConnectionId,
+      autoAcceptCredential: 'never',
       credentialFormats: {
         jsonld: {
           credential: {
