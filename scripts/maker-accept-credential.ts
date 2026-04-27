@@ -1,4 +1,4 @@
-import { AutoAcceptCredential } from '@credo-ts/core'
+import { DidCommAutoAcceptCredential } from '@credo-ts/didcomm'
 import z from 'zod'
 import type { AcceptCredentialOfferOptions } from '../src/controllers/types/index.js'
 
@@ -82,7 +82,7 @@ async function main() {
 
   // 2. Accept the offer
   const acceptOptions: AcceptCredentialOfferOptions = {
-    autoAcceptCredential: AutoAcceptCredential.Always, // Auto-accept subsequent steps (request, credential)
+    autoAcceptCredential: DidCommAutoAcceptCredential.Always, // Auto-accept subsequent steps (request, credential)
     comment: 'Accepting credential offer from script',
   }
 

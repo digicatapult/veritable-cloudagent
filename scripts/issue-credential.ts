@@ -1,9 +1,9 @@
 // This script issues a credential to maker(Bob) with (Charlie's)oem's did
 
 // Offer a credential to maker
-import { AutoAcceptCredential } from '@credo-ts/core'
+import { DidCommAutoAcceptCredential } from '@credo-ts/didcomm'
 import z from 'zod'
-import type { OfferCredentialOptions } from '../src/controllers/types.js'
+import type { OfferCredentialOptions } from '../src/controllers/types/index.js'
 
 const connectionParser = z.array(
   z.object({
@@ -121,7 +121,7 @@ async function main() {
   const offerCredentialBody: OfferCredentialOptions = {
     connectionId: connectionId,
     protocolVersion: 'v2',
-    autoAcceptCredential: AutoAcceptCredential.Always,
+    autoAcceptCredential: DidCommAutoAcceptCredential.Always,
     credentialFormats: {
       anoncreds: {
         credentialDefinitionId: credDefId,
