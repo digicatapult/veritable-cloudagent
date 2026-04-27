@@ -1,4 +1,6 @@
-import { Agent, RecordNotFoundError, type ProofExchangeRecordProps, type ProofFormatPayload } from '@credo-ts/core'
+import type { AnonCredsRequestedAttributeMatch, AnonCredsRequestedPredicateMatch } from '@credo-ts/anoncreds'
+import { Agent, RecordNotFoundError } from '@credo-ts/core'
+import { type DidCommProofExchangeRecordProps, type DidCommProofFormatPayload } from '@credo-ts/didcomm'
 import {
   Body,
   Controller,
@@ -42,12 +44,12 @@ import type {
   UUID,
 } from '../../types/index.js'
 
-type InternalProposeProofOptions = Parameters<RestAgent['proofs']['proposeProof']>[0]
-type InternalAcceptProofProposalOptions = Parameters<RestAgent['proofs']['acceptProposal']>[0]
-type InternalNegotiateProofProposalOptions = Parameters<RestAgent['proofs']['negotiateProposal']>[0]
-type InternalCreateProofRequestOptions = Parameters<RestAgent['proofs']['createRequest']>[0]
-type InternalRequestProofOptions = Parameters<RestAgent['proofs']['requestProof']>[0]
-type InternalAcceptProofRequestOptions = Parameters<RestAgent['proofs']['acceptRequest']>[0]
+type InternalProposeProofOptions = Parameters<RestAgent['didcomm']['proofs']['proposeProof']>[0]
+type InternalAcceptProofProposalOptions = Parameters<RestAgent['didcomm']['proofs']['acceptProposal']>[0]
+type InternalNegotiateProofProposalOptions = Parameters<RestAgent['didcomm']['proofs']['negotiateProposal']>[0]
+type InternalCreateProofRequestOptions = Parameters<RestAgent['didcomm']['proofs']['createRequest']>[0]
+type InternalRequestProofOptions = Parameters<RestAgent['didcomm']['proofs']['requestProof']>[0]
+type InternalAcceptProofRequestOptions = Parameters<RestAgent['didcomm']['proofs']['acceptRequest']>[0]
 
 @Tags('Proofs')
 @Route('/v1/proofs')
@@ -64,12 +66,12 @@ export class ProofController extends Controller {
    * Retrieve all proof records
    *
    * @param threadId
-   * @returns ProofExchangeRecordProps[]
+   * @returns DidCommProofExchangeRecordProps[]
    */
-  @Example<ProofExchangeRecordProps[]>([ProofRecordExample])
+  @Example<DidCommProofExchangeRecordProps[]>([ProofRecordExample])
   @Get('/')
   public async getAllProofs(@Request() req: express.Request, @Query('threadId') threadId?: UUID) {
-    let proofs = await this.agent.proofs.getAll()
+    let proofs = await this.agent.didcomm.proofs.getAll()
     req.log.debug('retrieving all proofs %j', proofs)
 
     if (threadId) {
@@ -85,12 +87,12 @@ export class ProofController extends Controller {
    *
    * @param proofRecordId
    * @param includeContent If true, includes the proof format data (request/presentation) in the response
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Get('/:proofRecordId')
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   public async getProofById(
     @Request() req: express.Request,
     @Path('proofRecordId') proofRecordId: UUID,
@@ -98,13 +100,13 @@ export class ProofController extends Controller {
   ) {
     req.log.debug('getting proof record %s', proofRecordId)
     try {
-      const proof = await this.agent.proofs.getById(proofRecordId)
+      const proof = await this.agent.didcomm.proofs.getById(proofRecordId)
       req.log.info('proof found %j', proof)
 
       const result = proof.toJSON() as Record<string, unknown>
 
       if (includeContent) {
-        const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+        const formatData = await this.agent.didcomm.proofs.getFormatData(proofRecordId)
         result.content = formatData
       }
 
@@ -134,7 +136,7 @@ export class ProofController extends Controller {
   ): Promise<Record<string, unknown>> {
     req.log.debug('getting proof content for %s', proofRecordId)
     try {
-      const formatData = await this.agent.proofs.getFormatData(proofRecordId)
+      const formatData = await this.agent.didcomm.proofs.getFormatData(proofRecordId)
       req.log.info('proof content found for %s', proofRecordId)
 
       if (view === 'simplified') {
@@ -165,8 +167,8 @@ export class ProofController extends Controller {
   ): Promise<MatchingCredentialsResponse> {
     req.log.debug('getting matching credentials for proof record %s', proofRecordId)
     try {
-      const credentials = await this.agent.proofs.getCredentialsForRequest({
-        proofRecordId,
+      const credentials = await this.agent.didcomm.proofs.getCredentialsForRequest({
+        proofExchangeRecordId: proofRecordId,
       })
 
       req.log.info('matching credentials found for %s', proofRecordId)
@@ -193,7 +195,7 @@ export class ProofController extends Controller {
     try {
       this.setStatus(204)
       req.log.info('deleting proof %s', proofRecordId)
-      await this.agent.proofs.deleteById(proofRecordId)
+      await this.agent.didcomm.proofs.deleteById(proofRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
         throw new NotFoundError(`proof record not found`)
@@ -207,10 +209,10 @@ export class ProofController extends Controller {
    * to the connection with the specified connection id.
    *
    * @param proposal
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Post('/propose-proof')
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<UnprocessableEntityError>(422)
@@ -221,7 +223,7 @@ export class ProofController extends Controller {
         if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
-      const proof = await this.agent.proofs.proposeProof({
+      const proof = await this.agent.didcomm.proofs.proposeProof({
         ...proposal,
         proofFormats: transformProposeProofFormats(proposal.proofFormats),
       } satisfies InternalProposeProofOptions)
@@ -242,10 +244,10 @@ export class ProofController extends Controller {
    *
    * @param proofRecordId
    * @param proposal
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Post('/:proofRecordId/accept-proposal')
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
@@ -257,10 +259,10 @@ export class ProofController extends Controller {
     try {
       req.log.info('accepting %s proof proposal %j', proofRecordId, proposal)
 
-      const proof = await this.agent.proofs.acceptProposal({
+      const proof = await this.agent.didcomm.proofs.acceptProposal({
         ...proposal,
         // Path parameter takes precedence over body property to ensure URL authority
-        proofRecordId,
+        proofExchangeRecordId: proofRecordId,
       } satisfies InternalAcceptProofProposalOptions)
 
       return proof.toJSON()
@@ -278,10 +280,10 @@ export class ProofController extends Controller {
    *
    * @param proofRecordId
    * @param options
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Post('/:proofRecordId/negotiate-proposal')
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<UnprocessableEntityError>(422)
@@ -298,10 +300,10 @@ export class ProofController extends Controller {
         if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
-      const proof = await this.agent.proofs.negotiateProposal({
+      const proof = await this.agent.didcomm.proofs.negotiateProposal({
         ...options,
         // Path parameter takes precedence over body property to ensure URL authority
-        proofRecordId,
+        proofExchangeRecordId: proofRecordId,
         proofFormats: transformProofFormats(options.proofFormats),
       } satisfies InternalNegotiateProofProposalOptions)
 
@@ -321,7 +323,7 @@ export class ProofController extends Controller {
    * @returns ProofRequestMessageResponse
    */
   @Post('/create-request')
-  @Example<{ message: Record<string, unknown>; proofRecord: ProofExchangeRecordProps }>({
+  @Example<{ message: Record<string, unknown>; proofRecord: DidCommProofExchangeRecordProps }>({
     message: {},
     proofRecord: ProofRecordExample,
   })
@@ -334,7 +336,7 @@ export class ProofController extends Controller {
       if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
     }
 
-    const { message, proofRecord } = await this.agent.proofs.createRequest({
+    const { message, proofRecord } = await this.agent.didcomm.proofs.createRequest({
       proofFormats: transformProofFormats(proofFormats),
       ...rest,
     } satisfies InternalCreateProofRequestOptions)
@@ -343,7 +345,7 @@ export class ProofController extends Controller {
 
     return {
       message,
-      proofRecord: proofRecord,
+      proofRecord,
     }
   }
 
@@ -351,10 +353,10 @@ export class ProofController extends Controller {
    * Creates a presentation request bound to existing connection
    *
    * @param request
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Post('/request-proof')
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<UnprocessableEntityError>(422)
@@ -367,7 +369,7 @@ export class ProofController extends Controller {
         if (errors) throw new UnprocessableEntityError('Validation Failed', errors)
       }
 
-      const proof = await this.agent.proofs.requestProof({
+      const proof = await this.agent.didcomm.proofs.requestProof({
         connectionId,
         proofFormats: transformProofFormats(proofFormats),
         ...rest,
@@ -396,10 +398,10 @@ export class ProofController extends Controller {
    *
    * @param proofRecordId
    * @param request
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Post('/:proofRecordId/accept-request')
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   @Response<BadRequest>(400)
@@ -411,17 +413,19 @@ export class ProofController extends Controller {
     body: AcceptProofRequestOptions
   ) {
     try {
-      let formatsToAccept: ProofFormatPayload<ProofFormats, 'acceptRequest'>
+      let formatsToAccept: DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>
 
       if (!body.proofFormats) {
         req.log.info('retrieving credentials for %s proof', proofRecordId)
-        const retrievedCredentials = await this.agent.proofs.selectCredentialsForRequest({
-          proofRecordId,
+        const retrievedCredentials = await this.agent.didcomm.proofs.selectCredentialsForRequest({
+          proofExchangeRecordId: proofRecordId,
         })
-        formatsToAccept = retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
+        formatsToAccept = retrievedCredentials.proofFormats as DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>
         req.log.info(
           'credentials found (redacted) %j',
-          redactProofFormats(retrievedCredentials.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>)
+          redactProofFormats(
+            retrievedCredentials.proofFormats as DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>
+          )
         )
       } else if (isSimpleAnonCredsProofFormats(body.proofFormats)) {
         const requestedAnonCreds = body.proofFormats.anoncreds
@@ -437,8 +441,19 @@ export class ProofController extends Controller {
 
         formatsToAccept = await this.hydrateProofFormats(req, proofRecordId, requestedAnonCreds)
       } else {
-        formatsToAccept = body.proofFormats as ProofFormatPayload<ProofFormats, 'acceptRequest'>
+        formatsToAccept = body.proofFormats as DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>
         const fullFormatAnonCreds = formatsToAccept.anoncreds
+        const fullFormatPresentationExchange = formatsToAccept.presentationExchange
+
+        if (fullFormatPresentationExchange && 'credentials' in fullFormatPresentationExchange) {
+          throw new UnprocessableEntityError('Validation Failed', {
+            'proofFormats.presentationExchange.credentials': {
+              message:
+                'Client-supplied presentationExchange.credentials is not supported for accept-request. Omit credentials and allow server-side selection.',
+              value: fullFormatPresentationExchange.credentials,
+            },
+          })
+        }
 
         // Added validation for empty formats
         if (
@@ -477,11 +492,11 @@ export class ProofController extends Controller {
       const options = {
         ...body,
         // Path parameter takes precedence over body property to ensure URL authority
-        proofRecordId,
+        proofExchangeRecordId: proofRecordId,
         proofFormats: formatsToAccept as unknown as InternalAcceptProofRequestOptions['proofFormats'],
       } satisfies InternalAcceptProofRequestOptions
 
-      const proof = await this.agent.proofs.acceptRequest(options)
+      const proof = await this.agent.didcomm.proofs.acceptRequest(options)
 
       req.log.debug('success, returning proof %j', proof.toJSON())
 
@@ -501,16 +516,16 @@ export class ProofController extends Controller {
    * to the connection associated with the proof record.
    *
    * @param proofRecordId
-   * @returns ProofExchangeRecordProps
+   * @returns DidCommProofExchangeRecordProps
    */
   @Post('/:proofRecordId/accept-presentation')
-  @Example<ProofExchangeRecordProps>(ProofRecordExample)
+  @Example<DidCommProofExchangeRecordProps>(ProofRecordExample)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptPresentation(@Request() req: express.Request, @Path('proofRecordId') proofRecordId: UUID) {
     try {
       req.log.info('accepting proof presentation %s', proofRecordId)
-      const proof = await this.agent.proofs.acceptPresentation({ proofRecordId })
+      const proof = await this.agent.didcomm.proofs.acceptPresentation({ proofExchangeRecordId: proofRecordId })
 
       return proof.toJSON()
     } catch (error) {
@@ -533,11 +548,20 @@ export class ProofController extends Controller {
     req: express.Request,
     proofRecordId: UUID,
     requestedAnonCreds: NonNullable<SimpleProofFormats['anoncreds']>
-  ): Promise<ProofFormatPayload<ProofFormats, 'acceptRequest'>> {
+  ): Promise<DidCommProofFormatPayload<ProofFormats, 'acceptRequest'>> {
     req.log.info('hydrating simplified proof formats for %s proof', proofRecordId)
 
-    const availableCredentials = await this.agent.proofs.getCredentialsForRequest({ proofRecordId })
-    const availableAnonCreds = availableCredentials.proofFormats.anoncreds
+    const availableCredentials = await this.agent.didcomm.proofs.getCredentialsForRequest({
+      proofExchangeRecordId: proofRecordId,
+    })
+    const availableAnonCreds = (
+      availableCredentials.proofFormats as {
+        anoncreds?: {
+          attributes?: Record<string, AnonCredsRequestedAttributeMatch[]>
+          predicates?: Record<string, AnonCredsRequestedPredicateMatch[]>
+        }
+      }
+    ).anoncreds
 
     const attrCount = Object.keys(availableAnonCreds?.attributes || {}).length
     const predCount = Object.keys(availableAnonCreds?.predicates || {}).length

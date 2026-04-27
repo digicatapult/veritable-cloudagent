@@ -2,24 +2,26 @@
  * Credential and Proof protocol version definitions.
  */
 import type {
-  AnonCredsCredentialFormat,
-  AnonCredsCredentialFormatService,
-  AnonCredsProofFormat,
-  AnonCredsProofFormatService,
+  AnonCredsDidCommCredentialFormat,
+  AnonCredsDidCommCredentialFormatService,
+  AnonCredsDidCommProofFormat,
+  AnonCredsDidCommProofFormatService,
 } from '@credo-ts/anoncreds'
 import type {
-  DifPresentationExchangeProofFormatService,
-  JsonLdCredentialFormat,
-  JsonLdCredentialFormatService,
-  V2CredentialProtocol,
-  V2ProofProtocol,
-} from '@credo-ts/core'
+  DidCommCredentialV2Protocol,
+  DidCommDifPresentationExchangeProofFormatService,
+  DidCommJsonLdCredentialFormat,
+  DidCommJsonLdCredentialFormatService,
+  DidCommProofV2Protocol,
+} from '@credo-ts/didcomm'
 import type { DifPresentationExchangeProofFormat } from './pex.js'
 
 export type CredentialProtocols = [
-  V2CredentialProtocol<[AnonCredsCredentialFormatService, JsonLdCredentialFormatService]>,
+  DidCommCredentialV2Protocol<[AnonCredsDidCommCredentialFormatService, DidCommJsonLdCredentialFormatService]>,
 ]
-export type CredentialFormats = [AnonCredsCredentialFormat, JsonLdCredentialFormat]
+export type CredentialFormats = [AnonCredsDidCommCredentialFormat, DidCommJsonLdCredentialFormat]
 
-export type ProofProtocols = [V2ProofProtocol<[AnonCredsProofFormatService, DifPresentationExchangeProofFormatService]>]
-export type ProofFormats = [AnonCredsProofFormat, DifPresentationExchangeProofFormat]
+export type ProofProtocols = [
+  DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
+]
+export type ProofFormats = [AnonCredsDidCommProofFormat, DifPresentationExchangeProofFormat]

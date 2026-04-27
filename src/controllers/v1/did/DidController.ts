@@ -1,4 +1,4 @@
-import { Agent, CredoError, TypedArrayEncoder } from '@credo-ts/core'
+import { Agent, CredoError } from '@credo-ts/core'
 import { Body, Controller, Example, Get, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
@@ -10,7 +10,7 @@ import type {
   DID,
   DidCreateOptions,
   DidCreateResult,
-  DidResolutionResultProps,
+  DidResolutionResult,
   ImportDidOptions,
 } from '../../types/index.js'
 
@@ -28,9 +28,9 @@ export class DidController extends Controller {
   /**
    * Retrieve schema
    *
-   * @returns DidResolutionResultProps[]
+   * @returns DidResolutionResult[]
    */
-  @Example<DidResolutionResultProps[]>([DidRecordExample])
+  @Example<DidResolutionResult[]>([DidRecordExample])
   @Get('/')
   @Response<BadRequest>(400)
   @Response<HttpResponse>(500)
@@ -38,7 +38,7 @@ export class DidController extends Controller {
     @Request() req: express.Request,
     @Query('createdLocally') createdLocally: boolean,
     @Query('method') method?: string
-  ): Promise<DidResolutionResultProps[]> {
+  ): Promise<DidResolutionResult[]> {
     if (!createdLocally) {
       throw new BadRequest('can only list DIDs created locally')
     }
@@ -72,7 +72,7 @@ export class DidController extends Controller {
    * @param did Decentralized Identifier
    * @returns DidResolutionResult
    */
-  @Example<DidResolutionResultProps>(DidRecordExample)
+  @Example<DidResolutionResult>(DidRecordExample)
   @Get('/:did')
   public async getDidRecordByDid(@Request() req: express.Request, @Path('did') did: DID) {
     req.log.debug('resolving %s', did)
@@ -93,23 +93,16 @@ export class DidController extends Controller {
    * Import a DID to the Agent and return the DID resolution result
    *
    * @param options
-   * @returns DidResolutionResultProps
+   * @returns DidResolutionResult
    */
-  @Example<DidResolutionResultProps>(DidRecordExample)
+  @Example<DidResolutionResult>(DidRecordExample)
   @Post('/import')
   @Response<BadRequest>(400)
   @Response<HttpResponse>(500)
   public async importDid(@Request() req: express.Request, @Body() options: ImportDidOptions) {
     try {
-      const { privateKeys, ...rest } = options
-      req.log.info('importing DIDs %j', rest)
-      await this.agent.dids.import({
-        ...rest,
-        privateKeys: privateKeys?.map(({ keyType, privateKey }) => ({
-          keyType,
-          privateKey: TypedArrayEncoder.fromBase64(privateKey),
-        })),
-      })
+      req.log.info('importing DIDs %j', options)
+      await this.agent.dids.import(options)
       req.log.debug('%s successfully imported', options.did)
       return this.getDidRecordByDid(req, options.did)
     } catch (error) {
@@ -127,7 +120,7 @@ export class DidController extends Controller {
    * Create a DID and return the DID resolution result
    *
    * @param options
-   * @returns DidResolutionResultProps
+   * @returns DidResolutionResult
    */
   @Example<DidCreateResult>(DidStateExample)
   @Post('/create')

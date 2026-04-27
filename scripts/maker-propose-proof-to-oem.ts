@@ -1,6 +1,6 @@
-import { AutoAcceptProof } from '@credo-ts/core'
+import { DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import z from 'zod'
-import type { ProposeProofOptions } from '../src/controllers/types.js'
+import type { ProposeProofOptions } from '../src/controllers/types/index.js'
 
 interface ParsedArgs {
   credentialId?: string
@@ -216,7 +216,7 @@ async function main() {
         ],
       },
     },
-    autoAcceptProof: AutoAcceptProof.Never,
+    autoAcceptProof: DidCommAutoAcceptProof.Never,
   }
 
   log('Proposing proof to OEM...')

@@ -2,20 +2,21 @@ import type { Server } from 'node:net'
 import type { RestAgent } from '../../src/agent.js'
 
 import { expect } from 'chai'
-import { afterEach, before, describe, test } from 'mocha'
+import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub, useFakeTimers, type SinonFakeTimers } from 'sinon'
 import request from 'supertest'
 
-import { ConnectionRecord, RecordNotFoundError } from '@credo-ts/core'
+import { RecordNotFoundError } from '@credo-ts/core'
+import { DidCommConnectionRecord } from '@credo-ts/didcomm'
 import { container } from 'tsyringe'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import { NotFoundError } from '../../src/error.js'
-import { getTestAgent, getTestConnection, getTestServer } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestConnection, getTestServer } from './utils/helpers.js'
 
 describe('DrpcController', () => {
   let app: Server
   let agent: RestAgent
-  let connection: ConnectionRecord
+  let connection: DidCommConnectionRecord
   let clock: SinonFakeTimers
   let receiveHandler: DrpcReceiveHandler
 
@@ -181,7 +182,11 @@ describe('DrpcController', () => {
     })
   })
 
-  after(async function () {
-    app.close()
+  after(async () => {
+    if (agent) {
+      await agent.shutdown()
+      await deleteAgentStore(agent)
+    }
+    app?.close()
   })
 })

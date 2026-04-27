@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import { describe, it } from 'mocha'
 import makerAuthorisationSchema from '../../scripts/schemas/makeAuthorisation.json' with { type: 'json' }
 import { ALICE_BASE_URL, BOB_BASE_URL, ISSUER_DID_KEY } from './utils/fixtures.js'
 

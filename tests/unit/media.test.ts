@@ -5,13 +5,13 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import {
-  MediaSharingRecord,
-  MediaSharingRole,
-  MediaSharingState,
+  DidCommMediaSharingRecord,
+  DidCommMediaSharingRole,
+  DidCommMediaSharingState,
   SharedMediaItem,
 } from '@2060.io/credo-ts-didcomm-media-sharing'
 
-import { getTestAgent, getTestServer, objectToJson } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestServer, objectToJson } from './utils/helpers.js'
 
 import type { RestAgent } from '../../src/agent.js'
 import type { MediaShareRequest } from '../../src/controllers/types/index.js'
@@ -31,7 +31,7 @@ describe('MediaController', () => {
   after(async () => {
     sinonRestore()
     await agent.shutdown()
-    await agent.wallet.delete()
+    await deleteAgentStore(agent)
     app.close()
   })
 
@@ -41,21 +41,21 @@ describe('MediaController', () => {
       const createStub = stub(agent.modules.media, 'create')
       const shareStub = stub(agent.modules.media, 'share')
 
-      const fakeRecord = new MediaSharingRecord({
+      const fakeRecord = new DidCommMediaSharingRecord({
         id: 'rec-123',
         createdAt: new Date(),
         connectionId: '52907745-7672-470e-a803-a2f8feb52944',
-        role: MediaSharingRole.Sender,
-        state: MediaSharingState.Init,
+        role: DidCommMediaSharingRole.Sender,
+        state: DidCommMediaSharingState.Init,
         items: [],
       })
       createStub.resolves(fakeRecord)
-      const sharedRecord = new MediaSharingRecord({
+      const sharedRecord = new DidCommMediaSharingRecord({
         id: 'rec-123',
         createdAt: new Date(),
         connectionId: '52907745-7672-470e-a803-a2f8feb52944',
-        role: MediaSharingRole.Sender,
-        state: MediaSharingState.MediaShared,
+        role: DidCommMediaSharingRole.Sender,
+        state: DidCommMediaSharingState.MediaShared,
         items: [],
       })
       shareStub.resolves(sharedRecord)

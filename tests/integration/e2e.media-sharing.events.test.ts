@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { describe, it } from 'mocha'
+import { after, describe, it } from 'mocha'
 import request from 'supertest'
 import WebSocket from 'ws'
 import PinoLogger from '../../src/utils/logger.js'
@@ -33,6 +33,21 @@ describe('Media Sharing Events (WS)', function () {
 
   let ws: WebSocket
 
+  after(async function () {
+    if (!ws || ws.readyState === WebSocket.CLOSED) {
+      return
+    }
+
+    await new Promise<void>((resolve) => {
+      const timeout = setTimeout(resolve, 500)
+      ws.once('close', () => {
+        clearTimeout(timeout)
+        resolve()
+      })
+      ws.close()
+    })
+  })
+
   it('Connects WebSocket to Alice', function (done) {
     const wsPort = process.env.ALICE_WS_PORT ?? '5003'
     ws = new WebSocket(ALICE_WS_URL.replace('/:\\d+$/', `:${wsPort}`))
@@ -59,7 +74,7 @@ describe('Media Sharing Events (WS)', function () {
   })
 
   it('Bob accepts invitation', async function () {
-    await bob.post('/v1/oob/receive-invitation-url').send({ invitationUrl }).expect(200)
+    await bob.post('/v1/oob/receive-invitation-url').send({ invitationUrl, label: 'Bob (Invitee)' }).expect(200)
   })
 
   it('Alice fetches her connection', async function () {
@@ -98,9 +113,5 @@ describe('Media Sharing Events (WS)', function () {
 
     expect(states, `States captured: ${states.join(',')}`).to.include('init')
     expect(states, `States captured: ${states.join(',')}`).to.include('media-shared')
-  })
-
-  it('Closes WebSocket', function () {
-    ws.close()
   })
 })

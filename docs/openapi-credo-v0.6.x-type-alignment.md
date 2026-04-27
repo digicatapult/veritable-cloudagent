@@ -1,6 +1,6 @@
-# OpenAPI ↔ Credo TS v0.5.x type alignment (current approach)
+# OpenAPI ↔ Credo TS v0.6.x type alignment (current approach)
 
-This document explains how veritable-cloudagent aligns its **TSOA/OpenAPI DTO types** with **Credo TS v0.5.x** internal types while keeping OpenAPI generation stable.
+This document explains how veritable-cloudagent aligns its **TSOA/OpenAPI DTO types** with **Credo TS v0.6.x** internal types while keeping OpenAPI generation stable.
 
 It is intentionally short and describes the *current implementation* on this branch.
 
@@ -31,19 +31,35 @@ We treat controller types as *DTOs for OpenAPI*, and we bridge to Credo types at
    - We build agent-call option objects explicitly and type-check them using `satisfies Parameters<...>[0]` where possible.
    - For proofs, proof-format payloads are adapted in `src/utils/proofs.ts`.
 
-4. **Stage correctness enforced by DTO shape + 422s**
-   - Requests that provide stage-inappropriate payloads are rejected with a TSOA `ValidateError` (HTTP 422).
+4. **Stage correctness enforced by DTO shape + boundary validation**
+   - Requests that provide stage-inappropriate payloads are rejected with a TSOA `ValidateError` (HTTP `422`) when the DTO contract fails.
+   - Runtime boundary guards that reject semantically unsafe payload shapes may return HTTP `400` when implemented as explicit bad-request responses.
 
 ---
 
+## Controller boundary strategy (v0.6.x)
+
+- Controller DTOs under `src/controllers/types/` are OpenAPI boundary contracts.
+- Explicit local DTO interfaces are preferred over utility-type composition (`Pick`/`Omit`) in controller request/response models.
+- Upstream naming is used directly where semantics match (including `...Options`).
+- Direct Credo re-exports are used only where schema/model stability is proven (for example DID request/resolution types).
+
+## DID alignment updates in v0.6.x
+
+- DID request/resolution contracts now use upstream Credo exports where stable:
+  - `DidCreateOptions`
+  - `ImportDidOptions`
+  - `DidResolutionResult`
+- DID create-state response DTOs remain local boundary models with explicit `state` discriminants, while sharing a local base shape for maintainability.
+
 ## Proofs: DIF Presentation Exchange (PEX)
 
-### DTO shape vs Credo v0.5.x expectations
+### DTO shape vs Credo v0.6.x expectations
 
 - Controller DTOs model `presentationDefinition` as a TSOA-friendly, “v2-looking” approximation (`PresentationDefinitionV2`) in `src/controllers/types/pex.ts`.
-- Credo v0.5.x’s declared PEX type surface is **V1-shaped** (e.g., `DifPresentationExchangeDefinitionV1`).
+- Credo v0.6.x still exposes PEX types that can pull in deeper Sphereon model graphs when used directly in controller signatures.
 
-### How we keep this safe on v0.5.x
+### How we keep this safe on v0.6.x
 
 1. **Runtime validator: v1-compatible PEX profile**
    - Implemented as `validatePexV1Presentation` in `src/utils/proofs.ts`.
@@ -79,12 +95,13 @@ We treat controller types as *DTOs for OpenAPI*, and we bridge to Credo types at
 
 This is a deliberate API/UX choice: Credo expects full `ProofFormatPayload<..., 'acceptRequest'>`, but we also support a simpler client-facing shape for AnonCreds.
 
-### Known mismatch: PEX accept-request credential selection
+### Current contract: PEX accept-request credential selection
 
 - Credo expects PEX accept-request selections as a mapping from input descriptor ids to **Credo credential record objects**.
-- Our TSOA DTO models this as `Record<string, unknown[]>` to avoid importing record types and to keep OpenAPI stable.
+- For migration stability, `POST /v1/proofs/:proofRecordId/accept-request` now rejects client-supplied `proofFormats.presentationExchange.credentials` with `422`.
+- PEX credential selection remains server-side/agent-side in this release.
 
-Result: this is **not a stable public client contract today**; client-driven PEX selection requires an explicit contract decision (e.g., record IDs resolved server-side).
+Result: client-driven PEX selection is intentionally out of scope for the current migration release and requires a separate post-migration API contract.
 
 ---
 
@@ -94,13 +111,22 @@ Where Credo exports stable, simple interface types that don’t pull in problema
 
 Example (already done in this repo): JSON-LD credential format types are re-exported for controller typing.
 
+### Credentials: JSON-LD boundary validation status code
+
+- For credential JSON-LD shape guards on:
+  - `POST /v1/credentials/propose-credential`
+  - `POST /v1/credentials/create-offer`
+  - `POST /v1/credentials/offer-credential`
+- Structurally unsafe JSON-LD payloads are rejected as HTTP `400` (bad request) by controller boundary validation.
+
 ---
 
-## Practical rules of thumb (v0.5.x)
+## Practical rules of thumb (v0.6.x)
 
 - If importing a Credo type into a controller signature drags in Sphereon PEX models: **do not import it**. Define a local DTO and bridge at the boundary.
-- If DTOs are intentionally broader than Credo: add a **runtime validator** and return a 422 on unsupported input.
+- If DTOs are intentionally broader than Credo: add a **runtime validator** and return a status code consistent with the endpoint contract (`400` for explicit bad-request boundary guards, `422` for TSOA `ValidateError` paths).
 - Prefer `satisfies` for agent option objects (DTO → internal) to avoid wide `as Internal...` casts.
+- Avoid utility-type composition (`Pick`/`Omit`) in TSOA controller boundary models.
 - Keep stage-specific payloads stage-correct in DTOs; don’t accept request-stage payloads in accept-stage endpoints.
 
 ---

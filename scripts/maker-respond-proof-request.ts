@@ -1,6 +1,6 @@
-import { AutoAcceptProof } from '@credo-ts/core'
+import { DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import z from 'zod'
-import type { AcceptProofRequestOptions } from '../src/controllers/types.js'
+import type { AcceptProofRequestOptions } from '../src/controllers/types/index.js'
 
 interface ParsedArgs {
   proofId?: string
@@ -182,7 +182,7 @@ async function main() {
   const acceptProofRequest: AcceptProofRequestOptions = {
     useReturnRoute: true,
     willConfirm: true,
-    autoAcceptProof: AutoAcceptProof.ContentApproved,
+    autoAcceptProof: DidCommAutoAcceptProof.ContentApproved,
     comment: 'Accepting proof request from OEM',
     proofFormats,
   }

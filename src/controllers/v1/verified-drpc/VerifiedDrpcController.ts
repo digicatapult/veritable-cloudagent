@@ -1,8 +1,8 @@
+import { Agent } from '@credo-ts/core'
 import {
-  Agent,
   type CreateProofRequestOptions as CredoCreateProofRequestOptions,
-  type ProofProtocol,
-} from '@credo-ts/core'
+  type DidCommProofProtocol,
+} from '@credo-ts/didcomm'
 import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } from '@tsoa/runtime'
 import express from 'express'
 import { injectable } from 'tsyringe'
@@ -47,7 +47,7 @@ export class VerifiedDrpcController extends Controller {
     @Query('async') async_ = false,
     @Query('timeout') timeout = 5000
   ) {
-    let proofOptions: CredoCreateProofRequestOptions<ProofProtocol[]> | undefined
+    let proofOptions: CredoCreateProofRequestOptions<DidCommProofProtocol[]> | undefined
     if (requestOptions.proofRequestOptions) {
       const {
         proofRequestOptions: { proofFormats, ...rest },

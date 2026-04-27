@@ -9,7 +9,7 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import { schema } from './utils/fixtures.js'
-import { getTestAgent, getTestSchema, getTestServer } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('SchemaController', () => {
   let app: Server
@@ -238,7 +238,7 @@ describe('SchemaController', () => {
 
   after(async () => {
     await agent.shutdown()
-    await agent.wallet.delete()
+    await deleteAgentStore(agent)
     app.close()
   })
 })

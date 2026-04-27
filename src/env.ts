@@ -31,19 +31,7 @@ const stringArray = <T extends string = string>(
   } = {}
 ) => {
   const validator = makeValidator((input: string | string[]) => {
-    let values: string[]
-    if (Array.isArray(input)) {
-      values = input
-    } else {
-      if (typeof input !== 'string') {
-        throw new Error('Invalid input type, expected a string')
-      }
-      try {
-        values = input.split(',').map((s) => s.trim())
-      } catch (err) {
-        throw new Error(`Invalid input for string array ${err}`)
-      }
-    }
+    const values = Array.isArray(input) ? input : parseStringArrayInput(input)
     const { allowedValues } = options
     if (allowedValues) {
       if (!values.every((v) => allowedValues.has(v as T))) {
@@ -55,6 +43,20 @@ const stringArray = <T extends string = string>(
     return values as T[]
   })
   return validator(spec)
+}
+
+const parseStringArrayInput = (input: string): string[] => {
+  if (typeof input !== 'string') {
+    throw new Error('Invalid input type, expected a string')
+  }
+
+  try {
+    return input.split(',').map((s) => s.trim())
+  } catch (err) {
+    throw new Error(`Invalid input for string array ${input}`, {
+      cause: err,
+    })
+  }
 }
 
 export const envConfig = {

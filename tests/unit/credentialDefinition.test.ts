@@ -13,7 +13,7 @@ import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
 import { schema } from './utils/fixtures.js'
-import { getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
+import { deleteAgentStore, getTestAgent, getTestCredDef, getTestSchema, getTestServer } from './utils/helpers.js'
 
 describe('CredentialDefinitionController', () => {
   let app: Server
@@ -284,7 +284,7 @@ describe('CredentialDefinitionController', () => {
 
   after(async () => {
     await agent.shutdown()
-    await agent.wallet.delete()
+    await deleteAgentStore(agent)
     app.close()
   })
 })

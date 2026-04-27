@@ -12,6 +12,7 @@ import {
 import {
   acceptCredential,
   acceptPresentation,
+  sleep,
   waitForConnectionByOob,
   waitForCredentialRecord,
   waitForCredentialState,
@@ -41,11 +42,8 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   let verifierProofRequestId: UUID
   let threadIdOnVerifier: UUID
 
-  beforeEach(function (done) {
-    // pause between tests/retries to allow state to resolve on peers
-    setTimeout(function () {
-      done()
-    }, 200)
+  beforeEach(async function () {
+    await sleep(200)
   })
 
   it('should allow an Issuer to create a Schema', async function () {
@@ -97,7 +95,10 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   })
 
   it("should allow a Holder to accept an Issuer's invitation", async function () {
-    const acceptInvitationPayload = { invitationUrl: issuerToHolderInvitationUrl }
+    const acceptInvitationPayload = {
+      invitationUrl: issuerToHolderInvitationUrl,
+      label: 'Bob (Invitee)',
+    }
 
     const response = await holderClient
       .post('/v1/oob/receive-invitation-url')
@@ -224,7 +225,10 @@ describe('Onboarding & Verification flow with AnonCreds', function () {
   })
 
   it("should allow a Holder to accept Verifier's invitation", async function () {
-    const acceptInvitationPayload = { invitationUrl: verifierToHolderInvitationUrl }
+    const acceptInvitationPayload = {
+      invitationUrl: verifierToHolderInvitationUrl,
+      label: 'Bob (Invitee)',
+    }
 
     const response = await holderClient
       .post('/v1/oob/receive-invitation-url')

@@ -2,20 +2,32 @@ import { expect } from 'chai'
 import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, spy } from 'sinon'
 
-import { BasicMessageEventTypes, type Agent, type BasicMessageRecord, type ConnectionRecord } from '@credo-ts/core'
+import {
+  DidCommBasicMessageEventTypes,
+  type DidCommBasicMessageRecord,
+  type DidCommConnectionRecord,
+} from '@credo-ts/didcomm'
 import { AddressInfo, Server } from 'node:net'
 import request from 'supertest'
-import WebSocket from 'ws'
+import type WebSocket from 'ws'
 
-import { closeWebSocket, getTestAgent, getTestServer, objectToJson, openWebSocket } from './utils/helpers.js'
+import {
+  closeWebSocket,
+  deleteAgentStore,
+  getTestAgent,
+  getTestServer,
+  objectToJson,
+  openWebSocket,
+  type TestAgent,
+} from './utils/helpers.js'
 
 describe('BasicMessageController', () => {
   let port: number
   let server: Server
   let socket: WebSocket
-  let aliceAgent: Agent
-  let bobAgent: Agent
-  let bobConnectionToAlice: ConnectionRecord
+  let aliceAgent: TestAgent
+  let bobAgent: TestAgent
+  let bobConnectionToAlice: DidCommConnectionRecord
 
   before(async () => {
     aliceAgent = await getTestAgent('Basic Message REST Agent Test Alice', 3002)
@@ -23,11 +35,13 @@ describe('BasicMessageController', () => {
     server = await getTestServer(bobAgent)
     port = (server.address() as AddressInfo).port
 
-    const { outOfBandInvitation } = await aliceAgent.oob.createInvitation()
-    const { outOfBandRecord: bobOOBRecord } = await bobAgent.oob.receiveInvitation(outOfBandInvitation)
+    const { outOfBandInvitation } = await aliceAgent.didcomm.oob.createInvitation()
+    const { outOfBandRecord: bobOOBRecord } = await bobAgent.didcomm.oob.receiveInvitation(outOfBandInvitation, {
+      label: 'Bob',
+    })
 
-    const [bobConnectionAtBobAlice] = await bobAgent.connections.findAllByOutOfBandId(bobOOBRecord.id)
-    bobConnectionToAlice = await bobAgent.connections.returnWhenIsConnected(bobConnectionAtBobAlice!.id)
+    const [bobConnectionAtBobAlice] = await bobAgent.didcomm.connections.findAllByOutOfBandId(bobOOBRecord.id)
+    bobConnectionToAlice = await bobAgent.didcomm.connections.returnWhenIsConnected(bobConnectionAtBobAlice!.id)
   })
 
   afterEach(async () => {
@@ -61,7 +75,7 @@ describe('BasicMessageController', () => {
         socket.on('message', (data) => {
           const event = JSON.parse(data.toString())
 
-          if (event.type === BasicMessageEventTypes.BasicMessageStateChanged) {
+          if (event.type === DidCommBasicMessageEventTypes.DidCommBasicMessageStateChanged) {
             expect(event.payload.basicMessageRecord.connectionId).to.be.equal(bobConnectionToAlice.id)
             resolve(undefined)
           }
@@ -76,8 +90,8 @@ describe('BasicMessageController', () => {
 
   describe('Get basic messages', () => {
     test('should return list of basic messages filtered by connection id', async () => {
-      const findAllByQuerySpy = spy(bobAgent.basicMessages, 'findAllByQuery')
-      const getResult = (): Promise<BasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
+      const findAllByQuerySpy = spy(bobAgent.didcomm.basicMessages, 'findAllByQuery')
+      const getResult = (): Promise<DidCommBasicMessageRecord[]> => findAllByQuerySpy.firstCall.returnValue
 
       const response = await request(server).get(`/v1/basic-messages/${bobConnectionToAlice.id}`)
       const result = await getResult()
@@ -90,9 +104,9 @@ describe('BasicMessageController', () => {
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     await bobAgent.shutdown()
-    await bobAgent.wallet.delete()
+    await deleteAgentStore(bobAgent)
     await closeWebSocket(socket)
     server.close()
   })

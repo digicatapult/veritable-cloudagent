@@ -8,10 +8,7 @@ import Zod, { IDatabase, Models, Order, TABLE, Where, tablesList } from './types
  * @param where - Optional where conditions as objects or tuples
  * @returns The modified query builder
  */
-export const reduceWhere = <M extends TABLE>(
-  query: knex.Knex.QueryBuilder,
-  where?: Where<M>
-): knex.Knex.QueryBuilder => {
+export const reduceWhere = <M extends TABLE>(query: Knex.QueryBuilder, where?: Where<M>): Knex.QueryBuilder => {
   if (where) {
     if (!Array.isArray(where)) {
       where = [where]
