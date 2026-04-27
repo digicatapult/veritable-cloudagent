@@ -14,13 +14,22 @@ This document summarizes externally visible changes introduced by the Credo-TS v
 ### DIDComm symbol naming cleanup (source-level)
 
 - Source now uses direct `DidComm*` symbols consistently in runtime code and tests/fixtures.
-- This is a deliberate migration-era breaking style change in source conventions to reduce ambiguity and maintain parity with `Credo-ts`
+- This is a deliberate migration-era breaking style change in source conventions to reduce ambiguity and maintain parity with `Credo-TS`.
 
 Contributor guidance:
 
 - Prefer direct `DidComm*` imports and usages.
 - Do not add new alias imports that map `DidComm*` symbols to legacy/internal names.
 - Keep upstream non-prefixed exports as-is when Credo defines them that way (for example `TrustPingResponseReceivedEvent`).
+
+### Operator script compatibility (source-level)
+
+Operational TypeScript scripts under `scripts/` were updated for v0.6 DIDComm enum exports:
+
+- `AutoAcceptCredential`/`AutoAcceptProof` from `@credo-ts/core` are no longer used in scripts.
+- Scripts now use `DidCommAutoAcceptCredential`/`DidCommAutoAcceptProof` from `@credo-ts/didcomm`.
+
+This is source-level only for operators who run scripts directly; REST/API contracts are unchanged by this update.
 
 ### Event payload contract
 
@@ -255,7 +264,7 @@ Use this as a release-readiness checklist for all API, webhook, and WebSocket co
 
 ## Operational Notes
 
-- Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) or legacy key fields (`publicKeyMultibase`, `publicKeyBase58`) must migrate.
+- Existing consumers that parse legacy DID fragments (`#owner`, `#encryption`) must migrate to relationship-based key resolution (`authentication`, `assertionMethod`, `keyAgreement`).
 - Existing webhook/WebSocket consumers must update credential event parsing to `credentialExchangeRecord`.
 - Integrations storing raw event payloads should treat this as a schema-version boundary: keep historical v0.5 events as-is, ingest v0.6 events with the new field, and normalize cross-version analytics outside runtime API contracts.
 - PEX clients should not submit `presentationExchange.credentials` in `accept-request` for this release; rely on server-side credential selection.
@@ -263,7 +272,7 @@ Use this as a release-readiness checklist for all API, webhook, and WebSocket co
 ### TypeScript ESM compiler settings
 
 - TypeScript compiler settings are aligned to the Digital Catapult ESM standard:
-  - `target: ES2022`
+  - `target: ESNext`
   - `module: NodeNext`
   - `moduleResolution: nodenext`
 
@@ -301,7 +310,7 @@ Clients should parse structured error objects. For `HttpResponse`-derived errors
 
 Integration validation performed for this migration branch:
 
-- `npm run test:integration` completed successfully against the Docker testnet (`71 passing`).
+- `npm run test:integration` completed successfully against the Docker testnet at migration cut time.
 
 ## Upgrade Examples
 
