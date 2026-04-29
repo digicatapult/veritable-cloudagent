@@ -114,8 +114,35 @@ AnonCreds provide strong privacy guarantees. This flow requires registering Sche
 ### Prerequisites
 
 Before issuing, you must register a Schema and Credential Definition.
-For an end-to-end scripted demo setup, see
-[`veritable-cloudagent-demo`](https://github.com/digicatapult/veritable-cloudagent-demo).
+
+### Register Schema
+
+* **Endpoint**: `POST /v1/schemas`
+* **Payload structure**:
+
+```json
+{
+  "issuerId": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+  "name": "employee-card",
+  "version": "1.0",
+  "attrNames": ["name", "role", "employeeId"]
+}
+```
+
+### Register Credential Definition
+
+* **Endpoint**: `POST /v1/credential-definitions`
+* **Payload structure**:
+
+```json
+{
+  "issuerId": "did:key:z6Mkk7yqnGF3YwTrLpqrW6PGsKci7dNqh1CjnvMbzrMerSeL",
+  "schemaId": "<schema-id>",
+  "tag": "employee-card-v1"
+}
+```
+
+Use the `id` returned from `POST /v1/schemas` as `schemaId` when creating the credential definition, then use the `id` returned from `POST /v1/credential-definitions` as `credentialDefinitionId` when issuing the credential.
 
 ### 1. Issuance (AnonCreds)
 
