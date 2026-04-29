@@ -1,11 +1,10 @@
+import { Agent, RecordNotFoundError } from '@credo-ts/core'
 import {
-  Agent,
-  type CredentialExchangeRecordProps,
-  CredentialRepository,
-  CredentialState,
-  RecordNotFoundError,
+  type DidCommCredentialExchangeRecordProps,
+  DidCommCredentialExchangeRepository,
+  DidCommCredentialState,
   type SendCredentialProblemReportOptions,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 import {
   Body,
   Controller,
@@ -24,16 +23,16 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { HttpResponse, NotFoundError } from '../../../error.js'
-import { transformToCredentialFormatData } from '../../../utils/credentials.js'
+import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { transformToCredentialFormatData, validateJsonLdCredentialProfile } from '../../../utils/credentials.js'
 import { CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 
-type InternalProposeCredentialOptions = Parameters<RestAgent['credentials']['proposeCredential']>[0]
-type InternalAcceptCredentialProposalOptions = Parameters<RestAgent['credentials']['acceptProposal']>[0]
-type InternalCreateOfferOptions = Parameters<RestAgent['credentials']['createOffer']>[0]
-type InternalOfferCredentialOptions = Parameters<RestAgent['credentials']['offerCredential']>[0]
-type InternalAcceptCredentialOfferOptions = Parameters<RestAgent['credentials']['acceptOffer']>[0]
-type InternalAcceptCredentialRequestOptions = Parameters<RestAgent['credentials']['acceptRequest']>[0]
+type InternalProposeCredentialOptions = Parameters<RestAgent['didcomm']['credentials']['proposeCredential']>[0]
+type InternalAcceptCredentialProposalOptions = Parameters<RestAgent['didcomm']['credentials']['acceptProposal']>[0]
+type InternalCreateOfferOptions = Parameters<RestAgent['didcomm']['credentials']['createOffer']>[0]
+type InternalOfferCredentialOptions = Parameters<RestAgent['didcomm']['credentials']['offerCredential']>[0]
+type InternalAcceptCredentialOfferOptions = Parameters<RestAgent['didcomm']['credentials']['acceptOffer']>[0]
+type InternalAcceptCredentialRequestOptions = Parameters<RestAgent['didcomm']['credentials']['acceptRequest']>[0]
 
 import type {
   AcceptCredentialOfferOptions,
@@ -62,14 +61,14 @@ export class CredentialController extends Controller {
    *
    * @returns CredentialExchangeRecord[]
    */
-  @Example<CredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
+  @Example<DidCommCredentialExchangeRecordProps[]>([CredentialExchangeRecordExample])
   @Get('/')
   public async getAllCredentials(
     @Query('threadId') threadId?: UUID,
     @Query('connectionId') connectionId?: UUID,
-    @Query('state') state?: CredentialState
+    @Query('state') state?: DidCommCredentialState
   ) {
-    const credentialRepository = this.agent.dependencyManager.resolve(CredentialRepository)
+    const credentialRepository = this.agent.dependencyManager.resolve(DidCommCredentialExchangeRepository)
 
     const credentials = await credentialRepository.findByQuery(this.agent.context, {
       connectionId,
@@ -86,9 +85,9 @@ export class CredentialController extends Controller {
    * @param credentialRecordId
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Get('/:credentialRecordId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getCredentialById(
     @Request() req: express.Request,
@@ -96,12 +95,14 @@ export class CredentialController extends Controller {
   ) {
     try {
       req.log.info('retrieving %s credential by id', credentialRecordId)
-      const credential = await this.agent.credentials.getById(credentialRecordId)
+      const credential = await this.agent.didcomm.credentials.getById(credentialRecordId)
 
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential record not found')
+        throw new NotFoundError('credential record not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -115,7 +116,7 @@ export class CredentialController extends Controller {
    */
   @Example<CredentialFormatData>(CredentialFormatDataExample)
   @Get('/:credentialRecordId/format-data')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getCredentialFormatDataById(
     @Request() req: express.Request,
@@ -123,12 +124,14 @@ export class CredentialController extends Controller {
   ): Promise<CredentialFormatData> {
     try {
       req.log.info('getting format data for %s', credentialRecordId)
-      const formatData = await this.agent.credentials.getFormatData(credentialRecordId)
+      const formatData = await this.agent.didcomm.credentials.getFormatData(credentialRecordId)
 
       return transformToCredentialFormatData(formatData)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('format data not found')
+        throw new NotFoundError('format data not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -140,16 +143,18 @@ export class CredentialController extends Controller {
    * @param credentialRecordId
    */
   @Delete('/:credentialRecordId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async deleteCredential(@Request() req: express.Request, @Path('credentialRecordId') credentialRecordId: UUID) {
     try {
       this.setStatus(204)
       req.log.info('deleting credential %s', credentialRecordId)
-      await this.agent.credentials.deleteById(credentialRecordId)
+      await this.agent.didcomm.credentials.deleteById(credentialRecordId)
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential record not found')
+        throw new NotFoundError('credential record not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -162,20 +167,27 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/propose-credential')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async proposeCredential(@Request() req: express.Request, @Body() options: ProposeCredentialOptions) {
     try {
+      if (options.credentialFormats.jsonld) {
+        const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
+        if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
+      }
+
       req.log.info('proposing credential to %s', options.connectionId)
-      const credential = await this.agent.credentials.proposeCredential(
+      const credential = await this.agent.didcomm.credentials.proposeCredential(
         options satisfies InternalProposeCredentialOptions
       )
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('connection not found')
+        throw new NotFoundError('connection not found', {
+          connectionId: options.connectionId,
+        })
       }
       throw error
     }
@@ -189,9 +201,9 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-proposal')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
     @Request() req: express.Request,
@@ -200,9 +212,9 @@ export class CredentialController extends Controller {
   ) {
     try {
       req.log.debug('accepting credential proposal for %s', credentialRecordId)
-      const credential = await this.agent.credentials.acceptProposal({
+      const credential = await this.agent.didcomm.credentials.acceptProposal({
         ...(options ?? {}),
-        credentialRecordId: credentialRecordId,
+        credentialExchangeRecordId: credentialRecordId,
       } satisfies InternalAcceptCredentialProposalOptions)
       return credential.toJSON()
     } catch (error) {
@@ -220,15 +232,21 @@ export class CredentialController extends Controller {
    * @param options
    * @returns AgentMessage, CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/create-offer')
+  @Response<BadRequest>(400)
   public async createOffer(@Request() req: express.Request, @Body() options: CreateOfferOptions) {
-    const offer = await this.agent.credentials.createOffer(options satisfies InternalCreateOfferOptions)
+    if (options.credentialFormats.jsonld) {
+      const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
+      if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
+    }
+
+    const offer = await this.agent.didcomm.credentials.createOffer(options satisfies InternalCreateOfferOptions)
     req.log.info('credential offer has been created %j', offer)
 
     return {
       message: offer.message.toJSON(),
-      credentialRecord: offer.credentialRecord.toJSON(),
+      credentialExchangeRecord: offer.credentialExchangeRecord.toJSON(),
     }
   }
 
@@ -239,25 +257,34 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/offer-credential')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {
+    if (options.credentialFormats.jsonld) {
+      const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
+      if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
+    }
+
     req.log.debug('checking if connection %s exists', options.connectionId)
-    const connection = await this.agent.connections.findById(options.connectionId)
+    const connection = await this.agent.didcomm.connections.findById(options.connectionId)
     if (!connection) {
-      throw new NotFoundError('connection not found')
+      throw new NotFoundError('connection not found', {
+        connectionId: options.connectionId,
+      })
     }
 
     try {
-      const credential = await this.agent.credentials.offerCredential(options satisfies InternalOfferCredentialOptions)
+      const credential = await this.agent.didcomm.credentials.offerCredential(
+        options satisfies InternalOfferCredentialOptions
+      )
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError(
-          `credential definition "${options.credentialFormats.anoncreds?.credentialDefinitionId}" not found`
-        )
+        throw new NotFoundError('credential definition not found', {
+          credentialDefinitionId: options.credentialFormats.anoncreds?.credentialDefinitionId,
+        })
       }
       throw error
     }
@@ -271,9 +298,9 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-offer')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptOffer(
     @Request() req: express.Request,
@@ -281,16 +308,18 @@ export class CredentialController extends Controller {
     @Body() options?: AcceptCredentialOfferOptions
   ) {
     try {
-      const credential = await this.agent.credentials.acceptOffer({
+      const credential = await this.agent.didcomm.credentials.acceptOffer({
         ...(options ?? {}),
-        credentialRecordId: credentialRecordId,
+        credentialExchangeRecordId: credentialRecordId,
       } satisfies InternalAcceptCredentialOfferOptions)
       req.log.debug('returning credential %j', credential.toJSON())
 
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential offer not found')
+        throw new NotFoundError('credential offer not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -304,9 +333,9 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-request')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptRequest(
     @Request() req: express.Request,
@@ -314,16 +343,18 @@ export class CredentialController extends Controller {
     @Body() options?: AcceptCredentialRequestOptions
   ) {
     try {
-      const credential = await this.agent.credentials.acceptRequest({
+      const credential = await this.agent.didcomm.credentials.acceptRequest({
         ...(options ?? {}),
-        credentialRecordId: credentialRecordId,
+        credentialExchangeRecordId: credentialRecordId,
       } satisfies InternalAcceptCredentialRequestOptions)
       req.log.debug('returning credential %j', credential.toJSON())
 
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential request not found')
+        throw new NotFoundError('credential request not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -336,19 +367,23 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-credential')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptCredential(@Request() req: express.Request, @Path('credentialRecordId') credentialRecordId: UUID) {
     try {
-      const credential = await this.agent.credentials.acceptCredential({ credentialRecordId: credentialRecordId })
+      const credential = await this.agent.didcomm.credentials.acceptCredential({
+        credentialExchangeRecordId: credentialRecordId,
+      })
       req.log.debug('returning credential %j', credential.toJSON())
 
       return credential.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential not found')
+        throw new NotFoundError('credential not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }
@@ -361,9 +396,9 @@ export class CredentialController extends Controller {
    * @param options
    * @returns CredentialExchangeRecord
    */
-  @Example<CredentialExchangeRecordProps>(CredentialExchangeRecordExample)
+  @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/send-problem-report')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async sendProblemReport(
     @Request() req: express.Request,
@@ -371,18 +406,20 @@ export class CredentialController extends Controller {
     @Body() body: { description: string }
   ) {
     const options: SendCredentialProblemReportOptions = {
-      credentialRecordId: credentialRecordId,
+      credentialExchangeRecordId: credentialRecordId,
       description: body.description,
     }
 
     try {
-      const problemReport = await this.agent.credentials.sendProblemReport(options)
+      const problemReport = await this.agent.didcomm.credentials.sendProblemReport(options)
       req.log.debug('returning problem report %j', problemReport.toJSON())
 
       return problemReport.toJSON()
     } catch (error) {
       if (error instanceof RecordNotFoundError) {
-        throw new NotFoundError('credential record not found')
+        throw new NotFoundError('credential record not found', {
+          credentialRecordId,
+        })
       }
       throw error
     }

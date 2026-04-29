@@ -4,7 +4,7 @@ import express from 'express'
 import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
-import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
+import { BadRequest, HttpResponse, InternalError, NotFoundError } from '../../../error.js'
 import { SchemaExample } from '../../examples.js'
 import type { AnonCredsSchemaResponse, DID, SchemaId, Version } from '../../types/index.js'
 
@@ -25,7 +25,7 @@ export class SchemaController {
    */
   @Example<AnonCredsSchemaResponse[]>([SchemaExample])
   @Get('/')
-  @Response<BadRequest['message']>(400)
+  @Response<BadRequest>(400)
   @Response<HttpResponse>(500)
   public async getCredentials(
     @Request() req: express.Request,
@@ -62,8 +62,8 @@ export class SchemaController {
    */
   @Example<AnonCredsSchemaResponse>(SchemaExample)
   @Get('/:schemaId')
-  @Response<BadRequest['message']>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<BadRequest>(400)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async getSchemaById(@Request() req: express.Request, @Path('schemaId') schemaId: SchemaId) {
     const { schema, resolutionMetadata } = await this.agent.modules.anoncreds.getSchema(schemaId)
@@ -75,11 +75,17 @@ export class SchemaController {
     }
 
     if (error === 'invalid' || error === 'unsupportedAnonCredsMethod') {
-      throw new BadRequest(`schemaId "${schemaId}" has invalid structure.`)
+      throw new BadRequest('schemaId has invalid structure.', {
+        schemaId,
+        resolutionError: error,
+      })
     }
 
     if (error !== undefined || schema === undefined) {
-      throw new HttpResponse({ message: `something went wrong: schema may be undefined ${error}` })
+      throw new InternalError('schema resolution failed', {
+        schemaId,
+        resolutionError: error ?? 'unknown',
+      })
     }
 
     req.log.debug('schema %s has been found %j', schemaId, schema)
@@ -121,11 +127,20 @@ export class SchemaController {
     })
 
     if (schemaState.state === 'failed') {
-      throw new HttpResponse({ message: `schema registration failed: ${schemaState.reason}` })
+      throw new InternalError('schema registration failed', {
+        issuerId: schema.issuerId,
+        schemaName: schema.name,
+        schemaVersion: schema.version,
+        reason: schemaState.reason,
+      })
     }
 
     if (schemaState.state !== 'finished' || schemaState.schemaId === undefined || schemaState.schema === undefined) {
-      throw new HttpResponse({ message: `something went wrong creating schema: unknown. state ${schemaState.state}` })
+      throw new InternalError('schema registration returned invalid state', {
+        state: schemaState.state,
+        hasSchemaId: schemaState.schemaId !== undefined,
+        hasSchema: schemaState.schema !== undefined,
+      })
     }
 
     req.log.info('%s schema has been created %j', schemaState.schemaId, schemaState)

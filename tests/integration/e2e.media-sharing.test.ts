@@ -28,7 +28,7 @@ describe('Media Sharing A→B', function () {
   it('Bob accepts invitation', async function () {
     await bob
       .post('/v1/oob/receive-invitation-url')
-      .send({ invitationUrl: aliceToBobInvitationUrl })
+      .send({ invitationUrl: aliceToBobInvitationUrl, label: 'Bob (Invitee)' })
       .expect('Content-Type', /json/)
       .expect(200)
   })

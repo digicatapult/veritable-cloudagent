@@ -1,16 +1,16 @@
+import type { Agent } from '@credo-ts/core'
 import {
-  TrustPingEventTypes,
-  type Agent,
-  type TrustPingReceivedEvent,
+  DidCommTrustPingEventTypes,
+  type DidCommTrustPingReceivedEvent,
   type TrustPingResponseReceivedEvent,
-} from '@credo-ts/core'
+} from '@credo-ts/didcomm'
 
 import type { ServerConfig } from '../utils/ServerConfig.js'
 import { sendWebSocketEvent } from './WebSocketEvents.js'
 import { sendWebhookEvent } from './WebhookEvent.js'
 
 export const trustPingEvents = async (agent: Agent, config: ServerConfig) => {
-  const eventHandler = async (event: TrustPingReceivedEvent | TrustPingResponseReceivedEvent) => {
+  const eventHandler = async (event: DidCommTrustPingReceivedEvent | TrustPingResponseReceivedEvent) => {
     const record = event.payload.connectionRecord
     const body = record.toJSON()
 
@@ -27,11 +27,11 @@ export const trustPingEvents = async (agent: Agent, config: ServerConfig) => {
         ...event,
         payload: {
           message: event.payload.message.toJSON(),
-          basicMessageRecord: event.payload.connectionRecord.toJSON(),
+          connectionRecord: event.payload.connectionRecord.toJSON(),
         },
       })
     }
   }
-  agent.events.on(TrustPingEventTypes.TrustPingReceivedEvent, eventHandler)
-  agent.events.on(TrustPingEventTypes.TrustPingResponseReceivedEvent, eventHandler)
+  agent.events.on(DidCommTrustPingEventTypes.DidCommTrustPingReceivedEvent, eventHandler)
+  agent.events.on(DidCommTrustPingEventTypes.DidCommTrustPingResponseReceivedEvent, eventHandler)
 }

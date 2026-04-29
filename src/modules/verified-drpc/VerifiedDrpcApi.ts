@@ -6,17 +6,16 @@ import type {
 } from './messages/index.js'
 import type { VerifiedDrpcRecord } from './repository/VerifiedDrpcRecord.js'
 
+import { AgentContext, injectable } from '@credo-ts/core'
 import {
-  type ConnectionRecord,
+  DidCommConnectionsApi,
+  DidCommMessageHandlerRegistry,
+  DidCommMessageSender,
+  DidCommOutboundMessageContext,
   type CreateProofRequestOptions,
-  type ProofProtocol,
-  AgentContext,
-  ConnectionsApi,
-  MessageHandlerRegistry,
-  MessageSender,
-  OutboundMessageContext,
-  injectable,
-} from '@credo-ts/core'
+  type DidCommConnectionRecord,
+  type DidCommProofProtocol,
+} from '@credo-ts/didcomm'
 
 import type { UUID } from '../../controllers/types/index.js'
 import { NotFoundError } from '../../error.js'
@@ -26,19 +25,19 @@ import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
 
 @injectable()
-export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
+export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
   private config: VerifiedDrpcModuleConfig<PPs>
   private verifiedDrpcMessageService: VerifiedDrpcService<PPs>
-  private messageSender: MessageSender
-  private connectionsApi: ConnectionsApi
+  private messageSender: DidCommMessageSender
+  private connectionsApi: DidCommConnectionsApi
   private agentContext: AgentContext
 
   public constructor(
     verifiedDrpcModuleConfig: VerifiedDrpcModuleConfig<PPs>,
-    messageHandlerRegistry: MessageHandlerRegistry,
+    messageHandlerRegistry: DidCommMessageHandlerRegistry,
     verifiedDrpcMessageService: VerifiedDrpcService<PPs>,
-    messageSender: MessageSender,
-    connectionsApi: ConnectionsApi,
+    messageSender: DidCommMessageSender,
+    connectionsApi: DidCommConnectionsApi,
     agentContext: AgentContext
   ) {
     this.config = verifiedDrpcModuleConfig
@@ -61,7 +60,7 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
   public async sendRequest(
     connectionId: UUID,
     request: VerifiedDrpcRequest,
-    proofOptions: CreateProofRequestOptions<ProofProtocol[]> = this.config.proofRequestOptions,
+    proofOptions: CreateProofRequestOptions<PPs> = this.config.proofRequestOptions,
     proofTimeoutMs: number = this.config.proofTimeoutMs
   ): Promise<(timeout?: number) => Promise<VerifiedDrpcResponse | undefined>> {
     const connection = await this.connectionsApi.getById(connectionId)
@@ -228,11 +227,11 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
   }
 
   private async sendMessage(
-    connection: ConnectionRecord,
+    connection: DidCommConnectionRecord,
     message: VerifiedDrpcRequestMessage | VerifiedDrpcResponseMessage,
     messageRecord: VerifiedDrpcRecord
   ): Promise<void> {
-    const outboundMessageContext = new OutboundMessageContext(message, {
+    const outboundMessageContext = new DidCommOutboundMessageContext(message, {
       agentContext: this.agentContext,
       connection,
       associatedRecord: messageRecord,
@@ -240,7 +239,7 @@ export class VerifiedDrpcApi<PPs extends ProofProtocol[]> {
     await this.messageSender.sendMessage(outboundMessageContext)
   }
 
-  private registerMessageHandlers(messageHandlerRegistry: MessageHandlerRegistry) {
+  private registerMessageHandlers(messageHandlerRegistry: DidCommMessageHandlerRegistry) {
     messageHandlerRegistry.registerMessageHandler(new VerifiedDrpcRequestHandler(this.verifiedDrpcMessageService))
     messageHandlerRegistry.registerMessageHandler(new VerifiedDrpcResponseHandler(this.verifiedDrpcMessageService))
   }

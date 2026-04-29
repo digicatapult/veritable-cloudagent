@@ -2,7 +2,7 @@ import { describe, it } from 'mocha'
 import type { SinonStubbedInstance } from 'sinon'
 import * as sinon from 'sinon'
 
-import { DependencyManager, FeatureRegistry } from '@credo-ts/core'
+import { DependencyManager } from '@credo-ts/core'
 
 import { withVerifiedDrpcModuleConfig } from './fixtures/verifiedDrpcModuleConfig.js'
 
@@ -12,12 +12,12 @@ import { VerifiedDrpcService } from '../services/index.js'
 
 describe('VerifiedDrpcModule', () => {
   it('registers dependencies on the dependency manager', () => {
-    const mockFeatureRegistry: SinonStubbedInstance<FeatureRegistry> = sinon.createStubInstance(FeatureRegistry)
     const mockDependencyManager: SinonStubbedInstance<DependencyManager> = sinon.createStubInstance(DependencyManager)
 
-    new VerifiedDrpcModule(withVerifiedDrpcModuleConfig()).register(mockDependencyManager, mockFeatureRegistry)
+    new VerifiedDrpcModule(withVerifiedDrpcModuleConfig()).register(mockDependencyManager)
 
     sinon.assert.calledTwice(mockDependencyManager.registerSingleton)
+    sinon.assert.calledOnce(mockDependencyManager.registerInstance)
     sinon.assert.calledWith(mockDependencyManager.registerSingleton, VerifiedDrpcService)
     sinon.assert.calledWith(mockDependencyManager.registerSingleton, VerifiedDrpcRepository)
   })

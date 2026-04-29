@@ -5,14 +5,22 @@ import { after, afterEach, before, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
 import request from 'supertest'
 
-import { KeyType, type Agent, type DidCreateResult, type DidRecord } from '@credo-ts/core'
+import { type DidCreateResult, type DidRecord } from '@credo-ts/core'
 
 import { DidCreateOptions, ImportDidOptions } from '../../src/controllers/types/index.js'
-import { getTestAgent, getTestDidCreate, getTestDidDocument, getTestServer, objectToJson } from './utils/helpers.js'
+import {
+  deleteAgentStore,
+  getTestAgent,
+  getTestDidCreate,
+  getTestDidDocument,
+  getTestServer,
+  objectToJson,
+  type TestAgent,
+} from './utils/helpers.js'
 
 describe('DidController', () => {
   let app: Server
-  let aliceAgent: Agent
+  let aliceAgent: TestAgent
   let testDidDocument: Record<string, unknown>
   let testDidCreate: DidCreateResult
 
@@ -43,6 +51,10 @@ describe('DidController', () => {
     test('should give 400 when createdLocally = false', async () => {
       const response = await request(app).get(`/v1/dids?createdLocally=false`)
       expect(response.statusCode).to.be.equal(400)
+      expect(response.body).to.deep.equal({
+        code: 400,
+        message: 'can only list DIDs created locally',
+      })
     })
   })
 
@@ -75,6 +87,11 @@ describe('DidController', () => {
       const response = await request(app).post(`/v1/dids/import`).send(importRequest)
 
       expect(response.statusCode).to.equal(400)
+      expect(response.body.code).to.equal(400)
+      expect(response.body.message).to.equal('error importing DID')
+      expect(response.body.details.did).to.equal(importRequest.did)
+      expect(response.body.details.cause).to.be.a('string')
+      expect(response.body.details.cause.length).to.be.greaterThan(0)
     })
   })
 
@@ -82,7 +99,12 @@ describe('DidController', () => {
     const createRequest: DidCreateOptions = {
       method: 'key',
       options: {
-        keyType: KeyType.Ed25519,
+        createKey: {
+          type: {
+            kty: 'OKP',
+            crv: 'Ed25519',
+          },
+        },
       },
     }
 
@@ -104,17 +126,26 @@ describe('DidController', () => {
       const createRequest: DidCreateOptions = {
         method: 'foo',
         options: {
-          keyType: KeyType.Ed25519,
+          createKey: {
+            type: {
+              kty: 'OKP',
+              crv: 'Ed25519',
+            },
+          },
         },
       }
       const response = await request(app).post(`/v1/dids/create`).send(createRequest)
       expect(response.statusCode).to.equal(400)
+      expect(response.body.code).to.equal(400)
+      expect(response.body.message).to.equal('error creating DID')
+      expect(response.body.details.reason).to.be.a('string')
+      expect(response.body.details.reason).to.include('foo')
     })
   })
 
   after(async () => {
     await aliceAgent.shutdown()
-    await aliceAgent.wallet.delete()
+    await deleteAgentStore(aliceAgent)
     app.close()
   })
 })

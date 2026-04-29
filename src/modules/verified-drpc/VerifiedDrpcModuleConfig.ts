@@ -1,12 +1,12 @@
-import type { CreateProofRequestOptions, ProofProtocol } from '@credo-ts/core'
+import type { CreateProofRequestOptions, DidCommProofProtocol } from '@credo-ts/didcomm'
 
-export interface VerifiedDrpcModuleConfigOptions<PPs extends ProofProtocol[]> {
+export interface VerifiedDrpcModuleConfigOptions<PPs extends DidCommProofProtocol[]> {
   proofTimeoutMs?: number
   requestTimeoutMs?: number
   proofRequestOptions: CreateProofRequestOptions<PPs>
 }
 
-export class VerifiedDrpcModuleConfig<PPs extends ProofProtocol[]> {
+export class VerifiedDrpcModuleConfig<PPs extends DidCommProofProtocol[]> {
   proofTimeoutMs: number
   requestTimeoutMs: number
   proofRequestOptions: CreateProofRequestOptions<PPs>

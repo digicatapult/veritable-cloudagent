@@ -1,12 +1,10 @@
+import { Agent, CredoError, RecordNotFoundError } from '@credo-ts/core'
 import {
-  type ConnectionRecordProps,
-  Agent,
-  ConnectionRepository,
-  CredoError,
-  DidExchangeState,
-  HandshakeProtocol,
-  RecordNotFoundError,
-} from '@credo-ts/core'
+  DidCommConnectionRecordProps,
+  DidCommConnectionRepository,
+  DidCommDidExchangeState,
+  DidCommHandshakeProtocol,
+} from '@credo-ts/didcomm'
 import {
   Body,
   Controller,
@@ -55,7 +53,7 @@ export class ConnectionController extends Controller {
     @Query('withReturnRouting') withReturnRouting?: boolean
   ) {
     req.log.debug('sending ping %j', { connectionId, responseRequested, withReturnRouting })
-    return this.agent.connections.sendPing(connectionId, { responseRequested, withReturnRouting })
+    return this.agent.didcomm.connections.sendPing(connectionId, { responseRequested, withReturnRouting })
   }
 
   /**
@@ -68,13 +66,13 @@ export class ConnectionController extends Controller {
    * @param outOfBandId Out of band invitation ID
    * @returns ConnectionRecord[]
    */
-  @Example<ConnectionRecordProps[]>([ConnectionRecordExample])
+  @Example<DidCommConnectionRecordProps[]>([ConnectionRecordExample])
   @Get('/')
   public async getAllConnections(
     @Request() req: express.Request,
     @Query('outOfBandId') outOfBandId?: UUID,
     @Query('alias') alias?: string,
-    @Query('state') state?: DidExchangeState,
+    @Query('state') state?: DidCommDidExchangeState,
     @Query('myDid') myDid?: DID,
     @Query('theirDid') theirDid?: DID,
     @Query('theirLabel') theirLabel?: string
@@ -83,9 +81,9 @@ export class ConnectionController extends Controller {
 
     if (outOfBandId) {
       req.log.info('retrieving OOB connections', connections)
-      connections = await this.agent.connections.findAllByOutOfBandId(outOfBandId)
+      connections = await this.agent.didcomm.connections.findAllByOutOfBandId(outOfBandId)
     } else {
-      const connectionRepository = this.agent.dependencyManager.resolve(ConnectionRepository)
+      const connectionRepository = this.agent.dependencyManager.resolve(DidCommConnectionRepository)
       req.log.info('retrieving by query connections %j', { alias, myDid, theirDid, theirLabel, state })
       connections = await connectionRepository.findByQuery(this.agent.context, {
         alias,
@@ -112,11 +110,11 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    * @returns ConnectionRecord
    */
-  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Get('/:connectionId')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   public async getConnectionById(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
-    const connection = await this.agent.connections.findById(connectionId)
+    const connection = await this.agent.didcomm.connections.findById(connectionId)
 
     if (!connection) {
       throw new NotFoundError('connection not found')
@@ -133,8 +131,8 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    */
   @Delete('/:connectionId')
-  @Response<BadRequest['message']>(400)
-  @Response<NotFoundError['message']>(404)
+  @Response<BadRequest>(400)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async closeConnection(
     @Request() req: express.Request,
@@ -142,21 +140,21 @@ export class ConnectionController extends Controller {
     @Query('deleteConnectionRecord') deleteConnectionRecord?: boolean
   ) {
     try {
-      const connectionRecord = await this.agent.connections.getById(connectionId)
+      const connectionRecord = await this.agent.didcomm.connections.getById(connectionId)
       // If we've hung up on them already, Did will be blank
       // If they've hung up on us already, theirDid will be blank
       const alreadyDisconnected = !connectionRecord.theirDid || !connectionRecord.did
       const deleteAfter = Boolean(deleteConnectionRecord)
       if (alreadyDisconnected) {
         if (!deleteAfter) {
-          throw new BadRequest(`cannot send hangup to disconnected peer ${connectionId}`)
+          throw new BadRequest('Cannot send hangup to disconnected peer', { connectionId })
         }
-        await this.agent.connections.deleteById(connectionId)
+        await this.agent.didcomm.connections.deleteById(connectionId)
         req.log.info('connection record deleted %s', connectionId)
         this.setStatus(204)
         return
       }
-      await this.agent.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteAfter })
+      await this.agent.didcomm.connections.hangup({ connectionId: connectionId, deleteAfterHangup: deleteAfter })
       req.log.info(
         { connectionId, deleteAfterHangup: deleteAfter },
         deleteAfter ? 'disconnected and deleted' : 'disconnected'
@@ -179,13 +177,13 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    * @returns ConnectionRecord
    */
-  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-request')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptRequest(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
-      const connection = await this.agent.connections.acceptRequest(connectionId)
+      const connection = await this.agent.didcomm.connections.acceptRequest(connectionId)
       req.log.info('accept %s connection request %j', connectionId, connection.toJSON())
 
       return connection.toJSON()
@@ -206,13 +204,13 @@ export class ConnectionController extends Controller {
    * @param connectionId Connection identifier
    * @returns ConnectionRecord
    */
-  @Example<ConnectionRecordProps>(ConnectionRecordExample)
+  @Example<DidCommConnectionRecordProps>(ConnectionRecordExample)
   @Post('/:connectionId/accept-response')
-  @Response<NotFoundError['message']>(404)
+  @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptResponse(@Request() req: express.Request, @Path('connectionId') connectionId: UUID) {
     try {
-      const connection = await this.agent.connections.acceptResponse(connectionId)
+      const connection = await this.agent.didcomm.connections.acceptResponse(connectionId)
       req.log.info('accept %s connection response %j', connectionId, connection.toJSON())
 
       return connection.toJSON()
@@ -235,17 +233,20 @@ export class ConnectionController extends Controller {
 
     try {
       req.log.info('retrieving connection by %s DID', did)
-      const connections = await this.agent.connections.findByInvitationDid(did)
+      const connections = await this.agent.didcomm.connections.findByInvitationDid(did)
 
       for (const { id, invitationDid } of connections) {
         if (invitationDid === did) {
           req.log.debug(`connection on DID ${did} already exists. deleting connection ${id}`)
-          await this.agent.connections.deleteById(id)
+          await this.agent.didcomm.connections.deleteById(id)
         }
       }
-      const { outOfBandRecord, connectionRecord } = await this.agent.oob.receiveImplicitInvitation({
+      const agentConfig = this.agent.config.toJSON() as Record<string, unknown>
+      const agentLabel = typeof agentConfig.label === 'string' ? agentConfig.label : 'Veritable Cloudagent'
+      const { outOfBandRecord, connectionRecord } = await this.agent.didcomm.oob.receiveImplicitInvitation({
         did,
-        handshakeProtocols: [HandshakeProtocol.Connections],
+        label: agentLabel,
+        handshakeProtocols: [DidCommHandshakeProtocol.Connections],
       })
 
       req.log.info('returning OOB record %j', {
@@ -258,7 +259,7 @@ export class ConnectionController extends Controller {
       }
     } catch (error) {
       if (error instanceof CredoError) {
-        throw new BadRequest('invalid DID')
+        throw new BadRequest('Invalid DID', { did })
       }
       throw error
     }
