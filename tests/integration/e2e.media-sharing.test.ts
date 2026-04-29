@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import { describe, it } from 'mocha'
 import request from 'supertest'
 import { ALICE_BASE_URL, BOB_BASE_URL, OOB_INVITATION_PAYLOAD } from './utils/fixtures.js'
-import { waitForConnectionByOob } from './utils/helpers.js'
+import { waitForConnectionByOob, waitForConnectionState } from './utils/helpers.js'
 
 // End-to-end test: A (Alice) shares media with B (Bob), and Bob can see the record
 // and download the file from the provided URL (mocked).
@@ -35,7 +35,10 @@ describe('Media Sharing A→B', function () {
 
   it('Alice sees her connection', async function () {
     aliceConnectionId = await waitForConnectionByOob(alice, oobRecordId, { maxAttempts: 10, intervalMs: 500 })
+    const state = await waitForConnectionState(alice, aliceConnectionId, 'completed')
+
     expect(aliceConnectionId).to.be.a('string')
+    expect(state).to.equal('completed')
   })
 
   it('Alice shares media to Bob', async function () {
