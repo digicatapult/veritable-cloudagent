@@ -64,9 +64,8 @@
 - **Samples:** `samples/` (sample agent configs, usage)
 - **Scripts:** `scripts/` (check-version.sh for CI version checks)
 - **Docker Compose:**
-  - `docker-compose.yml` (single agent)
-  - `docker-compose-agent-ipfs.yml` (agent + IPFS + OPA)
-  - `docker-compose-testnet.yml` (3 agents + 3 IPFS nodes)
+  - `docker-compose.yml` (single agent + IPFS + PostgreSQL)
+  - `docker-compose-testnet.yml` (3 agents + 3 IPFS nodes + 3 PostgreSQL instances)
   - `docker-compose-integration-tests.yml` (integration test orchestration)
 - **CI/CD:**
   - GitHub Actions: `.github/workflows/test.yml`, `.github/workflows/release.yml` (run lint, type-check, tests, build Docker images, check version, publish)
