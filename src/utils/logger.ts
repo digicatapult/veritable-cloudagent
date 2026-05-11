@@ -7,24 +7,24 @@ import { pinoHttp } from 'pino-http'
 import type { UUID } from '../controllers/types/index.js'
 
 const tsLogLevelMap = {
-  silent: CredoLogLevel.off,
-  trace: CredoLogLevel.trace,
-  debug: CredoLogLevel.debug,
-  info: CredoLogLevel.info,
-  warn: CredoLogLevel.warn,
-  error: CredoLogLevel.error,
-  fatal: CredoLogLevel.fatal,
+  silent: CredoLogLevel.Off,
+  trace: CredoLogLevel.Trace,
+  debug: CredoLogLevel.Debug,
+  info: CredoLogLevel.Info,
+  warn: CredoLogLevel.Warn,
+  error: CredoLogLevel.Error,
+  fatal: CredoLogLevel.Fatal,
 } as const
 
 const invTsLogLevelMap = {
-  [CredoLogLevel.off]: 'silent' as const,
-  [CredoLogLevel.test]: 'trace' as const,
-  [CredoLogLevel.trace]: 'trace' as const,
-  [CredoLogLevel.debug]: 'debug' as const,
-  [CredoLogLevel.info]: 'info' as const,
-  [CredoLogLevel.warn]: 'warn' as const,
-  [CredoLogLevel.error]: 'error' as const,
-  [CredoLogLevel.fatal]: 'fatal' as const,
+  [CredoLogLevel.Off]: 'silent' as const,
+  [CredoLogLevel.Test]: 'trace' as const,
+  [CredoLogLevel.Trace]: 'trace' as const,
+  [CredoLogLevel.Debug]: 'debug' as const,
+  [CredoLogLevel.Info]: 'info' as const,
+  [CredoLogLevel.Warn]: 'warn' as const,
+  [CredoLogLevel.Error]: 'error' as const,
+  [CredoLogLevel.Fatal]: 'fatal' as const,
 } as const
 
 export type LogLevel = LevelWithSilent
@@ -58,38 +58,38 @@ export default class PinoLogger extends BaseLogger {
     return new PinoLogger(invTsLogLevelMap[this.logLevel], child)
   }
 
-  private log(level: Exclude<CredoLogLevel, CredoLogLevel.off>, message: string, data?: Record<string, any>): void {
+  private log(level: Exclude<CredoLogLevel, CredoLogLevel.Off>, message: string, data?: Record<string, any>): void {
     const tsLogLevel = invTsLogLevelMap[level]
     if (data) return this._logger[tsLogLevel]('%s %o', message, data)
     this._logger[tsLogLevel](message)
   }
 
   public test(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.test, message, data)
+    this.log(CredoLogLevel.Test, message, data)
   }
 
   public trace(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.trace, message, data)
+    this.log(CredoLogLevel.Trace, message, data)
   }
 
   public debug(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.debug, message, data)
+    this.log(CredoLogLevel.Debug, message, data)
   }
 
   public info(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.info, message, data)
+    this.log(CredoLogLevel.Info, message, data)
   }
 
   public warn(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.warn, message, data)
+    this.log(CredoLogLevel.Warn, message, data)
   }
 
   public error(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.error, message, data)
+    this.log(CredoLogLevel.Error, message, data)
   }
 
   public fatal(message: string, data?: Record<string, any>): void {
-    this.log(CredoLogLevel.fatal, message, data)
+    this.log(CredoLogLevel.Fatal, message, data)
   }
 }
 
