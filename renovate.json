@@ -7,10 +7,6 @@
       "enabled": false
     },
     {
-      "matchPackageNames": ["@2060.io/credo-ts-didcomm-media-sharing"],
-      "enabled": false
-    },
-    {
       "matchPackageNames": ["@hyperledger/anoncreds-nodejs"],
       "enabled": false
     }

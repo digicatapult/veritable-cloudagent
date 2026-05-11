@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.19.2",
+  "version": "0.19.3",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -43,7 +43,6 @@
     "db:rollback": "npm run db:cmd -- migrate:rollback"
   },
   "dependencies": {
-    "@2060.io/credo-ts-didcomm-media-sharing": "^0.1.1",
     "@credo-ts/anoncreds": "^0.6.3",
     "@credo-ts/askar": "^0.6.3",
     "@credo-ts/core": "^0.6.3",

@@ -33,7 +33,6 @@ import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTranspo
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import { container } from 'tsyringe'
 
-import { DidCommMediaSharingModule } from '@2060.io/credo-ts-didcomm-media-sharing'
 import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
 import type { CredentialDefinitionId, DID } from './controllers/types/index.js'
@@ -97,7 +96,6 @@ export interface RestAgentModules extends ModulesMap {
   askar: AskarModule
   drpc: DrpcModule
   verifiedDrpc: VerifiedDrpcModule<AgentProofProtocols>
-  media: DidCommMediaSharingModule
 }
 
 export type RestAgent<
@@ -109,7 +107,6 @@ export type RestAgent<
     askar: AskarModule
     drpc: DrpcModule
     verifiedDrpc: VerifiedDrpcModule<AgentProofProtocols>
-    media: DidCommMediaSharingModule
   },
 > = Agent<modules>
 
@@ -203,7 +200,6 @@ const getAgentModules = (options: {
         return rest
       })()
     ),
-    media: new DidCommMediaSharingModule(),
   }
 }
 
