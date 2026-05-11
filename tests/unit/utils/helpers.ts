@@ -30,18 +30,16 @@ export async function deleteAgentStore(agent: RestAgent): Promise<void> {
   await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
 }
 
-export async function getTestAgent(name: string, port: number) {
+export async function getTestAgent(port: number) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
   const agent = await setupAgent({
     agentConfig: {
       // add some randomness to ensure test isolation
-      label: `${name} (${randomUUID()})`,
       endpoints: [`http://localhost:${port}`],
       useDidSovPrefixWhereAllowed: true,
       logger,
       autoUpdateStorageOnStartup: true,
-      backupBeforeStorageUpdate: false,
     },
 
     askarStoreConfig: {
@@ -89,7 +87,7 @@ export async function getTestServer(agent: RestAgent) {
 
 export function objectToJson<T>(result: T) {
   const serialized = JsonTransformer.serialize(result)
-  return JsonEncoder.fromString(serialized)
+  return JsonEncoder.fromUtf8String(serialized)
 }
 
 export function getTestDidRecord() {

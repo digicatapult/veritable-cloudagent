@@ -29,8 +29,8 @@ describe('WebhookTests', () => {
   const webhooks: WebhookData[] = []
 
   before(async () => {
-    aliceAgent = await getTestAgent('Webhook REST Agent Test Alice', 3042)
-    bobAgent = await getTestAgent('Webhook REST Agent Test Bob', 3043)
+    aliceAgent = await getTestAgent(3042)
+    bobAgent = await getTestAgent(3043)
     server = await webhookListener(3044, webhooks)
     await setupServer(bobAgent, new PinoLogger('silent'), { webhookUrl: ['http://localhost:3044'] })
   })

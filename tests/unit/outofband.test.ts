@@ -36,8 +36,8 @@ describe('OutOfBandController', () => {
   let connectionRecord: DidCommConnectionRecord
 
   before(async () => {
-    aliceAgent = await getTestAgent('OutOfBand REST Agent Test Alice', 3014)
-    bobAgent = await getTestAgent('OutOfBand REST Agent Test Bob', 3015)
+    aliceAgent = await getTestAgent(3014)
+    bobAgent = await getTestAgent(3015)
     app = await getTestServer(bobAgent)
     outOfBandRecord = getTestOutOfBandRecord()
     outOfBandInvitation = getTestOutOfBandInvitation()
