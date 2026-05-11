@@ -43,7 +43,6 @@
     "db:rollback": "npm run db:cmd -- migrate:rollback"
   },
   "dependencies": {
-    "@2060.io/credo-ts-didcomm-media-sharing": "^0.1.1",
     "@credo-ts/anoncreds": "^0.6.3",
     "@credo-ts/askar": "^0.6.3",
     "@credo-ts/core": "^0.6.3",
