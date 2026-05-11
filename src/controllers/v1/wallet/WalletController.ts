@@ -25,7 +25,7 @@ export class WalletController extends Controller {
     }
 
     try {
-      return TypedArrayEncoder.fromBase64(value)
+      return TypedArrayEncoder.fromBase64Url(value)
     } catch {
       throw new BadRequest(errorMessage, {
         ...(details ?? {}),
@@ -43,7 +43,7 @@ export class WalletController extends Controller {
     }
 
     try {
-      return JsonEncoder.fromBase64(value) as T
+      return JsonEncoder.fromBase64Url(value) as T
     } catch {
       throw new BadRequest(errorMessage, {
         ...(details ?? {}),
@@ -69,7 +69,7 @@ export class WalletController extends Controller {
       return undefined
     }
 
-    return TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64(publicJwk.x))
+    return TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64Url(publicJwk.x))
   }
 
   private async resolveKmsKeyIdForRecipientPublicKey(recipientPublicKeyBase58: string, fallbackKeyId: string) {
@@ -145,11 +145,11 @@ export class WalletController extends Controller {
     let recipientPublicKeyBytes: Uint8Array
 
     try {
-      recipientPublicKeyBytes = TypedArrayEncoder.fromBase64(recipientPublicKey)
+      recipientPublicKeyBytes = TypedArrayEncoder.fromBase64Url(recipientPublicKey)
     } catch {
       throw new BadRequest('Invalid compact JWE recipient public key', {
         field: 'recipientPublicKey',
-        reason: 'invalid_base64_encoding',
+        reason: 'invalid_base64url_encoding',
       })
     }
 
@@ -197,7 +197,7 @@ export class WalletController extends Controller {
         algorithm: 'A256GCM',
         iv,
         tag,
-        aad: TypedArrayEncoder.fromString(encodedHeader),
+        aad: TypedArrayEncoder.fromUtf8String(encodedHeader),
       },
       key: {
         keyAgreement: {

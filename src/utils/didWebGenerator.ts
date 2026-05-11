@@ -59,7 +59,7 @@ export class DidWebDocGenerator {
       id: `${didId}#agreement-key`,
       type: 'X25519KeyAgreementKey2019',
       controller: didId,
-      publicKeyBase58: TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64(keyAgreementKey.publicJwk.x)),
+      publicKeyBase58: TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64Url(keyAgreementKey.publicJwk.x)),
     }
 
     const didWebDocument = {

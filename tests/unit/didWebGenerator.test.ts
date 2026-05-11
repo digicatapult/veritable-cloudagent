@@ -18,9 +18,9 @@ describe('didWebGenerator', function () {
   const did = `did:web:localhost%3A5002`
 
   before(() => {
-    const authenticationPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(11))
-    const assertionPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(33))
-    const encryptionPublicKey = TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(22))
+    const authenticationPublicKey = TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(11))
+    const assertionPublicKey = TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(33))
+    const encryptionPublicKey = TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(22))
 
     let keyCallCount = 0
     aliceAgent = {
@@ -98,7 +98,7 @@ describe('didWebGenerator', function () {
     expect(agreementKey.controller).to.equal(did)
     expect(agreementKey.publicKeyBase58).to.equal(
       TypedArrayEncoder.toBase58(
-        TypedArrayEncoder.fromBase64(TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(22)))
+        TypedArrayEncoder.fromBase64Url(TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(22)))
       )
     )
 
