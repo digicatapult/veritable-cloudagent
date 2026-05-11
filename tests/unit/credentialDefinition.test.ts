@@ -22,7 +22,7 @@ describe('CredentialDefinitionController', () => {
   let testSchema: AnonCredsSchema
 
   before(async () => {
-    agent = await getTestAgent('CredentialDefinition REST Agent Test', 3011)
+    agent = await getTestAgent(3011)
     app = await getTestServer(agent)
 
     testCredDef = getTestCredDef()

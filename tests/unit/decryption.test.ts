@@ -18,7 +18,7 @@ describe('Decryption', () => {
         } as never,
         {
           jwe: 'invalid-format',
-          recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(1)),
+          recipientPublicKey: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(1)),
           enc: 'A256GCM',
           alg: 'ECDH-ES',
         }
@@ -35,8 +35,8 @@ describe('Decryption', () => {
   it('should throw 400 for compact JWE header without epk', async function () {
     const walletController = new WalletController({} as never)
 
-    const encodedHeader = JsonEncoder.toBase64URL({ alg: 'ECDH-ES', enc: 'A256GCM' })
-    const jwe = `${encodedHeader}..${TypedArrayEncoder.toBase64URL(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64URL(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64URL(new Uint8Array(16).fill(6))}`
+    const encodedHeader = JsonEncoder.toBase64Url({ alg: 'ECDH-ES', enc: 'A256GCM' })
+    const jwe = `${encodedHeader}..${TypedArrayEncoder.toBase64Url(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64Url(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64Url(new Uint8Array(16).fill(6))}`
 
     await walletController
       .decrypt(
@@ -47,7 +47,7 @@ describe('Decryption', () => {
         } as never,
         {
           jwe,
-          recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(1)),
+          recipientPublicKey: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(1)),
           enc: 'A256GCM',
           alg: 'ECDH-ES',
         }
@@ -64,7 +64,7 @@ describe('Decryption', () => {
   it('should throw 400 for invalid compact JWE header encoding', async function () {
     const walletController = new WalletController({} as never)
 
-    const jwe = `not-base64..${TypedArrayEncoder.toBase64URL(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64URL(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64URL(new Uint8Array(16).fill(6))}`
+    const jwe = `not-base64..${TypedArrayEncoder.toBase64Url(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64Url(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64Url(new Uint8Array(16).fill(6))}`
 
     await walletController
       .decrypt(
@@ -75,7 +75,7 @@ describe('Decryption', () => {
         } as never,
         {
           jwe,
-          recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(1)),
+          recipientPublicKey: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(1)),
           enc: 'A256GCM',
           alg: 'ECDH-ES',
         }
@@ -99,17 +99,17 @@ describe('Decryption', () => {
       },
     } as never)
 
-    const encodedHeader = JsonEncoder.toBase64URL({
+    const encodedHeader = JsonEncoder.toBase64Url({
       epk: {
         kty: 'OKP',
         crv: 'X25519',
-        x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(1)),
+        x: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(1)),
       },
       alg: 'ECDH-ES',
       enc: 'A256GCM',
     })
 
-    const jwe = `${encodedHeader}..not$base64.${TypedArrayEncoder.toBase64URL(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64URL(new Uint8Array(16).fill(6))}`
+    const jwe = `${encodedHeader}..not$base64.${TypedArrayEncoder.toBase64Url(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64Url(new Uint8Array(16).fill(6))}`
 
     await walletController
       .decrypt(
@@ -120,7 +120,7 @@ describe('Decryption', () => {
         } as never,
         {
           jwe,
-          recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(1)),
+          recipientPublicKey: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(1)),
           enc: 'A256GCM',
           alg: 'ECDH-ES',
         }

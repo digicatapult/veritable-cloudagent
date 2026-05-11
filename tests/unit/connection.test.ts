@@ -38,8 +38,8 @@ describe('ConnectionController', () => {
   let outOfBandRecord: DidCommOutOfBandRecord
 
   before(async () => {
-    aliceAgent = await getTestAgent('Connection REST Agent Test Alice', 3012)
-    bobAgent = await getTestAgent('Connection REST Agent Test Bob', 3013)
+    aliceAgent = await getTestAgent(3012)
+    bobAgent = await getTestAgent(3013)
     app = await getTestServer(bobAgent)
     port = (app.address() as AddressInfo).port
     connection = getTestConnection()
