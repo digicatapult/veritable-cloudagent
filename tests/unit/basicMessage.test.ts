@@ -30,8 +30,8 @@ describe('BasicMessageController', () => {
   let bobConnectionToAlice: DidCommConnectionRecord
 
   before(async () => {
-    aliceAgent = await getTestAgent('Basic Message REST Agent Test Alice', 3002)
-    bobAgent = await getTestAgent('Basic Message REST Agent Test Bob', 5034)
+    aliceAgent = await getTestAgent(3002)
+    bobAgent = await getTestAgent(5034)
     server = await getTestServer(bobAgent)
     port = (server.address() as AddressInfo).port
 

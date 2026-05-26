@@ -63,10 +63,7 @@ const outboundTransportMapping = {
 
 export type AriesRestConfig = {
   agentConfig: InitConfig & {
-    label?: string
     endpoints: string[]
-    connectionImageUrl?: string
-    backupBeforeStorageUpdate?: boolean
     autoUpdateStorageOnStartup?: boolean
     useDidKeyInProtocols?: boolean
     useDidSovPrefixWhereAllowed?: boolean

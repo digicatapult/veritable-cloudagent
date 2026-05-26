@@ -15,5 +15,5 @@ export function maybeMapValues<V, U>(
 
 export function objectToJson<T>(result: T) {
   const serialized = JsonTransformer.serialize(result)
-  return JsonEncoder.fromString(serialized)
+  return JsonEncoder.fromUtf8String(serialized)
 }

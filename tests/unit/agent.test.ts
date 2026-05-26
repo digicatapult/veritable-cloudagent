@@ -15,7 +15,7 @@ describe('AgentController', () => {
   let agent: TestAgent
 
   before(async () => {
-    agent = await getTestAgent('Agent REST Agent Test', 3001)
+    agent = await getTestAgent(3001)
     app = await getTestServer(agent)
   })
 
@@ -58,12 +58,10 @@ describe('AgentController', () => {
 
       return {
         agentConfig: {
-          label: `Agent bootstrap idempotence test (${randomUUID()})`,
           endpoints: [`http://localhost:${port}`],
           useDidSovPrefixWhereAllowed: true,
           logger,
           autoUpdateStorageOnStartup: true,
-          backupBeforeStorageUpdate: false,
         },
         askarStoreConfig: {
           id: storeId,

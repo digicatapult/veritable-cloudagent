@@ -1,4 +1,4 @@
-import { Buffer, JsonEncoder, TypedArrayEncoder } from '@credo-ts/core'
+import { JsonEncoder, TypedArrayEncoder } from '@credo-ts/core'
 import { expect } from 'chai'
 import { afterEach, describe, test } from 'mocha'
 import { restore as sinonRestore, stub } from 'sinon'
@@ -29,19 +29,19 @@ describe('WalletController', () => {
       const spy = stub(kms, 'decrypt')
       spy.resolves(decryptResult)
 
-      const encodedHeader = JsonEncoder.toBase64URL({
+      const encodedHeader = JsonEncoder.toBase64Url({
         epk: {
           kty: 'OKP',
           crv: 'X25519',
-          x: TypedArrayEncoder.toBase64URL(new Uint8Array(32).fill(1)),
+          x: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(1)),
         },
       })
 
-      const jwe = `${encodedHeader}..${TypedArrayEncoder.toBase64URL(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64URL(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64URL(new Uint8Array(16).fill(6))}`
+      const jwe = `${encodedHeader}..${TypedArrayEncoder.toBase64Url(new Uint8Array(12).fill(2))}.${TypedArrayEncoder.toBase64Url(new Uint8Array([3, 4, 5]))}.${TypedArrayEncoder.toBase64Url(new Uint8Array(16).fill(6))}`
 
       const params = {
         jwe,
-        recipientPublicKey: TypedArrayEncoder.toBase64(new Uint8Array(32).fill(7)),
+        recipientPublicKey: TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(7)),
         enc: 'A256GCM' as const,
         alg: 'ECDH-ES' as const,
       }

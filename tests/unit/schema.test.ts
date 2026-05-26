@@ -17,7 +17,7 @@ describe('SchemaController', () => {
   let testSchema: AnonCredsSchema
 
   before(async () => {
-    agent = await getTestAgent('Schema REST Agent Test', 3021)
+    agent = await getTestAgent(3021)
     app = await getTestServer(agent)
     testSchema = getTestSchema()
   })

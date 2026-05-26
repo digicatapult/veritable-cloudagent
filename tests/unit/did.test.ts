@@ -25,7 +25,7 @@ describe('DidController', () => {
   let testDidCreate: DidCreateResult
 
   before(async () => {
-    aliceAgent = await getTestAgent('DID REST Agent Test Alice', 3999)
+    aliceAgent = await getTestAgent(3999)
     app = await getTestServer(aliceAgent)
 
     testDidDocument = getTestDidDocument()

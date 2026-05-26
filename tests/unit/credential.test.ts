@@ -57,8 +57,8 @@ describe('CredentialController', () => {
   let connection: DidCommConnectionRecord
 
   before(async () => {
-    aliceAgent = await getTestAgent('Credential REST Agent Test Alice', 3022)
-    bobAgent = await getTestAgent('Credential REST Agent Test Bob', 3023)
+    aliceAgent = await getTestAgent(3022)
+    bobAgent = await getTestAgent(3023)
     app = await getTestServer(bobAgent)
     port = (app.address() as AddressInfo).port
 

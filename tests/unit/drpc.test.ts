@@ -21,7 +21,7 @@ describe('DrpcController', () => {
   let receiveHandler: DrpcReceiveHandler
 
   before(async () => {
-    agent = await getTestAgent('DRPC REST Agent Test', 3011)
+    agent = await getTestAgent(3011)
     app = await getTestServer(agent)
     connection = getTestConnection()
     receiveHandler = container.resolve(DrpcReceiveHandler)

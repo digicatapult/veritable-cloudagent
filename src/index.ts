@@ -24,11 +24,8 @@ container.register(PinoLogger, {
 
 const agent = await setupAgent({
   agentConfig: {
-    label: env.get('LABEL'),
     logger: logger.child({ component: 'credo-ts-agent' }),
     endpoints: env.get('ENDPOINT'),
-    connectionImageUrl: env.get('CONNECTION_IMAGE_URL'),
-    backupBeforeStorageUpdate: env.get('BACKUP_BEFORE_STORAGE_UPDATE'),
     autoUpdateStorageOnStartup: env.get('AUTO_UPDATE_STORAGE_ON_STARTUP'),
     useDidKeyInProtocols: env.get('USE_DID_KEY_IN_PROTOCOLS'),
     useDidSovPrefixWhereAllowed: env.get('USE_DID_SOV_PREFIX_WHERE_ALLOWED'),
