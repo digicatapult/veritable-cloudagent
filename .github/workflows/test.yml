@@ -53,7 +53,7 @@ jobs:
         with:
           buildkitd-flags: '--debug'
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install mkcert
         run: |
