@@ -5,9 +5,7 @@ import type { UUID } from '../../../controllers/types/index.js'
 import { type VerifiedDrpcErrorCode, IsValidVerifiedDrpcResponse } from '../models/index.js'
 
 export type VerifiedDrpcResponse =
-  | VerifiedDrpcResponseObject
-  | (VerifiedDrpcResponseObject | Record<string, never>)[]
-  | Record<string, never>
+  VerifiedDrpcResponseObject | (VerifiedDrpcResponseObject | Record<string, never>)[] | Record<string, never>
 
 export interface VerifiedDrpcResponseError {
   code: VerifiedDrpcErrorCode
