@@ -1,0 +1,12 @@
+name: Migration checks
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  migration-checks:
+    uses: digicatapult/shared-workflows/.github/workflows/migration-checks-npm.yml@ENG-313-migration-checks
+    permissions:
+      contents: read
+    with:
+      migrations_dir: src/didweb/migrations
