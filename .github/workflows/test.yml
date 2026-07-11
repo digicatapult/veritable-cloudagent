@@ -90,11 +90,13 @@ jobs:
       - static-checks
       - unit-tests
       - integration-tests
-    uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
+    uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@ENG-314-container-scan
     permissions:
       contents: read
       packages: write
       security-events: write
+    with:
+      scan_container: true
 
   generate-sbom-npm:
     needs:
