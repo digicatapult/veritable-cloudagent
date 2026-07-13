@@ -5,7 +5,7 @@ on:
 
 jobs:
   migration-checks:
-    uses: digicatapult/shared-workflows/.github/workflows/migration-checks-npm.yml@ENG-313-migration-checks
+    uses: digicatapult/shared-workflows/.github/workflows/migration-checks-npm.yml@main
     permissions:
       contents: read
     with:
