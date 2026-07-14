@@ -90,7 +90,7 @@ jobs:
       - static-checks
       - unit-tests
       - integration-tests
-    uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@ENG-314-container-scan
+    uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
     permissions:
       contents: read
       packages: write
