@@ -1,0 +1,18 @@
+name: Migration checks
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  migration-checks:
+    uses: digicatapult/shared-workflows/.github/workflows/migration-checks-npm.yml@main
+    permissions:
+      contents: read
+    with:
+      migrations_dir: src/didweb/migrations
+      # The repo's docker-compose.yml is the full testnet stack; bringing up
+      # just the postgres service still validates the whole file, which fails
+      # on the cert bind mounts that `npm run setup:certs` normally provisions.
+      # Use the image fallback, pinned to match the compose postgres image.
+      postgres_image: postgres:18.4-alpine
+      db_name: did-web-server
