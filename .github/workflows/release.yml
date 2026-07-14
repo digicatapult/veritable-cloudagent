@@ -20,10 +20,20 @@ jobs:
       pre_test_command: 'npm run build'
       tests: '["test:unit"]'
 
+  migration-checks:
+    uses: digicatapult/shared-workflows/.github/workflows/migration-checks-npm.yml@main
+    permissions:
+      contents: read
+    with:
+      migrations_dir: src/didweb/migrations
+      postgres_image: postgres:18.4-alpine
+      db_name: did-web-server
+
   build-docker:
     needs:
       - static-checks
       - tests
+      - migration-checks
     uses: digicatapult/shared-workflows/.github/workflows/build-docker.yml@main
     permissions:
       contents: read
