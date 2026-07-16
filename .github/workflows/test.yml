@@ -95,6 +95,8 @@ jobs:
       contents: read
       packages: write
       security-events: write
+    with:
+      scan_container: true
 
   generate-sbom-npm:
     needs:
