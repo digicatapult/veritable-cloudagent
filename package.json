@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.23",
+  "version": "0.20.24",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -74,7 +74,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.6",
     "@eslint/js": "^10.0.1",
-    "@swc-node/register": "^1.11.1",
+    "@swc-node/register": "^1.12.1",
     "@swc/cli": "^0.8.1",
     "@swc/core": "^1.15.43",
     "@types/chai": "^5.2.3",
