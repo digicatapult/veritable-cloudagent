@@ -107,7 +107,7 @@
   },
   "engines": {
     "node": "24.x",
-    "npm": "11.x"
+    "npm": "12.x"
   },
   "overrides": {
     "ref-napi": "npm:@2060.io/ref-napi",
@@ -116,5 +116,13 @@
   "directories": {
     "doc": "docs",
     "test": "tests"
+  },
+  "allowScripts": {
+    "@openwallet-foundation/askar-nodejs@0.6.0": true,
+    "@hyperledger/anoncreds-nodejs@0.4.0": true,
+    "koffi@2.16.3": true,
+    "cbor-extract@2.2.2": true,
+    "@swc/core@1.15.46": true,
+    "@scarf/scarf": false
   }
 }
