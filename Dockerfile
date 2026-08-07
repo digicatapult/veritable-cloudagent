@@ -46,6 +46,10 @@ RUN apt-get update && apt-get install -y curl openssl
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
+# Runtime image does not need npm tooling; removing it also drops vulnerable bundled deps.
+RUN rm -rf /usr/local/lib/node_modules/npm \
+	&& rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+
 WORKDIR /www
 
 COPY knexfile.js ./
