@@ -3,6 +3,8 @@
 # Build stage
 FROM node:24-bookworm AS build
 
+RUN npm install -g npm@12.0.1
+
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
