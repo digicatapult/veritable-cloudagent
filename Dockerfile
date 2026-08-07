@@ -20,6 +20,8 @@ RUN npm run build
 # Node_Modules stage
 FROM node:24-bookworm AS modules
 
+RUN npm install -g npm@12.0.1
+
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 WORKDIR /app
@@ -40,6 +42,8 @@ COPY scripts ./scripts
 
 # Production stage
 FROM node:24-bookworm-slim AS production
+
+RUN npm install -g npm@12.0.1
 
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
