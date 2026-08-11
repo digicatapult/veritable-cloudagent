@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.30",
+  "version": "0.20.31",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -68,7 +68,7 @@
     "tsoa": "^6.6.0",
     "tsyringe": "^4.10.0",
     "undici": "^8.10.0",
-    "ws": "^8.21.2",
+    "ws": "^8.21.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
@@ -92,7 +92,7 @@
     "chai": "^6.2.2",
     "concurrently": "^10.0.4",
     "depcheck": "^1.4.7",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "globals": "^17.9.0",
