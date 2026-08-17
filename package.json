@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.34",
+  "version": "0.20.35",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -76,7 +76,7 @@
     "@eslint/js": "^10.0.1",
     "@swc-node/register": "^1.12.1",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "^1.15.47",
+    "@swc/core": "^1.16.0",
     "@types/chai": "^5.2.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -112,7 +112,7 @@
   },
   "overrides": {
     "ref-napi": "npm:@2060.io/ref-napi",
-    "node-addon-api": "8.9.1"
+    "node-addon-api": "8.9.2"
   },
   "directories": {
     "doc": "docs",
