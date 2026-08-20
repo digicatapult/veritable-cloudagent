@@ -132,6 +132,12 @@ export const envConfig = {
   DID_WEB_DEV_KEY_PATH: envalid.str({ default: '', devDefault: 'certs/dev-key.pem' }),
   DID_WEB_DB_NAME: envalid.str({ default: 'did-web-server' }),
   DID_WEB_DOMAIN: envalid.str({ default: '', devDefault: 'localhost%3A8443' }),
+  OPENID4VC_ENABLED: envalid.bool({ default: false }),
+  OPENID4VC_HOLDER_ENABLED: envalid.bool({ default: false }),
+  OPENID4VC_ISSUER_ENABLED: envalid.bool({ default: false }),
+  OPENID4VC_VERIFIER_ENABLED: envalid.bool({ default: false }),
+  OPENID4VC_PUBLIC_BASE_URL: envalid.str({ default: '', devDefault: 'http://localhost:5002' }),
+  OPENID4VC_ID: envalid.str({ default: '', devDefault: 'alice' }),
 }
 
 export type ENV_CONFIG = typeof envConfig
