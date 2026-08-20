@@ -204,6 +204,15 @@ describe('Shared public protocol listener', () => {
   })
 
   after(async () => {
+    if (privateServer.listening) {
+      await new Promise<void>((resolve, reject) => {
+        privateServer.close((error) => {
+          if (error) return reject(error)
+          resolve()
+        })
+      })
+    }
+
     await agent.shutdown()
     await deleteAgentStore(agent)
   })
