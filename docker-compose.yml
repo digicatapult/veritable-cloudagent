@@ -5,7 +5,7 @@
 ##
 ## Agent: alice
 ## Ports:
-##    Alice   = 3000 / 5002 (HTTP) & 5003 (WS)
+##    Alice   = 3000 (API), 5002 (DIDComm HTTP + WS), 8443 (did:web)
 ##    IPFS    = 8080 (HTTP)
 ## Network: testnet
 ##
