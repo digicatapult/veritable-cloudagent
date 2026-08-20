@@ -34,7 +34,7 @@ services:
       #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=TA
       - PERSONA_COLOR=#eddedf
-      - ENDPOINT=http://alice:5002, ws://alice:5003
+      - ENDPOINT=http://alice:5002/didcomm, ws://alice:5002/didcomm-ws
       - IPFS_ORIGIN=http://ipfs0:5001
       - POSTGRES_HOST=alice-postgres
       - POSTGRES_PORT=5432
@@ -49,7 +49,7 @@ services:
       - DID_WEB_DEV_KEY_PATH=/dev-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=alice%3A8443
-      - DID_WEB_SERVICE_ENDPOINT=http://alice:5002
+      - DID_WEB_SERVICE_ENDPOINT=http://alice:5002/didcomm
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
@@ -87,7 +87,7 @@ services:
       #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=OEM
       - PERSONA_COLOR=#dfedde
-      - ENDPOINT=http://bob:5002, ws://bob:5003
+      - ENDPOINT=http://bob:5002/didcomm, ws://bob:5002/didcomm-ws
       - IPFS_ORIGIN=http://ipfs1:5001
       - POSTGRES_HOST=bob-postgres
       - POSTGRES_PORT=5432
@@ -102,7 +102,7 @@ services:
       - DID_WEB_DEV_KEY_PATH=/dev-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=bob%3A8443
-      - DID_WEB_SERVICE_ENDPOINT=http://bob:5002
+      - DID_WEB_SERVICE_ENDPOINT=http://bob:5002/didcomm
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5102:5002'
@@ -140,7 +140,7 @@ services:
       #- VERIFIED_DRPC_OPTIONS__CRED_DEF_ID=ipfs://bafkreifrnrqbr4ofsuoenr2xzsyc5qhwectsq7lovhohw47rhgxhkig4de
       - PERSONA_TITLE=Supplier
       - PERSONA_COLOR=#dedfed
-      - ENDPOINT=http://charlie:5002,ws://charlie:5003
+      - ENDPOINT=http://charlie:5002/didcomm,ws://charlie:5002/didcomm-ws
       - IPFS_ORIGIN=http://ipfs2:5001
       - POSTGRES_HOST=charlie-postgres
       - POSTGRES_PORT=5432
@@ -155,7 +155,7 @@ services:
       - DID_WEB_DEV_KEY_PATH=/dev-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=charlie%3A8443
-      - DID_WEB_SERVICE_ENDPOINT=http://charlie:5002
+      - DID_WEB_SERVICE_ENDPOINT=http://charlie:5002/didcomm
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5202:5002'

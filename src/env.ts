@@ -64,8 +64,8 @@ export const envConfig = {
   WALLET_ID: envalid.str({ default: 'walletId', devDefault: 'walletId' }),
   WALLET_KEY: envalid.str({ default: 'walletKey', devDefault: 'walletKey' }),
   ENDPOINT: stringArray({
-    default: ['http://localhost:5002', 'ws://localhost:5003'],
-    devDefault: ['http://localhost:5002', 'ws://localhost:5003'],
+    default: ['http://localhost:5002/didcomm', 'ws://localhost:5002/didcomm-ws'],
+    devDefault: ['http://localhost:5002/didcomm', 'ws://localhost:5002/didcomm-ws'],
   }),
   LOG_LEVEL: envalid.str({
     default: 'info',
@@ -78,6 +78,8 @@ export const envConfig = {
     { default: ['http', 'ws'], devDefault: ['http', 'ws'] },
     { allowedValues: new Set(['http', 'ws']) }
   ),
+  // The "ws" entry's port is not bound directly: DIDComm WS now shares the "http" entry's listener via
+  // an upgrade at /didcomm-ws, so only the ws entry's presence (not its port) enables the WS role.
   INBOUND_TRANSPORT: envalid.json({
     default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
     devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
@@ -123,7 +125,7 @@ export const envConfig = {
   }),
   DID_WEB_SERVICE_ENDPOINT: envalid.str({
     default: '',
-    devDefault: 'http://localhost:5002',
+    devDefault: 'http://localhost:5002/didcomm',
   }),
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),

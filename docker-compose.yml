@@ -37,7 +37,7 @@ services:
         node ./node_modules/.bin/knex migrate:latest
         npm start | pino-pretty -c -S"
     environment:
-      - ENDPOINT='http://alice:5002, ws://alice:5003'
+      - ENDPOINT='http://alice:5002/didcomm, ws://alice:5002/didcomm-ws'
       - IPFS_ORIGIN=http://ipfs:5001
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
@@ -50,7 +50,7 @@ services:
       - DID_WEB_DEV_KEY_PATH=/alice-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=localhost%3A8443
-      - DID_WEB_SERVICE_ENDPOINT=http://localhost:5002
+      - DID_WEB_SERVICE_ENDPOINT=http://localhost:5002/didcomm
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     networks:
       - testnet

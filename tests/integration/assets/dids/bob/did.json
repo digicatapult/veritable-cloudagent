@@ -29,7 +29,7 @@
       ],
       "routingKeys": [],
       "accept": ["didcomm/aip1"],
-      "serviceEndpoint": "http://bob:5002"
+      "serviceEndpoint": "http://bob:5002/didcomm"
     }
   ]
 }
