@@ -13,6 +13,7 @@ import {
   DidCommTrustPingMessage,
   type DidCommConnectionRecordProps,
 } from '@credo-ts/didcomm'
+import type { Express } from 'express'
 import type { Socket } from 'node:net'
 
 import { DidDocument, JsonEncoder, JsonTransformer, type DidCreateResult } from '@credo-ts/core'
@@ -66,6 +67,41 @@ export async function getTestAgent(port: number) {
   })
 
   return agent
+}
+
+// Like getTestAgent, but binds DIDComm HTTP/WS onto a caller-supplied shared app for shared-listener tests.
+export async function getTestAgentWithPublicApp(port: number, publicApp: Express) {
+  const logger = new PinoLogger('silent')
+  container.register(PinoLogger, { useValue: logger })
+  return setupAgent({
+    agentConfig: {
+      endpoints: [`http://localhost:${port}/didcomm`],
+      useDidSovPrefixWhereAllowed: true,
+      logger,
+      autoUpdateStorageOnStartup: true,
+    },
+
+    askarStoreConfig: {
+      id: randomUUID(),
+      key: 'DZ9hPqFWTPxemcGea72C1X1nusqk5wFNLq6QPjwXGqAa',
+      keyDerivationMethod: 'raw',
+      database: {
+        type: 'sqlite',
+      },
+    },
+
+    publicApp,
+    inboundTransports: [
+      { transport: 'http', port },
+      { transport: 'ws', port: 0 },
+    ],
+    outboundTransports: ['http'],
+
+    logger,
+    ipfsOrigin: 'https://localhost:5001',
+    ipfsTimeoutMs: 15000,
+    verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
+  })
 }
 
 export async function getTestServer(agent: RestAgent) {

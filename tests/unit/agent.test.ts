@@ -1,14 +1,24 @@
 import { expect } from 'chai'
+import express from 'express'
 import { after, before, describe, test } from 'mocha'
 
 import { randomUUID } from 'node:crypto'
-import type { Server } from 'node:net'
+import type { AddressInfo, Server } from 'node:net'
 
+import { DidCommHttpInboundTransport } from '@credo-ts/node'
 import request from 'supertest'
+import WebSocket from 'ws'
 
-import { setupAgent } from '../../src/agent.js'
+import { DIDCOMM_WS_PATH, setupAgent } from '../../src/agent.js'
 import PinoLogger from '../../src/utils/logger.js'
-import { deleteAgentStore, getTestAgent, getTestServer, type TestAgent } from './utils/helpers.js'
+import { ReadinessGate } from '../../src/utils/readiness.js'
+import {
+  deleteAgentStore,
+  getTestAgent,
+  getTestAgentWithPublicApp,
+  getTestServer,
+  type TestAgent,
+} from './utils/helpers.js'
 
 describe('AgentController', () => {
   let app: Server
@@ -143,5 +153,108 @@ describe('AgentController', () => {
     await agent.shutdown()
     await deleteAgentStore(agent)
     app.close()
+  })
+})
+
+describe('Shared public protocol listener', () => {
+  const port = 3199
+  const publicApp = express()
+  const readinessGate = new ReadinessGate()
+  publicApp.use(readinessGate.middleware)
+
+  let agent: TestAgent
+  let httpServer: import('node:http').Server
+  let privateServer: import('node:http').Server
+
+  before(async () => {
+    const {
+      agent: setupAgentResult,
+      didCommHttpInboundTransport,
+      didCommWsServer,
+    } = await getTestAgentWithPublicApp(port, publicApp)
+    agent = setupAgentResult
+
+    if (!(didCommHttpInboundTransport instanceof DidCommHttpInboundTransport) || !didCommHttpInboundTransport.server) {
+      throw new Error('Expected the DIDComm HTTP inbound transport to be configured')
+    }
+    httpServer = didCommHttpInboundTransport.server
+
+    httpServer.on('upgrade', (req, socket, head) => {
+      if (req.url !== DIDCOMM_WS_PATH || !didCommWsServer) {
+        socket.destroy()
+        return
+      }
+      didCommWsServer.handleUpgrade(req, socket, head, (ws) => didCommWsServer.emit('connection', ws, req))
+    })
+
+    privateServer = await getTestServer(agent)
+  })
+
+  after(async () => {
+    await agent.shutdown()
+    await deleteAgentStore(agent)
+  })
+
+  test('returns 503 for any request before the readiness gate is marked ready', async () => {
+    const response = await request(httpServer).get('/didcomm')
+    expect(response.statusCode).to.equal(503)
+  })
+
+  test('marks the gate ready and allows requests through', () => {
+    readinessGate.markReady()
+    expect(readinessGate.isReady()).to.equal(true)
+  })
+
+  test('routes DIDComm HTTP only through /didcomm', async () => {
+    const response = await request(httpServer).post('/didcomm').set('content-type', 'text/plain').send('not-didcomm')
+    expect(response.statusCode).to.equal(415)
+  })
+
+  test('does not capture an unrelated public POST at the root path', async () => {
+    const response = await request(httpServer).post('/').send({})
+    expect(response.statusCode).to.equal(404)
+  })
+
+  test('accepts a WebSocket upgrade at /didcomm-ws', async () => {
+    const { port: boundPort } = httpServer.address() as AddressInfo
+    const ws = new WebSocket(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}`)
+
+    await new Promise<void>((resolve, reject) => {
+      ws.once('open', () => resolve())
+      ws.once('error', reject)
+    })
+
+    ws.close()
+  })
+
+  test('rejects a WebSocket upgrade at an unknown path', async () => {
+    const { port: boundPort } = httpServer.address() as AddressInfo
+    const ws = new WebSocket(`ws://127.0.0.1:${boundPort}/unknown-ws`)
+
+    await new Promise<void>((resolve) => {
+      ws.once('open', () => {
+        ws.close()
+        resolve()
+      })
+      ws.once('error', () => resolve())
+      ws.once('close', () => resolve())
+    })
+
+    expect(ws.readyState).to.not.equal(WebSocket.OPEN)
+  })
+
+  test('private TSOA app remains functional after the public/private split', async () => {
+    const response = await request(privateServer).get('/v1/agent')
+    expect(response.statusCode).to.equal(200)
+  })
+
+  test('private app does not serve public DIDComm routes', async () => {
+    const response = await request(privateServer).post('/didcomm').set('content-type', 'text/plain').send('x')
+    expect(response.statusCode).to.equal(404)
+  })
+
+  test('public app does not serve private TSOA routes', async () => {
+    const response = await request(httpServer).get('/v1/agent')
+    expect(response.statusCode).to.equal(404)
   })
 })
