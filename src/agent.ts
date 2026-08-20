@@ -31,7 +31,9 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
+import express, { type Express } from 'express'
 import { container } from 'tsyringe'
+import { WebSocketServer } from 'ws'
 
 import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
@@ -40,6 +42,10 @@ import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/i
 import Ipfs from './ipfs/index.js'
 import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
 import PinoLogger from './utils/logger.js'
+
+/** Path DIDComm HTTP/WS bind to on the shared public protocol app, distinct from any future OpenID4VC routes. */
+export const DIDCOMM_HTTP_PATH = '/didcomm'
+export const DIDCOMM_WS_PATH = '/didcomm-ws'
 
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
@@ -50,11 +56,6 @@ export type InboundTransport = {
 type AgentProofProtocols = [
   DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
 ]
-
-const inboundTransportMapping = {
-  http: DidCommHttpInboundTransport,
-  ws: DidCommWsInboundTransport,
-} as const
 
 const outboundTransportMapping = {
   http: DidCommHttpOutboundTransport,
@@ -72,6 +73,8 @@ export type AriesRestConfig = {
 
   inboundTransports?: InboundTransport[]
   outboundTransports?: Transports[]
+  /** Shared public protocol Express app that DIDComm HTTP/WS bind to. Defaults to a private app if omitted (used by tests). */
+  publicApp?: Express
 
   autoAcceptConnections?: boolean
   autoAcceptCredentials?: DidCommAutoAcceptCredential
@@ -217,6 +220,8 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     askarStoreConfig,
   } = restConfig
 
+  const publicApp = restConfig.publicApp ?? express()
+
   const modules = getAgentModules({
     didcommConfig: {
       endpoints: agentConfig.endpoints,
@@ -245,12 +250,23 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     agent.didcomm.registerOutboundTransport(new OutboundTransport())
   }
 
-  // Register inbound transports
+  // Register inbound transports. HTTP shares the public app at DIDCOMM_HTTP_PATH; WS uses a no-server
+  // WebSocketServer at DIDCOMM_WS_PATH so its upgrade events can be dispatched from the shared HTTP server.
+  let didCommWsServer: WebSocketServer | undefined
+  let didCommHttpInboundTransport: DidCommHttpInboundTransport | undefined
   for (const inboundTransport of inboundTransports) {
-    const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.didcomm.registerInboundTransport(
-      new InboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
-    )
+    if (inboundTransport.transport === 'http') {
+      didCommHttpInboundTransport = new DidCommHttpInboundTransport({
+        app: publicApp,
+        path: DIDCOMM_HTTP_PATH,
+        port: inboundTransport.port,
+        processedMessageListenerTimeoutMs: 30000,
+      })
+      agent.didcomm.registerInboundTransport(didCommHttpInboundTransport)
+    } else {
+      didCommWsServer = new WebSocketServer({ noServer: true })
+      agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didCommWsServer }))
+    }
   }
 
   await agent.initialize()
@@ -269,5 +285,5 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
   drpcReceiveHandler.start()
 
-  return agent
+  return { agent, didCommHttpInboundTransport, didCommWsServer }
 }

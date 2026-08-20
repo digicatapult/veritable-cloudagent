@@ -3,18 +3,22 @@ import 'reflect-metadata'
 
 import type { Socket } from 'node:net'
 
+import { DidCommHttpInboundTransport } from '@credo-ts/node'
+import express from 'express'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { DidCommAutoAcceptCredential, DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
-import { setupAgent } from './agent.js'
+import { DIDCOMM_WS_PATH, setupAgent } from './agent.js'
 import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
+import { errorHandler } from './error.js'
 import { setupServer } from './server.js'
 import { DidWebDocGenerator } from './utils/didWebGenerator.js'
-import PinoLogger from './utils/logger.js'
+import PinoLogger, { createRequestLogger } from './utils/logger.js'
+import { ReadinessGate } from './utils/readiness.js'
 
 const env = container.resolve(Env)
 const logger = new PinoLogger(env.get('LOG_LEVEL'))
@@ -22,7 +26,13 @@ container.register(PinoLogger, {
   useValue: logger,
 })
 
-const agent = await setupAgent({
+// Shared public protocol application: DIDComm HTTP/WS live here, and OpenID4VC will join it in a later PR.
+const publicApp = express()
+const readinessGate = new ReadinessGate()
+publicApp.use(createRequestLogger(logger.logger))
+publicApp.use(readinessGate.middleware)
+
+const { agent, didCommHttpInboundTransport, didCommWsServer } = await setupAgent({
   agentConfig: {
     logger: logger.child({ component: 'credo-ts-agent' }),
     endpoints: env.get('ENDPOINT'),
@@ -51,6 +61,7 @@ const agent = await setupAgent({
           },
   },
 
+  publicApp,
   inboundTransports: env.get('INBOUND_TRANSPORT'),
   outboundTransports: env.get('OUTBOUND_TRANSPORT'),
 
@@ -68,6 +79,30 @@ const agent = await setupAgent({
   },
 
   logger,
+})
+
+// Final handlers for the public app: DIDComm's own route is registered above; anything else 404s.
+publicApp.use((_req, res) => {
+  res.status(404).json({ error: 'not_found' })
+})
+publicApp.use(errorHandler(agent.config.logger))
+
+// DidCommHttpInboundTransport owns the only listen() call for the shared public app.
+if (!(didCommHttpInboundTransport instanceof DidCommHttpInboundTransport) || !didCommHttpInboundTransport.server) {
+  throw new Error('Expected DidCommHttpInboundTransport to be configured with an HTTP inbound transport')
+}
+const publicServer = didCommHttpInboundTransport.server
+
+// Dispatch WebSocket upgrades on the shared public listener: only DIDCOMM_WS_PATH is handled here.
+publicServer.on('upgrade', (request, socket, head) => {
+  if (request.url !== DIDCOMM_WS_PATH || !didCommWsServer) {
+    socket.destroy()
+    return
+  }
+
+  didCommWsServer.handleUpgrade(request, socket as Socket, head, (ws) => {
+    didCommWsServer.emit('connection', ws, request)
+  })
 })
 
 const database = new Database({
@@ -95,6 +130,7 @@ await didWebGenerator.generateAndRegister(
   (document) => didWebServer.upsertDid(document)
 )
 
+// Private notification WebSocket: unrelated to DIDComm transport, stays on the private admin listener.
 const socketServer = new WebSocketServer({ noServer: true })
 const zombieSockets = new WeakSet<WebSocket>()
 const interval = setInterval(() => {
@@ -118,7 +154,7 @@ socketServer.on('close', () => {
   clearInterval(interval)
 })
 
-const app = await setupServer(agent, logger, {
+const privateApp = await setupServer(agent, logger, {
   webhookUrl: env.get('WEBHOOK_URL'),
   personaTitle: env.get('PERSONA_TITLE'),
   personaColor: env.get('PERSONA_COLOR'),
@@ -126,7 +162,7 @@ const app = await setupServer(agent, logger, {
 })
 
 const adminPort = env.get('ADMIN_PORT')
-const server = app.listen(adminPort, () => {
+const server = privateApp.listen(adminPort, () => {
   logger.info(`Successfully started server on port ${adminPort}`)
 })
 
@@ -136,3 +172,6 @@ server.on('upgrade', (request, socket, head) => {
     return
   })
 })
+
+// Public and private listeners, TSOA routes and DID:web are all up: only now accept protocol traffic.
+readinessGate.markReady()
