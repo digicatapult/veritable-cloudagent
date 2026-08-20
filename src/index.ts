@@ -10,7 +10,7 @@ import WebSocket, { WebSocketServer } from 'ws'
 import { DidCommAutoAcceptCredential, DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
-import { DIDCOMM_WS_PATH, setupAgent } from './agent.js'
+import { setupAgent } from './agent.js'
 import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
@@ -32,7 +32,7 @@ const readinessGate = new ReadinessGate()
 publicApp.use(createRequestLogger(logger.logger))
 publicApp.use(readinessGate.middleware)
 
-const { agent, didCommHttpInboundTransport, didCommWsServer } = await setupAgent({
+const { agent, didCommHttpInboundTransport } = await setupAgent({
   agentConfig: {
     logger: logger.child({ component: 'credo-ts-agent' }),
     endpoints: env.get('ENDPOINT'),
@@ -62,6 +62,7 @@ const { agent, didCommHttpInboundTransport, didCommWsServer } = await setupAgent
   },
 
   publicApp,
+  readinessGate,
   inboundTransports: env.get('INBOUND_TRANSPORT'),
   outboundTransports: env.get('OUTBOUND_TRANSPORT'),
 
@@ -87,23 +88,11 @@ publicApp.use((_req, res) => {
 })
 publicApp.use(errorHandler(agent.config.logger))
 
-// DidCommHttpInboundTransport owns the only listen() call for the shared public app.
+// DidCommHttpInboundTransport owns the only listen() call for the shared public app. WebSocket upgrade
+// dispatch (readiness gating, path routing, handleUpgrade) is wired by setupAgent itself.
 if (!(didCommHttpInboundTransport instanceof DidCommHttpInboundTransport) || !didCommHttpInboundTransport.server) {
   throw new Error('Expected DidCommHttpInboundTransport to be configured with an HTTP inbound transport')
 }
-const publicServer = didCommHttpInboundTransport.server
-
-// Dispatch WebSocket upgrades on the shared public listener: only DIDCOMM_WS_PATH is handled here.
-publicServer.on('upgrade', (request, socket, head) => {
-  if (request.url !== DIDCOMM_WS_PATH || !didCommWsServer) {
-    socket.destroy()
-    return
-  }
-
-  didCommWsServer.handleUpgrade(request, socket as Socket, head, (ws) => {
-    didCommWsServer.emit('connection', ws, request)
-  })
-})
 
 const database = new Database({
   host: env.get('POSTGRES_HOST'),

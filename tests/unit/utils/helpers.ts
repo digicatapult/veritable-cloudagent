@@ -24,6 +24,7 @@ import WebSocket, { WebSocketServer } from 'ws'
 import { RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
+import type { ReadinessGate } from '../../../src/utils/readiness.js'
 
 export type TestAgent = RestAgent
 
@@ -70,7 +71,7 @@ export async function getTestAgent(port: number) {
 }
 
 // Like getTestAgent, but binds DIDComm HTTP/WS onto a caller-supplied shared app for shared-listener tests.
-export async function getTestAgentWithPublicApp(port: number, publicApp: Express) {
+export async function getTestAgentWithPublicApp(port: number, publicApp: Express, readinessGate?: ReadinessGate) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
   return setupAgent({
@@ -91,9 +92,10 @@ export async function getTestAgentWithPublicApp(port: number, publicApp: Express
     },
 
     publicApp,
+    readinessGate,
     inboundTransports: [
       { transport: 'http', port },
-      { transport: 'ws', port: 0 },
+      { transport: 'ws', port },
     ],
     outboundTransports: ['http'],
 
@@ -728,4 +730,16 @@ export async function closeWebSocket(ws: WebSocket | undefined) {
     ws.once('error', (err: Error) => reject(err))
     ws.close()
   })
+}
+
+// Unlike openWebSocket, observes whether the upgrade opened or was rejected instead of throwing.
+export async function attemptWebSocketUpgrade(url: string): Promise<'open' | 'rejected'> {
+  const ws = new WebSocket(url)
+  const outcome = await new Promise<'open' | 'rejected'>((resolve) => {
+    ws.once('open', () => resolve('open'))
+    ws.once('error', () => resolve('rejected'))
+    ws.once('close', () => resolve('rejected'))
+  })
+  if (outcome === 'open') ws.close()
+  return outcome
 }

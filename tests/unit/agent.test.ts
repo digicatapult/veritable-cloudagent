@@ -7,12 +7,12 @@ import type { AddressInfo, Server } from 'node:net'
 
 import { DidCommHttpInboundTransport } from '@credo-ts/node'
 import request from 'supertest'
-import WebSocket from 'ws'
 
 import { DIDCOMM_WS_PATH, setupAgent } from '../../src/agent.js'
 import PinoLogger from '../../src/utils/logger.js'
 import { ReadinessGate } from '../../src/utils/readiness.js'
 import {
+  attemptWebSocketUpgrade,
   deleteAgentStore,
   getTestAgent,
   getTestAgentWithPublicApp,
@@ -147,6 +147,27 @@ describe('AgentController', () => {
         }
       }
     })
+
+    test('rejects a WS inbound transport port that does not match the HTTP inbound transport port', async () => {
+      const config = {
+        ...buildConfig(randomUUID(), 3098),
+        inboundTransports: [
+          { transport: 'http' as const, port: 3098 },
+          { transport: 'ws' as const, port: 3099 },
+        ],
+      }
+
+      let error: Error | undefined
+      try {
+        await setupAgent(config)
+      } catch (err) {
+        error = err as Error
+      }
+
+      expect(error?.message).to.match(
+        /Configured WS inbound transport port \(3099\) must match the HTTP inbound transport port \(3098\)/
+      )
+    })
   })
 
   after(async () => {
@@ -167,25 +188,17 @@ describe('Shared public protocol listener', () => {
   let privateServer: import('node:http').Server
 
   before(async () => {
-    const {
-      agent: setupAgentResult,
-      didCommHttpInboundTransport,
-      didCommWsServer,
-    } = await getTestAgentWithPublicApp(port, publicApp)
+    const { agent: setupAgentResult, didCommHttpInboundTransport } = await getTestAgentWithPublicApp(
+      port,
+      publicApp,
+      readinessGate
+    )
     agent = setupAgentResult
 
     if (!(didCommHttpInboundTransport instanceof DidCommHttpInboundTransport) || !didCommHttpInboundTransport.server) {
       throw new Error('Expected the DIDComm HTTP inbound transport to be configured')
     }
     httpServer = didCommHttpInboundTransport.server
-
-    httpServer.on('upgrade', (req, socket, head) => {
-      if (req.url !== DIDCOMM_WS_PATH || !didCommWsServer) {
-        socket.destroy()
-        return
-      }
-      didCommWsServer.handleUpgrade(req, socket, head, (ws) => didCommWsServer.emit('connection', ws, req))
-    })
 
     privateServer = await getTestServer(agent)
   })
@@ -195,14 +208,23 @@ describe('Shared public protocol listener', () => {
     await deleteAgentStore(agent)
   })
 
-  test('returns 503 for any request before the readiness gate is marked ready', async () => {
+  test('returns 503 for any /didcomm request before the readiness gate is marked ready', async () => {
     const response = await request(httpServer).get('/didcomm')
     expect(response.statusCode).to.equal(503)
   })
 
-  test('marks the gate ready and allows requests through', () => {
+  test('rejects a WebSocket upgrade at /didcomm-ws before the readiness gate is marked ready', async () => {
+    const { port: boundPort } = httpServer.address() as AddressInfo
+    const outcome = await attemptWebSocketUpgrade(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}`)
+    expect(outcome).to.equal('rejected')
+  })
+
+  test('marks the gate ready and allows requests through', async () => {
     readinessGate.markReady()
     expect(readinessGate.isReady()).to.equal(true)
+
+    const response = await request(httpServer).get('/didcomm')
+    expect(response.statusCode).to.not.equal(503)
   })
 
   test('routes DIDComm HTTP only through /didcomm', async () => {
@@ -217,33 +239,17 @@ describe('Shared public protocol listener', () => {
 
   test('accepts a WebSocket upgrade at /didcomm-ws', async () => {
     const { port: boundPort } = httpServer.address() as AddressInfo
-    const ws = new WebSocket(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}`)
-
-    await new Promise<void>((resolve, reject) => {
-      ws.once('open', () => resolve())
-      ws.once('error', reject)
-    })
-
-    ws.close()
+    const outcome = await attemptWebSocketUpgrade(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}`)
+    expect(outcome).to.equal('open')
   })
 
   test('rejects a WebSocket upgrade at an unknown path', async () => {
     const { port: boundPort } = httpServer.address() as AddressInfo
-    const ws = new WebSocket(`ws://127.0.0.1:${boundPort}/unknown-ws`)
-
-    await new Promise<void>((resolve) => {
-      ws.once('open', () => {
-        ws.close()
-        resolve()
-      })
-      ws.once('error', () => resolve())
-      ws.once('close', () => resolve())
-    })
-
-    expect(ws.readyState).to.not.equal(WebSocket.OPEN)
+    const outcome = await attemptWebSocketUpgrade(`ws://127.0.0.1:${boundPort}/unknown-ws`)
+    expect(outcome).to.equal('rejected')
   })
 
-  test('private TSOA app remains functional after the public/private split', async () => {
+  test('private TSOA app functional', async () => {
     const response = await request(privateServer).get('/v1/agent')
     expect(response.statusCode).to.equal(200)
   })

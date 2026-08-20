@@ -5,9 +5,9 @@
 ##
 ## Agents: Alice, Bob, Charlie
 ## Ports for testing purposes (HTTP):
-##    Alice   = 3000 [ 5002 (HTTP) & 5003 (WS) internal ]
-##    Bob     = 3001 [ 5102 (HTTP) & 5103 (WS) internal ]
-##    Charlie = 3002 [ 5202 (HTTP) & 5203 (WS) internal ]
+##    Alice   = 3000 [ 5002 (DIDComm HTTP + WS, shared) internal ]
+##    Bob     = 3001 [ 5102 (DIDComm HTTP + WS, shared) internal ]
+##    Charlie = 3002 [ 5202 (DIDComm HTTP + WS, shared) internal ]
 ##    IPFS    = 8080 [ 5001 used for internal traffic   ]
 ## Network: testnet
 ##

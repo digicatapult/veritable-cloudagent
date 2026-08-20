@@ -32,6 +32,7 @@ import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import express, { type Express } from 'express'
+import type { Socket } from 'node:net'
 import { container } from 'tsyringe'
 import { WebSocketServer } from 'ws'
 
@@ -42,6 +43,7 @@ import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/i
 import Ipfs from './ipfs/index.js'
 import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
 import PinoLogger from './utils/logger.js'
+import type { ReadinessGate } from './utils/readiness.js'
 
 /** Path DIDComm HTTP/WS bind to on the shared public protocol app, distinct from any future OpenID4VC routes. */
 export const DIDCOMM_HTTP_PATH = '/didcomm'
@@ -75,6 +77,8 @@ export type AriesRestConfig = {
   outboundTransports?: Transports[]
   /** Shared public protocol Express app that DIDComm HTTP/WS bind to. Defaults to a private app if omitted (used by tests). */
   publicApp?: Express
+  /** Gates the shared listener's WS upgrades the same way it gates HTTP requests; optional for backwards-compatibility with tests. */
+  readinessGate?: ReadinessGate
 
   autoAcceptConnections?: boolean
   autoAcceptCredentials?: DidCommAutoAcceptCredential
@@ -252,6 +256,18 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
   // Register inbound transports. HTTP shares the public app at DIDCOMM_HTTP_PATH; WS uses a no-server
   // WebSocketServer at DIDCOMM_WS_PATH so its upgrade events can be dispatched from the shared HTTP server.
+  // WS no longer binds its own port: it shares the HTTP entry's listener, so a mismatched configured
+  // port would otherwise be silently unreachable.
+  const httpTransportConfig = inboundTransports.find((t) => t.transport === 'http')
+  const wsTransportConfig = inboundTransports.find((t) => t.transport === 'ws')
+  if (wsTransportConfig && httpTransportConfig && wsTransportConfig.port !== httpTransportConfig.port) {
+    throw new Error(
+      `Configured WS inbound transport port (${wsTransportConfig.port}) must match the HTTP inbound transport port ` +
+        `(${httpTransportConfig.port}): DIDComm WebSocket no longer listens on its own port and instead shares the ` +
+        `HTTP transport's listener via an upgrade at ${DIDCOMM_WS_PATH}.`
+    )
+  }
+
   let didCommWsServer: WebSocketServer | undefined
   let didCommHttpInboundTransport: DidCommHttpInboundTransport | undefined
   for (const inboundTransport of inboundTransports) {
@@ -270,6 +286,27 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   await agent.initialize()
+
+  // Dispatch WebSocket upgrades on the shared listener: gate on readiness the same way HTTP requests are gated,
+  // then only DIDCOMM_WS_PATH is handled; every other upgrade path is rejected.
+  if (didCommHttpInboundTransport?.server && didCommWsServer) {
+    const httpServer = didCommHttpInboundTransport.server
+    const wsServer = didCommWsServer
+    httpServer.on('upgrade', (request, socket, head) => {
+      if (restConfig.readinessGate && !restConfig.readinessGate.isReady()) {
+        socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n')
+        socket.destroy()
+        return
+      }
+
+      if (request.url !== DIDCOMM_WS_PATH) {
+        socket.destroy()
+        return
+      }
+
+      wsServer.handleUpgrade(request, socket as Socket, head, (ws) => wsServer.emit('connection', ws, request))
+    })
+  }
 
   container.register(Agent, { useValue: agent as Agent })
 

@@ -155,12 +155,12 @@ docker compose -f docker-compose-testnet.yml up --build -d
 
 This private testnet has the following ports available to the user for testing:
 
-| Agent   | OpenAPI | HTTP | WS   |
-| ------- | ------- | ---- | ---- |
-| Alice   | 3000    | 5002 | 5003 |
-| Bob     | 3001    | 5102 | 5103 |
-| Charlie | 3002    | 5202 | 5203 |
-| IPFS    |         | 8080 |      |
+| Agent   | OpenAPI | DIDComm HTTP + WS (shared port) |
+| ------- | ------- | -------------------------------- |
+| Alice   | 3000    | 5002 (`/didcomm`, `/didcomm-ws`) |
+| Bob     | 3001    | 5102 (`/didcomm`, `/didcomm-ws`) |
+| Charlie | 3002    | 5202 (`/didcomm`, `/didcomm-ws`) |
+| IPFS    |         | 8080                              |
 
 Network name: `testnet`
 
@@ -200,7 +200,7 @@ The Envs are defined under `src > env.ts` They are used to start up a container.
 | USE_DID_SOV_PREFIX_WHERE_ALLOWED            | N        | false                                                                                                                                                                                                  | Allows the usage of 'sov' prefix in DIDs where possible                                                                            |
 | USE_DID_KEY_IN_PROTOCOLS                    | N        | true                                                                                                                                                                                                   | Allows the use of DID keys in protocols                                                                                            |
 | OUTBOUND_TRANSPORT                          | Y        | ['http', 'ws']                                                                                                                                                                                         | Specifies the type of outbound transport                                                                                           |
-| INBOUND_TRANSPORT                           | Y        | "[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]"                                                                                                                             | Specifies the inbound transport, needs to be provided as a JSON parseable string                                                   |
+| INBOUND_TRANSPORT                           | Y        | "[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5002}]"                                                                                                                             | Specifies the inbound transport, needs to be provided as a JSON parseable string. The `ws` entry's port must equal the `http` entry's port: WS shares the HTTP listener via an upgrade at `/didcomm-ws` rather than binding its own port. |
 | AUTO_ACCEPT_CONNECTIONS                     | N        | false                                                                                                                                                                                                  | Allows for connection requests to be automatically acceptedupon being received                                                     |
 | AUTO_ACCEPT_CREDENTIALS                     | N        | "never"                                                                                                                                                                                                | Allows for credentials to be automatically accepted upon being received                                                            |
 | AUTO_ACCEPT_MEDIATION_REQUESTS              | N        | false                                                                                                                                                                                                  | Allows for mediatioons requests to be automatically accepted                                                                       |
