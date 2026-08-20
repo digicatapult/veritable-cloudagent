@@ -33,10 +33,10 @@ export async function deleteAgentStore(agent: RestAgent): Promise<void> {
 export async function getTestAgent(port: number) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
-  const agent = await setupAgent({
+  const { agent } = await setupAgent({
     agentConfig: {
       // add some randomness to ensure test isolation
-      endpoints: [`http://localhost:${port}`],
+      endpoints: [`http://localhost:${port}/didcomm`],
       useDidSovPrefixWhereAllowed: true,
       logger,
       autoUpdateStorageOnStartup: true,

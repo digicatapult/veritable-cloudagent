@@ -58,7 +58,7 @@ describe('AgentController', () => {
 
       return {
         agentConfig: {
-          endpoints: [`http://localhost:${port}`],
+          endpoints: [`http://localhost:${port}/didcomm`],
           useDidSovPrefixWhereAllowed: true,
           logger,
           autoUpdateStorageOnStartup: true,
@@ -91,13 +91,13 @@ describe('AgentController', () => {
       let secondAgent: TestAgent | undefined
 
       try {
-        firstAgent = await setupAgent(buildConfig(storeId, 3091))
+        ;({ agent: firstAgent } = await setupAgent(buildConfig(storeId, 3091)))
         const firstRunLinkSecrets = await firstAgent.modules.anoncreds.getLinkSecretIds()
         expect(firstRunLinkSecrets).to.have.lengthOf(1)
 
         await firstAgent.shutdown()
 
-        secondAgent = await setupAgent(buildConfig(storeId, 3092))
+        ;({ agent: secondAgent } = await setupAgent(buildConfig(storeId, 3092)))
         const secondRunLinkSecrets = await secondAgent.modules.anoncreds.getLinkSecretIds()
         expect(secondRunLinkSecrets).to.have.lengthOf(1)
       } finally {
@@ -117,7 +117,7 @@ describe('AgentController', () => {
 
       try {
         for (let cycle = 0; cycle < 3; cycle++) {
-          currentAgent = await setupAgent(buildConfig(storeId, 3093 + cycle))
+          ;({ agent: currentAgent } = await setupAgent(buildConfig(storeId, 3093 + cycle)))
 
           const linkSecretIds = await currentAgent.modules.anoncreds.getLinkSecretIds()
           expect(linkSecretIds).to.have.lengthOf(1)
