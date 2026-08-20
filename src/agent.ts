@@ -254,17 +254,21 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     agent.didcomm.registerOutboundTransport(new OutboundTransport())
   }
 
-  // Register inbound transports. HTTP shares the public app at DIDCOMM_HTTP_PATH; WS uses a no-server
-  // WebSocketServer at DIDCOMM_WS_PATH so its upgrade events can be dispatched from the shared HTTP server.
-  // WS no longer binds its own port: it shares the HTTP entry's listener, so a mismatched configured
-  // port would otherwise be silently unreachable.
+  // Inbound transports share the public listener: HTTP at DIDCOMM_HTTP_PATH and WS upgrades at DIDCOMM_WS_PATH.
   const httpTransportConfig = inboundTransports.find((t) => t.transport === 'http')
   const wsTransportConfig = inboundTransports.find((t) => t.transport === 'ws')
-  if (wsTransportConfig && httpTransportConfig && wsTransportConfig.port !== httpTransportConfig.port) {
+  const httpPort = httpTransportConfig?.port
+  const wsPort = wsTransportConfig?.port
+
+  if (wsPort !== undefined && wsPort !== httpPort) {
+    if (httpPort === undefined) {
+      throw new Error(
+        `Configured WS inbound transport port (${wsPort}) requires an HTTP inbound transport on the same port.`
+      )
+    }
+
     throw new Error(
-      `Configured WS inbound transport port (${wsTransportConfig.port}) must match the HTTP inbound transport port ` +
-        `(${httpTransportConfig.port}): DIDComm WebSocket no longer listens on its own port and instead shares the ` +
-        `HTTP transport's listener via an upgrade at ${DIDCOMM_WS_PATH}.`
+      `Configured WS inbound transport port (${wsPort}) must match the HTTP inbound transport port (${httpPort}).`
     )
   }
 

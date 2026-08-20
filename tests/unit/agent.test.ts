@@ -168,6 +168,24 @@ describe('AgentController', () => {
         /Configured WS inbound transport port \(3099\) must match the HTTP inbound transport port \(3098\)/
       )
     })
+
+    test('rejects a WS inbound transport when no HTTP inbound transport is configured', async () => {
+      const config = {
+        ...buildConfig(randomUUID(), 3097),
+        inboundTransports: [{ transport: 'ws' as const, port: 3097 }],
+      }
+
+      let error: Error | undefined
+      try {
+        await setupAgent(config)
+      } catch (err) {
+        error = err as Error
+      }
+
+      expect(error?.message).to.match(
+        /Configured WS inbound transport port \(3097\) requires an HTTP inbound transport on the same port/
+      )
+    })
   })
 
   after(async () => {

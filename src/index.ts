@@ -151,8 +151,22 @@ const privateApp = await setupServer(agent, logger, {
 })
 
 const adminPort = env.get('ADMIN_PORT')
-const server = privateApp.listen(adminPort, () => {
-  logger.info(`Successfully started server on port ${adminPort}`)
+const server = privateApp.listen(adminPort)
+
+await new Promise<void>((resolve, reject) => {
+  const onListening = () => {
+    server.off('error', onError)
+    logger.info(`Successfully started OpenAPI server on port ${adminPort}`)
+    resolve()
+  }
+
+  const onError = (error: Error) => {
+    server.off('listening', onListening)
+    reject(error)
+  }
+
+  server.once('listening', onListening)
+  server.once('error', onError)
 })
 
 server.on('upgrade', (request, socket, head) => {

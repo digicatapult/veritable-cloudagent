@@ -73,6 +73,23 @@ export class DidWebServer {
     await this.db.upsert('did_web', { did: document.id, document: document.toJSON() }, 'did')
   }
 
+  private awaitServerListening(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const onListening = () => {
+        server.off('error', onError)
+        resolve()
+      }
+
+      const onError = (error: Error) => {
+        server.off('listening', onListening)
+        reject(error)
+      }
+
+      server.once('listening', onListening)
+      server.once('error', onError)
+    })
+  }
+
   async start(): Promise<void> {
     if (!this.config.enabled) {
       this.logger.info('DID:web server disabled')
@@ -99,14 +116,13 @@ export class DidWebServer {
         )
       }
       this.server = https.createServer(httpsCredentials, this.app)
-      this.server.listen(this.config.port, () => {
-        this.logger.info(`DID:web server started on https port ${this.config.port}`)
-      })
+      this.server.listen(this.config.port)
     } else {
-      this.server = this.app.listen(this.config.port, () => {
-        this.logger.info(`DID:web server started on http port ${this.config.port}`)
-      })
+      this.server = this.app.listen(this.config.port)
     }
+
+    await this.awaitServerListening(this.server)
+    this.logger.info(`DID:web server started on ${this.config.useDevCert ? 'https' : 'http'} port ${this.config.port}`)
 
     setupGracefulExit('SIGINT', this.server, 0)
     setupGracefulExit('SIGTERM', this.server, 143)
