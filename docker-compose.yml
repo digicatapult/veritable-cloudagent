@@ -5,7 +5,7 @@
 ##
 ## Agent: alice
 ## Ports:
-##    Alice   = 3000 / 5002 (HTTP) & 5003 (WS)
+##    Alice   = 3000 (API), 5002 (DIDComm HTTP + WS), 8443 (did:web)
 ##    IPFS    = 8080 (HTTP)
 ## Network: testnet
 ##
@@ -27,8 +27,7 @@ services:
       ipfs:
         condition: service_healthy
     ports:
-      - '5002:5002' #5000 is used for AirPlay in MacOS
-      - '5003:5003'
+      - '5002:5002' #5000 is used for AirPlay in MacOS; DIDComm HTTP and WS share this port
       - '3000:3000'
       - '8443:8443'
     command: >
@@ -37,7 +36,7 @@ services:
         node ./node_modules/.bin/knex migrate:latest
         npm start | pino-pretty -c -S"
     environment:
-      - ENDPOINT='http://alice:5002, ws://alice:5003'
+      - ENDPOINT='http://alice:5002/didcomm, ws://alice:5002/didcomm-ws'
       - IPFS_ORIGIN=http://ipfs:5001
       - POSTGRES_HOST=veritable-cloudagent-postgres
       - POSTGRES_PORT=5432
@@ -50,7 +49,7 @@ services:
       - DID_WEB_DEV_KEY_PATH=/alice-key.pem
       - DID_WEB_DB_NAME=did-web-server
       - DID_WEB_DOMAIN=localhost%3A8443
-      - DID_WEB_SERVICE_ENDPOINT=http://localhost:5002
+      - DID_WEB_SERVICE_ENDPOINT=http://localhost:5002/didcomm
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     networks:
       - testnet

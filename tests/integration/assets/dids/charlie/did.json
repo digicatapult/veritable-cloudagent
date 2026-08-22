@@ -29,7 +29,7 @@
       ],
       "routingKeys": [],
       "accept": ["didcomm/aip1"],
-      "serviceEndpoint": "http://charlie:5002"
+      "serviceEndpoint": "http://charlie:5002/didcomm"
     }
   ]
 }
