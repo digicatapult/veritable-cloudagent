@@ -81,8 +81,8 @@ export const envConfig = {
   // The "ws" entry's port must match the "http" entry's port: DIDComm WS no longer binds its own port,
   // it shares the HTTP entry's listener via an upgrade at /didcomm-ws. A mismatched port fails startup.
   INBOUND_TRANSPORT: envalid.json({
-    default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5002}]'),
-    devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5002}]'),
+    default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws"}]'),
+    devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws"}]'),
   }),
   AUTO_ACCEPT_CONNECTIONS: envalid.bool({ default: false, devDefault: true }),
   AUTO_ACCEPT_CREDENTIALS: envalid.str({

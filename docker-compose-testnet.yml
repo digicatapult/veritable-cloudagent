@@ -53,7 +53,6 @@ services:
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5002:5002' #5000 is used for AirPlay in MacOS
-      #- '5003:5003'
       - '3000:3000'
       - '8443:8443'
     command: >
@@ -106,7 +105,6 @@ services:
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5102:5002'
-      #- '5103:5003'
       - '3001:3000'
       - '8444:8443'
     command: >
@@ -159,7 +157,6 @@ services:
       - NODE_EXTRA_CA_CERTS=/rootCA.pem
     ports:
       #- '5202:5002'
-      #- '5203:5003'
       - '3002:3000'
       - '8445:8443'
     command: >

@@ -32,7 +32,6 @@ import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import express, { type Express } from 'express'
-import type { Socket } from 'node:net'
 import { container } from 'tsyringe'
 import { WebSocketServer } from 'ws'
 
@@ -52,7 +51,7 @@ export const DIDCOMM_WS_PATH = '/didcomm-ws'
 export type Transports = 'ws' | 'http'
 export type InboundTransport = {
   transport: Transports
-  port: number
+  port?: number
 }
 
 type AgentProofProtocols = [
@@ -255,27 +254,14 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   // Inbound transports share the public listener: HTTP at DIDCOMM_HTTP_PATH and WS upgrades at DIDCOMM_WS_PATH.
-  const httpTransportConfig = inboundTransports.find((t) => t.transport === 'http')
-  const wsTransportConfig = inboundTransports.find((t) => t.transport === 'ws')
-  const httpPort = httpTransportConfig?.port
-  const wsPort = wsTransportConfig?.port
-
-  if (wsPort !== undefined && wsPort !== httpPort) {
-    if (httpPort === undefined) {
-      throw new Error(
-        `Configured WS inbound transport port (${wsPort}) requires an HTTP inbound transport on the same port.`
-      )
-    }
-
-    throw new Error(
-      `Configured WS inbound transport port (${wsPort}) must match the HTTP inbound transport port (${httpPort}).`
-    )
-  }
-
   let didCommWsServer: WebSocketServer | undefined
   let didCommHttpInboundTransport: DidCommHttpInboundTransport | undefined
   for (const inboundTransport of inboundTransports) {
     if (inboundTransport.transport === 'http') {
+      if (inboundTransport.port === undefined) {
+        throw new Error('HTTP inbound transport requires a port.')
+      }
+
       didCommHttpInboundTransport = new DidCommHttpInboundTransport({
         app: publicApp,
         path: DIDCOMM_HTTP_PATH,
@@ -290,27 +276,6 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   await agent.initialize()
-
-  // Dispatch WebSocket upgrades on the shared listener: gate on readiness the same way HTTP requests are gated,
-  // then only DIDCOMM_WS_PATH is handled; every other upgrade path is rejected.
-  if (didCommHttpInboundTransport?.server && didCommWsServer) {
-    const httpServer = didCommHttpInboundTransport.server
-    const wsServer = didCommWsServer
-    httpServer.on('upgrade', (request, socket, head) => {
-      if (restConfig.readinessGate && !restConfig.readinessGate.isReady()) {
-        socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n')
-        socket.destroy()
-        return
-      }
-
-      if (request.url !== DIDCOMM_WS_PATH) {
-        socket.destroy()
-        return
-      }
-
-      wsServer.handleUpgrade(request, socket as Socket, head, (ws) => wsServer.emit('connection', ws, request))
-    })
-  }
 
   container.register(Agent, { useValue: agent as Agent })
 

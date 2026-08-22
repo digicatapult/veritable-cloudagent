@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import 'reflect-metadata'
 
+import { createServer, type Server } from 'node:http'
 import type { Socket } from 'node:net'
 
 import { DidCommHttpInboundTransport } from '@credo-ts/node'
@@ -10,7 +11,7 @@ import WebSocket, { WebSocketServer } from 'ws'
 import { DidCommAutoAcceptCredential, DidCommAutoAcceptProof } from '@credo-ts/didcomm'
 import { clearInterval } from 'node:timers'
 import { container } from 'tsyringe'
-import { setupAgent } from './agent.js'
+import { DIDCOMM_WS_PATH, setupAgent, type InboundTransport } from './agent.js'
 import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import { Env } from './env.js'
@@ -27,12 +28,14 @@ container.register(PinoLogger, {
 })
 
 // Shared public protocol application: DIDComm HTTP/WS live here, and OpenID4VC will join it in a later PR.
+// Keep the origin root available: OID4VC and did:web publish their well-known resources there.
+// Do not add catch-all middleware here; any 404 handler must be registered after all protocol routes.
 const publicApp = express()
 const readinessGate = new ReadinessGate()
 publicApp.use(createRequestLogger(logger.logger))
 publicApp.use(readinessGate.middleware)
 
-const { agent, didCommHttpInboundTransport } = await setupAgent({
+const { agent, didCommHttpInboundTransport, didCommWsServer } = await setupAgent({
   agentConfig: {
     logger: logger.child({ component: 'credo-ts-agent' }),
     endpoints: env.get('ENDPOINT'),
@@ -88,10 +91,65 @@ publicApp.use((_req, res) => {
 })
 publicApp.use(errorHandler(agent.config.logger))
 
-// DidCommHttpInboundTransport owns the only listen() call for the shared public app. WebSocket upgrade
-// dispatch (readiness gating, path routing, handleUpgrade) is wired by setupAgent itself.
-if (!(didCommHttpInboundTransport instanceof DidCommHttpInboundTransport) || !didCommHttpInboundTransport.server) {
-  throw new Error('Expected DidCommHttpInboundTransport to be configured with an HTTP inbound transport')
+let publicServer: Server
+let publicServerOwnedByDidComm = false
+if (didCommHttpInboundTransport instanceof DidCommHttpInboundTransport && didCommHttpInboundTransport.server) {
+  publicServer = didCommHttpInboundTransport.server
+  publicServerOwnedByDidComm = true
+} else {
+  publicServer = createServer(publicApp)
+}
+
+publicServer.on('error', (error) => {
+  logger.error('Public server error', { error })
+})
+
+if (!publicServerOwnedByDidComm) {
+  const publicPort =
+    (env.get('INBOUND_TRANSPORT') as InboundTransport[]).find((transport) => transport.transport === 'http')?.port ??
+    5002
+  publicServer.listen(publicPort)
+}
+
+// Attach upgrade dispatch immediately after obtaining the server. Credo may already have bound it;
+// unhandled upgrades are destroyed by Node, which is the desired rejection behaviour.
+if (didCommWsServer) {
+  publicServer.on('upgrade', (request, socket, head) => {
+    if (!readinessGate.isReady()) {
+      socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n')
+      socket.destroy()
+      return
+    }
+
+    const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
+    if (pathname !== DIDCOMM_WS_PATH && pathname !== `${DIDCOMM_WS_PATH}/`) {
+      socket.write('HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n')
+      socket.destroy()
+      return
+    }
+
+    didCommWsServer.handleUpgrade(request, socket as Socket, head, (ws) => {
+      didCommWsServer.emit('connection', ws, request)
+    })
+  })
+}
+
+const awaitServerListening = (serverToAwait: Server): Promise<void> => {
+  if (serverToAwait.listening) return Promise.resolve()
+
+  return new Promise<void>((resolve, reject) => {
+    const onListening = () => {
+      serverToAwait.off('error', onError)
+      resolve()
+    }
+    const onError = (error: Error) => {
+      serverToAwait.off('listening', onListening)
+      reject(error)
+    }
+
+    serverToAwait.once('listening', onListening)
+    serverToAwait.once('error', onError)
+  })
 }
 
 const database = new Database({
@@ -152,22 +210,8 @@ const privateApp = await setupServer(agent, logger, {
 
 const adminPort = env.get('ADMIN_PORT')
 const server = privateApp.listen(adminPort)
-
-await new Promise<void>((resolve, reject) => {
-  const onListening = () => {
-    server.off('error', onError)
-    logger.info(`Successfully started OpenAPI server on port ${adminPort}`)
-    resolve()
-  }
-
-  const onError = (error: Error) => {
-    server.off('listening', onListening)
-    reject(error)
-  }
-
-  server.once('listening', onListening)
-  server.once('error', onError)
-})
+await Promise.all([awaitServerListening(publicServer), awaitServerListening(server)])
+logger.info(`Successfully started OpenAPI server on port ${adminPort}`)
 
 server.on('upgrade', (request, socket, head) => {
   socketServer.handleUpgrade(request, socket as Socket, head, () => {
@@ -175,6 +219,35 @@ server.on('upgrade', (request, socket, head) => {
     return
   })
 })
+
+const closeServer = (serverToClose: Server): Promise<void> => {
+  if (!serverToClose.listening) return Promise.resolve()
+
+  return new Promise<void>((resolve, reject) => {
+    serverToClose.close((error) => {
+      if (error) return reject(error)
+      resolve()
+    })
+  })
+}
+
+let shuttingDown = false
+const shutdown = async (exitCode: number) => {
+  if (shuttingDown) return
+  shuttingDown = true
+
+  didCommWsServer?.clients.forEach((ws) => ws.terminate())
+  socketServer.clients.forEach((ws) => ws.terminate())
+  socketServer.close()
+
+  await agent.shutdown()
+  await closeServer(server)
+  if (!publicServerOwnedByDidComm) await closeServer(publicServer)
+  process.exit(exitCode)
+}
+
+process.prependListener('SIGINT', () => void shutdown(0))
+process.prependListener('SIGTERM', () => void shutdown(143))
 
 // Public and private listeners, TSOA routes and DID:web are all up: only now accept protocol traffic.
 readinessGate.markReady()
