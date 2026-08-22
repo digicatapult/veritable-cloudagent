@@ -64,8 +64,8 @@ export const envConfig = {
   WALLET_ID: envalid.str({ default: 'walletId', devDefault: 'walletId' }),
   WALLET_KEY: envalid.str({ default: 'walletKey', devDefault: 'walletKey' }),
   ENDPOINT: stringArray({
-    default: ['http://localhost:5002', 'ws://localhost:5003'],
-    devDefault: ['http://localhost:5002', 'ws://localhost:5003'],
+    default: ['http://localhost:5002/didcomm', 'ws://localhost:5002/didcomm-ws'],
+    devDefault: ['http://localhost:5002/didcomm', 'ws://localhost:5002/didcomm-ws'],
   }),
   LOG_LEVEL: envalid.str({
     default: 'info',
@@ -78,9 +78,11 @@ export const envConfig = {
     { default: ['http', 'ws'], devDefault: ['http', 'ws'] },
     { allowedValues: new Set(['http', 'ws']) }
   ),
+  // The "ws" entry's port must match the "http" entry's port: DIDComm WS no longer binds its own port,
+  // it shares the HTTP entry's listener via an upgrade at /didcomm-ws. A mismatched port fails startup.
   INBOUND_TRANSPORT: envalid.json({
-    default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
-    devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]'),
+    default: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws"}]'),
+    devDefault: JSON.parse('[{"transport": "http", "port": 5002}, {"transport": "ws"}]'),
   }),
   AUTO_ACCEPT_CONNECTIONS: envalid.bool({ default: false, devDefault: true }),
   AUTO_ACCEPT_CREDENTIALS: envalid.str({
@@ -123,7 +125,7 @@ export const envConfig = {
   }),
   DID_WEB_SERVICE_ENDPOINT: envalid.str({
     default: '',
-    devDefault: 'http://localhost:5002',
+    devDefault: 'http://localhost:5002/didcomm',
   }),
   DID_WEB_ENABLED: envalid.bool({ default: false }),
   DID_WEB_PORT: envalid.num({ default: 8443 }),

@@ -26,7 +26,6 @@ services:
     environment:
       - NODE_ENV=test
       - ALICE_BASE_URL=${ALICE_BASE_URL:-http://alice:3000}
-      - ALICE_WS_PORT=${ALICE_WS_PORT:-5003}
       - ALICE_DID_WEB_URL=${ALICE_DID_WEB_URL:-https://alice:8443}
       - ALICE_DID
       - ALICE_PRIV_KEY
