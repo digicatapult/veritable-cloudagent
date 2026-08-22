@@ -73,19 +73,39 @@ export class DidWebServer {
     await this.db.upsert('did_web', { did: document.id, document: document.toJSON() }, 'did')
   }
 
+  public async stop(): Promise<void> {
+    if (!this.server?.listening) return
+
+    await new Promise<void>((resolve, reject) => {
+      this.server?.close((error) => {
+        if (error) return reject(error)
+        resolve()
+      })
+    })
+  }
+
+  private awaitServerListening(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const onListening = () => {
+        server.off('error', onError)
+        resolve()
+      }
+
+      const onError = (error: Error) => {
+        server.off('listening', onListening)
+        reject(error)
+      }
+
+      server.once('listening', onListening)
+      server.once('error', onError)
+    })
+  }
+
   async start(): Promise<void> {
     if (!this.config.enabled) {
       this.logger.info('DID:web server disabled')
       return
     }
-    const setupGracefulExit = (sigName: NodeJS.Signals, server: Server, exitCode: number) => {
-      process.on(sigName, async () => {
-        server.close(() => {
-          process.exit(exitCode)
-        })
-      })
-    }
-
     if (this.config.useDevCert) {
       let httpsCredentials
       try {
@@ -99,16 +119,12 @@ export class DidWebServer {
         )
       }
       this.server = https.createServer(httpsCredentials, this.app)
-      this.server.listen(this.config.port, () => {
-        this.logger.info(`DID:web server started on https port ${this.config.port}`)
-      })
+      this.server.listen(this.config.port)
     } else {
-      this.server = this.app.listen(this.config.port, () => {
-        this.logger.info(`DID:web server started on http port ${this.config.port}`)
-      })
+      this.server = this.app.listen(this.config.port)
     }
 
-    setupGracefulExit('SIGINT', this.server, 0)
-    setupGracefulExit('SIGTERM', this.server, 143)
+    await this.awaitServerListening(this.server)
+    this.logger.info(`DID:web server started on ${this.config.useDevCert ? 'https' : 'http'} port ${this.config.port}`)
   }
 }
