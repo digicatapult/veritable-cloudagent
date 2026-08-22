@@ -168,6 +168,25 @@ describe('AgentController', () => {
       }
     })
 
+    test('rejects a WS inbound transport that specifies an ignored port', async () => {
+      const config = {
+        ...buildConfig(randomUUID(), 3096),
+        inboundTransports: [
+          { transport: 'http' as const, port: 3096 },
+          { transport: 'ws' as const, port: 3097 },
+        ],
+      }
+
+      let error: Error | undefined
+      try {
+        await setupAgent(config)
+      } catch (caughtError) {
+        error = caughtError as Error
+      }
+
+      expect(error?.message).to.equal('WS inbound transport must not specify a port, it shares the HTTP listener.')
+    })
+
     test('rejects when the public listener cannot bind and leaves readiness false', async () => {
       const occupiedServer = createServer().listen(0)
       await new Promise<void>((resolve) => occupiedServer.once('listening', resolve))

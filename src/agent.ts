@@ -291,6 +291,10 @@ export async function setupAgent(restConfig: AriesRestConfig) {
         return server
       }) as typeof publicApp.listen
     } else {
+      if (inboundTransport.port !== undefined) {
+        throw new Error('WS inbound transport must not specify a port, it shares the HTTP listener.')
+      }
+
       didCommWsServer = new WebSocketServer({ noServer: true })
       agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didCommWsServer }))
     }
