@@ -21,7 +21,7 @@ import { randomUUID } from 'crypto'
 import { container } from 'tsyringe'
 import WebSocket, { WebSocketServer } from 'ws'
 
-import { RestAgent, setupAgent } from '../../../src/agent.js'
+import { DIDCOMM_WS_PATH, RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 import type { ReadinessGate } from '../../../src/utils/readiness.js'
@@ -74,7 +74,7 @@ export async function getTestAgent(port: number) {
 export async function getTestAgentWithPublicApp(port: number, publicApp: Express, readinessGate?: ReadinessGate) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
-  return setupAgent({
+  const result = await setupAgent({
     agentConfig: {
       endpoints: [`http://localhost:${port}/didcomm`],
       useDidSovPrefixWhereAllowed: true,
@@ -93,10 +93,7 @@ export async function getTestAgentWithPublicApp(port: number, publicApp: Express
 
     publicApp,
     readinessGate,
-    inboundTransports: [
-      { transport: 'http', port },
-      { transport: 'ws', port },
-    ],
+    inboundTransports: [{ transport: 'http', port }, { transport: 'ws' }],
     outboundTransports: ['http'],
 
     logger,
@@ -104,6 +101,28 @@ export async function getTestAgentWithPublicApp(port: number, publicApp: Express
     ipfsTimeoutMs: 15000,
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
+
+  if (result.didCommHttpInboundTransport?.server && result.didCommWsServer) {
+    const wsServer = result.didCommWsServer
+    result.didCommHttpInboundTransport.server.on('upgrade', (request, socket, head) => {
+      if (readinessGate && !readinessGate.isReady()) {
+        socket.write('HTTP/1.1 503 Service Unavailable\r\nConnection: close\r\n\r\n')
+        socket.destroy()
+        return
+      }
+
+      const pathname = new URL(request.url ?? '/', 'http://localhost').pathname
+      if (pathname !== DIDCOMM_WS_PATH && pathname !== `${DIDCOMM_WS_PATH}/`) {
+        socket.write('HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n')
+        socket.destroy()
+        return
+      }
+
+      wsServer.handleUpgrade(request, socket, head, (ws) => wsServer.emit('connection', ws, request))
+    })
+  }
+
+  return result
 }
 
 export async function getTestServer(agent: RestAgent) {

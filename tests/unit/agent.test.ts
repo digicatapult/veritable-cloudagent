@@ -148,43 +148,21 @@ describe('AgentController', () => {
       }
     })
 
-    test('rejects a WS inbound transport port that does not match the HTTP inbound transport port', async () => {
-      const config = {
-        ...buildConfig(randomUUID(), 3098),
-        inboundTransports: [
-          { transport: 'http' as const, port: 3098 },
-          { transport: 'ws' as const, port: 3099 },
-        ],
-      }
-
-      let error: Error | undefined
-      try {
-        await setupAgent(config)
-      } catch (err) {
-        error = err as Error
-      }
-
-      expect(error?.message).to.match(
-        /Configured WS inbound transport port \(3099\) must match the HTTP inbound transport port \(3098\)/
-      )
-    })
-
-    test('rejects a WS inbound transport when no HTTP inbound transport is configured', async () => {
+    test('supports HTTP and WS inbound transports without a separate WS port', async () => {
       const config = {
         ...buildConfig(randomUUID(), 3097),
-        inboundTransports: [{ transport: 'ws' as const, port: 3097 }],
+        inboundTransports: [{ transport: 'http' as const, port: 3097 }, { transport: 'ws' as const }],
       }
 
-      let error: Error | undefined
+      let configuredAgent: TestAgent | undefined
       try {
-        await setupAgent(config)
-      } catch (err) {
-        error = err as Error
+        ;({ agent: configuredAgent } = await setupAgent(config))
+      } finally {
+        if (configuredAgent) {
+          await configuredAgent.shutdown()
+          await deleteAgentStore(configuredAgent)
+        }
       }
-
-      expect(error?.message).to.match(
-        /Configured WS inbound transport port \(3097\) requires an HTTP inbound transport on the same port/
-      )
     })
   })
 
@@ -217,6 +195,10 @@ describe('Shared public protocol listener', () => {
       throw new Error('Expected the DIDComm HTTP inbound transport to be configured')
     }
     httpServer = didCommHttpInboundTransport.server
+
+    publicApp.use((_req, res) => {
+      res.status(404).end()
+    })
 
     privateServer = await getTestServer(agent)
   })
@@ -267,6 +249,18 @@ describe('Shared public protocol listener', () => {
   test('accepts a WebSocket upgrade at /didcomm-ws', async () => {
     const { port: boundPort } = httpServer.address() as AddressInfo
     const outcome = await attemptWebSocketUpgrade(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}`)
+    expect(outcome).to.equal('open')
+  })
+
+  test('accepts a WebSocket upgrade with a query string', async () => {
+    const { port: boundPort } = httpServer.address() as AddressInfo
+    const outcome = await attemptWebSocketUpgrade(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}?foo=1`)
+    expect(outcome).to.equal('open')
+  })
+
+  test('accepts a WebSocket upgrade with a trailing slash', async () => {
+    const { port: boundPort } = httpServer.address() as AddressInfo
+    const outcome = await attemptWebSocketUpgrade(`ws://127.0.0.1:${boundPort}${DIDCOMM_WS_PATH}/`)
     expect(outcome).to.equal('open')
   })
 
