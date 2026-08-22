@@ -13,6 +13,7 @@ import {
   DidCommTrustPingMessage,
   type DidCommConnectionRecordProps,
 } from '@credo-ts/didcomm'
+import type { Express } from 'express'
 import type { Socket } from 'node:net'
 
 import { DidDocument, JsonEncoder, JsonTransformer, type DidCreateResult } from '@credo-ts/core'
@@ -22,7 +23,9 @@ import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
 import { setupServer } from '../../../src/server.js'
+import { registerDidCommWebSocketUpgrade } from '../../../src/utils/didcommWebSocket.js'
 import PinoLogger from '../../../src/utils/logger.js'
+import type { ReadinessGate } from '../../../src/utils/readiness.js'
 
 export type TestAgent = RestAgent
 
@@ -33,10 +36,10 @@ export async function deleteAgentStore(agent: RestAgent): Promise<void> {
 export async function getTestAgent(port: number) {
   const logger = new PinoLogger('silent')
   container.register(PinoLogger, { useValue: logger })
-  const agent = await setupAgent({
+  const { agent } = await setupAgent({
     agentConfig: {
       // add some randomness to ensure test isolation
-      endpoints: [`http://localhost:${port}`],
+      endpoints: [`http://localhost:${port}/didcomm`],
       useDidSovPrefixWhereAllowed: true,
       logger,
       autoUpdateStorageOnStartup: true,
@@ -68,12 +71,65 @@ export async function getTestAgent(port: number) {
   return agent
 }
 
-export async function getTestServer(agent: RestAgent) {
+// Like getTestAgent, but binds DIDComm HTTP/WS onto a caller-supplied shared app for shared-listener tests.
+export async function getTestAgentWithPublicApp(port: number, publicApp: Express, readinessGate?: ReadinessGate) {
+  const logger = new PinoLogger('silent')
+  container.register(PinoLogger, { useValue: logger })
+  const result = await setupAgent({
+    agentConfig: {
+      endpoints: [`http://localhost:${port}/didcomm`],
+      useDidSovPrefixWhereAllowed: true,
+      logger,
+      autoUpdateStorageOnStartup: true,
+    },
+
+    askarStoreConfig: {
+      id: randomUUID(),
+      key: 'DZ9hPqFWTPxemcGea72C1X1nusqk5wFNLq6QPjwXGqAa',
+      keyDerivationMethod: 'raw',
+      database: {
+        type: 'sqlite',
+      },
+    },
+
+    publicApp,
+    readinessGate,
+    inboundTransports: [{ transport: 'http', port }, { transport: 'ws' }],
+    outboundTransports: ['http'],
+
+    logger,
+    ipfsOrigin: 'https://localhost:5001',
+    ipfsTimeoutMs: 15000,
+    verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
+  })
+
+  if (result.didCommHttpInboundTransport?.server && result.didCommWsServer) {
+    registerDidCommWebSocketUpgrade(result.didCommHttpInboundTransport.server, result.didCommWsServer, readinessGate)
+  }
+
+  return result
+}
+
+export async function getTestServer(agent: RestAgent, port = 0) {
   const socketServer = new WebSocketServer({ noServer: true })
   const app = await setupServer(agent, new PinoLogger('silent'), {
     socketServer,
   })
-  const server = app.listen(0, () => {})
+  const server = app.listen(port)
+
+  await new Promise<void>((resolve, reject) => {
+    const onListening = () => {
+      server.off('error', onError)
+      resolve()
+    }
+    const onError = (error: Error) => {
+      server.off('listening', onListening)
+      reject(error)
+    }
+
+    server.once('listening', onListening)
+    server.once('error', onError)
+  })
 
   server.on('upgrade', (request, socket, head) => {
     socketServer.handleUpgrade(request, socket as Socket, head, () => {
@@ -692,4 +748,16 @@ export async function closeWebSocket(ws: WebSocket | undefined) {
     ws.once('error', (err: Error) => reject(err))
     ws.close()
   })
+}
+
+// Unlike openWebSocket, observes whether the upgrade opened or was rejected instead of throwing.
+export async function attemptWebSocketUpgrade(url: string): Promise<'open' | 'rejected'> {
+  const ws = new WebSocket(url)
+  const outcome = await new Promise<'open' | 'rejected'>((resolve) => {
+    ws.once('open', () => resolve('open'))
+    ws.once('error', () => resolve('rejected'))
+    ws.once('close', () => resolve('rejected'))
+  })
+  if (outcome === 'open') ws.close()
+  return outcome
 }

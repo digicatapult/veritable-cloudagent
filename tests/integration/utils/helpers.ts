@@ -50,6 +50,29 @@ export const waitForConnectionState = async (
   throw new Error(`Timed out waiting for connection state ${states.join(', ')}`)
 }
 
+export const waitForBasicMessageContent = async (
+  client: TestClient,
+  connectionId: UUID,
+  expectedContent: string,
+  options?: WaitOptions
+) => {
+  const { maxAttempts, intervalMs } = getWaitOptions(options)
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const response = await client.get(`/v1/basic-messages/${connectionId}`).expect(200)
+    const records = response.body as { id: UUID; content: string }[]
+
+    const record = records.find((message) => message.content === expectedContent)
+    if (record) {
+      return record
+    }
+
+    await sleep(intervalMs)
+  }
+
+  throw new Error(`Timed out waiting for basic message with content: ${expectedContent}`)
+}
+
 export const waitForCredentialRecord = async (
   client: TestClient,
   connectionId: UUID,
