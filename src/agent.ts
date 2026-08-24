@@ -210,6 +210,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsTimeoutMs,
     verifiedDrpcOptions,
     didcommWsSocketServer,
+    logger,
 
     agentConfig,
     askarStoreConfig,
@@ -276,7 +277,9 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
     agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
 
-    const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
+    // Construct and register explicitly to avoid resolving a stale singleton bound to a previous agent.
+    const drpcReceiveHandler = new DrpcReceiveHandler(agent, logger)
+    container.register(DrpcReceiveHandler, { useValue: drpcReceiveHandler })
     drpcReceiveHandler.start()
   } catch (error) {
     // Agent is already initialized at this point; shut it down so the caller's cleanup isn't skipped.

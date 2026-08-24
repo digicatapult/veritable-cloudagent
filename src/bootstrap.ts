@@ -10,6 +10,7 @@ import { container } from 'tsyringe'
 import { setupAgent, type InboundTransport, type RestAgent } from './agent.js'
 import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
+import DrpcReceiveHandler from './drpc-handler/index.js'
 import type { Env } from './env.js'
 import { setupServer } from './server.js'
 import { DidWebDocGenerator } from './utils/didWebGenerator.js'
@@ -254,6 +255,9 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
             }
           }
 
+          // Stop the DRPC receive loop before shutting down the agent it reads from.
+          await container.resolve(DrpcReceiveHandler).stop()
+
           // Keep timeout as a backstop to avoid indefinite shutdown hangs.
           await withTimeout(agent!.shutdown(), SHUTDOWN_TIMEOUT_MS, 'agent.shutdown')
           await closeWebSocketServer(didcommSocketServer)
@@ -282,6 +286,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       }
 
       if (agent) {
+        await container.resolve(DrpcReceiveHandler).stop()
         await withTimeout(agent.shutdown(), SHUTDOWN_TIMEOUT_MS, 'agent.shutdown')
       }
 
