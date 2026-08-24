@@ -98,19 +98,25 @@ export class DidWebServer {
     }
 
     const server = this.server
-    await new Promise<void>((resolve, reject) => {
-      server.once('error', reject)
-      server.listen(this.config.port, () => {
-        server.removeListener('error', reject)
-        resolve()
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', reject)
+        server.listen(this.config.port, () => {
+          server.removeListener('error', reject)
+          resolve()
+        })
       })
-    })
+    } catch (error) {
+      // Bind failed before the server ever started; clear it so stop() treats this as never-started.
+      this.server = undefined
+      throw error
+    }
 
     this.logger.info(`DID:web server started on ${this.config.useDevCert ? 'https' : 'http'} port ${this.config.port}`)
   }
 
   async stop(): Promise<void> {
-    if (!this.server) {
+    if (!this.server || !this.server.listening) {
       return
     }
 
@@ -120,6 +126,10 @@ export class DidWebServer {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => {
         if (error) {
+          if ((error as NodeJS.ErrnoException).code === 'ERR_SERVER_NOT_RUNNING') {
+            resolve()
+            return
+          }
           reject(error)
           return
         }

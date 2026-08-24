@@ -1,7 +1,6 @@
 import { expect } from 'chai'
 import { afterEach, before, describe, test } from 'mocha'
 import { randomUUID } from 'node:crypto'
-import { createServer } from 'node:net'
 import { restore as sinonRestore, stub as sinonStub } from 'sinon'
 import WebSocket from 'ws'
 
@@ -9,67 +8,7 @@ import { startCloudagent } from '../../src/bootstrap.js'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import type { Env } from '../../src/env.js'
 import PinoLogger from '../../src/utils/logger.js'
-import { deleteAgentStore } from './utils/helpers.js'
-
-const getAvailablePort = async () => {
-  const server = createServer()
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject)
-    server.listen(0, '127.0.0.1', () => resolve())
-  })
-
-  const address = server.address()
-  const port = typeof address === 'object' && address ? address.port : undefined
-
-  await new Promise<void>((resolve, reject) => {
-    server.close((error) => {
-      if (error) {
-        reject(error)
-        return
-      }
-      resolve()
-    })
-  })
-
-  if (!port) {
-    throw new Error('Unable to allocate test port')
-  }
-
-  return port
-}
-
-const occupyPort = async (port: number) => {
-  const server = createServer()
-
-  await new Promise<void>((resolve, reject) => {
-    server.once('error', reject)
-    // Bind without a host, matching how adminServer/didcommSocketServer bind, so the conflict is real.
-    server.listen(port, () => resolve())
-  })
-
-  return server
-}
-
-const closeServer = async (server: ReturnType<typeof createServer>) => {
-  await new Promise<void>((resolve, reject) => {
-    server.close((error) => {
-      if (error) {
-        reject(error)
-        return
-      }
-      resolve()
-    })
-  })
-}
-
-const connectWebSocket = async (port: number) => {
-  return new Promise<WebSocket>((resolve, reject) => {
-    const ws = new WebSocket(`ws://127.0.0.1:${port}`)
-    ws.once('open', () => resolve(ws))
-    ws.once('error', (error) => reject(error))
-  })
-}
+import { closeServer, connectWebSocket, deleteAgentStore, getAvailablePort, occupyPort } from './utils/helpers.js'
 
 const createTestEnv = async (walletId?: string, options?: { didWebEnabled?: boolean; secondWsPort?: number }) => {
   const adminPort = await getAvailablePort()
@@ -202,6 +141,7 @@ describe('startCloudagent lifecycle', () => {
 
     // shutdown must be idempotent
     await handle.shutdown()
+    expect(handle.adminServer.listening).to.equal(false)
 
     await deleteAgentStore(handle.agent)
     handles.pop()

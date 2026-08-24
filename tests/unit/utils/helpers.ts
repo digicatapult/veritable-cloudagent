@@ -13,7 +13,7 @@ import {
   DidCommTrustPingMessage,
   type DidCommConnectionRecordProps,
 } from '@credo-ts/didcomm'
-import type { Socket } from 'node:net'
+import { createServer, type Socket } from 'node:net'
 
 import { DidDocument, JsonEncoder, JsonTransformer, type DidCreateResult } from '@credo-ts/core'
 import { randomUUID } from 'crypto'
@@ -25,6 +25,66 @@ import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
 export type TestAgent = RestAgent
+
+export const getAvailablePort = async () => {
+  const server = createServer()
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => resolve())
+  })
+
+  const address = server.address()
+  const port = typeof address === 'object' && address ? address.port : undefined
+
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve()
+    })
+  })
+
+  if (!port) {
+    throw new Error('Unable to allocate test port')
+  }
+
+  return port
+}
+
+export const occupyPort = async (port: number) => {
+  const server = createServer()
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    // Bind without a host, matching how adminServer/didcommSocketServer bind, so the conflict is real.
+    server.listen(port, () => resolve())
+  })
+
+  return server
+}
+
+export const closeServer = async (server: ReturnType<typeof createServer>) => {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
+export const connectWebSocket = async (port: number) => {
+  return new Promise<WebSocket>((resolve, reject) => {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`)
+    ws.once('open', () => resolve(ws))
+    ws.once('error', (error) => reject(error))
+  })
+}
 
 export async function deleteAgentStore(agent: RestAgent): Promise<void> {
   await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
