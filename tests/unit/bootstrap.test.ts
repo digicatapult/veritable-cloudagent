@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import { afterEach, before, describe, test } from 'mocha'
 import { randomUUID } from 'node:crypto'
 import { restore as sinonRestore, stub as sinonStub } from 'sinon'
+import { container } from 'tsyringe'
 import WebSocket from 'ws'
 
 import { startCloudagent } from '../../src/bootstrap.js'
@@ -202,6 +203,30 @@ describe('startCloudagent lifecycle', () => {
     if (firstLinkSecrets.length > 0) {
       expect(secondLinkSecrets[0]).to.equal(firstLinkSecrets[0])
     }
+
+    await handle2.shutdown()
+    await deleteAgentStore(handle2.agent)
+    handles.pop()
+  })
+
+  test('should register a fresh DrpcReceiveHandler bound to the new agent on restart', async () => {
+    const { env: env1 } = await createTestEnv()
+    const walletId = env1.get('WALLET_ID')
+
+    const handle1 = await startCloudagent(env1, logger)
+    handles.push(handle1)
+    const handler1 = container.resolve(DrpcReceiveHandler)
+
+    await handle1.shutdown()
+    handles.pop()
+
+    const { env: env2 } = await createTestEnv(walletId as string)
+    const handle2 = await startCloudagent(env2, logger)
+    handles.push(handle2)
+    const handler2 = container.resolve(DrpcReceiveHandler)
+
+    // Must be a distinct instance bound to handle2's agent, not the stale singleton from handle1.
+    expect(handler2).to.not.equal(handler1)
 
     await handle2.shutdown()
     await deleteAgentStore(handle2.agent)
