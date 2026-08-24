@@ -1,10 +1,12 @@
 import { expect } from 'chai'
-import { afterEach, describe, test } from 'mocha'
+import { afterEach, before, describe, test } from 'mocha'
 import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:net'
+import { restore as sinonRestore, stub as sinonStub } from 'sinon'
 import WebSocket from 'ws'
 
 import { startCloudagent } from '../../src/bootstrap.js'
+import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import type { Env } from '../../src/env.js'
 import PinoLogger from '../../src/utils/logger.js'
 import { deleteAgentStore } from './utils/helpers.js'
@@ -37,25 +39,65 @@ const getAvailablePort = async () => {
   return port
 }
 
-const createTestEnv = async (walletId?: string) => {
+const occupyPort = async (port: number) => {
+  const server = createServer()
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    // Bind without a host, matching how adminServer/didcommSocketServer bind, so the conflict is real.
+    server.listen(port, () => resolve())
+  })
+
+  return server
+}
+
+const closeServer = async (server: ReturnType<typeof createServer>) => {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
+const connectWebSocket = async (port: number) => {
+  return new Promise<WebSocket>((resolve, reject) => {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`)
+    ws.once('open', () => resolve(ws))
+    ws.once('error', (error) => reject(error))
+  })
+}
+
+const createTestEnv = async (walletId?: string, options?: { didWebEnabled?: boolean; secondWsPort?: number }) => {
   const adminPort = await getAvailablePort()
   const didcommHttpPort = await getAvailablePort()
   const didcommWsPort = await getAvailablePort()
   const didWebPort = await getAvailablePort()
 
+  const endpoints = [`http://localhost:${didcommHttpPort}`, `ws://localhost:${didcommWsPort}`]
+  const inboundTransport: Array<{ transport: string; port: number }> = [
+    { transport: 'http', port: didcommHttpPort },
+    { transport: 'ws', port: didcommWsPort },
+  ]
+
+  if (options?.secondWsPort) {
+    endpoints.push(`ws://localhost:${options.secondWsPort}`)
+    inboundTransport.push({ transport: 'ws', port: options.secondWsPort })
+  }
+
   const values: Record<string, unknown> = {
     LABEL: 'Test Agent',
     WALLET_ID: walletId ?? randomUUID(),
     WALLET_KEY: 'DZ9hPqFWTPxemcGea72C1X1nusqk5wFNLq6QPjwXGqAa',
-    ENDPOINT: [`http://localhost:${didcommHttpPort}`, `ws://localhost:${didcommWsPort}`],
+    ENDPOINT: endpoints,
     LOG_LEVEL: 'silent',
     USE_DID_SOV_PREFIX_WHERE_ALLOWED: true,
     USE_DID_KEY_IN_PROTOCOLS: true,
     OUTBOUND_TRANSPORT: ['http', 'ws'],
-    INBOUND_TRANSPORT: [
-      { transport: 'http', port: didcommHttpPort },
-      { transport: 'ws', port: didcommWsPort },
-    ],
+    INBOUND_TRANSPORT: inboundTransport,
     AUTO_ACCEPT_CONNECTIONS: true,
     AUTO_ACCEPT_CREDENTIALS: 'always',
     AUTO_ACCEPT_MEDIATION_REQUESTS: false,
@@ -92,7 +134,7 @@ const createTestEnv = async (walletId?: string) => {
       },
     },
     DID_WEB_SERVICE_ENDPOINT: '',
-    DID_WEB_ENABLED: false,
+    DID_WEB_ENABLED: options?.didWebEnabled ?? false,
     DID_WEB_PORT: didWebPort,
     DID_WEB_USE_DEV_CERT: false,
     DID_WEB_DEV_CERT_PATH: '',
@@ -117,7 +159,14 @@ const createTestEnv = async (walletId?: string) => {
 }
 
 describe('startCloudagent lifecycle', () => {
+  let logger: PinoLogger
   const handles: Awaited<ReturnType<typeof startCloudagent>>[] = []
+  // Wallets created by a startup that failed later in the sequence, reopened here for deletion.
+  const walletIdsToClean: string[] = []
+
+  before(() => {
+    logger = new PinoLogger('silent')
+  })
 
   afterEach(async () => {
     while (handles.length > 0) {
@@ -129,11 +178,21 @@ describe('startCloudagent lifecycle', () => {
       }
       await deleteAgentStore(handle.agent)
     }
+
+    while (walletIdsToClean.length > 0) {
+      const walletId = walletIdsToClean.pop()!
+      const { env } = await createTestEnv(walletId)
+      const handle = await startCloudagent(env, logger)
+      expect(handle.adminServer.listening).to.equal(true)
+      await handle.shutdown()
+      expect(handle.adminServer.listening).to.equal(false)
+      await deleteAgentStore(handle.agent)
+    }
   })
 
   test('should start and shutdown idempotently', async () => {
     const { env } = await createTestEnv()
-    const handle = await startCloudagent(env, new PinoLogger('silent'))
+    const handle = await startCloudagent(env, logger)
     handles.push(handle)
 
     expect(handle.adminServer.listening).to.equal(true)
@@ -152,7 +211,7 @@ describe('startCloudagent lifecycle', () => {
     this.timeout(15000)
 
     const { env, ports } = await createTestEnv()
-    const handle = await startCloudagent(env, new PinoLogger('silent'))
+    const handle = await startCloudagent(env, logger)
     handles.push(handle)
 
     const client = await new Promise<WebSocket>((resolve, reject) => {
@@ -180,7 +239,7 @@ describe('startCloudagent lifecycle', () => {
     const walletId = env1.get('WALLET_ID')
 
     // First start
-    const handle1 = await startCloudagent(env1, new PinoLogger('silent'))
+    const handle1 = await startCloudagent(env1, logger)
     handles.push(handle1)
 
     expect(handle1.adminServer.listening).to.equal(true)
@@ -188,10 +247,11 @@ describe('startCloudagent lifecycle', () => {
 
     await handle1.shutdown()
     expect(handle1.adminServer.listening).to.equal(false)
+    handles.pop()
 
     // Second start with same wallet ID, different ports
     const { env: env2 } = await createTestEnv(walletId as string)
-    const handle2 = await startCloudagent(env2, new PinoLogger('silent'))
+    const handle2 = await startCloudagent(env2, logger)
     handles.push(handle2)
 
     expect(handle2.adminServer.listening).to.equal(true)
@@ -205,6 +265,123 @@ describe('startCloudagent lifecycle', () => {
 
     await handle2.shutdown()
     await deleteAgentStore(handle2.agent)
+    handles.pop()
+  })
+
+  test('should reject startup and free ports when the admin port is already in use', async function () {
+    this.timeout(15000)
+
+    const { env, ports } = await createTestEnv()
+    const walletId = env.get('WALLET_ID') as string
+    const occupyingServer = await occupyPort(ports.adminPort)
+
+    let thrownError: unknown
+    try {
+      await startCloudagent(env, logger)
+    } catch (error) {
+      thrownError = error
+    } finally {
+      await closeServer(occupyingServer)
+    }
+
+    expect(thrownError).to.be.instanceOf(Error)
+
+    // The DIDComm ws port opened during the failed attempt must have been released.
+    const verifyServer = await occupyPort(ports.didcommWsPort)
+    await closeServer(verifyServer)
+
+    walletIdsToClean.push(walletId)
+  })
+
+  test('should reject startup and free ports when the DID:web port is already in use', async function () {
+    this.timeout(15000)
+
+    const { env, ports } = await createTestEnv(undefined, { didWebEnabled: true })
+    const walletId = env.get('WALLET_ID') as string
+    const occupyingServer = await occupyPort(ports.didWebPort)
+
+    let thrownError: unknown
+    try {
+      await startCloudagent(env, logger)
+    } catch (error) {
+      thrownError = error
+    } finally {
+      await closeServer(occupyingServer)
+    }
+
+    expect(thrownError).to.be.instanceOf(Error)
+
+    // The admin port opened during the failed attempt must have been released.
+    const verifyServer = await occupyPort(ports.adminPort)
+    await closeServer(verifyServer)
+
+    walletIdsToClean.push(walletId)
+  })
+
+  test('should reject startup and free ports when the DIDComm ws port is already in use', async function () {
+    this.timeout(15000)
+
+    const { env, ports } = await createTestEnv()
+    const occupyingServer = await occupyPort(ports.didcommWsPort)
+
+    let thrownError: unknown
+    try {
+      await startCloudagent(env, logger)
+    } catch (error) {
+      thrownError = error
+    } finally {
+      await closeServer(occupyingServer)
+    }
+
+    expect(thrownError).to.be.instanceOf(Error)
+
+    // No wallet is created when the DIDComm ws server fails to bind before setupAgent() runs.
+    const verifyServer = await occupyPort(ports.adminPort)
+    await closeServer(verifyServer)
+  })
+
+  test('should shut down the agent when setupAgent() fails after agent initialisation', async function () {
+    this.timeout(15000)
+
+    const { env } = await createTestEnv()
+    const walletId = env.get('WALLET_ID') as string
+    const startStub = sinonStub(DrpcReceiveHandler.prototype, 'start').throws(new Error('drpc handler start failed'))
+
+    let thrownError: unknown
+    try {
+      await startCloudagent(env, logger)
+    } catch (error) {
+      thrownError = error
+    } finally {
+      startStub.restore()
+      sinonRestore()
+    }
+
+    expect(thrownError).to.be.instanceOf(Error)
+    expect((thrownError as Error).message).to.equal('drpc handler start failed')
+
+    walletIdsToClean.push(walletId)
+  })
+
+  test('should register independent servers for multiple ws inbound transport entries', async function () {
+    this.timeout(15000)
+
+    const secondWsPort = await getAvailablePort()
+    const { env, ports } = await createTestEnv(undefined, { secondWsPort })
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    const firstClient = await connectWebSocket(ports.didcommWsPort)
+    const secondClient = await connectWebSocket(secondWsPort)
+
+    expect(firstClient.readyState).to.equal(WebSocket.OPEN)
+    expect(secondClient.readyState).to.equal(WebSocket.OPEN)
+
+    firstClient.terminate()
+    secondClient.terminate()
+
+    await handle.shutdown()
+    await deleteAgentStore(handle.agent)
     handles.pop()
   })
 })
