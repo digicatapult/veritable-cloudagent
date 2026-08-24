@@ -78,13 +78,6 @@ export class DidWebServer {
       this.logger.info('DID:web server disabled')
       return
     }
-    const setupGracefulExit = (sigName: NodeJS.Signals, server: Server, exitCode: number) => {
-      process.on(sigName, async () => {
-        server.close(() => {
-          process.exit(exitCode)
-        })
-      })
-    }
 
     if (this.config.useDevCert) {
       let httpsCredentials
@@ -107,8 +100,24 @@ export class DidWebServer {
         this.logger.info(`DID:web server started on http port ${this.config.port}`)
       })
     }
+  }
 
-    setupGracefulExit('SIGINT', this.server, 0)
-    setupGracefulExit('SIGTERM', this.server, 143)
+  async stop(): Promise<void> {
+    if (!this.server) {
+      return
+    }
+
+    const server = this.server
+    this.server = undefined
+
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error)
+          return
+        }
+        resolve()
+      })
+    })
   }
 }

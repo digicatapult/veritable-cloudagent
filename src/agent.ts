@@ -32,6 +32,7 @@ import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import { container } from 'tsyringe'
+import type { WebSocketServer } from 'ws'
 
 import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
@@ -50,11 +51,6 @@ export type InboundTransport = {
 type AgentProofProtocols = [
   DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
 ]
-
-const inboundTransportMapping = {
-  http: DidCommHttpInboundTransport,
-  ws: DidCommWsInboundTransport,
-} as const
 
 const outboundTransportMapping = {
   http: DidCommHttpOutboundTransport,
@@ -81,6 +77,7 @@ export type AriesRestConfig = {
   ipfsTimeoutMs: number
 
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
+  didcommWsSocketServer?: WebSocketServer
 
   logger: PinoLogger
 }
@@ -212,6 +209,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
+    didcommWsSocketServer,
 
     agentConfig,
     askarStoreConfig,
@@ -247,10 +245,19 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
   // Register inbound transports
   for (const inboundTransport of inboundTransports) {
-    const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.didcomm.registerInboundTransport(
-      new InboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
-    )
+    if (inboundTransport.transport === 'http') {
+      agent.didcomm.registerInboundTransport(
+        new DidCommHttpInboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
+      )
+      continue
+    }
+
+    if (didcommWsSocketServer) {
+      agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didcommWsSocketServer }))
+      continue
+    }
+
+    agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ port: inboundTransport.port }))
   }
 
   await agent.initialize()
