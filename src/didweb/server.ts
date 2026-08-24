@@ -3,6 +3,7 @@ import cors from 'cors'
 import express from 'express'
 import fs from 'fs'
 import type { Server } from 'http'
+import * as http from 'http'
 import https from 'https'
 import { Logger } from 'pino'
 import { createRequestLogger } from '../utils/logger.js'
@@ -92,14 +93,20 @@ export class DidWebServer {
         )
       }
       this.server = https.createServer(httpsCredentials, this.app)
-      this.server.listen(this.config.port, () => {
-        this.logger.info(`DID:web server started on https port ${this.config.port}`)
-      })
     } else {
-      this.server = this.app.listen(this.config.port, () => {
-        this.logger.info(`DID:web server started on http port ${this.config.port}`)
-      })
+      this.server = http.createServer(this.app)
     }
+
+    const server = this.server
+    await new Promise<void>((resolve, reject) => {
+      server.once('error', reject)
+      server.listen(this.config.port, () => {
+        server.removeListener('error', reject)
+        resolve()
+      })
+    })
+
+    this.logger.info(`DID:web server started on ${this.config.useDevCert ? 'https' : 'http'} port ${this.config.port}`)
   }
 
   async stop(): Promise<void> {

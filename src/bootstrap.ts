@@ -40,13 +40,17 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, name: stri
 }
 
 const closeServer = async (server?: HttpServer) => {
-  if (!server) {
+  if (!server || !server.listening) {
     return
   }
 
   await new Promise<void>((resolve, reject) => {
     server.close((error) => {
       if (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ERR_SERVER_NOT_RUNNING') {
+          resolve()
+          return
+        }
         reject(error)
         return
       }
@@ -99,15 +103,23 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
   const didcommWsEntry = inboundTransports.find(
     (transport) => transport.transport === 'ws' && typeof transport.port === 'number'
   )
-  const didcommSocketServer = didcommWsEntry ? new WebSocketServer({ port: didcommWsEntry.port }) : undefined
 
   let agent: RestAgent | undefined
   let didWebServer: DidWebServer | undefined
   let adminServer: HttpServer | undefined
   let adminSocketServer: WebSocketServer | undefined
+  let didcommSocketServer: WebSocketServer | undefined
   let shuttingDownPromise: Promise<void> | undefined
 
   try {
+    if (didcommWsEntry) {
+      didcommSocketServer = new WebSocketServer({ port: didcommWsEntry.port })
+      await new Promise<void>((resolve, reject) => {
+        didcommSocketServer!.once('listening', () => resolve())
+        didcommSocketServer!.once('error', (error) => reject(error))
+      })
+    }
+
     agent = await setupAgent({
       agentConfig: {
         logger: logger.child({ component: 'credo-ts-agent' }),

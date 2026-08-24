@@ -244,6 +244,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   // Register inbound transports
+  let externalWsServerAssigned = false
   for (const inboundTransport of inboundTransports) {
     if (inboundTransport.transport === 'http') {
       agent.didcomm.registerInboundTransport(
@@ -252,8 +253,9 @@ export async function setupAgent(restConfig: AriesRestConfig) {
       continue
     }
 
-    if (didcommWsSocketServer) {
+    if (didcommWsSocketServer && !externalWsServerAssigned) {
       agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didcommWsSocketServer }))
+      externalWsServerAssigned = true
       continue
     }
 
@@ -262,19 +264,25 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
   await agent.initialize()
 
-  container.register(Agent, { useValue: agent as Agent })
+  try {
+    container.register(Agent, { useValue: agent as Agent })
 
-  const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
-  if (existingSecrets.length === 0) {
-    await agent.modules.anoncreds.createLinkSecret({
-      setAsDefault: true,
-    })
+    const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
+    if (existingSecrets.length === 0) {
+      await agent.modules.anoncreds.createLinkSecret({
+        setAsDefault: true,
+      })
+    }
+
+    agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
+
+    const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
+    drpcReceiveHandler.start()
+  } catch (error) {
+    // Agent is already initialized at this point; shut it down so the caller's cleanup isn't skipped.
+    await agent.shutdown()
+    throw error
   }
-
-  agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
-
-  const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
-  drpcReceiveHandler.start()
 
   return agent
 }
