@@ -32,6 +32,7 @@ import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import { container } from 'tsyringe'
+import type { WebSocketServer } from 'ws'
 
 import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
@@ -50,11 +51,6 @@ export type InboundTransport = {
 type AgentProofProtocols = [
   DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
 ]
-
-const inboundTransportMapping = {
-  http: DidCommHttpInboundTransport,
-  ws: DidCommWsInboundTransport,
-} as const
 
 const outboundTransportMapping = {
   http: DidCommHttpOutboundTransport,
@@ -81,6 +77,7 @@ export type AriesRestConfig = {
   ipfsTimeoutMs: number
 
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
+  didcommWsSocketServer?: WebSocketServer
 
   logger: PinoLogger
 }
@@ -212,6 +209,8 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
+    didcommWsSocketServer,
+    logger,
 
     agentConfig,
     askarStoreConfig,
@@ -246,28 +245,47 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   // Register inbound transports
+  let externalWsServerAssigned = false
   for (const inboundTransport of inboundTransports) {
-    const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.didcomm.registerInboundTransport(
-      new InboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
-    )
+    if (inboundTransport.transport === 'http') {
+      agent.didcomm.registerInboundTransport(
+        new DidCommHttpInboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
+      )
+      continue
+    }
+
+    if (didcommWsSocketServer && !externalWsServerAssigned) {
+      agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didcommWsSocketServer }))
+      externalWsServerAssigned = true
+      continue
+    }
+
+    agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ port: inboundTransport.port }))
   }
 
   await agent.initialize()
 
-  container.register(Agent, { useValue: agent as Agent })
+  try {
+    container.register(Agent, { useValue: agent as Agent })
 
-  const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
-  if (existingSecrets.length === 0) {
-    await agent.modules.anoncreds.createLinkSecret({
-      setAsDefault: true,
-    })
+    const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
+    if (existingSecrets.length === 0) {
+      await agent.modules.anoncreds.createLinkSecret({
+        setAsDefault: true,
+      })
+    }
+
+    agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
+
+    // Construct and register explicitly to avoid resolving a stale singleton bound to a previous agent.
+    const drpcReceiveHandler = new DrpcReceiveHandler(agent, logger)
+    container.register(DrpcReceiveHandler, { useValue: drpcReceiveHandler })
+    drpcReceiveHandler.start()
+  } catch (error) {
+    // Agent is already initialized at this point; shut it down so the caller's cleanup isn't skipped.
+    await agent.shutdown()
+    throw error
   }
-
-  agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
-
-  const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
-  drpcReceiveHandler.start()
 
   return agent
 }
