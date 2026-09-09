@@ -103,11 +103,17 @@ export const errorHandler =
 
     if (normalized.code >= 500) {
       logger.error(`Unexpected error thrown in handler: ${normalized.message}`)
+      if (normalized.details !== undefined) {
+        logger.error(`Error details for ${req.method} ${req.path}: ${JSON.stringify(normalized.details)}`)
+      }
       if (err instanceof Error) {
         logger.debug(`Stack: ${err.stack}`)
       }
     } else {
       logger.warn(`Error thrown in handler for ${req.method} ${req.path}: ${normalized.message}`)
+      if (normalized.details !== undefined) {
+        logger.warn(`Error details for ${req.method} ${req.path}: ${JSON.stringify(normalized.details)}`)
+      }
       if (err instanceof ValidateError) {
         logger.warn(`Caught Validation Error for ${req.path}:`, err.fields)
       }
