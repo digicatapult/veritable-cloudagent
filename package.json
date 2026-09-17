@@ -69,7 +69,7 @@
     "tsyringe": "^4.10.0",
     "undici": "^8.10.2",
     "ws": "^8.21.3",
-    "zod": "^4.6.4"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
