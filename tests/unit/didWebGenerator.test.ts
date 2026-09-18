@@ -1,6 +1,6 @@
 import { DidCommV1Service, TypedArrayEncoder } from '@credo-ts/core'
 import { expect } from 'chai'
-import { before, describe, it } from 'mocha'
+import { beforeEach, describe, it } from 'mocha'
 import { Logger } from 'pino'
 import { DidWebDocGenerator } from '../../src/utils/didWebGenerator.js'
 import PinoLogger from '../../src/utils/logger.js'
@@ -17,7 +17,7 @@ describe('didWebGenerator', function () {
   let logger: Logger
   const did = `did:web:localhost%3A5002`
 
-  before(() => {
+  beforeEach(() => {
     const authenticationPublicKey = TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(11))
     const assertionPublicKey = TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(33))
     const encryptionPublicKey = TypedArrayEncoder.toBase64Url(new Uint8Array(32).fill(22))
@@ -67,6 +67,34 @@ describe('didWebGenerator', function () {
   it('should make a new instance of DidWebDocGenerator', function () {
     const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
     expect(didWebDocGenerator).to.be.an.instanceof(DidWebDocGenerator)
+  })
+
+  it('should reject a DID that does not use the web method', async function () {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
+    let caughtError: unknown
+
+    try {
+      await didWebDocGenerator.generateDidWebDocument('did:key:z6Mkexample', 'http://localhost%3A5002')
+    } catch (error) {
+      caughtError = error
+    }
+
+    expect(caughtError).to.be.an.instanceof(Error)
+    expect((caughtError as Error).message).to.equal("Expected a did:web identifier, received 'did:key:z6Mkexample'")
+  })
+
+  it('should reject an invalid DIDComm service endpoint', async function () {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
+    let caughtError: unknown
+
+    try {
+      await didWebDocGenerator.generateDidWebDocument(did, 'not-a-url')
+    } catch (error) {
+      caughtError = error
+    }
+
+    expect(caughtError).to.be.an.instanceof(Error)
+    expect((caughtError as Error).message).to.contain('serviceEndpoint')
   })
 
   it('should generate a did doc', async function () {
