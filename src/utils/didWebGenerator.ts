@@ -3,13 +3,14 @@ import {
   DidCommV1Service,
   DidDocument,
   DidDocumentBuilder,
-  type DidDocumentKey,
   Ed25519Signature2020,
+  JsonTransformer,
   Kms,
   SECURITY_X25519_CONTEXT_URL,
   getEd25519VerificationKey2020,
   getX25519KeyAgreementKey2019,
   parseDid,
+  type DidDocumentKey,
 } from '@credo-ts/core'
 import { Logger } from 'pino'
 
@@ -94,12 +95,13 @@ export class DidWebDocGenerator {
         })
       )
       .build()
+    const validatedDidWebDocument = JsonTransformer.fromJSON(didWebDocument.toJSON(), DidDocument)
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
 
     return {
       did: didId,
-      didDocument: didWebDocument,
+      didDocument: validatedDidWebDocument,
       keys: [
         {
           didDocumentRelativeKeyId: authenticationKeyFragment,
