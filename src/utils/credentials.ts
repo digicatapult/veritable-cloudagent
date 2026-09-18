@@ -1,3 +1,4 @@
+import type { DidDocument, SignatureSuiteRegistry } from '@credo-ts/core'
 import type { GetCredentialFormatDataReturn } from '@credo-ts/didcomm'
 
 import type { CredentialFormatData, CredentialFormats } from '../controllers/types/index.js'
@@ -125,6 +126,46 @@ export const validateJsonLdCredentialProfile = (
     if (typeof options !== 'object' || options === null || Array.isArray(options)) {
       addError(`${fieldPath}.options`, 'options must be an object when provided', options)
     }
+  }
+
+  return Object.keys(errors).length > 0 ? errors : null
+}
+
+/**
+ * Validates that a `proofType` (e.g. 'Ed25519Signature2018') selected for a JSON-LD
+ * credential is actually usable for signing with the given issuer DID document.
+ */
+export const validateProofTypeAgainstIssuerDid = (
+  proofType: string,
+  issuerDidDocument: DidDocument,
+  signatureSuiteRegistry: SignatureSuiteRegistry,
+  fieldPath = 'credentialFormats.jsonld'
+): Record<string, ValidationFieldError> | null => {
+  const errors: Record<string, ValidationFieldError> = {}
+  const addError = (field: string, message: string, errorValue?: unknown) => {
+    if (errors[field]) return
+    errors[field] = { message, value: errorValue }
+  }
+
+  let verificationMethodTypes: string[]
+  try {
+    verificationMethodTypes = signatureSuiteRegistry.getVerificationMethodTypesByProofType(proofType)
+  } catch {
+    addError(`${fieldPath}.options.proofType`, `Unsupported proofType '${proofType}'`, proofType)
+    return errors
+  }
+
+  const compatibleVerificationMethod = issuerDidDocument.findVerificationMethodsByTypeAndPurpose(
+    verificationMethodTypes,
+    ['assertionMethod', 'verificationMethod']
+  )[0]
+
+  if (!compatibleVerificationMethod) {
+    addError(
+      `${fieldPath}.options.proofType`,
+      `proofType '${proofType}' requires a verification method of type ${verificationMethodTypes.join(' or ')}, but issuer DID '${issuerDidDocument.id}' does not advertise a compatible verification method`,
+      proofType
+    )
   }
 
   return Object.keys(errors).length > 0 ? errors : null
