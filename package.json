@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.44",
+  "version": "0.20.45",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -43,12 +43,12 @@
     "db:rollback": "npm run db:cmd -- migrate:rollback"
   },
   "dependencies": {
-    "@credo-ts/anoncreds": "^0.7.0",
-    "@credo-ts/askar": "^0.7.0",
-    "@credo-ts/core": "^0.7.0",
-    "@credo-ts/didcomm": "^0.7.0",
-    "@credo-ts/drpc": "^0.7.0",
-    "@credo-ts/node": "^0.7.0",
+    "@credo-ts/anoncreds": "^0.7.1",
+    "@credo-ts/askar": "^0.7.1",
+    "@credo-ts/core": "^0.7.1",
+    "@credo-ts/didcomm": "^0.7.1",
+    "@credo-ts/drpc": "^0.7.1",
+    "@credo-ts/node": "^0.7.1",
     "@hyperledger/anoncreds-nodejs": "^0.4.0",
     "@openwallet-foundation/askar-nodejs": "^0.6.0",
     "@tsoa/runtime": "^6.6.0",
