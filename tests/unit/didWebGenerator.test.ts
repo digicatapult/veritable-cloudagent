@@ -69,6 +69,20 @@ describe('didWebGenerator', function () {
     expect(didWebDocGenerator).to.be.an.instanceof(DidWebDocGenerator)
   })
 
+  it('should reject a DID that does not use the web method', async function () {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
+    let caughtError: unknown
+
+    try {
+      await didWebDocGenerator.generateDidWebDocument('did:key:z6Mkexample', 'http://localhost%3A5002')
+    } catch (error) {
+      caughtError = error
+    }
+
+    expect(caughtError).to.be.an.instanceof(Error)
+    expect((caughtError as Error).message).to.equal("Expected a did:web identifier, received 'did:key:z6Mkexample'")
+  })
+
   it('should generate a did doc', async function () {
     const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
     const generated = await didWebDocGenerator.generateDidWebDocument(did, 'http://localhost%3A5002')
