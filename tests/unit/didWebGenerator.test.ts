@@ -83,6 +83,21 @@ describe('didWebGenerator', function () {
     expect((caughtError as Error).message).to.equal("Expected a did:web identifier, received 'did:key:z6Mkexample'")
   })
 
+  it('should reject a did:web identifier with an extra path segment', async function () {
+    const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
+    const didWithPath = `${did}/path`
+    let caughtError: unknown
+
+    try {
+      await didWebDocGenerator.generateDidWebDocument(didWithPath, 'http://localhost%3A5002')
+    } catch (error) {
+      caughtError = error
+    }
+
+    expect(caughtError).to.be.an.instanceof(Error)
+    expect((caughtError as Error).message).to.equal(`Expected a did:web identifier, received '${didWithPath}'`)
+  })
+
   it('should reject an invalid DIDComm service endpoint', async function () {
     const didWebDocGenerator = new DidWebDocGenerator(aliceAgent as never, logger)
     let caughtError: unknown
