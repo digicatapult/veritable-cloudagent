@@ -1,8 +1,9 @@
-import { Agent, RecordNotFoundError } from '@credo-ts/core'
+import { Agent, RecordNotFoundError, SignatureSuiteRegistry } from '@credo-ts/core'
 import {
   type DidCommCredentialExchangeRecordProps,
   DidCommCredentialExchangeRepository,
   DidCommCredentialState,
+  type DidCommJsonLdCredentialDetailFormat,
   type SendCredentialProblemReportOptions,
 } from '@credo-ts/didcomm'
 import {
@@ -24,7 +25,11 @@ import { injectable } from 'tsyringe'
 
 import { RestAgent } from '../../../agent.js'
 import { BadRequest, HttpResponse, NotFoundError } from '../../../error.js'
-import { transformToCredentialFormatData, validateJsonLdCredentialProfile } from '../../../utils/credentials.js'
+import {
+  transformToCredentialFormatData,
+  validateJsonLdCredentialProfile,
+  validateProofTypeAgainstIssuerDid,
+} from '../../../utils/credentials.js'
 import { CredentialExchangeRecordExample, CredentialFormatDataExample } from '../../examples.js'
 
 type InternalProposeCredentialOptions = Parameters<RestAgent['didcomm']['credentials']['proposeCredential']>[0]
@@ -54,6 +59,54 @@ export class CredentialController extends Controller {
   public constructor(agent: Agent) {
     super()
     this.agent = agent
+  }
+
+  /**
+   * Resolves the issuer DID referenced in a JSON-LD credential, confirms it's a DID this agent
+   * actually created, and checks that its DID document advertises a verification method
+   * compatible with the requested proofType.
+   *
+   * @param jsonld
+   * @throws BadRequest if the issuer DID is not owned by this agent, cannot be resolved, or
+   * does not advertise a verification method compatible with the requested proofType
+   */
+  private async assertProofTypeMatchesIssuerDid(jsonld: DidCommJsonLdCredentialDetailFormat) {
+    const issuerDid =
+      typeof jsonld.credential.issuer === 'string' ? jsonld.credential.issuer : jsonld.credential.issuer.id
+
+    const [createdDidRecord] = await this.agent.dids.getCreatedDids({ did: issuerDid })
+    if (!createdDidRecord) {
+      throw new BadRequest('Validation Failed', {
+        'credentialFormats.jsonld.credential.issuer': {
+          message: `Issuer DID '${issuerDid}' was not created by this agent and cannot be used to sign a credential`,
+          value: issuerDid,
+        },
+      })
+    }
+
+    // Only methods (e.g. did:web) whose document is stored at creation time have it available
+    // here. Others (e.g. did:key) derive their document from the DID itself, so resolve it.
+    let issuerDidDocument = createdDidRecord.didDocument
+    if (!issuerDidDocument) {
+      try {
+        issuerDidDocument = await this.agent.dids.resolveDidDocument(issuerDid)
+      } catch (error) {
+        throw new BadRequest('Validation Failed', {
+          'credentialFormats.jsonld.credential.issuer': {
+            message: `Unable to resolve issuer DID '${issuerDid}': ${error instanceof Error ? error.message : String(error)}`,
+            value: issuerDid,
+          },
+        })
+      }
+    }
+
+    const signatureSuiteRegistry = this.agent.dependencyManager.resolve(SignatureSuiteRegistry)
+    const validationErrors = validateProofTypeAgainstIssuerDid(
+      jsonld.options.proofType,
+      issuerDidDocument,
+      signatureSuiteRegistry
+    )
+    if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
   }
 
   /**
@@ -239,6 +292,8 @@ export class CredentialController extends Controller {
     if (options.credentialFormats.jsonld) {
       const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
       if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
+
+      await this.assertProofTypeMatchesIssuerDid(options.credentialFormats.jsonld)
     }
 
     const offer = await this.agent.didcomm.credentials.createOffer(options satisfies InternalCreateOfferOptions)
@@ -259,12 +314,15 @@ export class CredentialController extends Controller {
    */
   @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/offer-credential')
+  @Response<BadRequest>(400)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async offerCredential(@Request() req: express.Request, @Body() options: OfferCredentialOptions) {
     if (options.credentialFormats.jsonld) {
       const validationErrors = validateJsonLdCredentialProfile(options.credentialFormats.jsonld)
       if (validationErrors) throw new BadRequest('Validation Failed', validationErrors)
+
+      await this.assertProofTypeMatchesIssuerDid(options.credentialFormats.jsonld)
     }
 
     req.log.debug('checking if connection %s exists', options.connectionId)
