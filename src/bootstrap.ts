@@ -121,9 +121,9 @@ const cleanupResources = async (
     }
   }
 
+  await attempt('close admin WebSocket server', () => closeWebSocketServer(resources.adminSocketServer, true))
   await attempt('close admin API HTTP server', () => closeServer(resources.adminApiServer))
   await attempt('close DIDComm HTTP server', () => closeServer(resources.didcommHttpServer))
-  await attempt('close admin WebSocket server', () => closeWebSocketServer(resources.adminSocketServer, true))
   await attempt('stop DID:web server', async () => {
     await resources.didWebServer?.stop()
   })

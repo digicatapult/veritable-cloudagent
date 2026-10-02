@@ -198,6 +198,50 @@ describe('startCloudagent lifecycle', () => {
     handles.pop()
   })
 
+  test('should shutdown with active admin websocket client', async function () {
+    this.timeout(15000)
+
+    const { env } = await createTestEnv()
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    const address = handle.adminApiServer.address()
+    if (!address || typeof address === 'string') {
+      throw new Error('Admin API server is not listening on a TCP port')
+    }
+    const client = await new Promise<WebSocket>((resolve, reject) => {
+      const ws = new WebSocket(`ws://127.0.0.1:${address.port}`)
+      ws.once('open', () => resolve(ws))
+      ws.once('error', (error) => reject(error))
+    })
+
+    expect(client.readyState).to.equal(WebSocket.OPEN)
+
+    let shutdownTimeout: NodeJS.Timeout | undefined
+    try {
+      await Promise.race([
+        handle.shutdown(),
+        new Promise<never>((_, reject) => {
+          shutdownTimeout = setTimeout(
+            () => reject(new Error('shutdown timed out with connected admin ws client')),
+            5000
+          )
+        }),
+      ])
+    } finally {
+      if (shutdownTimeout) clearTimeout(shutdownTimeout)
+      if (client.readyState === WebSocket.OPEN || client.readyState === WebSocket.CONNECTING) {
+        client.terminate()
+      }
+    }
+
+    expect(client.readyState).to.equal(WebSocket.CLOSED)
+    expect(handle.adminApiServer.listening).to.equal(false)
+
+    await deleteAgentStore(handle.agent)
+    handles.pop()
+  })
+
   test('should restart on the same wallet store', async () => {
     const { env: env1 } = await createTestEnv()
     const walletId = env1.get('WALLET_ID')
