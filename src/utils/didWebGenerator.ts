@@ -1,10 +1,23 @@
-import { Agent, DidDocument, JsonTransformer, Kms, TypedArrayEncoder } from '@credo-ts/core'
+import {
+  Agent,
+  DidCommV1Service,
+  DidDocument,
+  DidDocumentBuilder,
+  Ed25519Signature2020,
+  JsonTransformer,
+  Kms,
+  SECURITY_X25519_CONTEXT_URL,
+  getEd25519VerificationKey2020,
+  getX25519KeyAgreementKey2019,
+  parseDid,
+  type DidDocumentKey,
+} from '@credo-ts/core'
 import { Logger } from 'pino'
 
 export interface DidWebGenerationResult {
   did: string
   didDocument: DidDocument
-  keys: Array<{ didDocumentRelativeKeyId: string; kmsKeyId: string }>
+  keys: DidDocumentKey[]
 }
 
 export class DidWebDocGenerator {
@@ -17,95 +30,89 @@ export class DidWebDocGenerator {
   }
 
   async generateDidWebDocument(didId: string, serviceEndpoint: string): Promise<DidWebGenerationResult> {
+    let parsedDid: ReturnType<typeof parseDid> // Wrap CredoError type
+    try {
+      parsedDid = parseDid(didId)
+    } catch (error) {
+      throw new Error(`Invalid DID identifier '${didId}'`, { cause: error })
+    }
+
+    if (parsedDid.method !== 'web' || parsedDid.did !== didId) {
+      throw new Error(`Expected a did:web identifier, received '${didId}'`)
+    }
+
+    const authenticationKeyFragment = '#auth-key'
+    const assertionKeyFragment = '#assertion-key'
+    const keyAgreementKeyFragment = '#agreement-key'
+    const authenticationKeyId = `${didId}${authenticationKeyFragment}`
+    const assertionKeyId = `${didId}${assertionKeyFragment}`
+    const keyAgreementKeyId = `${didId}${keyAgreementKeyFragment}`
+    const didCommServiceId = `${didId}#did-communication`
     const kms = this.agent.kms
 
     const authenticationKey = await kms.createKey({ type: { kty: 'OKP', crv: 'Ed25519' } })
     const assertionKey = await kms.createKey({ type: { kty: 'OKP', crv: 'Ed25519' } })
     const keyAgreementKey = await kms.createKey({ type: { kty: 'OKP', crv: 'X25519' } })
 
-    if (!authenticationKey.publicJwk.x || !assertionKey.publicJwk.x || !keyAgreementKey.publicJwk.x) {
-      throw new Error('Invalid key material returned from KMS')
-    }
+    const authenticationPublicJwk = Kms.PublicJwk.fromPublicJwk(authenticationKey.publicJwk)
+    const assertionPublicJwk = Kms.PublicJwk.fromPublicJwk(assertionKey.publicJwk)
+    const keyAgreementPublicJwk = Kms.PublicJwk.fromPublicJwk(keyAgreementKey.publicJwk)
 
-    if (
-      authenticationKey.publicJwk.kty !== 'OKP' ||
-      authenticationKey.publicJwk.crv !== 'Ed25519' ||
-      assertionKey.publicJwk.kty !== 'OKP' ||
-      assertionKey.publicJwk.crv !== 'Ed25519' ||
-      keyAgreementKey.publicJwk.kty !== 'OKP' ||
-      keyAgreementKey.publicJwk.crv !== 'X25519'
-    ) {
-      throw new Error('Unexpected key type returned from KMS')
-    }
-
-    const authenticationPublicJwk = Kms.PublicJwk.fromUnknown(authenticationKey.publicJwk)
-    const assertionPublicJwk = Kms.PublicJwk.fromUnknown(assertionKey.publicJwk)
-
-    const authenticationVerificationMethod = {
-      id: `${didId}#auth-key`,
-      type: 'Ed25519VerificationKey2020',
+    const authenticationVerificationMethod = getEd25519VerificationKey2020({
+      id: authenticationKeyId,
+      publicJwk: authenticationPublicJwk,
       controller: didId,
-      publicKeyMultibase: authenticationPublicJwk.fingerprint,
-    }
+    })
 
-    const assertionVerificationMethod = {
-      id: `${didId}#assertion-key`,
-      type: 'Ed25519VerificationKey2020',
+    const assertionVerificationMethod = getEd25519VerificationKey2020({
+      id: assertionKeyId,
+      publicJwk: assertionPublicJwk,
       controller: didId,
-      publicKeyMultibase: assertionPublicJwk.fingerprint,
-    }
+    })
 
-    const keyAgreementVerificationMethod = {
-      id: `${didId}#agreement-key`,
-      type: 'X25519KeyAgreementKey2019',
+    const keyAgreementVerificationMethod = getX25519KeyAgreementKey2019({
+      id: keyAgreementKeyId,
+      publicJwk: keyAgreementPublicJwk,
       controller: didId,
-      publicKeyBase58: TypedArrayEncoder.toBase58(TypedArrayEncoder.fromBase64Url(keyAgreementKey.publicJwk.x)),
-    }
+    })
 
-    const didWebDocument = {
-      '@context': [
-        'https://www.w3.org/ns/did/v1',
-        'https://w3id.org/security/suites/ed25519-2020/v1',
-        'https://w3id.org/security/suites/x25519-2019/v1',
-      ],
-      id: didId,
-      verificationMethod: [
-        authenticationVerificationMethod,
-        assertionVerificationMethod,
-        keyAgreementVerificationMethod,
-      ],
-      authentication: [`${didId}#auth-key`],
-      assertionMethod: [`${didId}#assertion-key`],
-      keyAgreement: [`${didId}#agreement-key`],
-      capabilityInvocation: [`${didId}#auth-key`],
-      service: [
-        {
-          id: `${didId}#did-communication`,
-          type: 'did-communication',
-          priority: 0,
-          recipientKeys: [`${didId}#auth-key`],
+    const didWebDocument = new DidDocumentBuilder(didId)
+      .addContext(Ed25519Signature2020.CONTEXT_URL)
+      .addContext(SECURITY_X25519_CONTEXT_URL)
+      .addVerificationMethod(authenticationVerificationMethod)
+      .addVerificationMethod(assertionVerificationMethod)
+      .addVerificationMethod(keyAgreementVerificationMethod)
+      .addAuthentication(authenticationKeyId)
+      .addAssertionMethod(assertionKeyId)
+      .addKeyAgreement(keyAgreementKeyId)
+      .addCapabilityInvocation(authenticationKeyId)
+      .addService(
+        new DidCommV1Service({
+          id: didCommServiceId,
+          recipientKeys: [authenticationKeyId],
           routingKeys: [],
           serviceEndpoint: serviceEndpoint,
-        },
-      ],
-    }
+        })
+      )
+      .build()
+    const validatedDidWebDocument = JsonTransformer.fromJSON(didWebDocument.toJSON(), DidDocument)
 
     this.logger.info(`Successfully generated DID:web document for ${didId}`)
 
     return {
       did: didId,
-      didDocument: JsonTransformer.fromJSON(didWebDocument, DidDocument),
+      didDocument: validatedDidWebDocument,
       keys: [
         {
-          didDocumentRelativeKeyId: '#auth-key',
+          didDocumentRelativeKeyId: authenticationKeyFragment,
           kmsKeyId: authenticationKey.keyId,
         },
         {
-          didDocumentRelativeKeyId: '#assertion-key',
+          didDocumentRelativeKeyId: assertionKeyFragment,
           kmsKeyId: assertionKey.keyId,
         },
         {
-          didDocumentRelativeKeyId: '#agreement-key',
+          didDocumentRelativeKeyId: keyAgreementKeyFragment,
           kmsKeyId: keyAgreementKey.keyId,
         },
       ],
