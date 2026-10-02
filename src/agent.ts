@@ -258,7 +258,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   let drpcReceiveHandler: DrpcReceiveHandler | undefined
   for (const inboundTransport of inboundTransports) {
     if (inboundTransport.transport === 'http') {
-      if (didcommHttpApp && !externalHttpAppAssigned && inboundTransport.port !== undefined) {
+      if (didcommHttpApp && !externalHttpAppAssigned) {
         agent.didcomm.registerInboundTransport(
           new DidCommHttpInboundTransport({ app: didcommHttpApp, processedMessageListenerTimeoutMs: 30000 })
         )
