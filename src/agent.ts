@@ -31,7 +31,9 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
+import type { Express } from 'express'
 import { container } from 'tsyringe'
+import type { WebSocketServer } from 'ws'
 
 import { AskarModule, type AskarModuleConfigStoreOptions } from '@credo-ts/askar'
 import VeritableAnonCredsRegistry from './anoncreds/index.js'
@@ -42,19 +44,19 @@ import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/v
 import PinoLogger from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
-export type InboundTransport = {
-  transport: Transports
-  port: number
-}
+export type InboundTransport =
+  | {
+      transport: 'http'
+      port?: number
+    }
+  | {
+      transport: 'ws'
+      port: number
+    }
 
 type AgentProofProtocols = [
   DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
 ]
-
-const inboundTransportMapping = {
-  http: DidCommHttpInboundTransport,
-  ws: DidCommWsInboundTransport,
-} as const
 
 const outboundTransportMapping = {
   http: DidCommHttpOutboundTransport,
@@ -81,6 +83,8 @@ export type AriesRestConfig = {
   ipfsTimeoutMs: number
 
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
+  didcommHttpApp?: Express
+  didcommWsSocketServers?: WebSocketServer[]
 
   logger: PinoLogger
 }
@@ -212,6 +216,9 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
+    didcommHttpApp,
+    didcommWsSocketServers = [],
+    logger,
 
     agentConfig,
     askarStoreConfig,
@@ -246,28 +253,70 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   // Register inbound transports
+  let wsSocketServerIndex = 0
+  let externalHttpAppAssigned = false
+  let drpcReceiveHandler: DrpcReceiveHandler | undefined
   for (const inboundTransport of inboundTransports) {
-    const InboundTransport = inboundTransportMapping[inboundTransport.transport]
-    agent.didcomm.registerInboundTransport(
-      new InboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
-    )
+    if (inboundTransport.transport === 'http') {
+      if (didcommHttpApp && !externalHttpAppAssigned) {
+        agent.didcomm.registerInboundTransport(
+          new DidCommHttpInboundTransport({ app: didcommHttpApp, processedMessageListenerTimeoutMs: 30000 })
+        )
+        externalHttpAppAssigned = true
+      } else if (inboundTransport.port !== undefined) {
+        agent.didcomm.registerInboundTransport(
+          new DidCommHttpInboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
+        )
+      } else {
+        throw new Error('An HTTP inbound transport requires either an Express app or a port')
+      }
+      continue
+    }
+
+    const didcommWsSocketServer = didcommWsSocketServers[wsSocketServerIndex]
+    wsSocketServerIndex += 1
+    if (didcommWsSocketServer) {
+      agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didcommWsSocketServer }))
+      continue
+    }
+
+    agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ port: inboundTransport.port }))
   }
 
-  await agent.initialize()
+  try {
+    await agent.initialize()
 
-  container.register(Agent, { useValue: agent as Agent })
+    container.register(Agent, { useValue: agent as Agent })
 
-  const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
-  if (existingSecrets.length === 0) {
-    await agent.modules.anoncreds.createLinkSecret({
-      setAsDefault: true,
-    })
+    const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
+    if (existingSecrets.length === 0) {
+      await agent.modules.anoncreds.createLinkSecret({
+        setAsDefault: true,
+      })
+    }
+
+    agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
+
+    // Construct and register explicitly to avoid resolving a stale singleton bound to a previous agent.
+    drpcReceiveHandler = new DrpcReceiveHandler(agent, logger)
+    container.register(DrpcReceiveHandler, { useValue: drpcReceiveHandler })
+    drpcReceiveHandler.start()
+  } catch (error) {
+    if (drpcReceiveHandler) {
+      try {
+        await drpcReceiveHandler.stop()
+      } catch (cleanupError) {
+        logger.error('Failed to stop DRPC receive handler after agent initialization failure', { cleanupError })
+      }
+    }
+
+    try {
+      await agent.shutdown()
+    } catch (cleanupError) {
+      logger.error('Failed to shut down agent after initialization failure', { cleanupError })
+    }
+    throw error
   }
-
-  agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
-
-  const drpcReceiveHandler = container.resolve(DrpcReceiveHandler)
-  drpcReceiveHandler.start()
 
   return agent
 }

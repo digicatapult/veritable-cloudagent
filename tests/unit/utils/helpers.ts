@@ -13,7 +13,7 @@ import {
   DidCommTrustPingMessage,
   type DidCommConnectionRecordProps,
 } from '@credo-ts/didcomm'
-import type { Socket } from 'node:net'
+import { createServer, type Socket } from 'node:net'
 
 import { DidDocument, JsonEncoder, JsonTransformer, type DidCreateResult } from '@credo-ts/core'
 import { randomUUID } from 'crypto'
@@ -21,10 +21,70 @@ import { container } from 'tsyringe'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
-import { setupServer } from '../../../src/server.js'
+import { setupAdminApi } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
 export type TestAgent = RestAgent
+
+export const getAvailablePort = async () => {
+  const server = createServer()
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => resolve())
+  })
+
+  const address = server.address()
+  const port = typeof address === 'object' && address ? address.port : undefined
+
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve()
+    })
+  })
+
+  if (!port) {
+    throw new Error('Unable to allocate test port')
+  }
+
+  return port
+}
+
+export const occupyPort = async (port: number) => {
+  const server = createServer()
+
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    // Bind without a host, matching how adminApiServer/didcommSocketServer bind, so the conflict is real.
+    server.listen(port, () => resolve())
+  })
+
+  return server
+}
+
+export const closeServer = async (server: ReturnType<typeof createServer>) => {
+  await new Promise<void>((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error)
+        return
+      }
+      resolve()
+    })
+  })
+}
+
+export const connectWebSocket = async (port: number) => {
+  return new Promise<WebSocket>((resolve, reject) => {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`)
+    ws.once('open', () => resolve(ws))
+    ws.once('error', (error) => reject(error))
+  })
+}
 
 export async function deleteAgentStore(agent: RestAgent): Promise<void> {
   await agent.dependencyManager.resolve(AskarStoreManager).deleteStore(agent.context)
@@ -70,10 +130,10 @@ export async function getTestAgent(port: number) {
 
 export async function getTestServer(agent: RestAgent) {
   const socketServer = new WebSocketServer({ noServer: true })
-  const app = await setupServer(agent, new PinoLogger('silent'), {
+  const adminApiApp = await setupAdminApi(agent, new PinoLogger('silent'), {
     socketServer,
   })
-  const server = app.listen(0, () => {})
+  const server = adminApiApp.listen(0, () => {})
 
   server.on('upgrade', (request, socket, head) => {
     socketServer.handleUpgrade(request, socket as Socket, head, () => {

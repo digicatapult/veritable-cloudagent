@@ -155,14 +155,13 @@ docker compose -f docker-compose-testnet.yml up --build -d
 
 This private testnet has the following ports available to the user for testing:
 
-| Agent   | OpenAPI | HTTP | WS   |
-| ------- | ------- | ---- | ---- |
-| Alice   | 3000    | 5002 | 5003 |
-| Bob     | 3001    | 5102 | 5103 |
-| Charlie | 3002    | 5202 | 5203 |
-| IPFS    |         | 8080 |      |
+| Agent   | OpenAPI/admin | DIDComm HTTP | DIDComm WS |
+| ------- | ------------- | ------------ | ---------- |
+| Alice   | 3000          | 5002         | 5003       |
+| Bob     | 3001          | 5002         | 5003       |
+| Charlie | 3002          | 5002         | 5003       |
 
-Network name: `testnet`
+The IPFS gateway is available on port 8080. Network name: `testnet`.
 
 #### Starting Own Server
 
@@ -188,7 +187,7 @@ The following lifecycle commands can be run using `npm`
 
 ## Environment variables
 
-The Envs are defined under `src > env.ts` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them comma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`.
+The Envs are defined under `src > env.ts` They are used to start up a container. They mostly have defaults and if you wish to overwrite these, provide them under `environment` in docker compose. For any envs that are an array of strings please provide them comma-separated like so: `- ENDPOINT=http://charlie:5002,ws://charlie:5003`. The admin TSOA API and DIDComm HTTP use separate Express apps and listeners; `ADMIN_PORT` defaults to 3000 and DIDComm HTTP defaults to 5002.
 
 | variable                                    | required | default                                                                                                                                                                                                | description                                                                                                                        |
 | ------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -200,7 +199,7 @@ The Envs are defined under `src > env.ts` They are used to start up a container.
 | USE_DID_SOV_PREFIX_WHERE_ALLOWED            | N        | false                                                                                                                                                                                                  | Allows the usage of 'sov' prefix in DIDs where possible                                                                            |
 | USE_DID_KEY_IN_PROTOCOLS                    | N        | true                                                                                                                                                                                                   | Allows the use of DID keys in protocols                                                                                            |
 | OUTBOUND_TRANSPORT                          | Y        | ['http', 'ws']                                                                                                                                                                                         | Specifies the type of outbound transport                                                                                           |
-| INBOUND_TRANSPORT                           | Y        | "[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]"                                                                                                                             | Specifies the inbound transport, needs to be provided as a JSON parseable string                                                   |
+| INBOUND_TRANSPORT                           | Y        | "[{"transport": "http", "port": 5002}, {"transport": "ws", "port": 5003}]"                                                                                                                               | Specifies inbound transports as JSON. HTTP and WebSocket listeners each use their configured port                                 |
 | AUTO_ACCEPT_CONNECTIONS                     | N        | false                                                                                                                                                                                                  | Allows for connection requests to be automatically acceptedupon being received                                                     |
 | AUTO_ACCEPT_CREDENTIALS                     | N        | "never"                                                                                                                                                                                                | Allows for credentials to be automatically accepted upon being received                                                            |
 | AUTO_ACCEPT_MEDIATION_REQUESTS              | N        | false                                                                                                                                                                                                  | Allows for mediatioons requests to be automatically accepted                                                                       |
@@ -209,7 +208,7 @@ The Envs are defined under `src > env.ts` They are used to start up a container.
 | BACKUP_BEFORE_STORAGE_UPDATE                | N        | false                                                                                                                                                                                                  | Creates a backup before the storage update                                                                                         |
 | CONNECTION_IMAGE_URL                        | N        | "<https://image.com/image.png>"                                                                                                                                                                          | Url for connection image                                                                                                           |
 | WEBHOOK_URL                                 | Y        | ['https://my-webhook-server']                                                                                                                                                                          | An array of webhook urls                                                                                                           |
-| ADMIN_PORT                                  | N        | 3000                                                                                                                                                                                                   | The port for the app                                                                                                               |
+| ADMIN_PORT                                  | N        | 3000                                                                                                                                                                                                   | The port for the admin TSOA REST API                                                                                                |
 | ADMIN_PING_INTERVAL_MS                      | N        | 10000                                                                                                                                                                                                  | The time interval in ms on which to perform WebSocket ping checks                                                                  |
 | IPFS_ORIGIN                                 | Y        | "<http://ipfs0:5001>"                                                                                                                                                                                    | The IPFS url endpoint                                                                                                              |
 | IPFS_TIMEOUT_MS                             | N        | 15000                                                                                                                                                                                                  | Universal timeout in ms for IPFS network requests (upload and download)                                                           |
@@ -295,10 +294,10 @@ The currently supported events are:
 
 Webhook urls can be specified using the `WEBHOOK_URL` env.
 
-When using the REST server as an library, the WebSocket server and webhook urls can be configured in the `startServer` and `setupServer` methods.
+When using the REST server as a library, the WebSocket server and webhook URLs can be configured in the `startServer` and `setupAdminApi` methods.
 
 ```ts
-// You can either call startServer() or setupServer() and pass the ServerConfig interface with a webhookUrl and/or a WebSocket server
+// You can either call startServer() or setupAdminApi() and pass the ServerConfig interface with a webhookUrl and/or a WebSocket server
 
 const run = async (agent: Agent) => {
   const config = {
@@ -313,7 +312,7 @@ run()
 
 The `startServer` method will create and start a WebSocket server on the default http port if no socketServer is provided, and will use the provided socketServer if available.
 
-However, the `setupServer` method does not automatically create a socketServer, if one is not provided in the config options.
+However, the `setupAdminApi` method does not automatically create a socketServer, if one is not provided in the config options.
 
 In case of an event, we will send the event to the webhookUrls with the topic of the event added to the url (<http://test.com/{topic}>).
 
