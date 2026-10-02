@@ -2,6 +2,7 @@ import type { Server as HttpServer } from 'http'
 import type { Socket } from 'node:net'
 import { clearInterval } from 'node:timers'
 
+import express from 'express'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { DidCommAutoAcceptCredential, DidCommAutoAcceptProof } from '@credo-ts/didcomm'
@@ -12,7 +13,7 @@ import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import DrpcReceiveHandler from './drpc-handler/index.js'
 import type { Env } from './env.js'
-import { setupServer } from './server.js'
+import { createAdminApiApp, setupAdminApi } from './server.js'
 import { DidWebDocGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
@@ -20,7 +21,8 @@ const SHUTDOWN_TIMEOUT_MS = 15000
 
 export interface CloudagentHandle {
   agent: RestAgent
-  adminServer: HttpServer
+  adminApiServer: HttpServer
+  didcommHttpServer?: HttpServer
   didWebServer: DidWebServer
   shutdown(): Promise<void>
 }
@@ -94,6 +96,46 @@ const listen = async (server: HttpServer) => {
   })
 }
 
+const cleanupResources = async (
+  logger: PinoLogger,
+  resources: {
+    agent?: RestAgent
+    adminApiServer?: HttpServer
+    didcommHttpServer?: HttpServer
+    adminSocketServer?: WebSocketServer
+    didWebServer?: DidWebServer
+    didcommSocketServer?: WebSocketServer
+  }
+) => {
+  const errors: unknown[] = []
+  const attempt = async (name: string, cleanup: () => Promise<void>) => {
+    try {
+      await cleanup()
+    } catch (error) {
+      logger.error(`Failed to ${name}`, { error })
+      errors.push(error)
+    }
+  }
+
+  await attempt('close admin API HTTP server', () => closeServer(resources.adminApiServer))
+  await attempt('close DIDComm HTTP server', () => closeServer(resources.didcommHttpServer))
+  await attempt('close admin WebSocket server', () => closeWebSocketServer(resources.adminSocketServer, true))
+  await attempt('stop DID:web server', async () => {
+    await resources.didWebServer?.stop()
+  })
+
+  if (resources.agent) {
+    await attempt('stop DRPC receive handler', async () => container.resolve(DrpcReceiveHandler).stop())
+    await attempt('shut down agent', () =>
+      withTimeout(resources.agent!.shutdown(), SHUTDOWN_TIMEOUT_MS, 'agent.shutdown')
+    )
+  }
+
+  await attempt('close DIDComm WebSocket server', () => closeWebSocketServer(resources.didcommSocketServer))
+
+  return errors
+}
+
 export async function startCloudagent(env: Env, logger: PinoLogger): Promise<CloudagentHandle> {
   container.register(PinoLogger, {
     useValue: logger,
@@ -104,15 +146,22 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
   const didcommWsEntry = inboundTransports.find(
     (transport) => transport.transport === 'ws' && typeof transport.port === 'number'
   )
+  const didcommHttpEntry = inboundTransports.find(
+    (transport) => transport.transport === 'http' && typeof transport.port === 'number'
+  )
 
   let agent: RestAgent | undefined
   let didWebServer: DidWebServer | undefined
-  let adminServer: HttpServer | undefined
+  let adminApiServer: HttpServer | undefined
+  let didcommHttpServer: HttpServer | undefined
   let adminSocketServer: WebSocketServer | undefined
   let didcommSocketServer: WebSocketServer | undefined
   let shuttingDownPromise: Promise<void> | undefined
 
   try {
+    const didcommHttpApp = express()
+    const adminApiApp = createAdminApiApp(logger)
+
     if (didcommWsEntry) {
       didcommSocketServer = new WebSocketServer({ port: didcommWsEntry.port })
       await new Promise<void>((resolve, reject) => {
@@ -151,6 +200,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       },
 
       inboundTransports,
+      didcommHttpApp,
       outboundTransports: env.get('OUTBOUND_TRANSPORT'),
 
       autoAcceptConnections: env.get('AUTO_ACCEPT_CONNECTIONS'),
@@ -169,6 +219,11 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       didcommWsSocketServer: didcommSocketServer,
       logger,
     })
+
+    if (didcommHttpEntry?.port !== undefined) {
+      didcommHttpServer = didcommHttpApp.listen(didcommHttpEntry.port)
+      await listen(didcommHttpServer)
+    }
 
     const database = new Database({
       host: env.get('POSTGRES_HOST'),
@@ -221,20 +276,25 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       clearInterval(interval)
     })
 
-    const app = await setupServer(agent, logger, {
-      webhookUrl: env.get('WEBHOOK_URL'),
-      personaTitle: env.get('PERSONA_TITLE'),
-      personaColor: env.get('PERSONA_COLOR'),
-      socketServer: adminSocketServer,
-    })
+    await setupAdminApi(
+      agent,
+      logger,
+      {
+        webhookUrl: env.get('WEBHOOK_URL'),
+        personaTitle: env.get('PERSONA_TITLE'),
+        personaColor: env.get('PERSONA_COLOR'),
+        socketServer: adminSocketServer,
+      },
+      adminApiApp
+    )
 
     const adminPort = env.get('ADMIN_PORT')
-    adminServer = app.listen(adminPort)
-    await listen(adminServer)
+    adminApiServer = adminApiApp.listen(adminPort)
+    await listen(adminApiServer)
 
     logger.info(`Successfully started server on port ${adminPort}`)
 
-    adminServer.on('upgrade', (request, socket, head) => {
+    adminApiServer.on('upgrade', (request, socket, head) => {
       adminSocketServer!.handleUpgrade(request, socket as Socket, head, () => {
         // incoming messages aren't expected so ignore
         return
@@ -244,23 +304,17 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
     const shutdown = async () => {
       if (!shuttingDownPromise) {
         shuttingDownPromise = (async () => {
-          await closeServer(adminServer)
-          await closeWebSocketServer(adminSocketServer, true)
-          await didWebServer!.stop()
-
-          if (didcommSocketServer) {
-            // Remove once upstream websocket transport closes connected clients during stop.
-            for (const client of didcommSocketServer.clients) {
-              client.terminate()
-            }
+          const cleanupErrors = await cleanupResources(logger, {
+            agent,
+            adminApiServer,
+            didcommHttpServer,
+            adminSocketServer,
+            didWebServer,
+            didcommSocketServer,
+          })
+          if (cleanupErrors.length > 0) {
+            throw new AggregateError(cleanupErrors, 'Cloudagent shutdown did not complete cleanly')
           }
-
-          // Stop the DRPC receive loop before shutting down the agent it reads from.
-          await container.resolve(DrpcReceiveHandler).stop()
-
-          // Keep timeout as a backstop to avoid indefinite shutdown hangs.
-          await withTimeout(agent!.shutdown(), SHUTDOWN_TIMEOUT_MS, 'agent.shutdown')
-          await closeWebSocketServer(didcommSocketServer)
         })()
       }
 
@@ -269,32 +323,20 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
 
     return {
       agent,
-      adminServer,
+      adminApiServer,
+      didcommHttpServer,
       didWebServer,
       shutdown,
     }
   } catch (error) {
-    try {
-      await closeServer(adminServer)
-      await closeWebSocketServer(adminSocketServer, true)
-      await didWebServer?.stop()
-
-      if (didcommSocketServer) {
-        for (const client of didcommSocketServer.clients) {
-          client.terminate()
-        }
-      }
-
-      if (agent) {
-        await container.resolve(DrpcReceiveHandler).stop()
-        await withTimeout(agent.shutdown(), SHUTDOWN_TIMEOUT_MS, 'agent.shutdown')
-      }
-
-      await closeWebSocketServer(didcommSocketServer)
-    } catch (cleanupError) {
-      logger.error('Error during startup cleanup', { cleanupError })
-    }
-
+    await cleanupResources(logger, {
+      agent,
+      adminApiServer,
+      didcommHttpServer,
+      adminSocketServer,
+      didWebServer,
+      didcommSocketServer,
+    })
     throw error
   }
 }

@@ -1,10 +1,13 @@
+import { Agent } from '@credo-ts/core'
 import { expect } from 'chai'
 import { afterEach, before, describe, test } from 'mocha'
 import { randomUUID } from 'node:crypto'
 import { restore as sinonRestore, stub as sinonStub } from 'sinon'
+import request from 'supertest'
 import { container } from 'tsyringe'
 import WebSocket from 'ws'
 
+import type { InboundTransport } from '../../src/agent.js'
 import { startCloudagent } from '../../src/bootstrap.js'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import type { Env } from '../../src/env.js'
@@ -18,7 +21,7 @@ const createTestEnv = async (walletId?: string, options?: { didWebEnabled?: bool
   const didWebPort = await getAvailablePort()
 
   const endpoints = [`http://localhost:${didcommHttpPort}`, `ws://localhost:${didcommWsPort}`]
-  const inboundTransport: Array<{ transport: string; port: number }> = [
+  const inboundTransport: InboundTransport[] = [
     { transport: 'http', port: didcommHttpPort },
     { transport: 'ws', port: didcommWsPort },
   ]
@@ -123,9 +126,10 @@ describe('startCloudagent lifecycle', () => {
       const walletId = walletIdsToClean.pop()!
       const { env } = await createTestEnv(walletId)
       const handle = await startCloudagent(env, logger)
-      expect(handle.adminServer.listening).to.equal(true)
+      expect(handle.adminApiServer.listening).to.equal(true)
       await handle.shutdown()
-      expect(handle.adminServer.listening).to.equal(false)
+      expect(handle.adminApiServer.listening).to.equal(false)
+      expect(handle.didcommHttpServer?.listening).to.equal(false)
       await deleteAgentStore(handle.agent)
     }
   })
@@ -135,15 +139,34 @@ describe('startCloudagent lifecycle', () => {
     const handle = await startCloudagent(env, logger)
     handles.push(handle)
 
-    expect(handle.adminServer.listening).to.equal(true)
+    expect(handle.adminApiServer.listening).to.equal(true)
 
     await handle.shutdown()
-    expect(handle.adminServer.listening).to.equal(false)
+    expect(handle.adminApiServer.listening).to.equal(false)
+    expect(handle.didcommHttpServer?.listening).to.equal(false)
 
     // shutdown must be idempotent
     await handle.shutdown()
-    expect(handle.adminServer.listening).to.equal(false)
+    expect(handle.adminApiServer.listening).to.equal(false)
+    expect(handle.didcommHttpServer?.listening).to.equal(false)
 
+    await deleteAgentStore(handle.agent)
+    handles.pop()
+  })
+
+  test('should serve DIDComm HTTP and admin TSOA routes on separate listeners', async () => {
+    const { env } = await createTestEnv()
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    const response = await request(handle.didcommHttpServer!).post('/').set('Content-Type', 'application/json').send({})
+    expect(response.status).to.equal(415)
+
+    const adminResponse = await request(handle.adminApiServer).get('/health')
+    expect(adminResponse.status).to.equal(200)
+    expect(handle.adminApiServer.address()).to.not.deep.equal(handle.didcommHttpServer?.address())
+
+    await handle.shutdown()
     await deleteAgentStore(handle.agent)
     handles.pop()
   })
@@ -183,11 +206,11 @@ describe('startCloudagent lifecycle', () => {
     const handle1 = await startCloudagent(env1, logger)
     handles.push(handle1)
 
-    expect(handle1.adminServer.listening).to.equal(true)
+    expect(handle1.adminApiServer.listening).to.equal(true)
     const firstLinkSecrets = await handle1.agent.modules.anoncreds.getLinkSecretIds()
 
     await handle1.shutdown()
-    expect(handle1.adminServer.listening).to.equal(false)
+    expect(handle1.adminApiServer.listening).to.equal(false)
     handles.pop()
 
     // Second start with same wallet ID, different ports
@@ -195,7 +218,7 @@ describe('startCloudagent lifecycle', () => {
     const handle2 = await startCloudagent(env2, logger)
     handles.push(handle2)
 
-    expect(handle2.adminServer.listening).to.equal(true)
+    expect(handle2.adminApiServer.listening).to.equal(true)
     const secondLinkSecrets = await handle2.agent.modules.anoncreds.getLinkSecretIds()
 
     // Verify wallet data persisted across restart
@@ -251,7 +274,9 @@ describe('startCloudagent lifecycle', () => {
 
     expect(thrownError).to.be.instanceOf(Error)
 
-    // The DIDComm ws port opened during the failed attempt must have been released.
+    const verifyHttpServer = await occupyPort(ports.didcommHttpPort)
+    await closeServer(verifyHttpServer)
+
     const verifyServer = await occupyPort(ports.didcommWsPort)
     await closeServer(verifyServer)
 
@@ -276,7 +301,9 @@ describe('startCloudagent lifecycle', () => {
 
     expect(thrownError).to.be.instanceOf(Error)
 
-    // The admin port opened during the failed attempt must have been released.
+    const verifyHttpServer = await occupyPort(ports.didcommHttpPort)
+    await closeServer(verifyHttpServer)
+
     const verifyServer = await occupyPort(ports.adminPort)
     await closeServer(verifyServer)
 
@@ -303,6 +330,35 @@ describe('startCloudagent lifecycle', () => {
     // No wallet is created when the DIDComm ws server fails to bind before setupAgent() runs.
     const verifyServer = await occupyPort(ports.adminPort)
     await closeServer(verifyServer)
+  })
+
+  test('should shut down transports when agent initialization fails', async function () {
+    this.timeout(15000)
+
+    const { env, ports } = await createTestEnv()
+    const walletId = env.get('WALLET_ID') as string
+    const initialize = Agent.prototype.initialize
+    const initializeStub = sinonStub(Agent.prototype, 'initialize').callsFake(async function (this: Agent) {
+      await initialize.call(this)
+      throw new Error('agent initialization failed')
+    })
+
+    let thrownError: unknown
+    try {
+      await startCloudagent(env, logger)
+    } catch (error) {
+      thrownError = error
+    } finally {
+      initializeStub.restore()
+      sinonRestore()
+    }
+
+    expect(thrownError).to.be.instanceOf(Error)
+    expect((thrownError as Error).message).to.equal('agent initialization failed')
+
+    const verifyWsServer = await occupyPort(ports.didcommWsPort)
+    await closeServer(verifyWsServer)
+    walletIdsToClean.push(walletId)
   })
 
   test('should shut down the agent when setupAgent() fails after agent initialisation', async function () {

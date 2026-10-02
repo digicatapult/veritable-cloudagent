@@ -21,7 +21,7 @@ import { container } from 'tsyringe'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
-import { setupServer } from '../../../src/server.js'
+import { setupAdminApi } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
 export type TestAgent = RestAgent
@@ -59,7 +59,7 @@ export const occupyPort = async (port: number) => {
 
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject)
-    // Bind without a host, matching how adminServer/didcommSocketServer bind, so the conflict is real.
+    // Bind without a host, matching how adminApiServer/didcommSocketServer bind, so the conflict is real.
     server.listen(port, () => resolve())
   })
 
@@ -130,10 +130,10 @@ export async function getTestAgent(port: number) {
 
 export async function getTestServer(agent: RestAgent) {
   const socketServer = new WebSocketServer({ noServer: true })
-  const app = await setupServer(agent, new PinoLogger('silent'), {
+  const adminApiApp = await setupAdminApi(agent, new PinoLogger('silent'), {
     socketServer,
   })
-  const server = app.listen(0, () => {})
+  const server = adminApiApp.listen(0, () => {})
 
   server.on('upgrade', (request, socket, head) => {
     socketServer.handleUpgrade(request, socket as Socket, head, () => {

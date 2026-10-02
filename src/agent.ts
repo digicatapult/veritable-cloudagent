@@ -31,6 +31,7 @@ import {
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
+import type { Express } from 'express'
 import { container } from 'tsyringe'
 import type { WebSocketServer } from 'ws'
 
@@ -43,10 +44,15 @@ import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/v
 import PinoLogger from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
-export type InboundTransport = {
-  transport: Transports
-  port: number
-}
+export type InboundTransport =
+  | {
+      transport: 'http'
+      port?: number
+    }
+  | {
+      transport: 'ws'
+      port: number
+    }
 
 type AgentProofProtocols = [
   DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService, DidCommDifPresentationExchangeProofFormatService]>,
@@ -77,6 +83,7 @@ export type AriesRestConfig = {
   ipfsTimeoutMs: number
 
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
+  didcommHttpApp?: Express
   didcommWsSocketServer?: WebSocketServer
 
   logger: PinoLogger
@@ -209,6 +216,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsOrigin,
     ipfsTimeoutMs,
     verifiedDrpcOptions,
+    didcommHttpApp,
     didcommWsSocketServer,
     logger,
 
@@ -246,11 +254,22 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
   // Register inbound transports
   let externalWsServerAssigned = false
+  let externalHttpAppAssigned = false
+  let drpcReceiveHandler: DrpcReceiveHandler | undefined
   for (const inboundTransport of inboundTransports) {
     if (inboundTransport.transport === 'http') {
-      agent.didcomm.registerInboundTransport(
-        new DidCommHttpInboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
-      )
+      if (didcommHttpApp && !externalHttpAppAssigned && inboundTransport.port !== undefined) {
+        agent.didcomm.registerInboundTransport(
+          new DidCommHttpInboundTransport({ app: didcommHttpApp, processedMessageListenerTimeoutMs: 30000 })
+        )
+        externalHttpAppAssigned = true
+      } else if (inboundTransport.port !== undefined) {
+        agent.didcomm.registerInboundTransport(
+          new DidCommHttpInboundTransport({ port: inboundTransport.port, processedMessageListenerTimeoutMs: 30000 })
+        )
+      } else {
+        throw new Error('An HTTP inbound transport requires either an Express app or a port')
+      }
       continue
     }
 
@@ -263,9 +282,9 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ port: inboundTransport.port }))
   }
 
-  await agent.initialize()
-
   try {
+    await agent.initialize()
+
     container.register(Agent, { useValue: agent as Agent })
 
     const existingSecrets = await agent.modules.anoncreds.getLinkSecretIds()
@@ -278,12 +297,23 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     agent.modules.verifiedDrpc.addRequestListener(verifiedDrpcRequestHandler)
 
     // Construct and register explicitly to avoid resolving a stale singleton bound to a previous agent.
-    const drpcReceiveHandler = new DrpcReceiveHandler(agent, logger)
+    drpcReceiveHandler = new DrpcReceiveHandler(agent, logger)
     container.register(DrpcReceiveHandler, { useValue: drpcReceiveHandler })
     drpcReceiveHandler.start()
   } catch (error) {
-    // Agent is already initialized at this point; shut it down so the caller's cleanup isn't skipped.
-    await agent.shutdown()
+    if (drpcReceiveHandler) {
+      try {
+        await drpcReceiveHandler.stop()
+      } catch (cleanupError) {
+        logger.error('Failed to stop DRPC receive handler after agent initialization failure', { cleanupError })
+      }
+    }
+
+    try {
+      await agent.shutdown()
+    } catch (cleanupError) {
+      logger.error('Failed to shut down agent after initialization failure', { cleanupError })
+    }
     throw error
   }
 

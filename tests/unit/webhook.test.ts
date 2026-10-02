@@ -16,7 +16,7 @@ import {
   type DidCommProofStateChangedEvent,
 } from '@credo-ts/didcomm'
 
-import { setupServer } from '../../src/server.js'
+import { setupAdminApi } from '../../src/server.js'
 import { waitForHook, webhookListener, type WebhookData } from '../../src/utils/webhook.js'
 
 import PinoLogger from '../../src/utils/logger.js'
@@ -32,7 +32,7 @@ describe('WebhookTests', () => {
     aliceAgent = await getTestAgent(3042)
     bobAgent = await getTestAgent(3043)
     server = await webhookListener(3044, webhooks)
-    await setupServer(bobAgent, new PinoLogger('silent'), { webhookUrl: ['http://localhost:3044'] })
+    await setupAdminApi(bobAgent, new PinoLogger('silent'), { webhookUrl: ['http://localhost:3044'] })
   })
 
   test('should return a webhook event when basic message state changed', async () => {
