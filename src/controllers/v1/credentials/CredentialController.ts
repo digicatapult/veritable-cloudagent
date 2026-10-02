@@ -256,6 +256,7 @@ export class CredentialController extends Controller {
    */
   @Example<DidCommCredentialExchangeRecordProps>(CredentialExchangeRecordExample)
   @Post('/:credentialRecordId/accept-proposal')
+  @Response<BadRequest>(400)
   @Response<NotFoundError>(404)
   @Response<HttpResponse>(500)
   public async acceptProposal(
@@ -265,6 +266,14 @@ export class CredentialController extends Controller {
   ) {
     try {
       req.log.debug('accepting credential proposal for %s', credentialRecordId)
+
+      const formatData = await this.agent.didcomm.credentials.getFormatData(credentialRecordId)
+      const proposal = formatData.proposal as { jsonld?: DidCommJsonLdCredentialDetailFormat } | undefined
+      const requestedFormats = options?.credentialFormats
+      const jsonldSelected =
+        !requestedFormats || Object.keys(requestedFormats).length === 0 || 'jsonld' in requestedFormats
+      if (jsonldSelected && proposal?.jsonld) await this.assertProofTypeMatchesIssuerDid(proposal.jsonld)
+
       const credential = await this.agent.didcomm.credentials.acceptProposal({
         ...(options ?? {}),
         credentialExchangeRecordId: credentialRecordId,
