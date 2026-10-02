@@ -111,7 +111,6 @@
     "npm": "12.x"
   },
   "overrides": {
-    "node-addon-api": "8.9.2",
     "ts-deepmerge": "^8.0.0"
   },
   "directories": {
