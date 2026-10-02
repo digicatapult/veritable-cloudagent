@@ -84,7 +84,7 @@ export type AriesRestConfig = {
 
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
   didcommHttpApp?: Express
-  didcommWsSocketServer?: WebSocketServer
+  didcommWsSocketServers?: WebSocketServer[]
 
   logger: PinoLogger
 }
@@ -217,7 +217,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsTimeoutMs,
     verifiedDrpcOptions,
     didcommHttpApp,
-    didcommWsSocketServer,
+    didcommWsSocketServers = [],
     logger,
 
     agentConfig,
@@ -253,7 +253,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
   }
 
   // Register inbound transports
-  let externalWsServerAssigned = false
+  let wsSocketServerIndex = 0
   let externalHttpAppAssigned = false
   let drpcReceiveHandler: DrpcReceiveHandler | undefined
   for (const inboundTransport of inboundTransports) {
@@ -273,9 +273,10 @@ export async function setupAgent(restConfig: AriesRestConfig) {
       continue
     }
 
-    if (didcommWsSocketServer && !externalWsServerAssigned) {
+    const didcommWsSocketServer = didcommWsSocketServers[wsSocketServerIndex]
+    wsSocketServerIndex += 1
+    if (didcommWsSocketServer) {
       agent.didcomm.registerInboundTransport(new DidCommWsInboundTransport({ server: didcommWsSocketServer }))
-      externalWsServerAssigned = true
       continue
     }
 

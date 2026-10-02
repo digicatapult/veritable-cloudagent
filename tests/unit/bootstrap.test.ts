@@ -384,8 +384,8 @@ describe('startCloudagent lifecycle', () => {
     walletIdsToClean.push(walletId)
   })
 
-  test('should register independent servers for multiple ws inbound transport entries', async function () {
-    this.timeout(15000)
+  test('should terminate clients and close all servers for multiple ws inbound transports', async function () {
+    this.timeout(10000)
 
     const secondWsPort = await getAvailablePort()
     const { env, ports } = await createTestEnv(undefined, { secondWsPort })
@@ -398,10 +398,26 @@ describe('startCloudagent lifecycle', () => {
     expect(firstClient.readyState).to.equal(WebSocket.OPEN)
     expect(secondClient.readyState).to.equal(WebSocket.OPEN)
 
-    firstClient.terminate()
-    secondClient.terminate()
+    let shutdownTimeout: NodeJS.Timeout | undefined
+    try {
+      await Promise.race([
+        handle.shutdown(),
+        new Promise<never>((_, reject) => {
+          shutdownTimeout = setTimeout(() => reject(new Error('shutdown timed out with connected ws clients')), 5000)
+        }),
+      ])
+    } finally {
+      if (shutdownTimeout) clearTimeout(shutdownTimeout)
+    }
 
-    await handle.shutdown()
+    expect(firstClient.readyState).to.equal(WebSocket.CLOSED)
+    expect(secondClient.readyState).to.equal(WebSocket.CLOSED)
+
+    const firstVerifyServer = await occupyPort(ports.didcommWsPort)
+    await closeServer(firstVerifyServer)
+    const secondVerifyServer = await occupyPort(secondWsPort)
+    await closeServer(secondVerifyServer)
+
     await deleteAgentStore(handle.agent)
     handles.pop()
   })
