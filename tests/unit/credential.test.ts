@@ -63,6 +63,24 @@ function buildIssuerDidRecord(verificationMethodType: string): DidRecord {
   return new DidRecord({ did: 'did:key:123', role: DidDocumentRole.Created, didDocument })
 }
 
+function buildJsonLdCredentialFormat(proofType: string, issuer = 'did:key:123') {
+  return {
+    credential: {
+      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      type: ['VerifiableCredential'],
+      issuer,
+      issuanceDate: '2021-01-01T00:00:00Z',
+      credentialSubject: {
+        id: 'did:key:456',
+      },
+    },
+    options: {
+      proofType,
+      proofPurpose: 'assertionMethod',
+    },
+  }
+}
+
 describe('CredentialController', () => {
   let port: number
   let app: Server
@@ -721,6 +739,38 @@ describe('CredentialController', () => {
       expect(response.statusCode).to.be.equal(400)
       expect(createOfferStub.called).to.be.equal(false)
     })
+
+    test('should return 400 for unsupported jsonld proofType in create-offer', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('UnsupportedSignatureSuite'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/create-offer').send(createOfferRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(createOfferStub.called).to.equal(false)
+    })
+
+    test('should return 400 when create-offer issuer DID was not created by this agent', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([])
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', 'did:key:789'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/create-offer').send(createOfferRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(createOfferStub.called).to.equal(false)
+    })
   })
 
   describe('Create a credential offer and a corresponding invitation using create-invitation', () => {
@@ -974,6 +1024,40 @@ describe('CredentialController', () => {
       const response = await request(app).post(`/v1/credentials/offer-credential`).send(offerRequestJsonLd)
 
       expect(response.statusCode).to.be.equal(400)
+      expect(offerCredentialStub.called).to.equal(false)
+    })
+
+    test('should return 400 for unsupported jsonld proofType in offer-credential', async () => {
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      const offerRequest: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('UnsupportedSignatureSuite'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/offer-credential').send(offerRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(offerCredentialStub.called).to.equal(false)
+    })
+
+    test('should return 400 when offer-credential issuer DID was not created by this agent', async () => {
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([])
+      const offerRequest: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', 'did:key:789'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/offer-credential').send(offerRequest)
+
+      expect(response.statusCode).to.equal(400)
       expect(offerCredentialStub.called).to.equal(false)
     })
 

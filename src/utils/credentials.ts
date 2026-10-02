@@ -147,14 +147,12 @@ export const validateProofTypeAgainstIssuerDid = (
     errors[field] = { message, value: errorValue }
   }
 
-  let verificationMethodTypes: string[]
-  try {
-    verificationMethodTypes = signatureSuiteRegistry.getVerificationMethodTypesByProofType(proofType)
-  } catch {
+  if (!signatureSuiteRegistry.supportedProofTypes.includes(proofType)) {
     addError(`${fieldPath}.options.proofType`, `Unsupported proofType '${proofType}'`, proofType)
     return errors
   }
 
+  const verificationMethodTypes = signatureSuiteRegistry.getVerificationMethodTypesByProofType(proofType)
   const compatibleVerificationMethod = issuerDidDocument.findVerificationMethodsByTypeAndPurpose(
     verificationMethodTypes,
     ['assertionMethod', 'verificationMethod']
