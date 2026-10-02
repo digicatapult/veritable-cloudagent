@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.53",
+  "version": "0.20.54",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -111,7 +111,6 @@
     "npm": "12.x"
   },
   "overrides": {
-    "node-addon-api": "8.9.2",
     "ts-deepmerge": "^8.0.0"
   },
   "directories": {
