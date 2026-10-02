@@ -9,6 +9,7 @@ import WebSocket from 'ws'
 
 import type { InboundTransport } from '../../src/agent.js'
 import { startCloudagent } from '../../src/bootstrap.js'
+import Database from '../../src/didweb/db.js'
 import DrpcReceiveHandler from '../../src/drpc-handler/index.js'
 import type { Env } from '../../src/env.js'
 import PinoLogger from '../../src/utils/logger.js'
@@ -136,22 +137,31 @@ describe('startCloudagent lifecycle', () => {
 
   test('should start and shutdown idempotently', async () => {
     const { env } = await createTestEnv()
-    const handle = await startCloudagent(env, logger)
-    handles.push(handle)
+    const closeDidWebDatabase = Database.prototype.close
+    const closeDidWebDatabaseStub = sinonStub(Database.prototype, 'close').callsFake(function (this: Database) {
+      return closeDidWebDatabase.call(this)
+    })
+    try {
+      const handle = await startCloudagent(env, logger)
+      handles.push(handle)
 
-    expect(handle.adminApiServer.listening).to.equal(true)
+      expect(handle.adminApiServer.listening).to.equal(true)
 
-    await handle.shutdown()
-    expect(handle.adminApiServer.listening).to.equal(false)
-    expect(handle.didcommHttpServer?.listening).to.equal(false)
+      await handle.shutdown()
+      expect(handle.adminApiServer.listening).to.equal(false)
+      expect(handle.didcommHttpServer?.listening).to.equal(false)
 
-    // shutdown must be idempotent
-    await handle.shutdown()
-    expect(handle.adminApiServer.listening).to.equal(false)
-    expect(handle.didcommHttpServer?.listening).to.equal(false)
+      // shutdown must be idempotent
+      await handle.shutdown()
+      expect(handle.adminApiServer.listening).to.equal(false)
+      expect(handle.didcommHttpServer?.listening).to.equal(false)
+      expect(closeDidWebDatabaseStub.calledOnce).to.equal(true)
 
-    await deleteAgentStore(handle.agent)
-    handles.pop()
+      await deleteAgentStore(handle.agent)
+      handles.pop()
+    } finally {
+      closeDidWebDatabaseStub.restore()
+    }
   })
 
   test('should serve DIDComm HTTP and admin TSOA routes on separate listeners', async () => {
@@ -306,6 +316,10 @@ describe('startCloudagent lifecycle', () => {
     const { env, ports } = await createTestEnv()
     const walletId = env.get('WALLET_ID') as string
     const occupyingServer = await occupyPort(ports.adminPort)
+    const closeDidWebDatabase = Database.prototype.close
+    const closeDidWebDatabaseStub = sinonStub(Database.prototype, 'close').callsFake(function (this: Database) {
+      return closeDidWebDatabase.call(this)
+    })
 
     let thrownError: unknown
     try {
@@ -313,10 +327,12 @@ describe('startCloudagent lifecycle', () => {
     } catch (error) {
       thrownError = error
     } finally {
+      closeDidWebDatabaseStub.restore()
       await closeServer(occupyingServer)
     }
 
     expect(thrownError).to.be.instanceOf(Error)
+    expect(closeDidWebDatabaseStub.calledOnce).to.equal(true)
 
     const verifyHttpServer = await occupyPort(ports.didcommHttpPort)
     await closeServer(verifyHttpServer)

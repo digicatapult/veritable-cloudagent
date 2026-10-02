@@ -117,6 +117,7 @@ const cleanupResources = async (
     didcommHttpServer?: HttpServer
     adminSocketServer?: WebSocketServer
     didWebServer?: DidWebServer
+    didWebDatabase?: Database
     didcommSocketServers?: WebSocketServer[]
   }
 ) => {
@@ -135,6 +136,9 @@ const cleanupResources = async (
   await attempt('close DIDComm HTTP server', () => closeServer(resources.didcommHttpServer))
   await attempt('stop DID:web server', async () => {
     await resources.didWebServer?.stop()
+  })
+  await attempt('close DID:web database', async () => {
+    await resources.didWebDatabase?.close()
   })
 
   for (const server of resources.didcommSocketServers ?? []) {
@@ -174,6 +178,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
   let adminApiServer: HttpServer | undefined
   let didcommHttpServer: HttpServer | undefined
   let adminSocketServer: WebSocketServer | undefined
+  let didWebDatabase: Database | undefined
   const didcommSocketServers: WebSocketServer[] = []
   let shuttingDownPromise: Promise<void> | undefined
 
@@ -253,7 +258,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       await listen(didcommHttpServer)
     }
 
-    const database = new Database({
+    didWebDatabase = new Database({
       host: env.get('POSTGRES_HOST'),
       database: env.get('DID_WEB_DB_NAME'),
       user: env.get('POSTGRES_USERNAME'),
@@ -261,7 +266,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       port: env.get('POSTGRES_PORT'),
     })
 
-    didWebServer = new DidWebServer(logger.logger, database, {
+    didWebServer = new DidWebServer(logger.logger, didWebDatabase, {
       enabled: env.get('DID_WEB_ENABLED'),
       port: env.get('DID_WEB_PORT'),
       useDevCert: env.get('DID_WEB_USE_DEV_CERT'),
@@ -338,6 +343,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
             didcommHttpServer,
             adminSocketServer,
             didWebServer,
+            didWebDatabase,
             didcommSocketServers,
           })
           if (cleanupErrors.length > 0) {
@@ -363,6 +369,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       didcommHttpServer,
       adminSocketServer,
       didWebServer,
+      didWebDatabase,
       didcommSocketServers,
     })
     throw error
