@@ -56,7 +56,6 @@ export interface AcceptCredentialOfferOptions {
 }
 
 export interface AcceptCredentialRequestOptions {
-  credentialFormats?: DidCommCredentialFormatPayload<CredentialFormats, 'acceptRequest'>
   autoAcceptCredential?: DidCommAutoAcceptCredential
   comment?: string
 }

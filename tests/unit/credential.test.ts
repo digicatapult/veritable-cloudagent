@@ -1,5 +1,5 @@
 import type { AnonCredsDidCommCredentialFormat } from '@credo-ts/anoncreds'
-import { JsonTransformer } from '@credo-ts/core'
+import { DidDocument, DidDocumentRole, DidRecord, JsonTransformer } from '@credo-ts/core'
 import {
   DidCommAutoAcceptCredential,
   DidCommCredentialEventTypes,
@@ -23,6 +23,7 @@ import type WebSocket from 'ws'
 
 import type {
   AcceptCredentialProposalOptions,
+  CreateOfferOptions,
   OfferCredentialOptions,
   ProposeCredentialOptions,
 } from '../../src/controllers/types/index.js'
@@ -40,6 +41,49 @@ import {
   openWebSocket,
   type TestAgent,
 } from './utils/helpers.js'
+
+function buildIssuerDidRecord(verificationMethodType: string): DidRecord {
+  const didDocument = JsonTransformer.fromJSON(
+    {
+      '@context': ['https://www.w3.org/ns/did/v1'],
+      id: 'did:key:123',
+      verificationMethod: [
+        {
+          id: 'did:key:123#123',
+          type: verificationMethodType,
+          controller: 'did:key:123',
+          publicKeyBase58: '11111111111111111111111111111111',
+        },
+      ],
+      assertionMethod: ['did:key:123#123'],
+    },
+    DidDocument
+  )
+
+  return new DidRecord({ did: 'did:key:123', role: DidDocumentRole.Created, didDocument })
+}
+
+function buildIssuerDidRecordWithoutDocument(): DidRecord {
+  return new DidRecord({ did: 'did:key:123', role: DidDocumentRole.Created })
+}
+
+function buildJsonLdCredentialFormat(proofType: string, issuer: string | { id: string } = 'did:key:123') {
+  return {
+    credential: {
+      '@context': ['https://www.w3.org/2018/credentials/v1'],
+      type: ['VerifiableCredential'],
+      issuer,
+      issuanceDate: '2021-01-01T00:00:00Z',
+      credentialSubject: {
+        id: 'did:key:456',
+      },
+    },
+    options: {
+      proofType,
+      proofPurpose: 'assertionMethod',
+    },
+  }
+}
 
 describe('CredentialController', () => {
   let port: number
@@ -370,6 +414,8 @@ describe('CredentialController', () => {
 
   describe('Accept a credential proposal', () => {
     test('should return credential record', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({ proposal: { anoncreds: {} } })
       const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
@@ -404,6 +450,8 @@ describe('CredentialController', () => {
     })
 
     test('should work without optional parameters', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({ proposal: { anoncreds: {} } })
       const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
       acceptProposalStub.resolves(testCredential)
       const getResult = (): Promise<DidCommCredentialExchangeRecord> => acceptProposalStub.firstCall.returnValue
@@ -420,6 +468,120 @@ describe('CredentialController', () => {
 
       expect(response.statusCode).to.be.equal(200)
       expect(response.body).to.deep.equal(objectToJson(result))
+    })
+
+    test('should validate a JSON-LD proposal before accepting it', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({
+        proposal: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018'),
+        },
+      })
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
+      acceptProposalStub.resolves(testCredential)
+
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-proposal`).send({})
+
+      expect(response.statusCode).to.equal(200)
+      expect(getFormatDataStub.calledOnceWithExactly(testCredential.id)).to.equal(true)
+      expect(getCreatedDidsStub.calledOnceWithExactly({ did: 'did:key:123' })).to.equal(true)
+      expect(acceptProposalStub.calledOnce).to.equal(true)
+    })
+
+    test('should not validate an unselected JSON-LD format when accepting only AnonCreds', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({
+        proposal: {
+          anoncreds: {},
+          jsonld: buildJsonLdCredentialFormat('UnsupportedSignatureSuite', 'did:key:789'),
+        },
+      })
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
+      acceptProposalStub.resolves(testCredential)
+      const proposalRequest: AcceptCredentialProposalOptions = {
+        credentialFormats: {
+          anoncreds: {
+            attributes: [{ name: 'name', value: 'test' }],
+          },
+        },
+      }
+
+      const response = await request(app)
+        .post(`/v1/credentials/${testCredential.id}/accept-proposal`)
+        .send(proposalRequest)
+
+      expect(response.statusCode).to.equal(200)
+      expect(getCreatedDidsStub.called).to.equal(false)
+      expect(acceptProposalStub.calledOnce).to.equal(true)
+      expect(acceptProposalStub.firstCall.args[0].credentialFormats).to.deep.equal(proposalRequest.credentialFormats)
+    })
+
+    test('should reject a JSON-LD proposal when the issuer DID is not managed by this agent', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({
+        proposal: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', 'did:key:789'),
+        },
+      })
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([])
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
+
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-proposal`).send({})
+
+      expect(response.statusCode).to.equal(400)
+      expect(response.body.message).to.equal('Validation Failed')
+      expect(response.body.details['credentialFormats.jsonld.credential.issuer']).to.deep.equal({
+        message: "Issuer DID 'did:key:789' was not created by this agent and cannot be used to sign a credential",
+        value: 'did:key:789',
+      })
+      expect(acceptProposalStub.called).to.equal(false)
+    })
+
+    test('should reject a JSON-LD proposal when proofType does not match an issuer verification method', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({
+        proposal: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2020'),
+        },
+      })
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
+
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-proposal`).send({})
+
+      expect(response.statusCode).to.equal(400)
+      expect(response.body.message).to.equal('Validation Failed')
+      expect(response.body.details['credentialFormats.jsonld.options.proofType'].message).to.include(
+        "proofType 'Ed25519Signature2020' requires a verification method"
+      )
+      expect(acceptProposalStub.called).to.equal(false)
+    })
+
+    test('should reject a JSON-LD proposal with an unsupported proofType', async () => {
+      const getFormatDataStub = stub(bobAgent.didcomm.credentials, 'getFormatData')
+      getFormatDataStub.resolves({
+        proposal: {
+          jsonld: buildJsonLdCredentialFormat('UnsupportedSignatureSuite'),
+        },
+      })
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+      const acceptProposalStub = stub(bobAgent.didcomm.credentials, 'acceptProposal')
+
+      const response = await request(app).post(`/v1/credentials/${testCredential.id}/accept-proposal`).send({})
+
+      expect(response.statusCode).to.equal(400)
+      expect(response.body.message).to.equal('Validation Failed')
+      expect(response.body.details['credentialFormats.jsonld.options.proofType']).to.deep.equal({
+        message: "Unsupported proofType 'UnsupportedSignatureSuite'",
+        value: 'UnsupportedSignatureSuite',
+      })
+      expect(acceptProposalStub.called).to.equal(false)
     })
 
     test('should give 404 not found when credential is not found', async () => {
@@ -626,6 +788,155 @@ describe('CredentialController', () => {
       expect(response.statusCode).to.be.equal(400)
       expect(createOfferStub.called).to.be.equal(false)
     })
+
+    test('should support jsonld format in create-offer', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      createOfferStub.resolves(testOffer)
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: ['VerifiableCredential'],
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            options: {
+              proofType: 'Ed25519Signature2018',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(createOfferRequest)
+
+      expect(response.statusCode).to.be.equal(200)
+      expect(
+        createOfferStub.calledWithMatch({
+          credentialFormats: {
+            jsonld: createOfferRequest.credentialFormats?.jsonld,
+          },
+        })
+      ).to.equal(true)
+    })
+
+    test('should return 400 when create-offer proofType does not match a verification method advertised by the issuer DID', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      createOfferStub.resolves(testOffer)
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: ['VerifiableCredential'],
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            // issuer DID only advertises Ed25519VerificationKey2018, so 2020 should be rejected
+            options: {
+              proofType: 'Ed25519Signature2020',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/create-offer`).send(createOfferRequest)
+
+      expect(response.statusCode).to.be.equal(400)
+      expect(createOfferStub.called).to.be.equal(false)
+    })
+
+    test('should return 400 for unsupported jsonld proofType in create-offer', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('UnsupportedSignatureSuite'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/create-offer').send(createOfferRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(createOfferStub.called).to.equal(false)
+    })
+
+    test('should return 400 when create-offer issuer DID was not created by this agent', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([])
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', 'did:key:789'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/create-offer').send(createOfferRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(createOfferStub.called).to.equal(false)
+    })
+
+    test('should accept an object-form issuer in create-offer', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      createOfferStub.resolves(testOffer)
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', { id: 'did:key:123' }),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/create-offer').send(createOfferRequest)
+
+      expect(response.statusCode).to.equal(200)
+      expect(getCreatedDidsStub.calledWith({ did: 'did:key:123' })).to.equal(true)
+      expect(createOfferStub.calledOnce).to.equal(true)
+    })
+
+    test('should return a validation error when create-offer issuer DID document cannot be resolved', async () => {
+      const createOfferStub = stub(bobAgent.didcomm.credentials, 'createOffer')
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecordWithoutDocument()])
+      const resolveDidDocumentStub = stub(bobAgent.dids, 'resolveDidDocument')
+      resolveDidDocumentStub.rejects(new Error('DID resolution failed'))
+      const createOfferRequest: CreateOfferOptions = {
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/create-offer').send(createOfferRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(response.body.message).to.equal('Validation Failed')
+      expect(response.body.details['credentialFormats.jsonld.credential.issuer']).to.deep.equal({
+        message: "Unable to resolve issuer DID 'did:key:123': DID resolution failed",
+        value: 'did:key:123',
+      })
+      expect(resolveDidDocumentStub.calledOnceWithExactly('did:key:123')).to.equal(true)
+      expect(createOfferStub.called).to.equal(false)
+    })
   })
 
   describe('Create a credential offer and a corresponding invitation using create-invitation', () => {
@@ -808,6 +1119,8 @@ describe('CredentialController', () => {
       findByIdStub.resolves(connection)
       const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
       offerCredentialStub.resolves(testCredential)
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
 
       const offerRequestJsonLd: OfferCredentialOptions = {
         connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
@@ -841,6 +1154,125 @@ describe('CredentialController', () => {
           },
         })
       ).to.equal(true)
+    })
+
+    test('should return 400 when proofType does not match a verification method advertised by the issuer DID', async () => {
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
+      findByIdStub.resolves(connection)
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      offerCredentialStub.resolves(testCredential)
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+
+      const offerRequestJsonLd: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: {
+            credential: {
+              '@context': ['https://www.w3.org/2018/credentials/v1'],
+              type: ['VerifiableCredential'],
+              issuer: 'did:key:123',
+              issuanceDate: '2021-01-01T00:00:00Z',
+              credentialSubject: {
+                id: 'did:key:456',
+              },
+            },
+            // issuer DID only advertises Ed25519VerificationKey2018, so 2020 should be rejected
+            options: {
+              proofType: 'Ed25519Signature2020',
+              proofPurpose: 'assertionMethod',
+            },
+          },
+        },
+      }
+
+      const response = await request(app).post(`/v1/credentials/offer-credential`).send(offerRequestJsonLd)
+
+      expect(response.statusCode).to.be.equal(400)
+      expect(offerCredentialStub.called).to.equal(false)
+    })
+
+    test('should return 400 for unsupported jsonld proofType in offer-credential', async () => {
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      const offerRequest: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('UnsupportedSignatureSuite'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/offer-credential').send(offerRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(offerCredentialStub.called).to.equal(false)
+    })
+
+    test('should return 400 when offer-credential issuer DID was not created by this agent', async () => {
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([])
+      const offerRequest: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', 'did:key:789'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/offer-credential').send(offerRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(offerCredentialStub.called).to.equal(false)
+    })
+
+    test('should accept an object-form issuer in offer-credential', async () => {
+      const findByIdStub = stub(bobAgent.didcomm.connections, 'findById')
+      findByIdStub.resolves(connection)
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      offerCredentialStub.resolves(testCredential)
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecord('Ed25519VerificationKey2018')])
+      const offerRequest: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018', { id: 'did:key:123' }),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/offer-credential').send(offerRequest)
+
+      expect(response.statusCode).to.equal(200)
+      expect(getCreatedDidsStub.calledWith({ did: 'did:key:123' })).to.equal(true)
+      expect(offerCredentialStub.calledOnce).to.equal(true)
+    })
+
+    test('should return a validation error when offer-credential issuer DID document cannot be resolved', async () => {
+      const offerCredentialStub = stub(bobAgent.didcomm.credentials, 'offerCredential')
+      const getCreatedDidsStub = stub(bobAgent.dids, 'getCreatedDids')
+      getCreatedDidsStub.resolves([buildIssuerDidRecordWithoutDocument()])
+      const resolveDidDocumentStub = stub(bobAgent.dids, 'resolveDidDocument')
+      resolveDidDocumentStub.rejects(new Error('DID resolution failed'))
+      const offerRequest: OfferCredentialOptions = {
+        connectionId: '000000aa-aa00-40a0-aa00-000a0aa00000',
+        protocolVersion: 'v2',
+        credentialFormats: {
+          jsonld: buildJsonLdCredentialFormat('Ed25519Signature2018'),
+        },
+      }
+
+      const response = await request(app).post('/v1/credentials/offer-credential').send(offerRequest)
+
+      expect(response.statusCode).to.equal(400)
+      expect(response.body.message).to.equal('Validation Failed')
+      expect(response.body.details['credentialFormats.jsonld.credential.issuer']).to.deep.equal({
+        message: "Unable to resolve issuer DID 'did:key:123': DID resolution failed",
+        value: 'did:key:123',
+      })
+      expect(resolveDidDocumentStub.calledOnceWithExactly('did:key:123')).to.equal(true)
+      expect(offerCredentialStub.called).to.equal(false)
     })
 
     test('should return 400 for invalid jsonld offer profile', async () => {
