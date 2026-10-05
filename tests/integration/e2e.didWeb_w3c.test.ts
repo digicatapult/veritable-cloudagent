@@ -17,7 +17,6 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
 
   let aliceCredentialRecordId: UUID
   let bobCredentialRecordId: UUID
-  let aliceVerificationMethod: string
 
   beforeEach(async function () {
     await sleep(200)
@@ -94,18 +93,6 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
   })
 
   it('Alice should be able to offer Bob a W3C (JSON-LD) credential', async function () {
-    const didResponse = await aliceClient.get(`/v1/dids/${encodeURIComponent(DID_WEB_ALICE)}`).expect(200)
-    const assertionMethod = didResponse.body?.didDocument?.assertionMethod?.[0]
-
-    const resolvedVerificationMethod =
-      typeof assertionMethod === 'string' ? assertionMethod : (assertionMethod?.id as string | undefined)
-
-    if (!resolvedVerificationMethod) {
-      throw new Error('Unable to resolve Alice verificationMethod from DID document')
-    }
-
-    aliceVerificationMethod = resolvedVerificationMethod
-
     const offerCredentialPayload = {
       protocolVersion: 'v2',
       connectionId: aliceConnectionId,
@@ -170,13 +157,7 @@ describe('DID:web Implicit Connection Flow + Credential Issuance', function () {
 
     const response = await aliceClient
       .post(`/v1/credentials/${aliceCredentialRecordId}/accept-request`)
-      .send({
-        credentialFormats: {
-          jsonld: {
-            verificationMethod: aliceVerificationMethod,
-          },
-        },
-      })
+      .send({})
       .expect('Content-Type', /json/)
       .expect(200)
 
