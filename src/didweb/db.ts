@@ -78,6 +78,10 @@ export default class Database {
     this.db = models
   }
 
+  async close(): Promise<void> {
+    await this.client.destroy()
+  }
+
   /**
    * Insert or update a record based on conflict resolution
    * @param model - The table name
