@@ -118,11 +118,11 @@
     "test": "tests"
   },
   "allowScripts": {
-    "@openwallet-foundation/askar-nodejs@0.6.0": true,
+    "@openwallet-foundation/askar-nodejs@0.6.1": true,
     "@hyperledger/anoncreds-nodejs@0.4.0": true,
     "koffi@2.16.3": true,
     "cbor-extract@2.2.2": true,
-    "@swc/core@1.15.46": true,
+    "@swc/core@1.16.13": true,
     "@scarf/scarf": false
   }
 }
