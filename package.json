@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.55",
+  "version": "0.20.56",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -119,7 +119,7 @@
   },
   "allowScripts": {
     "@openwallet-foundation/askar-nodejs@0.6.1": true,
-    "@hyperledger/anoncreds-nodejs@0.4.0": true,
+    "@hyperledger/anoncreds-nodejs@0.4.1": true,
     "koffi@2.16.3": true,
     "cbor-extract@2.2.2": true,
     "@swc/core@1.16.13": true,
