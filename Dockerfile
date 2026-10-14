@@ -48,7 +48,7 @@ RUN npm install -g npm@12.0.1
 ARG NODE_ENV=production
 ENV NODE_ENV=${NODE_ENV}
 
-RUN apt-get update && apt-get install -y curl openssl
+RUN apt-get update && apt-get upgrade -y && apt-get install -y curl openssl
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
