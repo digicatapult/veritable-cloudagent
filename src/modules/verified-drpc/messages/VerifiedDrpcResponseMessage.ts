@@ -9,12 +9,19 @@ export interface VerifiedDrpcResponseError {
   data?: unknown
 }
 
-export interface VerifiedDrpcResponse {
-  jsonrpc: string
-  result?: unknown
-  error?: VerifiedDrpcResponseError
+export interface VerifiedDrpcResultResponse {
+  jsonrpc: '2.0'
+  result: unknown
   id: UUID | number | null
 }
+
+export interface VerifiedDrpcErrorResponse {
+  jsonrpc: '2.0'
+  error: VerifiedDrpcResponseError
+  id: UUID | number | null
+}
+
+export type VerifiedDrpcResponse = VerifiedDrpcResultResponse | VerifiedDrpcErrorResponse
 
 export class VerifiedDrpcResponseMessage extends DidCommMessage {
   public constructor(options: { response: VerifiedDrpcResponse; threadId: UUID }) {

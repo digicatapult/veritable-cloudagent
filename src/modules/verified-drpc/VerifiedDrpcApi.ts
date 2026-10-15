@@ -135,12 +135,18 @@ export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
         verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server &&
         verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived
       ) {
-        const response = await handler(verifiedDrpcMessageRecord, this.agentContext)
-        this.sendResponse({
-          connectionId: verifiedDrpcMessageRecord.connectionId,
-          threadId: verifiedDrpcMessageRecord.threadId,
-          response,
-        })
+        try {
+          const response = await handler(verifiedDrpcMessageRecord, this.agentContext)
+          await this.sendResponse({
+            connectionId: verifiedDrpcMessageRecord.connectionId,
+            threadId: verifiedDrpcMessageRecord.threadId,
+            response,
+          })
+        } catch (error) {
+          this.agentContext.config.logger.error(
+            `Error responding to verified DRPC request ${verifiedDrpcMessageRecord.threadId}: ${error}`
+          )
+        }
       }
     }
 

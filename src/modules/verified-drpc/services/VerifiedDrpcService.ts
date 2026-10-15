@@ -4,6 +4,7 @@ import { type AgentContext, EventEmitter, injectable, type Query } from '@credo-
 import {
   type CreateProofRequestOptions,
   type DidCommInboundMessageContext,
+  DidCommProblemReportError,
   DidCommProofEventTypes,
   type DidCommProofProtocol,
   DidCommProofsApi,
@@ -203,7 +204,9 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   public async receiveResponse(messageContext: DidCommInboundMessageContext<VerifiedDrpcResponseMessage>) {
-    verifiedDrpcResponseSchema.parse(messageContext.message.response)
+    if (!verifiedDrpcResponseSchema.safeParse(messageContext.message.response).success) {
+      throw new DidCommProblemReportError('Invalid verified DRPC response', { problemCode: 'message-parse-failure' })
+    }
     const connection = messageContext.assertReadyConnection()
     const verifiedDrpcMessageRecord = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -225,7 +228,9 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   public async receiveRequest(messageContext: DidCommInboundMessageContext<VerifiedDrpcRequestMessage>) {
-    verifiedDrpcRequestSchema.parse(messageContext.message.request)
+    if (!verifiedDrpcRequestSchema.safeParse(messageContext.message.request).success) {
+      throw new DidCommProblemReportError('Invalid verified DRPC request', { problemCode: 'message-parse-failure' })
+    }
     const connection = messageContext.assertReadyConnection()
     const record = await this.findByThreadAndConnectionId(
       messageContext.agentContext,

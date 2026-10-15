@@ -4,7 +4,7 @@ import type { UUID } from '../../../controllers/types/index.js'
 import { verifiedDrpcRequestSchema } from '../models/index.js'
 
 export interface VerifiedDrpcRequest {
-  jsonrpc: string
+  jsonrpc: '2.0'
   method: string
   params?: unknown[] | Record<string, unknown>
   id: UUID | number | null

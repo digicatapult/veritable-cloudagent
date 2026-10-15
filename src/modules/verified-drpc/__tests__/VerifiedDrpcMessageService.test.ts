@@ -10,6 +10,8 @@ import {
   DidCommDidExchangeRole,
   DidCommDidExchangeState,
   DidCommInboundMessageContext,
+  DidCommProblemReportError,
+  DidCommProblemReportMessage,
   DidCommProofEventTypes,
   DidCommProofsApi,
   DidCommProofState,
@@ -49,6 +51,18 @@ export function getMockConnection({
     tags,
     theirLabel,
   })
+}
+
+const expectProblemReport = async (promise: Promise<unknown>, description: string) => {
+  try {
+    await promise
+    expect.fail('Expected a problem report error')
+  } catch (error) {
+    expect(error).to.be.instanceOf(DidCommProblemReportError)
+    const { problemReport } = error as DidCommProblemReportError
+    expect(problemReport).to.be.instanceOf(DidCommProblemReportMessage)
+    expect(problemReport.description).to.deep.equal({ en: description, code: 'message-parse-failure' })
+  }
 }
 
 describe('VerifiedDrpcService', () => {
@@ -145,6 +159,28 @@ describe('VerifiedDrpcService', () => {
   })
 
   describe('receive request', () => {
+    it('rejects an invalid inbound request with a problem report and does not store it', async () => {
+      const requestMessage = JsonTransformer.fromJSON(
+        {
+          '@id': 'request-message-id',
+          '@type': VerifiedDrpcRequestMessage.type.messageTypeUri,
+          request: { jsonrpc: '1.0', method: 'hello', id: 1 },
+        },
+        VerifiedDrpcRequestMessage
+      )
+      const messageContext = new DidCommInboundMessageContext(requestMessage, {
+        agentContext,
+        connection: mockConnectionRecord,
+      })
+
+      await expectProblemReport(
+        verifiedDrpcMessageService.receiveRequest(messageContext),
+        'Invalid verified DRPC request'
+      )
+      sinon.assert.notCalled(mockVerifiedDrpcRepository.save)
+      sinon.assert.notCalled(mockEventEmitter.emit)
+    })
+
     it('does not emit a verified request or allow a response before the client proof completes', async () => {
       const mockProofsApi: SinonStubbedInstance<
         DidCommProofsApi<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
@@ -297,8 +333,31 @@ describe('VerifiedDrpcService', () => {
   })
 
   describe('receive response', () => {
+    it('rejects an invalid inbound response with a problem report and does not update the record', async () => {
+      const responseMessage = JsonTransformer.fromJSON(
+        {
+          '@id': 'response-message-id',
+          '@type': VerifiedDrpcResponseMessage.type.messageTypeUri,
+          '~thread': { thid: 'request-thread-id' },
+          response: { jsonrpc: '2.0', id: 1, result: 'ok', error: { code: -32000, message: 'failed' } },
+        },
+        VerifiedDrpcResponseMessage
+      )
+      const messageContext = new DidCommInboundMessageContext(responseMessage, {
+        agentContext,
+        connection: mockConnectionRecord,
+      })
+
+      await expectProblemReport(
+        verifiedDrpcMessageService.receiveResponse(messageContext),
+        'Invalid verified DRPC response'
+      )
+      sinon.assert.notCalled(mockVerifiedDrpcRepository.update)
+      sinon.assert.notCalled(mockEventEmitter.emit)
+    })
+
     it('emits a state change event for a valid response object', async () => {
-      const response = { jsonrpc: '2.0', result: 'hello', id: 1 }
+      const response = { jsonrpc: '2.0' as const, result: 'hello', id: 1 }
       const record = withMockVerifiedDrpcRecord({
         connectionId: mockConnectionRecord.id,
         role: VerifiedDrpcRole.Client,
