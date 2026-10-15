@@ -10,7 +10,7 @@ export const verifiedDrpcRequestSchema = z
     params: z.union([z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]).optional(),
     id: z.union([z.string(), z.number(), z.null()]),
   })
-  .passthrough()
+  .loose()
   .refine((request) => !('params' in request) || request.params !== undefined, {
     message: 'Request params must be omitted or contain a JSON value',
   })

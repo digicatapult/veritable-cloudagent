@@ -261,9 +261,14 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
 
   private emitStateChangedEvent(agentContext: AgentContext, verifiedDrpcMessageRecord: VerifiedDrpcRecord) {
     if (verifiedDrpcMessageRecord.request && isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request)) {
+      const eventRecord = verifiedDrpcMessageRecord.clone()
+      // Inbound requests are only actionable once the client proof is verified
+      if (eventRecord.role === VerifiedDrpcRole.Server && eventRecord.state !== VerifiedDrpcState.ClientProofReceived) {
+        eventRecord.request = undefined
+      }
       this.eventEmitter.emit<VerifiedDrpcRequestStateChangedEvent>(agentContext, {
         type: VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged,
-        payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },
+        payload: { verifiedDrpcMessageRecord: eventRecord },
       })
     } else if (verifiedDrpcMessageRecord.response && isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response)) {
       this.eventEmitter.emit<VerifiedDrpcResponseStateChangedEvent>(agentContext, {

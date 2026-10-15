@@ -10,7 +10,7 @@ const responseBaseSchema = z.object({
 
 const resultResponseSchema = responseBaseSchema
   .extend({ result: jsonValueSchema })
-  .passthrough()
+  .loose()
   .refine((response) => !('error' in response), {
     message: 'A JSON-RPC response cannot contain both result and error',
   })
@@ -23,9 +23,9 @@ const errorResponseSchema = responseBaseSchema
         message: z.string(),
         data: jsonValueSchema.optional(),
       })
-      .passthrough(),
+      .loose(),
   })
-  .passthrough()
+  .loose()
   .refine((response) => !('result' in response), {
     message: 'A JSON-RPC response cannot contain both result and error',
   })

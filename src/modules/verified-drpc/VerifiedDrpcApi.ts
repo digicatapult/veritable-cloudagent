@@ -73,6 +73,7 @@ export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
       verifiedDrpcMessageRecord,
       proofTimeoutMs
     )
+    verifiedDrpcMessageRecord.assertState(VerifiedDrpcState.RequestSent)
     const messageId = verifiedDrpcMessage.id
     await this.sendMessage(connection, verifiedDrpcMessage, verifiedDrpcMessageRecord)
     return async (timeout?: number) => {

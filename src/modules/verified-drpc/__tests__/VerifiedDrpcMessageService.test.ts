@@ -160,6 +160,12 @@ describe('VerifiedDrpcService', () => {
       const record = await verifiedDrpcMessageService.receiveRequest(messageContext)
 
       expect(record.state).to.equal(VerifiedDrpcState.RequestReceived)
+      sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
+        type: 'VerifiedDrpcRequestStateChanged',
+        payload: {
+          verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.RequestReceived, request: undefined }),
+        },
+      })
       sinon.assert.neverCalledWithMatch(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
         payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.ClientProofReceived }) },
@@ -188,7 +194,12 @@ describe('VerifiedDrpcService', () => {
       expect(record.state).to.equal(VerifiedDrpcState.ClientProofReceived)
       sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
-        payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.ClientProofReceived }) },
+        payload: {
+          verifiedDrpcMessageRecord: sinon.match({
+            state: VerifiedDrpcState.ClientProofReceived,
+            request: { jsonrpc: '2.0', method: 'hello', id: 1 },
+          }),
+        },
       })
       await verifiedDrpcMessageService.createResponseMessage(
         agentContext,
@@ -214,6 +225,10 @@ describe('VerifiedDrpcService', () => {
 
       expect(record.state).to.equal(VerifiedDrpcState.Abandoned)
       expect(record.isVerified).to.equal(false)
+      sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
+        type: 'VerifiedDrpcRequestStateChanged',
+        payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.Abandoned, request: undefined }) },
+      })
       sinon.assert.neverCalledWithMatch(mockEventEmitter.emit, agentContext, {
         type: 'VerifiedDrpcRequestStateChanged',
         payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.ClientProofReceived }) },
@@ -260,6 +275,7 @@ describe('VerifiedDrpcService', () => {
       })
 
       await verifiedDrpcMessageService.receiveRequest(messageContext)
+      await new Promise((resolve) => setImmediate(resolve))
 
       sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
       sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
@@ -273,6 +289,7 @@ describe('VerifiedDrpcService', () => {
               method: 'hello',
             },
             role: VerifiedDrpcRole.Server,
+            state: VerifiedDrpcState.ClientProofReceived,
           },
         },
       })
