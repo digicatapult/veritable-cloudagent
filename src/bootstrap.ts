@@ -28,10 +28,18 @@ export interface CloudagentHandle {
   shutdown(): Promise<void>
 }
 
-const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number, name: string): Promise<T> => {
+const withTimeout = async <T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  name: string,
+  onTimeout?: () => void
+): Promise<T> => {
   let timeoutHandle: NodeJS.Timeout | undefined
   const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutHandle = setTimeout(() => reject(new Error(`${name} timed out after ${timeoutMs}ms`)), timeoutMs)
+    timeoutHandle = setTimeout(() => {
+      onTimeout?.()
+      reject(new Error(`${name} timed out after ${timeoutMs}ms`))
+    }, timeoutMs)
   })
 
   try {
@@ -94,6 +102,24 @@ const terminateWebSocketClients = (server: WebSocketServer) => {
   }
 }
 
+const forceCloseConnections = (resources: {
+  adminApiServer?: HttpServer
+  didcommHttpServer?: HttpServer
+  adminSocketServer?: WebSocketServer
+  didcommSocketServers?: WebSocketServer[]
+}) => {
+  resources.adminApiServer?.closeAllConnections()
+  resources.didcommHttpServer?.closeAllConnections()
+
+  if (resources.adminSocketServer) {
+    terminateWebSocketClients(resources.adminSocketServer)
+  }
+
+  for (const server of resources.didcommSocketServers ?? []) {
+    terminateWebSocketClients(server)
+  }
+}
+
 const listen = async (server: HttpServer) => {
   await new Promise<void>((resolve, reject) => {
     const onListening = () => {
@@ -132,9 +158,11 @@ const cleanupResources = async (
     }
   }
 
-  await attempt('close admin WebSocket server', () => closeWebSocketServer(resources.adminSocketServer, true))
-  await attempt('close admin API HTTP server', () => closeServer(resources.adminApiServer))
-  await attempt('close DIDComm HTTP server', () => closeServer(resources.didcommHttpServer))
+  await Promise.all([
+    attempt('close admin WebSocket server', () => closeWebSocketServer(resources.adminSocketServer, true)),
+    attempt('close admin API HTTP server', () => closeServer(resources.adminApiServer)),
+    attempt('close DIDComm HTTP server', () => closeServer(resources.didcommHttpServer)),
+  ])
   await attempt('stop DID:web server', async () => {
     await resources.didWebServer?.stop()
   })
@@ -148,9 +176,7 @@ const cleanupResources = async (
 
   if (resources.agent) {
     await attempt('stop DRPC receive handler', async () => container.resolve(DrpcReceiveHandler).stop())
-    await attempt('shut down agent', () =>
-      withTimeout(resources.agent!.shutdown(), SHUTDOWN_TIMEOUT_MS, 'agent.shutdown')
-    )
+    await attempt('shut down agent', () => resources.agent!.shutdown())
   }
 
   for (const server of resources.didcommSocketServers ?? []) {
@@ -347,22 +373,34 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
     const shutdown = async () => {
       if (!shuttingDownPromise) {
         shuttingDownPromise = (async () => {
-          try {
-            const cleanupErrors = await cleanupResources(logger, {
-              agent,
-              adminApiServer,
-              didcommHttpServer,
-              adminSocketServer,
-              didWebServer,
-              didWebDatabase,
-              didcommSocketServers,
-            })
+          const resources = {
+            agent,
+            adminApiServer,
+            didcommHttpServer,
+            adminSocketServer,
+            didWebServer,
+            didWebDatabase,
+            didcommSocketServers,
+          }
+          const cleanupPromise = cleanupResources(logger, resources).then((cleanupErrors) => {
             if (cleanupErrors.length > 0) {
               throw new AggregateError(cleanupErrors, 'Cloudagent shutdown did not complete cleanly')
             }
-          } finally {
-            cloudagentInstanceActive = false
-          }
+          })
+          // Keep the single-instance guard until cleanup finishes, even if the caller's timeout expires first.
+          void cleanupPromise.then(
+            () => {
+              cloudagentInstanceActive = false
+            },
+            () => {
+              cloudagentInstanceActive = false
+            }
+          )
+
+          return withTimeout(cleanupPromise, SHUTDOWN_TIMEOUT_MS, 'Cloudagent shutdown', () => {
+            logger.error(`Cloudagent shutdown exceeded ${SHUTDOWN_TIMEOUT_MS}ms; terminating active connections`)
+            forceCloseConnections(resources)
+          })
         })()
       }
 

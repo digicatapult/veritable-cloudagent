@@ -294,7 +294,7 @@ The currently supported events are:
 
 Webhook urls can be specified using the `WEBHOOK_URL` env.
 
-The cloudagent is a standalone service: `startCloudagent(env, logger)` starts one agent per process, including the DIDComm listener, TSOA admin API, and DID:web server according to configuration, and returns a handle with a `shutdown()` method. Calling `startCloudagent` again while that instance is starting or running fails; start another instance only after shutting down the current handle. Clients interact with the agent through the exposed TSOA admin API; they do not provide or mount an Express app.
+The cloudagent is a standalone service: `startCloudagent(env, logger)` starts one agent per process, including the DIDComm listener, TSOA admin API, and DID:web server according to configuration, and returns a handle with a `shutdown()` method. Shutdown allows up to 15 seconds for cleanup, then force-closes active HTTP and WebSocket connections and rejects if cleanup has not completed. Calling `startCloudagent` again while that instance is starting or running fails; start another instance only after shutting down the current handle. Clients interact with the agent through the exposed TSOA admin API; they do not provide or mount an Express app.
 
 Internally, `setupServer(agent, logger, config)` creates and configures the admin API Express app with TSOA routes and middleware. It does not start an HTTP listener; `startCloudagent` starts the listener and manages the WebSocket server. The `webhookUrl` and `socketServer` config options enable event forwarding.
 

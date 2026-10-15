@@ -219,6 +219,70 @@ describe('startCloudagent lifecycle', () => {
     handles.pop()
   })
 
+  test('should force-close active HTTP connections when the global shutdown timeout expires', async function () {
+    this.timeout(18000)
+
+    const { env } = await createTestEnv()
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    let resolveDidWebStop!: () => void
+    const didWebStop = new Promise<void>((resolve) => {
+      resolveDidWebStop = resolve
+    })
+    const didWebStopStub = sinonStub(handle.didWebServer, 'stop').returns(didWebStop)
+    const closeAdminConnections = handle.adminApiServer.closeAllConnections.bind(handle.adminApiServer)
+    const adminCloseAllConnections = sinonStub(handle.adminApiServer, 'closeAllConnections').callsFake(
+      closeAdminConnections
+    )
+    const closeDidcommConnections = handle.didcommHttpServer!.closeAllConnections.bind(handle.didcommHttpServer)
+    const didcommCloseAllConnections = sinonStub(handle.didcommHttpServer!, 'closeAllConnections').callsFake(
+      closeDidcommConnections
+    )
+
+    const originalAgentShutdown = handle.agent.shutdown.bind(handle.agent)
+    let agentShutdownPromise: Promise<void> | undefined
+    let resolveAgentShutdownStarted!: () => void
+    const agentShutdownStarted = new Promise<void>((resolve) => {
+      resolveAgentShutdownStarted = resolve
+    })
+    const agentShutdownStub = sinonStub(handle.agent, 'shutdown').callsFake(() => {
+      resolveAgentShutdownStarted()
+      agentShutdownPromise = originalAgentShutdown()
+      return agentShutdownPromise
+    })
+
+    try {
+      let shutdownError: unknown
+      try {
+        await handle.shutdown()
+      } catch (error) {
+        shutdownError = error
+      }
+
+      expect(shutdownError).to.be.instanceOf(Error)
+      if (!(shutdownError instanceof Error)) throw new Error('Expected global shutdown timeout')
+      expect(shutdownError.message).to.equal('Cloudagent shutdown timed out after 15000ms')
+
+      expect(adminCloseAllConnections.calledOnce).to.equal(true)
+      expect(didcommCloseAllConnections.calledOnce).to.equal(true)
+
+      resolveDidWebStop()
+      await agentShutdownStarted
+      await agentShutdownPromise
+      expect(handle.adminApiServer.listening).to.equal(false)
+    } finally {
+      agentShutdownStub.restore()
+      didWebStopStub.restore()
+      resolveDidWebStop()
+      adminCloseAllConnections.restore()
+      didcommCloseAllConnections.restore()
+    }
+
+    await deleteAgentStore(handle.agent)
+    handles.pop()
+  })
+
   test('should shutdown with active didcomm websocket client', async function () {
     this.timeout(15000)
 
