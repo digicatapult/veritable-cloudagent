@@ -30,6 +30,8 @@ import {
 import {
   isValidVerifiedDrpcRequest,
   isValidVerifiedDrpcResponse,
+  verifiedDrpcRequestSchema,
+  verifiedDrpcResponseSchema,
   VerifiedDrpcRole,
   VerifiedDrpcState,
 } from '../models/index.js'
@@ -201,6 +203,7 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   public async receiveResponse(messageContext: DidCommInboundMessageContext<VerifiedDrpcResponseMessage>) {
+    verifiedDrpcResponseSchema.parse(messageContext.message.response)
     const connection = messageContext.assertReadyConnection()
     const verifiedDrpcMessageRecord = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -222,6 +225,7 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   public async receiveRequest(messageContext: DidCommInboundMessageContext<VerifiedDrpcRequestMessage>) {
+    verifiedDrpcRequestSchema.parse(messageContext.message.request)
     const connection = messageContext.assertReadyConnection()
     const record = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -254,24 +258,12 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   private emitStateChangedEvent(agentContext: AgentContext, verifiedDrpcMessageRecord: VerifiedDrpcRecord) {
-    if (
-      verifiedDrpcMessageRecord.request &&
-      (isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request) ||
-        (Array.isArray(verifiedDrpcMessageRecord.request) &&
-          verifiedDrpcMessageRecord.request.length > 0 &&
-          isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request[0])))
-    ) {
+    if (verifiedDrpcMessageRecord.request && isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request)) {
       this.eventEmitter.emit<VerifiedDrpcRequestStateChangedEvent>(agentContext, {
         type: VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged,
         payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },
       })
-    } else if (
-      verifiedDrpcMessageRecord.response &&
-      (isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response) ||
-        (Array.isArray(verifiedDrpcMessageRecord.response) &&
-          verifiedDrpcMessageRecord.response.length > 0 &&
-          isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response[0])))
-    ) {
+    } else if (verifiedDrpcMessageRecord.response && isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response)) {
       this.eventEmitter.emit<VerifiedDrpcResponseStateChangedEvent>(agentContext, {
         type: VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged,
         payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },

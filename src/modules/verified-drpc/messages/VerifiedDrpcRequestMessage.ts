@@ -1,13 +1,12 @@
 import { DidCommMessage, IsValidMessageType, parseMessageType } from '@credo-ts/didcomm'
 
 import type { UUID } from '../../../controllers/types/index.js'
-import { IsValidVerifiedDrpcRequest } from '../models/index.js'
+import { verifiedDrpcRequestSchema } from '../models/index.js'
 
 export interface VerifiedDrpcRequestObject {
   jsonrpc: string
   method: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  params?: any[] | Record<string, unknown>
+  params?: unknown[] | Record<string, unknown>
   id: UUID | number | null
 }
 
@@ -18,7 +17,7 @@ export class VerifiedDrpcRequestMessage extends DidCommMessage {
     super()
     if (options) {
       this.id = this.generateId()
-      this.request = options.request
+      this.request = verifiedDrpcRequestSchema.parse(options.request)
     }
   }
 
@@ -27,6 +26,5 @@ export class VerifiedDrpcRequestMessage extends DidCommMessage {
   @IsValidMessageType(VerifiedDrpcRequestMessage.type)
   public readonly type = VerifiedDrpcRequestMessage.type.messageTypeUri
 
-  @IsValidVerifiedDrpcRequest()
   public request!: VerifiedDrpcRequest
 }

@@ -1,67 +1,43 @@
-import { type ValidationOptions, ValidateBy, ValidationError, buildMessage } from 'class-validator'
+import { z } from 'zod'
 
-export function IsValidVerifiedDrpcResponse(validationOptions?: ValidationOptions): PropertyDecorator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function (target: any, propertyKey: string | symbol) {
-    ValidateBy(
-      {
-        name: 'isValidVerifiedDrpcResponse',
-        validator: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          validate: (value: any): boolean => {
-            // Check if value is a valid VerifiedDrpcResponseObject, an array of VerifiedDrpcResponseObject (possibly mixed with empty objects), or an empty object
-            let isValid = false
-            if (Array.isArray(value)) {
-              if (value.length > 0) {
-                isValid = value.every(isValidVerifiedDrpcResponse)
-              }
-            } else {
-              isValid = isValidVerifiedDrpcResponse(value)
-            }
-            if (!isValid) {
-              throw new ValidationError()
-            }
-            return isValid
-          },
-          defaultMessage: buildMessage(
-            (eachPrefix) => eachPrefix + '$property is not a valid VerifiedDrpcResponse',
-            validationOptions
-          ),
-        },
-      },
-      validationOptions
-    )(target, propertyKey)
-  }
-}
+import type { VerifiedDrpcResponse, VerifiedDrpcResponseObject } from '../messages/VerifiedDrpcResponseMessage.js'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isValidVerifiedDrpcResponse(value: any): boolean {
-  // Check if value is an object
+export const verifiedDrpcResponseSchema = z.custom<VerifiedDrpcResponse>((value) =>
+  Array.isArray(value)
+    ? value.length > 0 && value.every(isValidVerifiedDrpcResponse)
+    : isValidVerifiedDrpcResponse(value)
+)
+
+export function isValidVerifiedDrpcResponse(
+  value: unknown
+): value is VerifiedDrpcResponseObject | Record<string, never> {
   if (typeof value !== 'object' || value === null) {
     return false
   }
 
-  // Check if it's an empty object
   if (Object.keys(value).length === 0) {
     return true
   }
 
-  // Check if it's a valid VerifiedDrpcResponseObject
-  if (value.jsonrpc === '2.0' && 'id' in value) {
-    // Check if 'result' and 'error' are valid
-    if ('result' in value && typeof value.result === 'undefined') {
-      return false
-    }
-    if ('error' in value && !isValidVerifiedDrpcResponseError(value.error)) {
-      return false
-    }
-    return true
+  if (Array.isArray(value)) {
+    return false
   }
 
-  return false
+  if (!('jsonrpc' in value) || value.jsonrpc !== '2.0' || !('id' in value)) {
+    return false
+  }
+
+  if ('result' in value && typeof value.result === 'undefined') {
+    return false
+  }
+
+  if ('error' in value && !isValidVerifiedDrpcResponseError(value.error)) {
+    return false
+  }
+
+  return true
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isValidVerifiedDrpcResponseError(error: any): boolean {
+function isValidVerifiedDrpcResponseError(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'code' in error && 'message' in error
 }
