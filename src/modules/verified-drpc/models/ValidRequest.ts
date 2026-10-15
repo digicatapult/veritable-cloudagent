@@ -2,14 +2,23 @@ import { z } from 'zod'
 
 import type { VerifiedDrpcRequest, VerifiedDrpcRequestObject } from '../messages/VerifiedDrpcRequestMessage.js'
 
-export const verifiedDrpcRequestSchema = z.custom<VerifiedDrpcRequest>((value) =>
-  Array.isArray(value) ? value.every(isValidVerifiedDrpcRequest) : isValidVerifiedDrpcRequest(value)
-)
+const jsonValueSchema: z.ZodType<unknown> = z.json()
+const requestObjectSchema = z
+  .object({
+    jsonrpc: z.literal('2.0'),
+    method: z.string(),
+    params: z.union([z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]).optional(),
+    id: z.union([z.string(), z.number(), z.null()]),
+  })
+  .passthrough()
+  .refine((request) => !('params' in request) || request.params !== undefined, {
+    message: 'Request params must be omitted or contain a JSON value',
+  })
 
-export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequestObject {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false
-  }
+export const verifiedDrpcRequestSchema = z.union([requestObjectSchema, z.array(requestObjectSchema).min(1)])
 
-  return 'jsonrpc' in value && value.jsonrpc === '2.0' && 'method' in value && 'id' in value
+export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequest {
+  return verifiedDrpcRequestSchema.safeParse(value).success
 }
+
+export type { VerifiedDrpcRequestObject }

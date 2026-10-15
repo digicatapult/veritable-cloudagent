@@ -1,43 +1,41 @@
 import { z } from 'zod'
 
-import type { VerifiedDrpcResponse, VerifiedDrpcResponseObject } from '../messages/VerifiedDrpcResponseMessage.js'
+import type { VerifiedDrpcResponse } from '../messages/VerifiedDrpcResponseMessage.js'
 
-export const verifiedDrpcResponseSchema = z.custom<VerifiedDrpcResponse>((value) =>
-  Array.isArray(value)
-    ? value.length > 0 && value.every(isValidVerifiedDrpcResponse)
-    : isValidVerifiedDrpcResponse(value)
-)
+const jsonValueSchema: z.ZodType<unknown> = z.json()
+const responseBaseSchema = z.object({
+  jsonrpc: z.literal('2.0'),
+  id: z.union([z.string(), z.number(), z.null()]),
+})
 
-export function isValidVerifiedDrpcResponse(
-  value: unknown
-): value is VerifiedDrpcResponseObject | Record<string, never> {
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
+const resultResponseSchema = responseBaseSchema
+  .extend({ result: jsonValueSchema })
+  .passthrough()
+  .refine((response) => !('error' in response), {
+    message: 'A JSON-RPC response cannot contain both result and error',
+  })
 
-  if (Object.keys(value).length === 0) {
-    return true
-  }
+const errorResponseSchema = responseBaseSchema
+  .extend({
+    error: z
+      .object({
+        code: z.number().int(),
+        message: z.string(),
+        data: jsonValueSchema.optional(),
+      })
+      .passthrough(),
+  })
+  .passthrough()
+  .refine((response) => !('result' in response), {
+    message: 'A JSON-RPC response cannot contain both result and error',
+  })
 
-  if (Array.isArray(value)) {
-    return false
-  }
+const responseObjectSchema = z.union([resultResponseSchema, errorResponseSchema])
 
-  if (!('jsonrpc' in value) || value.jsonrpc !== '2.0' || !('id' in value)) {
-    return false
-  }
+export const verifiedDrpcResponseSchema = z.union([responseObjectSchema, z.array(responseObjectSchema).min(1)])
 
-  if ('result' in value && typeof value.result === 'undefined') {
-    return false
-  }
-
-  if ('error' in value && !isValidVerifiedDrpcResponseError(value.error)) {
-    return false
-  }
-
-  return true
+export function isValidVerifiedDrpcResponse(value: unknown): value is VerifiedDrpcResponse {
+  return verifiedDrpcResponseSchema.safeParse(value).success
 }
 
-function isValidVerifiedDrpcResponseError(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && 'message' in error
-}
+export type { VerifiedDrpcResponse }
