@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { VerifiedDrpcRequest, VerifiedDrpcRequestObject } from '../messages/VerifiedDrpcRequestMessage.js'
+import type { VerifiedDrpcRequestObject } from '../messages/VerifiedDrpcRequestMessage.js'
 
 const jsonValueSchema: z.ZodType<unknown> = z.json()
 const requestObjectSchema = z
@@ -17,8 +17,8 @@ const requestObjectSchema = z
 
 export const verifiedDrpcRequestSchema = z.union([requestObjectSchema, z.array(requestObjectSchema).min(1)])
 
-export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequest {
-  return verifiedDrpcRequestSchema.safeParse(value).success
+export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequestObject {
+  return requestObjectSchema.safeParse(value).success
 }
 
 export type { VerifiedDrpcRequestObject }
