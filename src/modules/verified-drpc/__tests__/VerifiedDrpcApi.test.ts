@@ -16,7 +16,7 @@ import { withMockVerifiedDrpcRecord } from './fixtures/mockVerifiedDrpcRecord.js
 
 import { VerifiedDrpcApi } from '../VerifiedDrpcApi.js'
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
-import { VerifiedDrpcRequestMessage } from '../messages/index.js'
+import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from '../messages/index.js'
 import { VerifiedDrpcRole, VerifiedDrpcState } from '../models/index.js'
 import { VerifiedDrpcService } from '../services/index.js'
 
@@ -71,25 +71,59 @@ describe('VerifiedDrpcApi.sendRequest', () => {
 })
 
 describe('VerifiedDrpcApi.addRequestListener', () => {
-  it('logs and does not reject when the handler returns an invalid response', async () => {
-    const { agentContext, service, sender, connection, api } = setup()
+  const internalError = { jsonrpc: '2.0', error: { code: -32603, message: 'Internal error' }, id: 1 } as const
+
+  const setupListener = (handler: Parameters<VerifiedDrpcApi<never>['addRequestListener']>[0]) => {
+    const context = setup()
     const record = withMockVerifiedDrpcRecord({
-      connectionId: connection.id,
+      connectionId: context.connection.id,
       role: VerifiedDrpcRole.Server,
       state: VerifiedDrpcState.ClientProofReceived,
     })
     record.request = { jsonrpc: '2.0', method: 'hello', id: 1 }
-    service.findByThreadAndConnectionId.resolves(record)
-    service.createResponseMessage.callThrough()
-    api.addRequestListener(() => ({ jsonrpc: '1.0', id: 1 }) as never)
-    const listener = service.createRequestListener.firstCall.args[0]
+    context.service.findByThreadAndConnectionId.resolves(record)
+    context.service.createResponseMessage.callsFake(async (_agentContext, response, verifiedDrpcRecord) => ({
+      responseMessage: new VerifiedDrpcResponseMessage({ response, threadId: verifiedDrpcRecord.threadId }),
+      record: verifiedDrpcRecord,
+    }))
+    context.api.addRequestListener(handler)
+    const listener = context.service.createRequestListener.firstCall.args[0]
+    const deliver = () => listener({ verifiedDrpcMessageRecord: record, removeListener: () => {} })
+    return { ...context, record, deliver }
+  }
 
-    await listener({ verifiedDrpcMessageRecord: record, removeListener: () => {} })
+  it('sends a JSON-RPC internal error when the handler throws', async () => {
+    const { service, sender, deliver } = setupListener(() => {
+      throw new Error('handler failed')
+    })
 
-    sinon.assert.notCalled(sender.sendMessage)
-    sinon.assert.calledWithMatch(
-      agentContext.config.logger.error as sinon.SinonStub,
-      sinon.match(`Error responding to verified DRPC request ${record.threadId}`)
+    await deliver()
+
+    sinon.assert.calledWithMatch(service.createResponseMessage, sinon.match.any, internalError)
+    sinon.assert.calledOnce(sender.sendMessage)
+    sinon.assert.notCalled(service.abandonUnansweredRequest)
+  })
+
+  it('sends a JSON-RPC internal error when the handler returns an invalid response', async () => {
+    const { service, sender, deliver } = setupListener(() => ({ jsonrpc: '1.0', id: 1 }) as never)
+
+    await deliver()
+
+    sinon.assert.calledWithMatch(service.createResponseMessage, sinon.match.any, internalError)
+    sinon.assert.calledOnce(sender.sendMessage)
+  })
+
+  it('abandons the request when no response can be sent', async () => {
+    const { service, sender, record, deliver } = setupListener(() => ({ jsonrpc: '2.0', result: 'ok', id: 1 }))
+    sender.sendMessage.rejects(new Error('transport failed'))
+
+    await deliver()
+
+    sinon.assert.calledOnceWithExactly(
+      service.abandonUnansweredRequest,
+      sinon.match.any,
+      record.connectionId,
+      record.threadId
     )
   })
 })

@@ -21,7 +21,7 @@ import type { UUID } from '../../controllers/types/index.js'
 import { NotFoundError } from '../../error.js'
 import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
-import { VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
+import { verifiedDrpcResponseSchema, VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
 import { VerifiedDrpcService } from './services/index.js'
 
 @injectable()
@@ -135,17 +135,25 @@ export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
         verifiedDrpcMessageRecord.role === VerifiedDrpcRole.Server &&
         verifiedDrpcMessageRecord.state === VerifiedDrpcState.ClientProofReceived
       ) {
+        const { connectionId, threadId } = verifiedDrpcMessageRecord
+        const logger = this.agentContext.config.logger
+        let response: VerifiedDrpcResponse
         try {
-          const response = await handler(verifiedDrpcMessageRecord, this.agentContext)
-          await this.sendResponse({
-            connectionId: verifiedDrpcMessageRecord.connectionId,
-            threadId: verifiedDrpcMessageRecord.threadId,
-            response,
-          })
+          response = verifiedDrpcResponseSchema.parse(await handler(verifiedDrpcMessageRecord, this.agentContext))
         } catch (error) {
-          this.agentContext.config.logger.error(
-            `Error responding to verified DRPC request ${verifiedDrpcMessageRecord.threadId}: ${error}`
-          )
+          logger.error(`Verified DRPC request handler failed for ${threadId}: ${error}`)
+          response = { jsonrpc: '2.0', error: { code: -32603, message: 'Internal error' }, id: request.id }
+        }
+
+        try {
+          await this.sendResponse({ connectionId, threadId, response })
+        } catch (error) {
+          logger.error(`Error sending verified DRPC response for ${threadId}: ${error}`)
+          try {
+            await this.verifiedDrpcMessageService.abandonUnansweredRequest(this.agentContext, connectionId, threadId)
+          } catch (abandonError) {
+            logger.error(`Error abandoning verified DRPC request ${threadId}: ${abandonError}`)
+          }
         }
       }
     }

@@ -162,6 +162,16 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     return { responseMessage: verifiedDrpcMessage, record: verifiedDrpcRecord }
   }
 
+  public async abandonUnansweredRequest(agentContext: AgentContext, connectionId: UUID, threadId: UUID) {
+    const verifiedDrpcRecord = await this.findByThreadAndConnectionId(agentContext, connectionId, threadId)
+    if (
+      verifiedDrpcRecord?.role === VerifiedDrpcRole.Server &&
+      verifiedDrpcRecord.state === VerifiedDrpcState.ClientProofReceived
+    ) {
+      await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.Abandoned)
+    }
+  }
+
   public createRequestListener(
     callback: (params: {
       verifiedDrpcMessageRecord: VerifiedDrpcRecord

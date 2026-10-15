@@ -332,6 +332,36 @@ describe('VerifiedDrpcService', () => {
     })
   })
 
+  describe('abandonUnansweredRequest', () => {
+    it('abandons a verified server request that has not been answered', async () => {
+      const record = withMockVerifiedDrpcRecord({
+        connectionId: mockConnectionRecord.id,
+        role: VerifiedDrpcRole.Server,
+        state: VerifiedDrpcState.ClientProofReceived,
+      })
+      mockVerifiedDrpcRepository.findSingleByQuery.resolves(record)
+
+      await verifiedDrpcMessageService.abandonUnansweredRequest(agentContext, record.connectionId, record.threadId)
+
+      expect(record.state).to.equal(VerifiedDrpcState.Abandoned)
+      sinon.assert.calledOnceWithExactly(mockVerifiedDrpcRepository.update, agentContext, record)
+    })
+
+    it('does not abandon a request that has already been answered', async () => {
+      const record = withMockVerifiedDrpcRecord({
+        connectionId: mockConnectionRecord.id,
+        role: VerifiedDrpcRole.Server,
+        state: VerifiedDrpcState.Completed,
+      })
+      mockVerifiedDrpcRepository.findSingleByQuery.resolves(record)
+
+      await verifiedDrpcMessageService.abandonUnansweredRequest(agentContext, record.connectionId, record.threadId)
+
+      expect(record.state).to.equal(VerifiedDrpcState.Completed)
+      sinon.assert.notCalled(mockVerifiedDrpcRepository.update)
+    })
+  })
+
   describe('receive response', () => {
     it('rejects an invalid inbound response with a problem report and does not update the record', async () => {
       const responseMessage = JsonTransformer.fromJSON(
