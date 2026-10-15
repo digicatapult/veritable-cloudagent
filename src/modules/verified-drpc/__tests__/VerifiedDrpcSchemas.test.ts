@@ -38,9 +38,9 @@ describe('verifiedDrpcRequestSchema', () => {
 })
 
 describe('isValidVerifiedDrpcRequest', () => {
-  it('returns true for valid requests and batches and false for invalid values', () => {
+  it('returns true for valid request objects and false for batches and invalid values', () => {
     expect(isValidVerifiedDrpcRequest({ jsonrpc: '2.0', method: 'hello', id: 1 })).to.equal(true)
-    expect(isValidVerifiedDrpcRequest([{ jsonrpc: '2.0', method: 'hello', id: 1 }])).to.equal(true)
+    expect(isValidVerifiedDrpcRequest([{ jsonrpc: '2.0', method: 'hello', id: 1 }])).to.equal(false)
     expect(isValidVerifiedDrpcRequest({ jsonrpc: '1.0', method: 'hello', id: 1 })).to.equal(false)
     expect(isValidVerifiedDrpcRequest({ jsonrpc: '2.0', method: 'hello' })).to.equal(false)
     expect(isValidVerifiedDrpcRequest([])).to.equal(false)
