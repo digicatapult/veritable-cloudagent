@@ -4,16 +4,16 @@ import type { SinonStubbedInstance } from 'sinon'
 import * as sinon from 'sinon'
 
 import type { AnonCredsDidCommProofFormatService } from '@credo-ts/anoncreds'
-import { type AgentContext, EventEmitter } from '@credo-ts/core'
+import { EventEmitter, JsonTransformer, type AgentContext } from '@credo-ts/core'
 import {
   DidCommConnectionRecord,
-  type DidCommConnectionRecordProps,
   DidCommDidExchangeRole,
   DidCommDidExchangeState,
   DidCommInboundMessageContext,
   DidCommProofEventTypes,
   DidCommProofsApi,
   DidCommProofState,
+  type DidCommConnectionRecordProps,
   type DidCommProofV2Protocol,
 } from '@credo-ts/didcomm'
 
@@ -21,7 +21,11 @@ import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'
 import { withMockVerifiedDrpcRecord } from './fixtures/mockVerifiedDrpcRecord.js'
 
-import { VerifiedDrpcRequestMessage, type VerifiedDrpcRequestObject } from '../messages/index.js'
+import {
+  VerifiedDrpcRequestMessage,
+  VerifiedDrpcResponseMessage,
+  type VerifiedDrpcRequestObject,
+} from '../messages/index.js'
 import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole.js'
 import { VerifiedDrpcState } from '../models/VerifiedDrpcState.js'
 import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord.js'
@@ -81,6 +85,33 @@ describe('VerifiedDrpcService', () => {
       mockVerifiedDrpcRepository,
       mockEventEmitter
     )
+  })
+
+  describe('message serialization', () => {
+    it('serializes a request message payload', () => {
+      const message = new VerifiedDrpcRequestMessage({
+        request: { jsonrpc: '2.0', method: 'hello', id: 1 },
+      })
+
+      expect(JsonTransformer.toJSON(message)).to.have.deep.property('request', {
+        jsonrpc: '2.0',
+        method: 'hello',
+        id: 1,
+      })
+    })
+
+    it('serializes a response message payload', () => {
+      const message = new VerifiedDrpcResponseMessage({
+        response: { jsonrpc: '2.0', result: 'hello', id: 1 },
+        threadId: 'thread-id',
+      })
+
+      expect(JsonTransformer.toJSON(message)).to.have.deep.property('response', {
+        jsonrpc: '2.0',
+        result: 'hello',
+        id: 1,
+      })
+    })
   })
 
   describe('createMessage', () => {
