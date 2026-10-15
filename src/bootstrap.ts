@@ -308,16 +308,12 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       clearInterval(interval)
     })
 
-    const adminApiApp = await setupServer(
-      agent,
-      logger,
-      {
-        webhookUrl: env.get('WEBHOOK_URL'),
-        personaTitle: env.get('PERSONA_TITLE'),
-        personaColor: env.get('PERSONA_COLOR'),
-        socketServer: adminSocketServer,
-      }
-    )
+    const adminApiApp = await setupServer(agent, logger, {
+      webhookUrl: env.get('WEBHOOK_URL'),
+      personaTitle: env.get('PERSONA_TITLE'),
+      personaColor: env.get('PERSONA_COLOR'),
+      socketServer: adminSocketServer,
+    })
 
     const adminPort = env.get('ADMIN_PORT')
     adminApiServer = adminApiApp.listen(adminPort)
