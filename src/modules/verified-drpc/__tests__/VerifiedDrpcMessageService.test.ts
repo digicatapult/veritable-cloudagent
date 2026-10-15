@@ -21,11 +21,7 @@ import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockProofExchangeRecord } from './fixtures/mockProofExchangeRecord.js'
 import { withMockVerifiedDrpcRecord } from './fixtures/mockVerifiedDrpcRecord.js'
 
-import {
-  VerifiedDrpcRequestMessage,
-  VerifiedDrpcResponseMessage,
-  type VerifiedDrpcRequestObject,
-} from '../messages/index.js'
+import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage, type VerifiedDrpcRequest } from '../messages/index.js'
 import { VerifiedDrpcRole } from '../models/VerifiedDrpcRole.js'
 import { VerifiedDrpcState } from '../models/VerifiedDrpcState.js'
 import { VerifiedDrpcRecord } from '../repository/VerifiedDrpcRecord.js'
@@ -116,7 +112,7 @@ describe('VerifiedDrpcService', () => {
 
   describe('createMessage', () => {
     it(`creates message and record, and emits message and basic message record`, async () => {
-      const messageRequest: VerifiedDrpcRequestObject = {
+      const messageRequest: VerifiedDrpcRequest = {
         jsonrpc: '2.0',
         method: 'hello',
         id: 1,
@@ -128,7 +124,7 @@ describe('VerifiedDrpcService', () => {
       )
 
       expect(requestMessage).to.be.an.instanceof(VerifiedDrpcRequestMessage)
-      expect((requestMessage.request as VerifiedDrpcRequestObject).method).to.equal('hello')
+      expect(requestMessage.request.method).to.equal('hello')
 
       sinon.assert.calledWith(mockVerifiedDrpcRepository.save, agentContext, sinon.match.instanceOf(VerifiedDrpcRecord))
       sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
@@ -149,6 +145,91 @@ describe('VerifiedDrpcService', () => {
   })
 
   describe('receive request', () => {
+    it('does not emit a verified request or allow a response before the client proof completes', async () => {
+      const mockProofsApi: SinonStubbedInstance<
+        DidCommProofsApi<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
+      > = sinon.createStubInstance(DidCommProofsApi)
+      const proofRecord = withMockProofExchangeRecord({ state: DidCommProofState.Done })
+      mockProofsApi.requestProof.resolves(proofRecord)
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
+      const messageContext = new DidCommInboundMessageContext(
+        new VerifiedDrpcRequestMessage({ request: { jsonrpc: '2.0', method: 'hello', id: 1 } }),
+        { agentContext, connection: mockConnectionRecord }
+      )
+
+      const record = await verifiedDrpcMessageService.receiveRequest(messageContext)
+
+      expect(record.state).to.equal(VerifiedDrpcState.RequestReceived)
+      sinon.assert.neverCalledWithMatch(mockEventEmitter.emit, agentContext, {
+        type: 'VerifiedDrpcRequestStateChanged',
+        payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.ClientProofReceived }) },
+      })
+      try {
+        await verifiedDrpcMessageService.createResponseMessage(
+          agentContext,
+          { jsonrpc: '2.0', result: 'hello', id: 1 },
+          record
+        )
+        expect.fail('Response creation must wait for a verified client proof')
+      } catch (error) {
+        expect(error).to.have.property('message').that.includes('invalid state')
+      }
+
+      await Promise.resolve()
+      const onProofStateChanged = mockEventEmitter.on.withArgs(DidCommProofEventTypes.ProofStateChanged).firstCall
+        .args[1]
+      await onProofStateChanged({
+        type: DidCommProofEventTypes.ProofStateChanged,
+        payload: { proofRecord, previousState: null },
+        metadata: { contextCorrelationId: agentContext.contextCorrelationId },
+      })
+      await new Promise((resolve) => setImmediate(resolve))
+
+      expect(record.state).to.equal(VerifiedDrpcState.ClientProofReceived)
+      sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
+        type: 'VerifiedDrpcRequestStateChanged',
+        payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.ClientProofReceived }) },
+      })
+      await verifiedDrpcMessageService.createResponseMessage(
+        agentContext,
+        { jsonrpc: '2.0', result: 'hello', id: 1 },
+        record
+      )
+      expect(record.state).to.equal(VerifiedDrpcState.Completed)
+    })
+
+    it('does not permit a response when client proof verification fails', async () => {
+      const mockProofsApi: SinonStubbedInstance<
+        DidCommProofsApi<[DidCommProofV2Protocol<[AnonCredsDidCommProofFormatService]>]>
+      > = sinon.createStubInstance(DidCommProofsApi)
+      mockProofsApi.requestProof.rejects(new Error('proof rejected'))
+      agentContext.dependencyManager.resolve = sinon.stub().withArgs(DidCommProofsApi).returns(mockProofsApi)
+      const messageContext = new DidCommInboundMessageContext(
+        new VerifiedDrpcRequestMessage({ request: { jsonrpc: '2.0', method: 'hello', id: 1 } }),
+        { agentContext, connection: mockConnectionRecord }
+      )
+
+      const record = await verifiedDrpcMessageService.receiveRequest(messageContext)
+      await new Promise((resolve) => setImmediate(resolve))
+
+      expect(record.state).to.equal(VerifiedDrpcState.Abandoned)
+      expect(record.isVerified).to.equal(false)
+      sinon.assert.neverCalledWithMatch(mockEventEmitter.emit, agentContext, {
+        type: 'VerifiedDrpcRequestStateChanged',
+        payload: { verifiedDrpcMessageRecord: sinon.match({ state: VerifiedDrpcState.ClientProofReceived }) },
+      })
+      try {
+        await verifiedDrpcMessageService.createResponseMessage(
+          agentContext,
+          { jsonrpc: '2.0', result: 'hello', id: 1 },
+          record
+        )
+        expect.fail('Response creation must reject failed client proofs')
+      } catch (error) {
+        expect(error).to.have.property('message').that.includes('invalid state')
+      }
+    })
+
     it(`stores a record and emits message and basic message record`, async () => {
       const testProofId = 'test-proof-id'
       const testProofRecord = withMockProofExchangeRecord({
@@ -193,6 +274,38 @@ describe('VerifiedDrpcService', () => {
             },
             role: VerifiedDrpcRole.Server,
           },
+        },
+      })
+    })
+  })
+
+  describe('receive response', () => {
+    it('emits a state change event for a valid response object', async () => {
+      const response = { jsonrpc: '2.0', result: 'hello', id: 1 }
+      const record = withMockVerifiedDrpcRecord({
+        connectionId: mockConnectionRecord.id,
+        role: VerifiedDrpcRole.Client,
+        state: VerifiedDrpcState.RequestSent,
+      })
+      mockVerifiedDrpcRepository.findSingleByQuery.resolves(record)
+      const responseMessage = new VerifiedDrpcResponseMessage({
+        response,
+        threadId: record.threadId,
+      })
+      const messageContext = new DidCommInboundMessageContext(responseMessage, {
+        agentContext,
+        connection: mockConnectionRecord,
+      })
+
+      await verifiedDrpcMessageService.receiveResponse(messageContext)
+
+      sinon.assert.calledWithMatch(mockEventEmitter.emit, agentContext, {
+        type: 'VerifiedDrpcResponseStateChanged',
+        payload: {
+          verifiedDrpcMessageRecord: sinon.match({
+            response,
+            role: VerifiedDrpcRole.Client,
+          }),
         },
       })
     })

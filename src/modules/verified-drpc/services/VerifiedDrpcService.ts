@@ -246,13 +246,15 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     })
     await this.verifiedDrpcMessageRepository.save(messageContext.agentContext, verifiedDrpcMessageRecord)
     this.emitStateChangedEvent(messageContext.agentContext, verifiedDrpcMessageRecord)
-    await this.verifyClient(
+    void this.verifyClient(
       messageContext.agentContext,
       connection.id,
       this.config.proofRequestOptions,
       verifiedDrpcMessageRecord,
       this.config.proofTimeoutMs
-    )
+    ).catch((error: unknown) => {
+      messageContext.agentContext.config.logger.error(`Error processing verified DRPC client proof: ${error}`)
+    })
 
     return verifiedDrpcMessageRecord
   }

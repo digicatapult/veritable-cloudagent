@@ -1,9 +1,9 @@
 import { z } from 'zod'
 
-import type { VerifiedDrpcRequestObject } from '../messages/VerifiedDrpcRequestMessage.js'
+import type { VerifiedDrpcRequest } from '../messages/VerifiedDrpcRequestMessage.js'
 
 const jsonValueSchema: z.ZodType<unknown> = z.json()
-const requestObjectSchema = z
+export const verifiedDrpcRequestSchema = z
   .object({
     jsonrpc: z.literal('2.0'),
     method: z.string(),
@@ -15,10 +15,8 @@ const requestObjectSchema = z
     message: 'Request params must be omitted or contain a JSON value',
   })
 
-export const verifiedDrpcRequestSchema = z.union([requestObjectSchema, z.array(requestObjectSchema).min(1)])
-
-export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequestObject {
-  return requestObjectSchema.safeParse(value).success
+export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequest {
+  return verifiedDrpcRequestSchema.safeParse(value).success
 }
 
-export type { VerifiedDrpcRequestObject }
+export type { VerifiedDrpcRequest }

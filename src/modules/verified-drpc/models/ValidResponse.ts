@@ -30,9 +30,7 @@ const errorResponseSchema = responseBaseSchema
     message: 'A JSON-RPC response cannot contain both result and error',
   })
 
-const responseObjectSchema = z.union([resultResponseSchema, errorResponseSchema])
-
-export const verifiedDrpcResponseSchema = z.union([responseObjectSchema, z.array(responseObjectSchema).min(1)])
+export const verifiedDrpcResponseSchema = z.union([resultResponseSchema, errorResponseSchema])
 
 export function isValidVerifiedDrpcResponse(value: unknown): value is VerifiedDrpcResponse {
   return verifiedDrpcResponseSchema.safeParse(value).success

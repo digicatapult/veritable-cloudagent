@@ -252,6 +252,8 @@ export NODE_EXTRA_CA_CERTS="$(mkcert -CAROOT)/rootCA.pem"
 
 Then the testnet orchestration can be deployed.
 
+The verified-DRPC integration test sends a single request object after proving credentials in both directions. It observes proof exchange states through the REST API and checks the existing automatic response.
+
 **If the testnet is already running locally:** (through the command `docker compose -f docker-compose-testnet.yml up --build` for example), the integration tests can be run by first building the tests docker image and then running it against the testnet stack:
 
 ```bash
@@ -332,6 +334,7 @@ In addition to RPC messaging, Verified DRPC adds a proof verification step on bo
 ![Verified DRPC state flow](./docs/images/Verified_DRPC_State_Flow.png)
 
 Verified DRPC request and responses are exposed through the `/verified-drpc/` REST endpoints, `verified-drpc` webhooks and `VerifiedDrpc` internal events.
+Requests and responses currently accept only individual JSON-RPC objects, not batches.
 
 ## Schema Definition
 

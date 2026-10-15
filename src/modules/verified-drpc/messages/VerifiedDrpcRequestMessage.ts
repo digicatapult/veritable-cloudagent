@@ -3,14 +3,12 @@ import { DidCommMessage, IsValidMessageType, parseMessageType } from '@credo-ts/
 import type { UUID } from '../../../controllers/types/index.js'
 import { verifiedDrpcRequestSchema } from '../models/index.js'
 
-export interface VerifiedDrpcRequestObject {
+export interface VerifiedDrpcRequest {
   jsonrpc: string
   method: string
   params?: unknown[] | Record<string, unknown>
   id: UUID | number | null
 }
-
-export type VerifiedDrpcRequest = VerifiedDrpcRequestObject | VerifiedDrpcRequestObject[]
 
 export class VerifiedDrpcRequestMessage extends DidCommMessage {
   public constructor(options: { request: VerifiedDrpcRequest }) {
