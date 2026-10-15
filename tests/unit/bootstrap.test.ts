@@ -164,6 +164,44 @@ describe('startCloudagent lifecycle', () => {
     }
   })
 
+  test('should reject a second active agent and allow starting after shutdown', async () => {
+    const { env: firstEnv } = await createTestEnv()
+    const { env: secondEnv } = await createTestEnv()
+
+    const expectSecondStartToBeRejected = async () => {
+      let startError: unknown
+      try {
+        handles.push(await startCloudagent(secondEnv, logger))
+      } catch (error) {
+        startError = error
+      }
+
+      expect(startError).to.be.instanceOf(Error)
+      if (!(startError instanceof Error)) throw new Error('Expected starting a second agent to fail')
+      expect(startError.message).to.equal('A cloudagent instance is already starting or running in this process')
+    }
+
+    const firstStart = startCloudagent(firstEnv, logger)
+    await expectSecondStartToBeRejected()
+    const firstHandle = await firstStart
+    handles.push(firstHandle)
+
+    await expectSecondStartToBeRejected()
+    expect(firstHandle.adminApiServer.listening).to.equal(true)
+
+    await firstHandle.shutdown()
+    await deleteAgentStore(firstHandle.agent)
+    handles.pop()
+
+    const secondHandle = await startCloudagent(secondEnv, logger)
+    handles.push(secondHandle)
+    expect(secondHandle.adminApiServer.listening).to.equal(true)
+
+    await secondHandle.shutdown()
+    await deleteAgentStore(secondHandle.agent)
+    handles.pop()
+  })
+
   test('should serve DIDComm HTTP and admin TSOA routes on separate listeners', async () => {
     const { env } = await createTestEnv()
     const handle = await startCloudagent(env, logger)

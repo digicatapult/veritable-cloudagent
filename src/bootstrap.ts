@@ -18,6 +18,7 @@ import { DidWebDocGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
 const SHUTDOWN_TIMEOUT_MS = 15000
+let cloudagentInstanceActive = false
 
 export interface CloudagentHandle {
   agent: RestAgent
@@ -160,6 +161,21 @@ const cleanupResources = async (
 }
 
 export async function startCloudagent(env: Env, logger: PinoLogger): Promise<CloudagentHandle> {
+  if (cloudagentInstanceActive) {
+    throw new Error('A cloudagent instance is already starting or running in this process')
+  }
+
+  cloudagentInstanceActive = true
+
+  try {
+    return await startCloudagentInstance(env, logger)
+  } catch (error) {
+    cloudagentInstanceActive = false
+    throw error
+  }
+}
+
+async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<CloudagentHandle> {
   container.register(PinoLogger, {
     useValue: logger,
   })
@@ -331,17 +347,21 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
     const shutdown = async () => {
       if (!shuttingDownPromise) {
         shuttingDownPromise = (async () => {
-          const cleanupErrors = await cleanupResources(logger, {
-            agent,
-            adminApiServer,
-            didcommHttpServer,
-            adminSocketServer,
-            didWebServer,
-            didWebDatabase,
-            didcommSocketServers,
-          })
-          if (cleanupErrors.length > 0) {
-            throw new AggregateError(cleanupErrors, 'Cloudagent shutdown did not complete cleanly')
+          try {
+            const cleanupErrors = await cleanupResources(logger, {
+              agent,
+              adminApiServer,
+              didcommHttpServer,
+              adminSocketServer,
+              didWebServer,
+              didWebDatabase,
+              didcommSocketServers,
+            })
+            if (cleanupErrors.length > 0) {
+              throw new AggregateError(cleanupErrors, 'Cloudagent shutdown did not complete cleanly')
+            }
+          } finally {
+            cloudagentInstanceActive = false
           }
         })()
       }
