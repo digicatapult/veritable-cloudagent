@@ -21,7 +21,7 @@ import { container } from 'tsyringe'
 import WebSocket, { WebSocketServer } from 'ws'
 
 import { RestAgent, setupAgent } from '../../../src/agent.js'
-import { setupAdminApi } from '../../../src/server.js'
+import { setupServer } from '../../../src/server.js'
 import PinoLogger from '../../../src/utils/logger.js'
 
 export type TestAgent = RestAgent
@@ -130,7 +130,7 @@ export async function getTestAgent(port: number) {
 
 export async function getTestServer(agent: RestAgent) {
   const socketServer = new WebSocketServer({ noServer: true })
-  const adminApiApp = await setupAdminApi(agent, new PinoLogger('silent'), {
+  const adminApiApp = await setupServer(agent, new PinoLogger('silent'), {
     socketServer,
   })
   const server = adminApiApp.listen(0, () => {})

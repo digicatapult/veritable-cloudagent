@@ -13,7 +13,7 @@ import Database from './didweb/db.js'
 import { DidWebServer } from './didweb/server.js'
 import DrpcReceiveHandler from './drpc-handler/index.js'
 import type { Env } from './env.js'
-import { createAdminApiApp, setupAdminApi } from './server.js'
+import { setupServer } from './server.js'
 import { DidWebDocGenerator } from './utils/didWebGenerator.js'
 import PinoLogger from './utils/logger.js'
 
@@ -184,7 +184,6 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
 
   try {
     const didcommHttpApp = express()
-    const adminApiApp = createAdminApiApp(logger)
 
     for (const didcommWsEntry of didcommWsEntries) {
       const didcommSocketServer = new WebSocketServer({ port: didcommWsEntry.port })
@@ -309,7 +308,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
       clearInterval(interval)
     })
 
-    await setupAdminApi(
+    const adminApiApp = await setupServer(
       agent,
       logger,
       {
@@ -317,8 +316,7 @@ export async function startCloudagent(env: Env, logger: PinoLogger): Promise<Clo
         personaTitle: env.get('PERSONA_TITLE'),
         personaColor: env.get('PERSONA_COLOR'),
         socketServer: adminSocketServer,
-      },
-      adminApiApp
+      }
     )
 
     const adminPort = env.get('ADMIN_PORT')

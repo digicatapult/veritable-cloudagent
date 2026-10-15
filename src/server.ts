@@ -1,6 +1,6 @@
 import { Agent } from '@credo-ts/core'
 import cors from 'cors'
-import express, { type Express, type Request as ExRequest, type Response as ExResponse } from 'express'
+import express, { type Request as ExRequest, type Response as ExResponse } from 'express'
 import fs from 'fs/promises'
 import path from 'path'
 import 'reflect-metadata'
@@ -25,18 +25,10 @@ import PinoLogger, { createRequestLogger } from './utils/logger.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-export const createAdminApiApp = (logger: PinoLogger): Express => {
+export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
   const adminApiApp = express()
   adminApiApp.use(createRequestLogger(logger.logger))
-  return adminApiApp
-}
 
-export const setupAdminApi = async (
-  agent: RestAgent,
-  logger: PinoLogger,
-  config: ServerConfig,
-  adminApiApp: Express = createAdminApiApp(logger)
-) => {
   const swaggerBuffer = await fs.readFile(path.join(__dirname, '..', 'build', 'routes', 'swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
   const swaggerUiOpts = {

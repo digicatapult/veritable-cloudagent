@@ -294,25 +294,9 @@ The currently supported events are:
 
 Webhook urls can be specified using the `WEBHOOK_URL` env.
 
-When using the REST server as a library, the WebSocket server and webhook URLs can be configured in the `startServer` and `setupAdminApi` methods.
+The cloudagent is a standalone service: `startCloudagent(env, logger)` starts the agent, DIDComm listener, TSOA admin API, and DID:web server according to configuration, and returns a handle with a `shutdown()` method. Clients interact with the agent through the exposed TSOA admin API; they do not provide or mount an Express app.
 
-```ts
-// You can either call startServer() or setupAdminApi() and pass the ServerConfig interface with a webhookUrl and/or a WebSocket server
-
-const run = async (agent: Agent) => {
-  const config = {
-    port: 3000,
-    webhookUrl: ['http://test.com'],
-    socketServer: new Server({ port: 8080 }),
-  }
-  await startServer(agent, config)
-}
-run()
-```
-
-The `startServer` method will create and start a WebSocket server on the default http port if no socketServer is provided, and will use the provided socketServer if available.
-
-However, the `setupAdminApi` method does not automatically create a socketServer, if one is not provided in the config options.
+Internally, `setupServer(agent, logger, config)` creates and configures the admin API Express app with TSOA routes and middleware. It does not start an HTTP listener; `startCloudagent` starts the listener and manages the WebSocket server. The `webhookUrl` and `socketServer` config options enable event forwarding.
 
 In case of an event, we will send the event to the webhookUrls with the topic of the event added to the url (<http://test.com/{topic}>).
 
