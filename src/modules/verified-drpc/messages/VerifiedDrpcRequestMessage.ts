@@ -1,5 +1,4 @@
 import { DidCommMessage, IsValidMessageType, parseMessageType } from '@credo-ts/didcomm'
-import { Expose } from 'class-transformer'
 
 import type { UUID } from '../../../controllers/types/index.js'
 import { IsValidVerifiedDrpcRequest } from '../models/index.js'
@@ -28,7 +27,6 @@ export class VerifiedDrpcRequestMessage extends DidCommMessage {
   @IsValidMessageType(VerifiedDrpcRequestMessage.type)
   public readonly type = VerifiedDrpcRequestMessage.type.messageTypeUri
 
-  @Expose({ name: 'request' })
   @IsValidVerifiedDrpcRequest()
   public request!: VerifiedDrpcRequest
 }
