@@ -26,6 +26,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: ServerConfig) => {
+  const adminApiApp = express()
+  adminApiApp.use(createRequestLogger(logger.logger))
+
   const swaggerBuffer = await fs.readFile(path.join(__dirname, '..', 'build', 'routes', 'swagger.json'))
   const swaggerJson = JSON.parse(swaggerBuffer.toString('utf8'))
   const swaggerUiOpts = {
@@ -43,11 +46,7 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
 
   container.registerInstance(Agent, agent as Agent)
 
-  const app = express()
-
-  app.use(createRequestLogger(logger.logger))
-
-  if (config.cors) app.use(cors())
+  if (config.cors) adminApiApp.use(cors())
 
   if (config.socketServer || (config.webhookUrl && config.webhookUrl.length > 0)) {
     basicMessageEvents(agent, config)
@@ -60,22 +59,22 @@ export const setupServer = async (agent: RestAgent, logger: PinoLogger, config: 
   }
 
   // Use Express native body parser to read sent json payloads
-  app.use(express.urlencoded({ extended: true }))
-  app.use(express.json())
+  adminApiApp.use(express.urlencoded({ extended: true }))
+  adminApiApp.use(express.json())
 
-  app.get('/', (_req: ExRequest, res: ExResponse) => {
+  adminApiApp.get('/', (_req: ExRequest, res: ExResponse) => {
     res.redirect('/swagger')
   })
 
-  app.use('/swagger', serve, setup(swaggerJson, swaggerUiOpts))
+  adminApiApp.use('/swagger', serve, setup(swaggerJson, swaggerUiOpts))
 
-  app.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
+  adminApiApp.get('/api-docs', (_req: ExRequest, res: ExResponse) => {
     res.json(swaggerJson)
   })
 
-  RegisterRoutes(app)
+  RegisterRoutes(adminApiApp)
 
-  app.use(errorHandler(agent.config.logger))
+  adminApiApp.use(errorHandler(agent.config.logger))
 
-  return app
+  return adminApiApp
 }

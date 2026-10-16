@@ -18,6 +18,8 @@ type ReceivedRequest = {
   sendResponse: (response: DrpcResponse) => Promise<void>
 }
 
+const RECV_REQUEST_POLL_TIMEOUT_MS = 1000
+
 @injectable()
 @singleton()
 export default class DrpcReceiveHandler {
@@ -65,7 +67,8 @@ export default class DrpcReceiveHandler {
 
   private async loop() {
     while (!this.stopped) {
-      const maybeRequest = await this.agent.modules.drpc.recvRequest()
+      // Timeout only bounds idle re-checking of stopped, real requests still resolve immediately
+      const maybeRequest = await this.agent.modules.drpc.recvRequest(RECV_REQUEST_POLL_TIMEOUT_MS)
       if (!maybeRequest) {
         continue
       }
