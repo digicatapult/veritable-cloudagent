@@ -2,7 +2,6 @@ import { Logger } from '@credo-ts/core'
 import { ValidateError } from '@tsoa/runtime'
 import { Request as ExRequest, Response as ExResponse, NextFunction } from 'express'
 import { isHttpError } from 'http-errors'
-import { ZodError } from 'zod'
 
 export class HttpResponse extends Error {
   public code: number
@@ -77,10 +76,6 @@ const toErrorBody = (error: HttpResponse): ErrorBody => ({
 const normalizeError = (err: unknown): HttpResponse => {
   if (err instanceof ValidateError) {
     return new UnprocessableEntityError('Validation Failed', err.fields)
-  }
-
-  if (err instanceof ZodError) {
-    return new UnprocessableEntityError('Validation Failed', err.issues)
   }
 
   if (err instanceof HttpResponse) {

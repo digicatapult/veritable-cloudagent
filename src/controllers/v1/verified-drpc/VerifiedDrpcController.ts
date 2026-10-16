@@ -7,6 +7,7 @@ import { Body, Controller, Path, Post, Query, Request, Response, Route, Tags } f
 import express from 'express'
 import { injectable } from 'tsyringe'
 import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules/verified-drpc/index.js'
+import { verifiedDrpcRequestSchema, verifiedDrpcResponseSchema } from '../../../modules/verified-drpc/models/index.js'
 
 import { RestAgent } from '../../../agent.js'
 import { GatewayTimeout, NotFoundError, UnprocessableEntityError } from '../../../error.js'
@@ -47,6 +48,9 @@ export class VerifiedDrpcController extends Controller {
     @Query('async') async_ = false,
     @Query('timeout') timeout = 5000
   ) {
+    const parsedRequest = verifiedDrpcRequestSchema.safeParse(requestOptions.drpcRequest)
+    if (!parsedRequest.success) throw new UnprocessableEntityError('Validation Failed', parsedRequest.error.issues)
+
     let proofOptions: CredoCreateProofRequestOptions<DidCommProofProtocol[]> | undefined
     if (requestOptions.proofRequestOptions) {
       const {
@@ -67,8 +71,8 @@ export class VerifiedDrpcController extends Controller {
     }
 
     const responseListener = proofOptions
-      ? await this.agent.modules.verifiedDrpc.sendRequest(connectionId, requestOptions.drpcRequest, proofOptions)
-      : await this.agent.modules.verifiedDrpc.sendRequest(connectionId, requestOptions.drpcRequest)
+      ? await this.agent.modules.verifiedDrpc.sendRequest(connectionId, parsedRequest.data, proofOptions)
+      : await this.agent.modules.verifiedDrpc.sendRequest(connectionId, parsedRequest.data)
     const responsePromise = responseListener(timeout).then((response?: VerifiedDrpcResponse) => {
       if (response === undefined) {
         req.log.warn('responseListener just hit a timeout %j', { timeout, response })
@@ -94,13 +98,17 @@ export class VerifiedDrpcController extends Controller {
    */
   @Post('/response/:connectionId')
   @Response<NotFoundError>(404)
+  @Response<UnprocessableEntityError>(422)
   public async sendResponse(
     @Request() req: express.Request,
     @Path('connectionId') connectionId: UUID,
     @Query() threadId: UUID,
     @Body() response: VerifiedDrpcResponse
   ) {
+    const parsedResponse = verifiedDrpcResponseSchema.safeParse(response)
+    if (!parsedResponse.success) throw new UnprocessableEntityError('Validation Failed', parsedResponse.error.issues)
+
     req.log.info('send DRPC response %j', { connectionId, threadId, response })
-    await this.agent.modules.verifiedDrpc.sendResponse({ connectionId, threadId, response })
+    await this.agent.modules.verifiedDrpc.sendResponse({ connectionId, threadId, response: parsedResponse.data })
   }
 }
