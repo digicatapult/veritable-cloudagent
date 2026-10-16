@@ -67,14 +67,14 @@
     "tsyringe": "^4.10.0",
     "undici": "^8.11.2",
     "ws": "^8.22.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
     "@swc-node/register": "^1.12.1",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "^1.16.13",
+    "@swc/core": "^1.16.18",
     "@types/chai": "^5.2.3",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
