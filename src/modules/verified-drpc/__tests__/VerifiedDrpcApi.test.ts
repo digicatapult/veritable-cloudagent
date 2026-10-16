@@ -14,6 +14,7 @@ import {
 import { withMockedAgentContext } from './fixtures/agentContext.js'
 import { withMockVerifiedDrpcRecord } from './fixtures/mockVerifiedDrpcRecord.js'
 
+import { BadGatewayError } from '../../../error.js'
 import { VerifiedDrpcApi } from '../VerifiedDrpcApi.js'
 import { VerifiedDrpcModuleConfig } from '../VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestMessage, VerifiedDrpcResponseMessage } from '../messages/index.js'
@@ -63,7 +64,8 @@ describe('VerifiedDrpcApi.sendRequest', () => {
       await api.sendRequest(connection.id, { jsonrpc: '2.0', method: 'hello', id: 1 })
       expect.fail('Request must not be sent after a failed server proof')
     } catch (error) {
-      expect(error).to.have.property('message').that.includes('invalid state')
+      expect(error).to.be.instanceOf(BadGatewayError)
+      expect(error).to.include({ code: 502, message: 'Server proof verification failed' })
     }
 
     sinon.assert.notCalled(sender.sendMessage)

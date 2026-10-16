@@ -18,7 +18,7 @@ import {
 } from '@credo-ts/didcomm'
 
 import type { UUID } from '../../controllers/types/index.js'
-import { NotFoundError } from '../../error.js'
+import { BadGatewayError, NotFoundError } from '../../error.js'
 import { VerifiedDrpcModuleConfig } from './VerifiedDrpcModuleConfig.js'
 import { VerifiedDrpcRequestHandler, VerifiedDrpcResponseHandler } from './handlers/index.js'
 import { verifiedDrpcResponseSchema, VerifiedDrpcRole, VerifiedDrpcState } from './models/index.js'
@@ -73,6 +73,9 @@ export class VerifiedDrpcApi<PPs extends DidCommProofProtocol[]> {
       verifiedDrpcMessageRecord,
       proofTimeoutMs
     )
+    if (verifiedDrpcMessageRecord.state === VerifiedDrpcState.Abandoned) {
+      throw new BadGatewayError('Server proof verification failed')
+    }
     verifiedDrpcMessageRecord.assertState(VerifiedDrpcState.RequestSent)
     const messageId = verifiedDrpcMessage.id
     await this.sendMessage(connection, verifiedDrpcMessage, verifiedDrpcMessageRecord)

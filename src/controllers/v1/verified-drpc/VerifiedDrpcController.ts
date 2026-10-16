@@ -10,7 +10,7 @@ import type { VerifiedDrpcRequest, VerifiedDrpcResponse } from '../../../modules
 import { verifiedDrpcRequestSchema, verifiedDrpcResponseSchema } from '../../../modules/verified-drpc/models/index.js'
 
 import { RestAgent } from '../../../agent.js'
-import { GatewayTimeout, NotFoundError, UnprocessableEntityError } from '../../../error.js'
+import { BadGatewayError, GatewayTimeout, NotFoundError, UnprocessableEntityError } from '../../../error.js'
 import { transformProofFormats, validatePexV1Presentation } from '../../../utils/proofs.js'
 import type { CreateProofRequestOptions as ApiCreateProofRequestOptions, UUID } from '../../types/index.js'
 
@@ -39,6 +39,7 @@ export class VerifiedDrpcController extends Controller {
    */
   @Post('/request/:connectionId')
   @Response<NotFoundError>(404)
+  @Response<BadGatewayError>(502)
   @Response<GatewayTimeout>(504)
   @Response<UnprocessableEntityError>(422)
   public async sendRequest(

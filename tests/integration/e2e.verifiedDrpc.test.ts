@@ -160,8 +160,8 @@ describe('Verified DRPC request', function () {
 
     await waitForProofRequest(bob, bobConnectionId)
     const response = await responsePromise
-    expect(response.status).to.equal(500, JSON.stringify(response.body))
-    expect(response.body.message).to.include('invalid state abandoned')
+    expect(response.status).to.equal(502, JSON.stringify(response.body))
+    expect(response.body).to.include({ code: 502, message: 'Server proof verification failed' })
 
     await sleep(200)
     const aliceProofs = await alice.get('/v1/proofs').expect(200)
