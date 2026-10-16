@@ -1,33 +1,34 @@
 import { DidCommMessage, IsValidMessageType, parseMessageType } from '@credo-ts/didcomm'
-import { Expose } from 'class-transformer'
 
 import type { UUID } from '../../../controllers/types/index.js'
-import { type VerifiedDrpcErrorCode, IsValidVerifiedDrpcResponse } from '../models/index.js'
-
-export type VerifiedDrpcResponse =
-  VerifiedDrpcResponseObject | (VerifiedDrpcResponseObject | Record<string, never>)[] | Record<string, never>
+import { verifiedDrpcResponseSchema } from '../models/index.js'
 
 export interface VerifiedDrpcResponseError {
-  code: VerifiedDrpcErrorCode
+  code: number
   message: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data?: any
+  data?: unknown
 }
 
-export interface VerifiedDrpcResponseObject {
-  jsonrpc: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  result?: any
-  error?: VerifiedDrpcResponseError
+export interface VerifiedDrpcResultResponse {
+  jsonrpc: '2.0'
+  result: unknown
   id: UUID | number | null
 }
+
+export interface VerifiedDrpcErrorResponse {
+  jsonrpc: '2.0'
+  error: VerifiedDrpcResponseError
+  id: UUID | number | null
+}
+
+export type VerifiedDrpcResponse = VerifiedDrpcResultResponse | VerifiedDrpcErrorResponse
 
 export class VerifiedDrpcResponseMessage extends DidCommMessage {
   public constructor(options: { response: VerifiedDrpcResponse; threadId: UUID }) {
     super()
     if (options) {
       this.id = this.generateId()
-      this.response = options.response
+      this.response = verifiedDrpcResponseSchema.parse(options.response)
       this.setThread({ threadId: options.threadId })
     }
   }
@@ -37,7 +38,5 @@ export class VerifiedDrpcResponseMessage extends DidCommMessage {
   @IsValidMessageType(VerifiedDrpcResponseMessage.type)
   public readonly type = VerifiedDrpcResponseMessage.type.messageTypeUri
 
-  @Expose({ name: 'response' })
-  @IsValidVerifiedDrpcResponse()
   public response!: VerifiedDrpcResponse
 }

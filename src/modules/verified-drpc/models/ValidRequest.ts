@@ -1,44 +1,22 @@
-import { type ValidationOptions, ValidateBy, buildMessage } from 'class-validator'
+import { z } from 'zod'
 
-export function IsValidVerifiedDrpcRequest(validationOptions?: ValidationOptions): PropertyDecorator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function (target: any, propertyKey: string | symbol) {
-    ValidateBy(
-      {
-        name: 'isValidVerifiedDrpcRequest',
-        validator: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          validate: (value: any): boolean => {
-            // Check if value is a VerifiedDrpcRequestObject or an array of VerifiedDrpcRequestObject
-            if (Array.isArray(value)) {
-              if (!value.every(isValidVerifiedDrpcRequest)) {
-                return false
-              }
+import type { VerifiedDrpcRequest } from '../messages/VerifiedDrpcRequestMessage.js'
 
-              return true
-            }
+const jsonValueSchema: z.ZodType<unknown> = z.json()
+export const verifiedDrpcRequestSchema = z
+  .object({
+    jsonrpc: z.literal('2.0'),
+    method: z.string(),
+    params: z.union([z.array(jsonValueSchema), z.record(z.string(), jsonValueSchema)]).optional(),
+    id: z.union([z.string(), z.number(), z.null()]),
+  })
+  .loose()
+  .refine((request) => !('params' in request) || request.params !== undefined, {
+    message: 'Request params must be omitted or contain a JSON value',
+  })
 
-            if (!isValidVerifiedDrpcRequest(value)) {
-              return false
-            }
-
-            return true
-          },
-          defaultMessage: buildMessage(
-            (eachPrefix) => eachPrefix + '$property is not a valid VerifiedDrpcRequest',
-            validationOptions
-          ),
-        },
-      },
-      validationOptions
-    )(target, propertyKey)
-  }
+export function isValidVerifiedDrpcRequest(value: unknown): value is VerifiedDrpcRequest {
+  return verifiedDrpcRequestSchema.safeParse(value).success
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isValidVerifiedDrpcRequest(value: any): boolean {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false
-  }
-  return value.jsonrpc === '2.0' && 'method' in value && 'id' in value
-}
+export type { VerifiedDrpcRequest }

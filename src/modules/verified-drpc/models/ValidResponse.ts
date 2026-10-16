@@ -1,67 +1,39 @@
-import { type ValidationOptions, ValidateBy, ValidationError, buildMessage } from 'class-validator'
+import { z } from 'zod'
 
-export function IsValidVerifiedDrpcResponse(validationOptions?: ValidationOptions): PropertyDecorator {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return function (target: any, propertyKey: string | symbol) {
-    ValidateBy(
-      {
-        name: 'isValidVerifiedDrpcResponse',
-        validator: {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          validate: (value: any): boolean => {
-            // Check if value is a valid VerifiedDrpcResponseObject, an array of VerifiedDrpcResponseObject (possibly mixed with empty objects), or an empty object
-            let isValid = false
-            if (Array.isArray(value)) {
-              if (value.length > 0) {
-                isValid = value.every(isValidVerifiedDrpcResponse)
-              }
-            } else {
-              isValid = isValidVerifiedDrpcResponse(value)
-            }
-            if (!isValid) {
-              throw new ValidationError()
-            }
-            return isValid
-          },
-          defaultMessage: buildMessage(
-            (eachPrefix) => eachPrefix + '$property is not a valid VerifiedDrpcResponse',
-            validationOptions
-          ),
-        },
-      },
-      validationOptions
-    )(target, propertyKey)
-  }
+import type { VerifiedDrpcResponse } from '../messages/VerifiedDrpcResponseMessage.js'
+
+const jsonValueSchema: z.ZodType<unknown> = z.json()
+const responseBaseSchema = z.object({
+  jsonrpc: z.literal('2.0'),
+  id: z.union([z.string(), z.number(), z.null()]),
+})
+
+const resultResponseSchema = responseBaseSchema
+  .extend({ result: jsonValueSchema })
+  .loose()
+  .refine((response) => !('error' in response), {
+    message: 'A JSON-RPC response cannot contain both result and error',
+  })
+
+const errorResponseSchema = responseBaseSchema
+  .extend({
+    error: z
+      .object({
+        code: z.number().int(),
+        message: z.string(),
+        data: jsonValueSchema.optional(),
+      })
+      .loose(),
+  })
+  .loose()
+  .refine((response) => !('result' in response), {
+    message: 'A JSON-RPC response cannot contain both result and error',
+  })
+
+export const verifiedDrpcResponseSchema = z.union([resultResponseSchema, errorResponseSchema])
+
+export function isValidVerifiedDrpcResponse(value: unknown): value is VerifiedDrpcResponse {
+  return verifiedDrpcResponseSchema.safeParse(value).success
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isValidVerifiedDrpcResponse(value: any): boolean {
-  // Check if value is an object
-  if (typeof value !== 'object' || value === null) {
-    return false
-  }
-
-  // Check if it's an empty object
-  if (Object.keys(value).length === 0) {
-    return true
-  }
-
-  // Check if it's a valid VerifiedDrpcResponseObject
-  if (value.jsonrpc === '2.0' && 'id' in value) {
-    // Check if 'result' and 'error' are valid
-    if ('result' in value && typeof value.result === 'undefined') {
-      return false
-    }
-    if ('error' in value && !isValidVerifiedDrpcResponseError(value.error)) {
-      return false
-    }
-    return true
-  }
-
-  return false
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isValidVerifiedDrpcResponseError(error: any): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && 'message' in error
-}
+export type { VerifiedDrpcResponse }

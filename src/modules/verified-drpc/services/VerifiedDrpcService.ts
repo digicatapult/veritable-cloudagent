@@ -4,6 +4,7 @@ import { type AgentContext, EventEmitter, injectable, type Query } from '@credo-
 import {
   type CreateProofRequestOptions,
   type DidCommInboundMessageContext,
+  DidCommProblemReportError,
   DidCommProofEventTypes,
   type DidCommProofProtocol,
   DidCommProofsApi,
@@ -30,6 +31,8 @@ import {
 import {
   isValidVerifiedDrpcRequest,
   isValidVerifiedDrpcResponse,
+  verifiedDrpcRequestSchema,
+  verifiedDrpcResponseSchema,
   VerifiedDrpcRole,
   VerifiedDrpcState,
 } from '../models/index.js'
@@ -159,6 +162,16 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     return { responseMessage: verifiedDrpcMessage, record: verifiedDrpcRecord }
   }
 
+  public async abandonUnansweredRequest(agentContext: AgentContext, connectionId: UUID, threadId: UUID) {
+    const verifiedDrpcRecord = await this.findByThreadAndConnectionId(agentContext, connectionId, threadId)
+    if (
+      verifiedDrpcRecord?.role === VerifiedDrpcRole.Server &&
+      verifiedDrpcRecord.state === VerifiedDrpcState.ClientProofReceived
+    ) {
+      await this.updateState(agentContext, verifiedDrpcRecord, VerifiedDrpcState.Abandoned)
+    }
+  }
+
   public createRequestListener(
     callback: (params: {
       verifiedDrpcMessageRecord: VerifiedDrpcRecord
@@ -201,6 +214,9 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   public async receiveResponse(messageContext: DidCommInboundMessageContext<VerifiedDrpcResponseMessage>) {
+    if (!verifiedDrpcResponseSchema.safeParse(messageContext.message.response).success) {
+      throw new DidCommProblemReportError('Invalid verified DRPC response', { problemCode: 'message-parse-failure' })
+    }
     const connection = messageContext.assertReadyConnection()
     const verifiedDrpcMessageRecord = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -222,6 +238,9 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
   }
 
   public async receiveRequest(messageContext: DidCommInboundMessageContext<VerifiedDrpcRequestMessage>) {
+    if (!verifiedDrpcRequestSchema.safeParse(messageContext.message.request).success) {
+      throw new DidCommProblemReportError('Invalid verified DRPC request', { problemCode: 'message-parse-failure' })
+    }
     const connection = messageContext.assertReadyConnection()
     const record = await this.findByThreadAndConnectionId(
       messageContext.agentContext,
@@ -242,36 +261,31 @@ export class VerifiedDrpcService<PPs extends DidCommProofProtocol[]> {
     })
     await this.verifiedDrpcMessageRepository.save(messageContext.agentContext, verifiedDrpcMessageRecord)
     this.emitStateChangedEvent(messageContext.agentContext, verifiedDrpcMessageRecord)
-    await this.verifyClient(
+    void this.verifyClient(
       messageContext.agentContext,
       connection.id,
       this.config.proofRequestOptions,
       verifiedDrpcMessageRecord,
       this.config.proofTimeoutMs
-    )
+    ).catch((error: unknown) => {
+      messageContext.agentContext.config.logger.error(`Error processing verified DRPC client proof: ${error}`)
+    })
 
     return verifiedDrpcMessageRecord
   }
 
   private emitStateChangedEvent(agentContext: AgentContext, verifiedDrpcMessageRecord: VerifiedDrpcRecord) {
-    if (
-      verifiedDrpcMessageRecord.request &&
-      (isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request) ||
-        (Array.isArray(verifiedDrpcMessageRecord.request) &&
-          verifiedDrpcMessageRecord.request.length > 0 &&
-          isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request[0])))
-    ) {
+    if (verifiedDrpcMessageRecord.request && isValidVerifiedDrpcRequest(verifiedDrpcMessageRecord.request)) {
+      const eventRecord = verifiedDrpcMessageRecord.clone()
+      // Inbound requests are only actionable once the client proof is verified
+      if (eventRecord.role === VerifiedDrpcRole.Server && eventRecord.state !== VerifiedDrpcState.ClientProofReceived) {
+        eventRecord.request = undefined
+      }
       this.eventEmitter.emit<VerifiedDrpcRequestStateChangedEvent>(agentContext, {
         type: VerifiedDrpcRequestEventTypes.VerifiedDrpcRequestStateChanged,
-        payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },
+        payload: { verifiedDrpcMessageRecord: eventRecord },
       })
-    } else if (
-      verifiedDrpcMessageRecord.response &&
-      (isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response) ||
-        (Array.isArray(verifiedDrpcMessageRecord.response) &&
-          verifiedDrpcMessageRecord.response.length > 0 &&
-          isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response[0])))
-    ) {
+    } else if (verifiedDrpcMessageRecord.response && isValidVerifiedDrpcResponse(verifiedDrpcMessageRecord.response)) {
       this.eventEmitter.emit<VerifiedDrpcResponseStateChangedEvent>(agentContext, {
         type: VerifiedDrpcResponseEventTypes.VerifiedDrpcResponseStateChanged,
         payload: { verifiedDrpcMessageRecord: verifiedDrpcMessageRecord.clone() },
