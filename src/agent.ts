@@ -30,6 +30,7 @@ import {
 } from '@credo-ts/didcomm'
 import { DrpcModule } from '@credo-ts/drpc'
 import { agentDependencies, DidCommHttpInboundTransport, DidCommWsInboundTransport } from '@credo-ts/node'
+import { OpenId4VcModule, type OpenId4VcModuleConfigOptions } from '@credo-ts/openid4vc'
 import { askarNodeJS } from '@openwallet-foundation/askar-nodejs'
 import type { Express } from 'express'
 import { container } from 'tsyringe'
@@ -41,6 +42,8 @@ import type { CredentialDefinitionId, DID } from './controllers/types/index.js'
 import DrpcReceiveHandler, { verifiedDrpcRequestHandler } from './drpc-handler/index.js'
 import Ipfs from './ipfs/index.js'
 import { VerifiedDrpcModule, VerifiedDrpcModuleConfigOptions } from './modules/verified-drpc/index.js'
+import { createOpenId4VcModuleOptions, type OpenId4VcConfig } from './openid4vc/config.js'
+import { setupOpenId4VcResources } from './openid4vc/setup.js'
 import PinoLogger from './utils/logger.js'
 
 export type Transports = 'ws' | 'http'
@@ -85,6 +88,8 @@ export type AriesRestConfig = {
   verifiedDrpcOptions: VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
   didcommHttpApp?: Express
   didcommWsSocketServers?: WebSocketServer[]
+  openId4VcConfig: OpenId4VcConfig
+  openId4VcApp?: Express
 
   logger: PinoLogger
 }
@@ -97,6 +102,7 @@ export interface RestAgentModules extends ModulesMap {
   askar: AskarModule
   drpc: DrpcModule
   verifiedDrpc: VerifiedDrpcModule<AgentProofProtocols>
+  openid4vc: OpenId4VcModule<null, null>
 }
 
 export type RestAgent<
@@ -108,6 +114,7 @@ export type RestAgent<
     askar: AskarModule
     drpc: DrpcModule
     verifiedDrpc: VerifiedDrpcModule<AgentProofProtocols>
+    openid4vc: OpenId4VcModule<null, null>
   },
 > = Agent<modules>
 
@@ -128,8 +135,10 @@ const getAgentModules = (options: {
     issuerDid?: DID
   } & VerifiedDrpcModuleConfigOptions<AgentProofProtocols>
   askarStoreConfig: AskarModuleConfigStoreOptions
+  openId4VcOptions: OpenId4VcModuleConfigOptions
 }): RestAgentModules => {
   return {
+    openid4vc: new OpenId4VcModule<null, null>(options.openId4VcOptions),
     askar: new AskarModule({
       askar: askarNodeJS,
       store: options.askarStoreConfig,
@@ -218,12 +227,15 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     verifiedDrpcOptions,
     didcommHttpApp,
     didcommWsSocketServers = [],
+    openId4VcConfig,
+    openId4VcApp,
     logger,
 
     agentConfig,
     askarStoreConfig,
   } = restConfig
 
+  const openId4VcOptions = createOpenId4VcModuleOptions(openId4VcConfig, openId4VcApp)
   const modules = getAgentModules({
     didcommConfig: {
       endpoints: agentConfig.endpoints,
@@ -238,6 +250,7 @@ export async function setupAgent(restConfig: AriesRestConfig) {
     ipfsTimeoutMs,
     verifiedDrpcOptions,
     askarStoreConfig,
+    openId4VcOptions,
   })
 
   const agent: RestAgent = new Agent({
@@ -285,6 +298,8 @@ export async function setupAgent(restConfig: AriesRestConfig) {
 
   try {
     await agent.initialize()
+
+    await setupOpenId4VcResources(agent, openId4VcConfig)
 
     container.register(Agent, { useValue: agent as Agent })
 

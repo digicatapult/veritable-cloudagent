@@ -24,6 +24,7 @@ export interface CloudagentHandle {
   agent: RestAgent
   adminApiServer: HttpServer
   didcommHttpServer?: HttpServer
+  openId4VcHttpServer?: HttpServer
   didWebServer: DidWebServer
   shutdown(): Promise<void>
 }
@@ -105,11 +106,13 @@ const terminateWebSocketClients = (server: WebSocketServer) => {
 const forceCloseConnections = (resources: {
   adminApiServer?: HttpServer
   didcommHttpServer?: HttpServer
+  openId4VcHttpServer?: HttpServer
   adminSocketServer?: WebSocketServer
   didcommSocketServers?: WebSocketServer[]
 }) => {
   resources.adminApiServer?.closeAllConnections()
   resources.didcommHttpServer?.closeAllConnections()
+  resources.openId4VcHttpServer?.closeAllConnections()
 
   if (resources.adminSocketServer) {
     terminateWebSocketClients(resources.adminSocketServer)
@@ -142,6 +145,7 @@ const cleanupResources = async (
     agent?: RestAgent
     adminApiServer?: HttpServer
     didcommHttpServer?: HttpServer
+    openId4VcHttpServer?: HttpServer
     adminSocketServer?: WebSocketServer
     didWebServer?: DidWebServer
     didWebDatabase?: Database
@@ -162,6 +166,7 @@ const cleanupResources = async (
     attempt('close admin WebSocket server', () => closeWebSocketServer(resources.adminSocketServer, true)),
     attempt('close admin API HTTP server', () => closeServer(resources.adminApiServer)),
     attempt('close DIDComm HTTP server', () => closeServer(resources.didcommHttpServer)),
+    attempt('close OpenID4VC HTTP server', () => closeServer(resources.openId4VcHttpServer)),
   ])
   await attempt('stop DID:web server', async () => {
     await resources.didWebServer?.stop()
@@ -219,6 +224,7 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
   let didWebServer: DidWebServer | undefined
   let adminApiServer: HttpServer | undefined
   let didcommHttpServer: HttpServer | undefined
+  let openId4VcHttpServer: HttpServer | undefined
   let adminSocketServer: WebSocketServer | undefined
   let didWebDatabase: Database | undefined
   const didcommSocketServers: WebSocketServer[] = []
@@ -226,6 +232,7 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
 
   try {
     const didcommHttpApp = express()
+    const openId4VcApp = express()
 
     for (const didcommWsEntry of didcommWsEntries) {
       const didcommSocketServer = new WebSocketServer({ port: didcommWsEntry.port })
@@ -275,6 +282,14 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
 
       inboundTransports,
       didcommHttpApp,
+      openId4VcApp,
+      openId4VcConfig: {
+        issuerEnabled: env.get('OPENID4VC_ISSUER_ENABLED'),
+        verifierEnabled: env.get('OPENID4VC_VERIFIER_ENABLED'),
+        publicBaseUrl: env.get('OPENID4VC_PUBLIC_BASE_URL'),
+        issuerId: env.get('OPENID4VC_ISSUER_ID'),
+        verifierId: env.get('OPENID4VC_VERIFIER_ID'),
+      },
       outboundTransports: env.get('OUTBOUND_TRANSPORT'),
 
       autoAcceptConnections: env.get('AUTO_ACCEPT_CONNECTIONS'),
@@ -293,6 +308,11 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
       didcommWsSocketServers: didcommSocketServers,
       logger,
     })
+
+    if (agent.openid4vc.issuer || agent.openid4vc.verifier) {
+      openId4VcHttpServer = openId4VcApp.listen(env.get('OPENID4VC_PORT'))
+      await listen(openId4VcHttpServer)
+    }
 
     if (didcommHttpEntry?.port !== undefined) {
       didcommHttpServer = didcommHttpApp.listen(didcommHttpEntry.port)
@@ -377,6 +397,7 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
             agent,
             adminApiServer,
             didcommHttpServer,
+            openId4VcHttpServer,
             adminSocketServer,
             didWebServer,
             didWebDatabase,
@@ -411,6 +432,7 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
       agent,
       adminApiServer,
       didcommHttpServer,
+      openId4VcHttpServer,
       didWebServer,
       shutdown,
     }
@@ -419,6 +441,7 @@ async function startCloudagentInstance(env: Env, logger: PinoLogger): Promise<Cl
       agent,
       adminApiServer,
       didcommHttpServer,
+      openId4VcHttpServer,
       adminSocketServer,
       didWebServer,
       didWebDatabase,
