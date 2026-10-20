@@ -15,17 +15,31 @@ import type { Env } from '../../src/env.js'
 import PinoLogger from '../../src/utils/logger.js'
 import { closeServer, connectWebSocket, deleteAgentStore, getAvailablePort, occupyPort } from './utils/helpers.js'
 
-const createTestEnv = async (walletId?: string, options?: { didWebEnabled?: boolean; secondWsPort?: number }) => {
+const createTestEnv = async (
+  walletId?: string,
+  options?: {
+    didWebEnabled?: boolean
+    secondWsPort?: number
+    didcommHttpEnabled?: boolean
+    openId4VcRolesEnabled?: boolean
+  }
+) => {
   const adminPort = await getAvailablePort()
   const didcommHttpPort = await getAvailablePort()
   const didcommWsPort = await getAvailablePort()
   const didWebPort = await getAvailablePort()
+  const openId4VcPort = await getAvailablePort()
 
   const endpoints = [`http://localhost:${didcommHttpPort}`, `ws://localhost:${didcommWsPort}`]
   const inboundTransport: InboundTransport[] = [
     { transport: 'http', port: didcommHttpPort },
     { transport: 'ws', port: didcommWsPort },
   ]
+
+  if (options?.didcommHttpEnabled === false) {
+    endpoints.splice(0, 1)
+    inboundTransport.splice(0, 1)
+  }
 
   if (options?.secondWsPort) {
     endpoints.push(`ws://localhost:${options.secondWsPort}`)
@@ -85,6 +99,12 @@ const createTestEnv = async (walletId?: string, options?: { didWebEnabled?: bool
     DID_WEB_DEV_KEY_PATH: '',
     DID_WEB_DB_NAME: 'did-web-server',
     DID_WEB_DOMAIN: 'localhost%3A8443',
+    OPENID4VC_PORT: openId4VcPort,
+    OPENID4VC_ISSUER_ENABLED: options?.openId4VcRolesEnabled ?? false,
+    OPENID4VC_VERIFIER_ENABLED: options?.openId4VcRolesEnabled ?? false,
+    OPENID4VC_PUBLIC_BASE_URL: 'https://issuer.example',
+    OPENID4VC_ISSUER_ID: 'test-issuer',
+    OPENID4VC_VERIFIER_ID: 'test-verifier',
   }
 
   const env = {
@@ -98,6 +118,7 @@ const createTestEnv = async (walletId?: string, options?: { didWebEnabled?: bool
       didcommHttpPort,
       didcommWsPort,
       didWebPort,
+      openId4VcPort,
     },
   }
 }
@@ -219,10 +240,90 @@ describe('startCloudagent lifecycle', () => {
     handles.pop()
   })
 
+  test('should serve OpenID4VC on its own listener separate from DIDComm and TSOA', async () => {
+    const { env } = await createTestEnv(undefined, { openId4VcRolesEnabled: true })
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    const issuerMetadata = await request(handle.openId4VcHttpServer!).get(
+      '/.well-known/openid-credential-issuer/oid4vci/test-issuer'
+    )
+    const authorizationServerMetadata = await request(handle.openId4VcHttpServer!).get(
+      '/.well-known/oauth-authorization-server/oid4vci/test-issuer'
+    )
+    const verifierAuthorizationRequest = await request(handle.openId4VcHttpServer!).get(
+      '/oid4vp/test-verifier/authorization-requests/unknown-request'
+    )
+    const didcommRootPost = await request(handle.didcommHttpServer!)
+      .post('/')
+      .set('Content-Type', 'application/json')
+      .send({})
+    const issuerMetadataOnDidcomm = await request(handle.didcommHttpServer!).get(
+      '/.well-known/openid-credential-issuer/oid4vci/test-issuer'
+    )
+
+    expect(issuerMetadata.status, JSON.stringify(issuerMetadata.body)).to.equal(200)
+    expect(authorizationServerMetadata.status).to.equal(200)
+    expect(issuerMetadataOnDidcomm.status).to.equal(404)
+    expect(verifierAuthorizationRequest.status).to.equal(404)
+    expect(verifierAuthorizationRequest.body.error).to.equal('not_found')
+    expect(handle.openId4VcHttpServer?.listening).to.equal(true)
+    expect(handle.openId4VcHttpServer?.address()).to.not.deep.equal(handle.didcommHttpServer?.address())
+    expect(handle.openId4VcHttpServer?.address()).to.not.deep.equal(handle.adminApiServer.address())
+    expect(didcommRootPost.status).to.equal(415)
+
+    await handle.shutdown()
+    expect(handle.openId4VcHttpServer?.listening).to.equal(false)
+    handles.pop()
+
+    const { env: restartEnv } = await createTestEnv(env.get('WALLET_ID'), { openId4VcRolesEnabled: true })
+    const restartedHandle = await startCloudagent(restartEnv, logger)
+    handles.push(restartedHandle)
+    expect(await restartedHandle.agent.openid4vc.issuer?.getAllIssuers()).to.have.lengthOf(1)
+    expect(await restartedHandle.agent.openid4vc.verifier?.getAllVerifiers()).to.have.lengthOf(1)
+
+    await restartedHandle.shutdown()
+    await deleteAgentStore(restartedHandle.agent)
+    handles.pop()
+  })
+
+  test('should start the OpenID4VC listener without a DIDComm HTTP inbound transport', async () => {
+    const { env } = await createTestEnv(undefined, { didcommHttpEnabled: false, openId4VcRolesEnabled: true })
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    const issuerMetadata = await request(handle.openId4VcHttpServer!).get(
+      '/.well-known/openid-credential-issuer/oid4vci/test-issuer'
+    )
+
+    expect(handle.didcommHttpServer).to.equal(undefined)
+    expect(handle.openId4VcHttpServer?.listening).to.equal(true)
+    expect(issuerMetadata.status, JSON.stringify(issuerMetadata.body)).to.equal(200)
+
+    await handle.shutdown()
+    expect(handle.openId4VcHttpServer?.listening).to.equal(false)
+    await deleteAgentStore(handle.agent)
+    handles.pop()
+  })
+
+  test('should register OpenID4VC holder without starting an OpenID4VC listener', async () => {
+    const { env } = await createTestEnv()
+    const handle = await startCloudagent(env, logger)
+    handles.push(handle)
+
+    expect(handle.agent.openid4vc.holder).to.not.equal(undefined)
+    expect(handle.didcommHttpServer?.listening).to.equal(true)
+    expect(handle.openId4VcHttpServer).to.equal(undefined)
+
+    await handle.shutdown()
+    await deleteAgentStore(handle.agent)
+    handles.pop()
+  })
+
   test('should force-close active HTTP connections when the global shutdown timeout expires', async function () {
     this.timeout(18000)
 
-    const { env } = await createTestEnv()
+    const { env } = await createTestEnv(undefined, { openId4VcRolesEnabled: true })
     const handle = await startCloudagent(env, logger)
     handles.push(handle)
 
@@ -238,6 +339,10 @@ describe('startCloudagent lifecycle', () => {
     const closeDidcommConnections = handle.didcommHttpServer!.closeAllConnections.bind(handle.didcommHttpServer)
     const didcommCloseAllConnections = sinonStub(handle.didcommHttpServer!, 'closeAllConnections').callsFake(
       closeDidcommConnections
+    )
+    const closeOpenId4VcConnections = handle.openId4VcHttpServer!.closeAllConnections.bind(handle.openId4VcHttpServer)
+    const openId4VcCloseAllConnections = sinonStub(handle.openId4VcHttpServer!, 'closeAllConnections').callsFake(
+      closeOpenId4VcConnections
     )
 
     const originalAgentShutdown = handle.agent.shutdown.bind(handle.agent)
@@ -266,6 +371,7 @@ describe('startCloudagent lifecycle', () => {
 
       expect(adminCloseAllConnections.calledOnce).to.equal(true)
       expect(didcommCloseAllConnections.calledOnce).to.equal(true)
+      expect(openId4VcCloseAllConnections.calledOnce).to.equal(true)
 
       resolveDidWebStop()
       await agentShutdownStarted
@@ -277,6 +383,7 @@ describe('startCloudagent lifecycle', () => {
       resolveDidWebStop()
       adminCloseAllConnections.restore()
       didcommCloseAllConnections.restore()
+      openId4VcCloseAllConnections.restore()
     }
 
     await deleteAgentStore(handle.agent)

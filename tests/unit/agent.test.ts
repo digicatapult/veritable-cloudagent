@@ -81,6 +81,13 @@ describe('AgentController', () => {
         logger,
         ipfsOrigin: 'https://localhost:5001',
         ipfsTimeoutMs: 15000,
+        openId4VcConfig: {
+          issuerEnabled: false,
+          verifierEnabled: false,
+          publicBaseUrl: '',
+          issuerId: '',
+          verifierId: '',
+        },
         verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2' as const, proofFormats: {} } },
       }
     }
