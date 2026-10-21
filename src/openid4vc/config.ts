@@ -22,6 +22,9 @@ export const validateOpenId4VcConfig = (config: OpenId4VcConfig): void => {
   if (config.verifierEnabled && !config.verifierId) {
     throw new Error('OPENID4VC_VERIFIER_ID is required when the verifier role is enabled')
   }
+  if ((config.issuerEnabled || config.verifierEnabled) && !config.publicBaseUrl.trim()) {
+    throw new Error('OPENID4VC_PUBLIC_BASE_URL is required when the issuer or verifier role is enabled')
+  }
 }
 
 export const createOpenId4VcModuleOptions = (config: OpenId4VcConfig, app?: Express): OpenId4VcModuleConfigOptions => {
