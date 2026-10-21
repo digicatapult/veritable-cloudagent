@@ -122,6 +122,13 @@ export async function getTestAgent(port: number) {
     logger,
     ipfsOrigin: 'https://localhost:5001',
     ipfsTimeoutMs: 15000,
+    openId4VcConfig: {
+      issuerEnabled: false,
+      verifierEnabled: false,
+      publicBaseUrl: '',
+      issuerId: '',
+      verifierId: '',
+    },
     verifiedDrpcOptions: { proofRequestOptions: { protocolVersion: 'v2', proofFormats: {} } },
   })
 
@@ -130,9 +137,7 @@ export async function getTestAgent(port: number) {
 
 export async function getTestServer(agent: RestAgent) {
   const socketServer = new WebSocketServer({ noServer: true })
-  const adminApiApp = await setupServer(agent, new PinoLogger('silent'), {
-    socketServer,
-  })
+  const adminApiApp = await setupServer(agent, new PinoLogger('silent'), { socketServer })
   const server = adminApiApp.listen(0, () => {})
 
   server.on('upgrade', (request, socket, head) => {
