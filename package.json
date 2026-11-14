@@ -1,6 +1,6 @@
 {
   "name": "@digicatapult/veritable-cloudagent",
-  "version": "0.20.77",
+  "version": "0.20.78",
   "main": "build/index",
   "type": "module",
   "types": "build/index",
@@ -50,7 +50,7 @@
     "@credo-ts/drpc": "^0.7.2",
     "@credo-ts/node": "^0.7.2",
     "@hyperledger/anoncreds-nodejs": "^0.4.0",
-    "@openwallet-foundation/askar-nodejs": "^0.6.1",
+    "@openwallet-foundation/askar-nodejs": "^0.7.0",
     "@tsoa/runtime": "^6.6.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
