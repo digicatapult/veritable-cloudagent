@@ -1,7 +1,7 @@
 # docker build . -t veritable-cloudagent
 
 # Build stage
-FROM node:26.13.1-bookworm@sha256:0a7c0471c10988ef5ab64718fa58bf8d5be578b4d20cf42b10b5fa6ccda39ae1 AS build
+FROM node:26.13.1-bookworm@sha256:893ea48106e988a5f91e69629d6472600daa9d0494adf7db87eb0b886ce82255 AS build
 
 RUN npm install -g npm@12.0.1
 
@@ -18,7 +18,7 @@ RUN npm run build
 
 
 # Node_Modules stage
-FROM node:26.13.1-bookworm@sha256:0a7c0471c10988ef5ab64718fa58bf8d5be578b4d20cf42b10b5fa6ccda39ae1 AS modules
+FROM node:26.13.1-bookworm@sha256:893ea48106e988a5f91e69629d6472600daa9d0494adf7db87eb0b886ce82255 AS modules
 
 RUN npm install -g npm@12.0.1
 
